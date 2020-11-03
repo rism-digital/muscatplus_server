@@ -1,0 +1,13 @@
+---
+common:
+  debug: yes
+
+solr:
+  server: "http://localhost:8983/solr/muscat-plus-ingest"
+
+search:
+  rows: 20
+  page_sizes:
+    - 20
+    - 40
+    - 100

@@ -1,0 +1,124 @@
+openapi: 3.0.0
+info:
+  title: RISM Data Service API
+  description: RISM Data Service API
+  version: 1.0.0
+servers:
+  - url: 'https://discovery.rism.digital/'
+paths:
+  /sources/:
+    get:
+      description: "A list of all sources"
+      responses:
+        '200':
+          description: ""
+  /sources/{source_id}/:
+    get:
+      description: "A view of a single source"
+      parameters:
+        - name: source_id
+          in: path
+      responses:
+        '200':
+          description: ""
+  /sources/{source_id}/incipits/:
+    get:
+      description: "A list of incipits for a source"
+      parameters:
+        - name: source_id
+          in: path
+      responses:
+        '200':
+          description: ""
+  /sources/{source_id}/incipits/{incipit_id}/:
+    get:
+      description: "A single incipit in a source"
+      parameters:
+        - name: source_id
+          in: path
+      responses:
+        '200':
+          description: ""
+  /sources/{source_id}/materialgroups/:
+    get:
+      description: "A list of material groups for a source"
+      parameters:
+        - name: source_id
+          in: path
+      responses:
+        '200':
+          description: ""
+  /sources/{source_id}/materialgroups/{materialgroup_id}:
+    get:
+      description: "A single material group in a source"
+      parameters:
+        - name: source_id
+          in: path
+        - name: materialgroup_id
+          in: path
+      responses:
+        '200':
+          description: ""
+  /sources/{source_id}/relationships/:
+    get:
+      description: "A list of relationships for a source"
+      parameters:
+        - name: source_id
+          in: path
+      responses:
+        '200':
+          description: ""
+  /sources/{source_id}/relationships/{relationship_id}:
+    get:
+      description: ""
+      parameters:
+        - name: source_id
+          in: path
+      responses:
+        '200':
+          description: ""
+  /people/:
+    get:
+      description: "A list of people"
+      responses:
+        '200':
+          description: ""
+  /people/{id}/:
+    get:
+      description: "A view of a single person"
+      parameters:
+        - name: id
+          in: path
+      responses:
+        '200':
+          description: ""
+  /subjects/:
+    get:
+      description: "A list of all subjects"
+      responses:
+        200:
+          description: ""
+  /subjects/{subject_id}:
+    get:
+      description: "A single subject"
+      parameters:
+        - name: subject_id
+          in: path
+      responses:
+        200:
+          description: ""
+  /institutions/:
+    get:
+      description: "A list of institutions"
+      responses:
+        '200':
+          description: ""
+  /institutions/{institution_id}/:
+    get:
+      description: "A single institution"
+      parameters:
+        - name: institution_id
+          in: path
+      responses:
+        '200':
+          description: ""
