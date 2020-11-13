@@ -16,6 +16,7 @@ from search_server.resources.people.person import handle_person_request
 from search_server.resources.sources.source_materialgroup import handle_materialgroup_list_request, \
     handle_materialgroup_request
 from search_server.resources.sources.source_relationship import handle_relationship_request
+from search_server.helpers.languages import load_translations
 
 config: Dict = yaml.safe_load(open('configuration.yml', 'r'))
 app = Sanic("search_server")
@@ -40,6 +41,12 @@ logging.basicConfig(format="[%(asctime)s] [%(levelname)8s] %(message)s (%(filena
                     level=LOGLEVEL)
 
 log = logging.getLogger(__name__)
+
+translations: Optional[Dict] = load_translations("locales")
+if not translations:
+    log.error("No translations can be loaded.")
+
+app.translations = translations
 
 
 async def _handle_request(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
