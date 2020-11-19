@@ -1,7 +1,7 @@
 import re
 from typing import Pattern, Dict
 
-ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_")
+ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_")
 
 EXTERNAL_IDS: Dict = {
     "viaf": "https://viaf.org/viaf/{ident}",
@@ -28,8 +28,6 @@ def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) ->
 
     return request.app.url_for(viewname, _external=True, _scheme=scheme, _server=server, **kwargs)
 
-    # return template.format(scheme=scheme, host=host, **kwargs)
-
 
 roles: Dict = {
     "prf": "Performer",
@@ -38,7 +36,17 @@ roles: Dict = {
     "arr": "Arranger"
 }
 
+RELATIONSHIP_LABELS = {
+    None: "records.unknown",
+    "lyr": "records.lyricist",
+    "fmo": "records.former_owner",
+    "scr": "records.scribe",
+    "arr": "records.arranger",
+    "edt": "records.editor"
+}
+
 
 def humanize_role(rle: str) -> str:
     return roles.get(rle, rle)
+
 

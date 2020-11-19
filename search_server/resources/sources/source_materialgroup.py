@@ -10,7 +10,7 @@ from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager
 
 
-def handle_materialgroup_list_request(req, source_id: str) -> Optional[Dict]:
+def handle_materialgroups_list_request(req, source_id: str) -> Optional[Dict]:
     fq: List = ["type:source_materialgroup",
                 f"source_id:source_{source_id}"]
 
@@ -20,7 +20,7 @@ def handle_materialgroup_list_request(req, source_id: str) -> Optional[Dict]:
         pass
 
 
-def handle_materialgroup_request(req, source_id: str, materialgroup_id: str) -> Optional[Dict]:
+def handle_materialgroups_request(req, source_id: str, materialgroup_id: str) -> Optional[Dict]:
     pass
 
 
@@ -32,17 +32,22 @@ class SourceMaterialGroupList(ContextDictSerializer):
         label="type",
         value="rism:MaterialGroupList"
     )
-    label = serpy.MethodField()
+    heading = serpy.MethodField()
     items = serpy.MethodField()
 
     def get_mid(self, obj: Dict) -> str:
         req = self.context.get("request")
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
-        return get_identifier(req, "materialgroup_list", source_id=source_id)
+        return get_identifier(req, "materialgroups_list", source_id=source_id)
 
-    def get_label(self, obj: Dict) -> Dict:
-        pass
+    def get_heading(self, obj: Dict) -> Dict:
+        req = self.context.get("request")
+        transl: Dict = req.app.translations
+
+        return {
+            "label": transl.get("records.material_description")
+        }
 
     def get_items(self, obj: Dict) -> Optional[List]:
         conn = SolrManager(SolrConnection)
@@ -72,9 +77,7 @@ class SourceMaterialGroup(ContextDictSerializer):
         label="type",
         value="rism:MaterialGroup"
     )
-    display_fields = serpy.MethodField(
-        label="displayFields"
-    )
+    heading = serpy.MethodField()
 
     def get_ctx(self, obj: Dict) -> Dict:
         pass
@@ -87,5 +90,5 @@ class SourceMaterialGroup(ContextDictSerializer):
 
         return get_identifier(req, "materialgroup", source_id=source_id, materialgroup_id=materialgroup_id)
 
-    def get_display_fields(self, obj: Dict) -> List:
+    def get_heading(self, obj: Dict) -> List[Dict]:
         pass

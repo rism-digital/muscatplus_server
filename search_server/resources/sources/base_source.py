@@ -3,10 +3,12 @@ from typing import Dict, Optional, List
 
 import serpy
 
+from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.ld_context import RISM_JSONLD_CONTEXT
 from search_server.helpers.serializers import ContextDictSerializer
+from search_server.helpers.solr_connection import SolrResult
 
 
 class BaseSource(ContextDictSerializer):
@@ -26,7 +28,10 @@ class BaseSource(ContextDictSerializer):
         label="type",
         value="rism:Source"
     )
-    label = serpy.MethodField()
+    display = serpy.MethodField(
+        label="display"
+    )
+
     part_of = serpy.MethodField(
         label="partOf"
     )
@@ -41,11 +46,14 @@ class BaseSource(ContextDictSerializer):
 
         return get_identifier(req, "source", source_id=source_id)
 
-    def get_label(self, obj: Dict) -> Dict:
-        return {"none": [f"{obj.get('title_s')}"]}
+    def get_display(self, obj: SolrResult) -> List[Dict]:
+        req = self.context.get("request")
+        transl: Dict = req.app.translations
+
+        return get_display_fields(obj, transl)
 
     def get_part_of(self, obj: Dict) -> Optional[List]:
-        # Do not show 'partOf' if the result is being embedded.
+        # Do not show 'partOf' if the result is embedded in the source it is part of.
         if not self.context.get("direct_request"):
             return None
 
@@ -60,8 +68,13 @@ class BaseSource(ContextDictSerializer):
 
         req = self.context.get("request")
         rel_id: str = re.sub(ID_SUB, "", member_id)
+        transl: Dict = req.app.translations
 
         return [{
             "id": get_identifier(req, "source", source_id=rel_id),
-            "type": "rism:Source"
+            "type": "rism:Source",
+            "display": {
+                "label": transl.get("records.parent_record"),
+                "value": {"none": obj.get("source_membership_title_s")}
+            }
         }]

@@ -10,13 +10,21 @@ from search_server.resources.institutions.institution import handle_institution_
 from search_server.resources.search.search import handle_search_request
 from search_server.resources.siglum.sigla import handle_sigla_request
 from search_server.resources.sources.full_source import handle_source_request
+from search_server.resources.sources.source_creator import handle_creator_request
 from search_server.resources.sources.source_holding import handle_holding_request
 from search_server.resources.sources.source_incipit import handle_incipit_request
 from search_server.resources.people.person import handle_person_request
-from search_server.resources.sources.source_materialgroup import handle_materialgroup_list_request, \
-    handle_materialgroup_request
-from search_server.resources.sources.source_relationship import handle_relationship_request
+from search_server.resources.sources.source_materialgroup import (
+    handle_materialgroups_list_request,
+    handle_materialgroups_request
+)
+from search_server.resources.sources.source_relationship import (
+    handle_relationships_request,
+    handle_relationships_list_request
+)
+
 from search_server.helpers.languages import load_translations
+from search_server.resources.subjects.subject import handle_subject_request
 
 config: Dict = yaml.safe_load(open('configuration.yml', 'r'))
 app = Sanic("search_server")
@@ -109,32 +117,40 @@ async def incipit(req, source_id: str, incipit_id: str):
 
 
 @app.route("/sources/<source_id:string>/materialgroups/")
-async def materialgroup_list(req, source_id: str):
+async def materialgroups_list(req, source_id: str):
     return await _handle_request(req,
-                                 handle_materialgroup_list_request,
+                                 handle_materialgroups_list_request,
                                  source_id=source_id)
 
 
 @app.route("/sources/<source_id:string>/materialgroups/<materialgroup_id:string>/")
 async def materialgroup(req, source_id: str, materialgroup_id: str):
     return await _handle_request(req,
-                                 handle_materialgroup_request,
+                                 handle_materialgroups_request,
                                  source_id=source_id,
                                  materialgroup_id=materialgroup_id)
 
 
 @app.route("/sources/<source_id:string>/relationships/")
 async def relationships_list(req, source_id: str):
-    pass
+    return await _handle_request(req,
+                                 handle_relationships_list_request,
+                                 source_id=source_id)
 
 
 @app.route("/sources/<source_id:string>/relationships/<relationship_id:string>/")
 async def relationship(req, source_id: str, relationship_id: str):
     return await _handle_request(req,
-                                 handle_relationship_request,
+                                 handle_relationships_request,
                                  source_id=source_id,
                                  relationship_id=relationship_id)
 
+
+@app.route("/sources/<source_id:string>/creator")
+async def creator(req, source_id: str):
+    return await _handle_request(req,
+                                 handle_creator_request,
+                                 source_id=source_id)
 
 @app.route("/sources/<source_id:string>/holdings/<holding_id:string>/")
 async def holding(req, source_id: str, holding_id: str):
@@ -163,7 +179,9 @@ async def subject_list(req):
 
 @app.route("/subjects/<subject_id:string>/")
 async def subject(req, subject_id: str):
-    pass
+    return await _handle_request(req,
+                                 handle_subject_request,
+                                 subject_id=subject_id)
 
 
 @app.route("/institutions/")

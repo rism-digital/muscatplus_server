@@ -1,19 +1,20 @@
+import re
 from typing import Dict, Optional, List
 
 import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier, EXTERNAL_IDS
+from search_server.helpers.identifiers import get_identifier, EXTERNAL_IDS, ID_SUB
 from search_server.helpers.ld_context import RISM_JSONLD_CONTEXT
 from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrManager
+from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult
 from search_server.resources.people.person_relationship import PersonRelationship
 
 
 def handle_person_request(req, person_id: str) -> Optional[Dict]:
     fq: List = ["type:person",
-                f"person_id:{person_id}"]
+                f"id:person_{person_id}"]
 
     record: pysolr.Results = SolrConnection.search("*:*", fq=fq, rows=1)
 
@@ -44,21 +45,23 @@ class Person(ContextDictSerializer):
     )
     sources = serpy.MethodField()
 
-    def get_ctx(self, obj: Dict) -> Dict:
+    def get_ctx(self, obj: SolrResult) -> Optional[Dict]:
         direct_request: bool = self.context.get("direct_request")
         return RISM_JSONLD_CONTEXT if direct_request else None
 
-    def get_pid(self, obj: Dict) -> str:
+    def get_pid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
-        return get_identifier(req, "person", person_id=f"{obj.get('person_id')}")
+        person_id: str = re.sub(ID_SUB, "", obj.get('id'))
 
-    def get_name(self, obj: Dict) -> Dict:
+        return get_identifier(req, "person", person_id=person_id)
+
+    def get_name(self, obj: SolrResult) -> Dict:
         name: str = obj.get("name_s")
         dates: Optional[str] = f" ({d})" if (d := obj.get("date_statement_s")) else ""
 
-        return {"none": [f"{obj.get('name_s')}{dates}"]}
+        return {"none": [f"{name}{dates}"]}
 
-    def get_see_also(self, obj: Dict) -> Optional[List[Dict]]:
+    def get_see_also(self, obj: SolrResult) -> Optional[List[Dict]]:
         external_ids: Optional[List] = obj.get("external_ids")
         if not external_ids:
             return None
@@ -76,7 +79,7 @@ class Person(ContextDictSerializer):
 
         return ret
 
-    def get_sources(self, obj: Dict) -> Optional[List]:
+    def get_sources(self, obj: SolrResult) -> Optional[List]:
         fq: List = ["type:source_person_relationship",
                     f"person_id:{obj.get('person_id')}"]
 
