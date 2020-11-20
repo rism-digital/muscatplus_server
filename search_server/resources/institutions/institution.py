@@ -5,10 +5,9 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier, ID_SUB
-from search_server.helpers.ld_context import RISM_JSONLD_CONTEXT
+from search_server.helpers.identifiers import get_identifier, ID_SUB, RISM_JSONLD_CONTEXT, get_jsonld_context
 from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrManager
+from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult
 from search_server.resources.institutions.institution_relationship import InstitutionRelationship
 
 
@@ -43,20 +42,20 @@ class Institution(ContextDictSerializer):
     label = serpy.MethodField()
     sources = serpy.MethodField()
 
-    def get_ctx(self, obj: Dict) -> Dict:
+    def get_ctx(self, obj: SolrResult) -> Dict:
         direct_request: Optional[bool] = self.context.get("direct_request")
-        return RISM_JSONLD_CONTEXT if direct_request else None
+        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
-    def get_iid(self, obj: Dict) -> str:
+    def get_iid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
         institution_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "institution", institution_id=institution_id)
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: SolrResult) -> Dict:
         return {"none": [f"{obj.get('name_s')}"]}
 
-    def get_sources(self, obj: Dict) -> Optional[List]:
+    def get_sources(self, obj: SolrResult) -> Optional[List]:
         conn = SolrManager(SolrConnection)
         fq: List = ["type:source_institution_relationship",
                     f"institution_id:institution_{obj.get('institution_id')}"]

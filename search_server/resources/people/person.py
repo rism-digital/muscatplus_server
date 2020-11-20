@@ -5,8 +5,7 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier, EXTERNAL_IDS, ID_SUB
-from search_server.helpers.ld_context import RISM_JSONLD_CONTEXT
+from search_server.helpers.identifiers import get_identifier, EXTERNAL_IDS, ID_SUB, RISM_JSONLD_CONTEXT, get_jsonld_context
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult
 from search_server.resources.people.person_relationship import PersonRelationship
@@ -47,7 +46,7 @@ class Person(ContextDictSerializer):
 
     def get_ctx(self, obj: SolrResult) -> Optional[Dict]:
         direct_request: bool = self.context.get("direct_request")
-        return RISM_JSONLD_CONTEXT if direct_request else None
+        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context.get("request")

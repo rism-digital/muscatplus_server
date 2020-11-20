@@ -5,8 +5,7 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import ID_SUB, get_identifier
-from search_server.helpers.ld_context import RISM_JSONLD_CONTEXT
+from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection
 
@@ -52,7 +51,7 @@ class SourceIncipit(ContextDictSerializer):
 
     def get_ctx(self, obj: Dict) -> Optional[Dict]:
         direct_request: bool = self.context.get("direct_request")
-        return RISM_JSONLD_CONTEXT if direct_request else None
+        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_incip_id(self, obj: Dict) -> str:
         req = self.context.get("request")

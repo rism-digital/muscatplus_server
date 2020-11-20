@@ -4,8 +4,7 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier
-from search_server.helpers.ld_context import RISM_JSONLD_CONTEXT
+from search_server.helpers.identifiers import get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context
 from search_server.helpers.serializers import ContextDictSerializer, ContextSerializer
 from search_server.resources.search.pagination import Pagination
 
@@ -28,7 +27,7 @@ class SearchResults(ContextSerializer):
     items = serpy.MethodField()
 
     def get_ctx(self, obj: pysolr.Results) -> Dict:
-        return RISM_JSONLD_CONTEXT
+        return get_jsonld_context(self.context.get("request"))
 
     def get_sid(self, obj: pysolr.Results) -> str:
         req = self.context.get('request')
