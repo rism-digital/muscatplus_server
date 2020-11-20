@@ -5,14 +5,15 @@ import logging
 import pysolr
 import serpy
 
-from search_server.helpers.identifiers import ID_SUB, get_identifier
-from search_server.helpers.ld_context import RISM_JSONLD_CONTEXT
+from search_server.helpers.display_fields import get_display_fields
+from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.source_creator import SourceCreator
 from search_server.resources.sources.source_incipit import SourceIncipit
 from search_server.resources.sources.source_materialgroup import SourceMaterialGroupList
+from search_server.resources.sources.source_note import SourceNoteList
 from search_server.resources.sources.source_relationship import SourceRelationshipList
 from search_server.resources.sources.source_holding import SourceHolding
 from search_server.resources.subjects.subject import Subject
@@ -66,6 +67,7 @@ class SourceItemList(ContextDictSerializer):
 
 
 class FullSource(BaseSource):
+    summary = serpy.MethodField()
     creator = serpy.MethodField()
     related = serpy.MethodField()
     materials = serpy.MethodField()
@@ -78,7 +80,13 @@ class FullSource(BaseSource):
     )
     items = serpy.MethodField()
 
-    def get_creator(self, obj: Dict) -> Optional[Dict]:
+    def get_summary(self, obj: SolrResult) -> List[Dict]:
+        req = self.context.get("request")
+        transl: Dict = req.app.translations
+
+        return get_display_fields(obj, transl)
+
+    def get_creator(self, obj: SolrResult) -> Optional[Dict]:
         fq = [f"source_id:{obj.get('id')}",
               "type:source_creator"]
 
@@ -92,19 +100,19 @@ class FullSource(BaseSource):
 
         return creator.data
 
-    def get_related(self, obj: Dict) -> Dict:
+    def get_related(self, obj: SolrResult) -> Dict:
         relationships = SourceRelationshipList(obj,
                                                context={"request": self.context.get("request")})
 
         return relationships.data
 
-    def get_materials(self, obj: Dict) -> Dict:
+    def get_materials(self, obj: SolrResult) -> Dict:
         grouplist_obj = SourceMaterialGroupList(obj,
                                                 context={"request": self.context.get('request')})
 
         return grouplist_obj.data
 
-    def get_subjects(self, obj: Dict) -> Optional[List]:
+    def get_subjects(self, obj: SolrResult) -> Optional[List]:
         subject_ids: Optional[List] = obj.get('subject_ids')
         if not subject_ids:
             return None
@@ -127,10 +135,13 @@ class FullSource(BaseSource):
 
         return subjects.data
 
-    def get_notes(self, obj: Dict) -> List:
-        pass
+    def get_notes(self, obj: SolrResult) -> List:
+        notelist_obj = SourceNoteList(obj,
+                                      context={"request": self.context.get("request")})
 
-    def get_holdings(self, obj: Dict) -> Optional[List[Dict]]:
+        return notelist_obj.data
+
+    def get_holdings(self, obj: SolrResult) -> Optional[List[Dict]]:
         conn = SolrManager(SolrConnection)
         fq: List = [f"source_membership_id:{obj.get('id')}",
                     "type:holding"]
@@ -146,7 +157,7 @@ class FullSource(BaseSource):
 
         return holdings.data
 
-    def get_incipits(self, obj: Dict) -> Optional[List[Dict]]:
+    def get_incipits(self, obj: SolrResult) -> Optional[List[Dict]]:
         conn = SolrManager(SolrConnection)
         fq: List = [f"source_id:{obj.get('id')}",
                     "type:source_incipit"]
@@ -162,17 +173,20 @@ class FullSource(BaseSource):
 
         return incipits.data
 
-    def get_see_also(self, obj: Dict) -> Optional[List]:
+    def get_see_also(self, obj: SolrResult) -> Optional[List]:
         pass
 
-    def get_items(self, obj: Dict) -> Optional[List]:
+    def get_items(self, obj: SolrResult) -> Optional[List]:
         this_id: str = obj.get("source_id")
         conn = SolrManager(SolrConnection)
 
         # Remember to filter out the current source from the list of all sources in this membership group.
         fq: List = ["type:source", f"source_membership_id:{this_id}", f"!source_id:{this_id}"]
         sort: str = "source_id asc"
-        conn.search("*:*", fq=fq, sort=sort)
+
+        # increasing the number of rows means fewer requests for larger items, but NB: Solr pre-allocates memory
+        # for each value in row, so there needs to be a balance between large numbers and fewer requests.
+        conn.search("*:*", fq=fq, sort=sort, rows=100)
 
         if conn.hits == 0:
             return None
