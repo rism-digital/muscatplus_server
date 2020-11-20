@@ -5,8 +5,7 @@ from typing import Dict, Optional, List
 import pysolr
 import serpy
 
-from search_server.helpers.identifiers import ID_SUB, get_identifier
-from search_server.helpers.ld_context import RISM_JSONLD_CONTEXT
+from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection
 
