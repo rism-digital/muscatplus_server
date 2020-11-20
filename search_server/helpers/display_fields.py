@@ -3,8 +3,7 @@ from typing import Dict, List, Optional
 from search_server.helpers.solr_connection import SolrResult
 
 FIELD_CONFIG: Dict[str, str] = {
-    "title_s": "records.title",
-    "general_notes_sm": "records.general_note"
+    "source_title_s": "records.title_on_source"
 }
 
 
