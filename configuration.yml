@@ -1,6 +1,7 @@
 ---
 common:
   debug: yes
+  context_uri: yes  # if false, displays the full JSON-LD context inline
 
 solr:
   server: "http://localhost:8983/solr/muscat-plus-ingest"
