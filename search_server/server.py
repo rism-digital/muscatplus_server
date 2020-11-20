@@ -6,6 +6,7 @@ import uvloop
 import yaml
 from sanic import Sanic, request, response
 
+from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.resources.institutions.institution import handle_institution_request
 from search_server.resources.search.search import handle_search_request
 from search_server.resources.siglum.sigla import handle_sigla_request
@@ -33,6 +34,7 @@ app = Sanic("search_server")
 app.config.update(config)
 
 debug_mode: bool = config['common']['debug']
+context_uri: bool = config['common']['context_uri']
 
 # Indent levels can make a big difference in download size, but at the expense of making
 # the output readable. Set to indent only in Debug mode.
@@ -50,11 +52,12 @@ logging.basicConfig(format="[%(asctime)s] [%(levelname)8s] %(message)s (%(filena
 
 log = logging.getLogger(__name__)
 
-translations: Optional[Dict] = load_translations("locales")
+translations: Optional[Dict] = load_translations("locales/")
 if not translations:
     log.error("No translations can be loaded.")
 
 app.translations = translations
+app.context_uri = context_uri
 
 
 async def _handle_request(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
@@ -89,6 +92,11 @@ async def _handle_request(req: request.Request, handler: Callable, **kwargs) -> 
 @app.route("/")
 async def root(req):
     return response.json({"message": "Hello World"})
+
+
+@app.route("/api/v1/context.json")
+async def context(req) -> response.HTTPResponse:
+    return response.json(RISM_JSONLD_CONTEXT)
 
 
 @app.route("/sources/")
