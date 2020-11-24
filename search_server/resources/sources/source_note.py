@@ -2,7 +2,7 @@ from typing import Union, Optional, Dict, List
 
 import serpy
 
-from search_server.helpers.display_fields import get_display_fields
+from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_jsonld_context
 from search_server.helpers.serializers import ContextDictSerializer
@@ -36,9 +36,9 @@ class SourceNoteList(ContextDictSerializer):
         req = self.context.get("request")
         transl = req.app.translations
 
-        field_config: Dict = {
-            "general_notes_sm": "records.general_note",
-            "description_summary_sm": "records.description_summary"
+        field_config: LabelConfig = {
+            "general_notes_sm": ("records.general_note", None),
+            "description_summary_sm": ("records.description_summary", None)
         }
 
         return get_display_fields(obj, transl, field_config)

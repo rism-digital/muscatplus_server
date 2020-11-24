@@ -7,7 +7,11 @@ import serpy
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context
 from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection
+from search_server.helpers.solr_connection import SolrConnection, SolrResult, SolrManager
+
+
+def handle_incipits_list_request(req, source_id: str) -> Optional[Dict]:
+    pass
 
 
 def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[Dict]:
@@ -25,6 +29,48 @@ def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[Dict]
                                                      "direct_request": True})
 
     return incipit.data
+
+
+class SourceIncipitList(ContextDictSerializer):
+    ctx = serpy.MethodField(
+        label="@context"
+    )
+    lid = serpy.MethodField(
+        label="id"
+    )
+
+    def get_ctx(self, obj: SolrResult) -> Optional[str]:
+        direct_request: bool = self.context.get("direct_request")
+        return get_jsonld_context(self.context.get("request")) if direct_request else None
+
+    def get_lid(self, obj: SolrResult) -> str:
+        req = self.context.get("request")
+        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+
+        return get_identifier(req, "incipits_list", source_id=source_id)
+
+    def get_heading(self, obj: SolrResult) -> Dict:
+        req = self.context.get("request")
+        transl: Dict = req.app.translations
+
+        return {
+            "label": transl.get("records.incipits")
+        }
+
+    def get_items(self, obj: SolrResult) -> Optional[List]:
+        conn = SolrManager(SolrConnection)
+        fq: List = [f"source_id:{obj.get('id')}",
+                    "type:source_incipit"]
+        sort: str = "work_num_s asc"
+
+        conn.search("*:*", fq=fq, sort=sort)
+
+        if conn.hits == 0:
+            return None
+
+        return SourceIncipit(conn.results,
+                             many=True,
+                             context={"request": self.context.get("request")}).data
 
 
 class SourceIncipit(ContextDictSerializer):

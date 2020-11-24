@@ -3,7 +3,7 @@ from typing import Dict, Optional, List
 
 import serpy
 
-from search_server.helpers.display_fields import get_display_fields
+from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context
 from search_server.helpers.serializers import ContextDictSerializer
@@ -45,7 +45,7 @@ class BaseSource(ContextDictSerializer):
     def get_title(self, obj: SolrResult) -> List[Dict]:
         req = self.context.get("request")
         transl: Dict = req.app.translations
-        field_config: Dict = {"title_s": "records.title"}
+        field_config: LabelConfig = {"title_s": ("records.title", None)}
 
         return get_display_fields(obj, transl, field_config)
 

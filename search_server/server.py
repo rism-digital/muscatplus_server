@@ -13,7 +13,7 @@ from search_server.resources.siglum.sigla import handle_sigla_request
 from search_server.resources.sources.full_source import handle_source_request
 from search_server.resources.sources.source_creator import handle_creator_request
 from search_server.resources.sources.source_holding import handle_holding_request
-from search_server.resources.sources.source_incipit import handle_incipit_request
+from search_server.resources.sources.source_incipit import handle_incipit_request, handle_incipits_list_request
 from search_server.resources.people.person import handle_person_request
 from search_server.resources.sources.source_materialgroup import (
     handle_materialgroups_list_request,
@@ -113,7 +113,9 @@ async def source(req, source_id: str):
 
 @app.route("/sources/<source_id:string>/incipits/")
 async def incipits_list(req, source_id: str):
-    pass
+    return await _handle_request(req,
+                                 handle_incipits_list_request,
+                                 source_id=source_id)
 
 
 @app.route("/sources/<source_id:string>/incipits/<incipit_id:string>/")

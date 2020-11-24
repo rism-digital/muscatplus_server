@@ -6,12 +6,12 @@ import pysolr
 import serpy
 
 from search_server.helpers.display_fields import get_display_fields
-from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT
+from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context
 from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult
+from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult, has_results
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.source_creator import SourceCreator
-from search_server.resources.sources.source_incipit import SourceIncipit
+from search_server.resources.sources.source_incipit import SourceIncipit, SourceIncipitList
 from search_server.resources.sources.source_materialgroup import SourceMaterialGroupList
 from search_server.resources.sources.source_note import SourceNoteList
 from search_server.resources.sources.source_relationship import SourceRelationshipList
@@ -23,8 +23,7 @@ log = logging.getLogger(__name__)
 
 def handle_source_request(req, source_id: str) -> Optional[Dict]:
     fq: List = ["type:source", f"source_id:source_{source_id}"]
-    fl: str = "*,[child]"
-    record: pysolr.Results = SolrConnection.search("*:*", fq=fq, fl=fl, rows=1)
+    record: pysolr.Results = SolrConnection.search("*:*", fq=fq, rows=1)
 
     if record.hits == 0:
         return None
@@ -49,7 +48,7 @@ class SourceItemList(ContextDictSerializer):
 
     def get_ctx(self, obj: SolrResult) -> Optional[Dict]:
         direct_request: bool = self.context.get("direct_request")
-        return RISM_JSONLD_CONTEXT if direct_request else None
+        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
@@ -100,13 +99,19 @@ class FullSource(BaseSource):
 
         return creator.data
 
-    def get_related(self, obj: SolrResult) -> Dict:
-        relationships = SourceRelationshipList(obj,
-                                               context={"request": self.context.get("request")})
+    def get_related(self, obj: SolrResult) -> Optional[Dict]:
+        fq: List = [f"source_id:{obj.get('id')}",
+                    "type:source_person_relationship OR type:source_institution_relationship"]
 
-        return relationships.data
+        if not has_results(fq=fq):
+            return None
 
-    def get_materials(self, obj: SolrResult) -> Dict:
+        return SourceRelationshipList(obj, context={"request": self.context.get("request")}).data
+
+    def get_materials(self, obj: SolrResult) -> Optional[Dict]:
+        if not has_results(fq=["type:source_materialgroup", f"source_id:{obj.get('source_id')}"]):
+            return None
+
         grouplist_obj = SourceMaterialGroupList(obj,
                                                 context={"request": self.context.get('request')})
 
@@ -118,9 +123,13 @@ class FullSource(BaseSource):
             return None
 
         subj_list_q: str = ' OR '.join(subject_ids)
-        log.debug(subj_list_q)
+
         fq: List = [f"id:({subj_list_q})",
                     "type:subject"]
+
+        if not has_results(fq=fq):
+            return None
+
         sort: str = "term_s asc"
 
         conn = SolrManager(SolrConnection)
@@ -135,11 +144,16 @@ class FullSource(BaseSource):
 
         return subjects.data
 
-    def get_notes(self, obj: SolrResult) -> List:
+    def get_notes(self, obj: SolrResult) -> Optional[List]:
         notelist_obj = SourceNoteList(obj,
                                       context={"request": self.context.get("request")})
 
-        return notelist_obj.data
+        notelist_data = notelist_obj.data
+
+        if notelist_data.get("items"):
+            return notelist_data
+
+        return None
 
     def get_holdings(self, obj: SolrResult) -> Optional[List[Dict]]:
         conn = SolrManager(SolrConnection)
@@ -157,21 +171,11 @@ class FullSource(BaseSource):
 
         return holdings.data
 
-    def get_incipits(self, obj: SolrResult) -> Optional[List[Dict]]:
-        conn = SolrManager(SolrConnection)
-        fq: List = [f"source_id:{obj.get('id')}",
-                    "type:source_incipit"]
-        sort: str = "work_num_s asc"
-
-        conn.search("*:*", fq=fq, sort=sort)
-
-        if conn.hits == 0:
+    def get_incipits(self, obj: SolrResult) -> Optional[Dict]:
+        if not has_results(fq=[f"source_id:{obj.get('id')}", "type:source_incipit"]):
             return None
 
-        incipits = SourceIncipit(conn.results, many=True,
-                                 context={"request": self.context.get("request")})
-
-        return incipits.data
+        return SourceIncipitList(obj, context={"request": self.context.get("request")}).data
 
     def get_see_also(self, obj: SolrResult) -> Optional[List]:
         pass
@@ -186,6 +190,7 @@ class FullSource(BaseSource):
 
         # increasing the number of rows means fewer requests for larger items, but NB: Solr pre-allocates memory
         # for each value in row, so there needs to be a balance between large numbers and fewer requests.
+        # (remember that the SolrManager object automatically retrieves the next page of results when iterating)
         conn.search("*:*", fq=fq, sort=sort, rows=100)
 
         if conn.hits == 0:
