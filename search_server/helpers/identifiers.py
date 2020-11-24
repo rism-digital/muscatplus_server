@@ -36,7 +36,10 @@ RELATIONSHIP_LABELS = {
     "fmo": "records.former_owner",
     "scr": "records.scribe",
     "arr": "records.arranger",
-    "edt": "records.editor"
+    "edt": "records.editor",
+    "dte": "records.dedicatee",
+    "pbl": "records.publisher",
+    "cmp": "records.composer"
 }
 
 
