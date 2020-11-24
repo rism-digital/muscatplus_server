@@ -1,13 +1,11 @@
 import logging
 import re
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 
-import pysolr
 import serpy
 
-from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT
+from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection
 
 log = logging.getLogger()
 
