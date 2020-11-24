@@ -126,3 +126,15 @@ class SolrManager:
 
             self._page_idx += 1
             self._idx += 1
+
+
+def has_results(**kwargs) -> bool:
+    """ Takes a Solr query and checks whether there are any results to be retrieved.
+        Useful for doing a very quick lookup to see whether more processing needs to be done.
+
+        It doesn't retrieve any results rows, so latency due to data transfer is minimized.
+    """
+    res = SolrConnection.search("*:*", rows=0, **kwargs)
+    if res.hits > 0:
+        return True
+    return False
