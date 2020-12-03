@@ -60,6 +60,11 @@ app.translations = translations
 app.context_uri = context_uri
 
 
+@app.middleware('response')
+async def add_cors(req, resp):
+    resp.headers['access-control-allow-origin'] = "*"
+
+
 async def _handle_request(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
     """
     Takes in a request object and a function for handling the request. This function should return

@@ -5,7 +5,8 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context
+from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context, \
+    JSONLDContext
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 
@@ -43,7 +44,7 @@ class SourceHolding(ContextDictSerializer):
         label="heldBy"
     )
 
-    def get_ctx(self, obj: SolrResult) -> Dict:
+    def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
         direct_request: Optional[bool] = self.context.get("direct_request")
         return get_jsonld_context(self.context.get("request")) if direct_request else None
 

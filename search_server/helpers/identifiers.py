@@ -1,5 +1,5 @@
 import re
-from typing import Pattern, Dict, Union
+from typing import Pattern, Dict, Union, Optional
 
 ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_")
 
@@ -32,6 +32,7 @@ def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) ->
 # Map between relator codes and the chosen translation string for that relator.
 RELATIONSHIP_LABELS = {
     None: "records.unknown",
+    "cre": "records.composer_author",  # A special case, where the cre relator code is used to label the 100 main entry field.
     "lyr": "records.lyricist",
     "fmo": "records.former_owner",
     "scr": "records.scribe",
@@ -42,8 +43,11 @@ RELATIONSHIP_LABELS = {
     "cmp": "records.composer"
 }
 
+# A type that represents the fact that the JSON-LD context can be given either by URI or an embedded context object.
+JSONLDContext = Union[str, Dict]
 
-def get_jsonld_context(request) -> Union[str, Dict]:
+
+def get_jsonld_context(request) -> JSONLDContext:
     """
     Returns the configured JSON-LD context string. If the `context_uri` setting is
     set to True in the server configuration file, this will return the URI for the

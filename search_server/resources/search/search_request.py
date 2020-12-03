@@ -13,7 +13,6 @@ class SearchRequest:
         self._req = req
         # If there is no q parameter it will return all results
         self._requested_query: str = req.args.get("q", "*:*")
-
         self._page: Optional[str] = req.args.get("page", None)
         self._return_rows: Optional[str] = req.args.get("rows", None)
 
@@ -35,5 +34,6 @@ class SearchRequest:
         return {
             "q": [self._requested_query],
             "start": start_row,
-            "rows": return_rows
+            "rows": return_rows,
+            "fq": "type:source OR type:person OR type:institution"
         }

@@ -7,7 +7,7 @@ import serpy
 
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier, RELATIONSHIP_LABELS, RISM_JSONLD_CONTEXT, \
-    get_jsonld_context
+    get_jsonld_context, JSONLDContext
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, SolrManager
 
@@ -100,9 +100,9 @@ class SourceRelationship(ContextDictSerializer):
         label="relatedTo"
     )
 
-    def get_ctx(self, obj: Dict) -> Optional[Dict]:
+    def get_ctx(self, obj: Dict) -> Optional[JSONLDContext]:
         direct_request: bool = self.context.get("direct_request")
-        return RISM_JSONLD_CONTEXT if direct_request else None
+        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_srid(self, obj: Dict) -> str:
         req = self.context.get("request")
@@ -124,10 +124,7 @@ class SourceRelationship(ContextDictSerializer):
         }]
 
     def get_role(self, obj: Dict) -> Optional[str]:
-        if t := obj.get("relationship_s"):
-            return f"relators:{t}"
-
-        return None
+        return f"relators:{t}" if (t := obj.get("relationship_s")) else None
 
     def get_qualifier(self, obj: Dict) -> Optional[str]:
         return f"rism:{q}" if (q := obj.get('qualifier_s')) else None

@@ -4,7 +4,7 @@ import serpy
 
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_jsonld_context
+from search_server.helpers.identifiers import get_jsonld_context, JSONLDContext
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 
@@ -20,7 +20,7 @@ class SourceNoteList(ContextDictSerializer):
     )
     items = serpy.MethodField()
 
-    def get_ctx(self, obj: SolrResult) -> Optional[Union[str, Dict]]:
+    def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
         direct_request: bool = self.context.get("direct_request")
         return get_jsonld_context(self.context.get("request")) if direct_request else None
 

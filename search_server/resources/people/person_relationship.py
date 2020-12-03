@@ -44,5 +44,5 @@ class PersonRelationship(ContextDictSerializer):
         return {
             "id": get_identifier(req, "source", source_id=source_id),
             "type": "rism:Source",
-            "label": {"none": [obj.get("title_s")]}
+            "label": {"none": [obj.get("main_title_s")]}
         }

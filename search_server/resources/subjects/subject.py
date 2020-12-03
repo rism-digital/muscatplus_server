@@ -5,7 +5,8 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier, ID_SUB, RISM_JSONLD_CONTEXT, get_jsonld_context
+from search_server.helpers.identifiers import get_identifier, ID_SUB, RISM_JSONLD_CONTEXT, get_jsonld_context, \
+    JSONLDContext
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult, SolrConnection, SolrManager
 from search_server.resources.sources.base_source import BaseSource
@@ -47,7 +48,7 @@ class Subject(ContextDictSerializer):
     alternate_terms = serpy.MethodField()
     sources = serpy.MethodField()
 
-    def get_ctx(self, obj: SolrResult) -> Optional[Dict]:
+    def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
         direct_request: bool = self.context.get("direct_request")
         return get_jsonld_context(self.context.get("request")) if direct_request else None
 
@@ -84,6 +85,8 @@ class Subject(ContextDictSerializer):
         return obj.get("alternate_terms_sm")
 
     def get_sources(self, obj: SolrResult) -> Optional[List]:
+        # Only give a list of sources for this term if we are looking at a dedicated page for this subject heading, and
+        # it is not embedded in another type of record.
         direct_request: bool = self.context.get("direct_request")
 
         if not direct_request:
@@ -94,8 +97,9 @@ class Subject(ContextDictSerializer):
             "type:source",
             f"subject_ids:{obj.get('id')}"
         ]
+        sort: str = "main_title_ans asc"
 
-        conn.search("*:*", fq=fq)
+        conn.search("*:*", fq=fq, sort=sort)
 
         if conn.hits == 0:
             return None

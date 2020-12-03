@@ -5,7 +5,8 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier, ID_SUB, RISM_JSONLD_CONTEXT, get_jsonld_context
+from search_server.helpers.identifiers import get_identifier, ID_SUB, RISM_JSONLD_CONTEXT, get_jsonld_context, \
+    JSONLDContext
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult
 from search_server.resources.institutions.institution_relationship import InstitutionRelationship
@@ -38,11 +39,19 @@ class Institution(ContextDictSerializer):
         label="type",
         value="rism:Institution"
     )
-
     label = serpy.MethodField()
+    other_names = serpy.Field(
+        label="otherNames",
+        attr="alternate_names_sm",
+        required=False
+    )
+    location = serpy.Field(
+        attr="location_loc",
+        required=False
+    )
     sources = serpy.MethodField()
 
-    def get_ctx(self, obj: SolrResult) -> Dict:
+    def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
         direct_request: Optional[bool] = self.context.get("direct_request")
         return get_jsonld_context(self.context.get("request")) if direct_request else None
 
@@ -58,7 +67,7 @@ class Institution(ContextDictSerializer):
     def get_sources(self, obj: SolrResult) -> Optional[List]:
         conn = SolrManager(SolrConnection)
         fq: List = ["type:source_institution_relationship",
-                    f"institution_id:institution_{obj.get('institution_id')}"]
+                    f"institution_id:{obj.get('institution_id')}"]
 
         sort: str = "title_s asc"
 

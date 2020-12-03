@@ -14,7 +14,7 @@ from search_server.resources.sources.source_creator import SourceCreator
 from search_server.resources.sources.source_incipit import SourceIncipit, SourceIncipitList
 from search_server.resources.sources.source_materialgroup import SourceMaterialGroupList
 from search_server.resources.sources.source_note import SourceNoteList
-from search_server.resources.sources.source_relationship import SourceRelationshipList
+from search_server.resources.sources.source_relationship import SourceRelationshipList, SourceRelationship
 from search_server.resources.sources.source_holding import SourceHolding
 from search_server.resources.subjects.subject import Subject
 
@@ -87,7 +87,8 @@ class FullSource(BaseSource):
 
     def get_creator(self, obj: SolrResult) -> Optional[Dict]:
         fq = [f"source_id:{obj.get('id')}",
-              "type:source_creator"]
+              "type:source_person_relationship",
+              "relationship_id:creator"]
 
         res = SolrConnection.search("*:*", fq=fq)
 
@@ -95,7 +96,7 @@ class FullSource(BaseSource):
             log.warning("No creator record found for %s", obj.get('id'))
             return None
 
-        creator = SourceCreator(res.docs[0], context={"request": self.context.get('request')})
+        creator = SourceRelationship(res.docs[0], context={"request": self.context.get('request')})
 
         return creator.data
 
@@ -109,13 +110,12 @@ class FullSource(BaseSource):
         return SourceRelationshipList(obj, context={"request": self.context.get("request")}).data
 
     def get_materials(self, obj: SolrResult) -> Optional[Dict]:
-        if not has_results(fq=["type:source_materialgroup", f"source_id:{obj.get('source_id')}"]):
+        fq: List = ["type:source_materialgroup", f"source_id:{obj.get('source_id')}"]
+
+        if not has_results(fq=fq):
             return None
 
-        grouplist_obj = SourceMaterialGroupList(obj,
-                                                context={"request": self.context.get('request')})
-
-        return grouplist_obj.data
+        return SourceMaterialGroupList(obj, context={"request": self.context.get('request')}).data
 
     def get_subjects(self, obj: SolrResult) -> Optional[List]:
         subject_ids: Optional[List] = obj.get('subject_ids')
@@ -145,6 +145,8 @@ class FullSource(BaseSource):
         return subjects.data
 
     def get_notes(self, obj: SolrResult) -> Optional[List]:
+        # This does not perform an extra Solr lookup to get the notes, so we can just render it and then
+        # look to see if anything came back.
         notelist_obj = SourceNoteList(obj,
                                       context={"request": self.context.get("request")})
 
@@ -156,15 +158,16 @@ class FullSource(BaseSource):
         return None
 
     def get_holdings(self, obj: SolrResult) -> Optional[List[Dict]]:
-        conn = SolrManager(SolrConnection)
         fq: List = [f"source_membership_id:{obj.get('id')}",
                     "type:holding"]
+
+        if not has_results(fq=fq):
+            return None
+
         sort: str = "id asc"
 
+        conn = SolrManager(SolrConnection)
         conn.search("*:*", fq=fq, sort=sort)
-
-        if conn.hits == 0:
-            return None
 
         holdings = SourceHolding(conn.results,
                                  many=True, context={"request": self.context.get("request")})
@@ -172,7 +175,8 @@ class FullSource(BaseSource):
         return holdings.data
 
     def get_incipits(self, obj: SolrResult) -> Optional[Dict]:
-        if not has_results(fq=[f"source_id:{obj.get('id')}", "type:source_incipit"]):
+        fq: List = [f"source_id:{obj.get('id')}", "type:source_incipit"]
+        if not has_results(fq=fq):
             return None
 
         return SourceIncipitList(obj, context={"request": self.context.get("request")}).data
@@ -182,19 +186,19 @@ class FullSource(BaseSource):
 
     def get_items(self, obj: SolrResult) -> Optional[List]:
         this_id: str = obj.get("source_id")
-        conn = SolrManager(SolrConnection)
 
         # Remember to filter out the current source from the list of all sources in this membership group.
         fq: List = ["type:source", f"source_membership_id:{this_id}", f"!source_id:{this_id}"]
         sort: str = "source_id asc"
 
+        if not has_results(fq=fq):
+            return None
+
+        conn = SolrManager(SolrConnection)
         # increasing the number of rows means fewer requests for larger items, but NB: Solr pre-allocates memory
         # for each value in row, so there needs to be a balance between large numbers and fewer requests.
         # (remember that the SolrManager object automatically retrieves the next page of results when iterating)
         conn.search("*:*", fq=fq, sort=sort, rows=100)
-
-        if conn.hits == 0:
-            return None
 
         sources = BaseSource(conn.results, many=True,
                              context={"request": self.context.get("request")})

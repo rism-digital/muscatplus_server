@@ -5,7 +5,8 @@ import serpy
 
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context
+from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context, \
+    JSONLDContext
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 
@@ -27,12 +28,12 @@ class BaseSource(ContextDictSerializer):
         label="type",
         value="rism:Source"
     )
-    title = serpy.MethodField()
+    label = serpy.MethodField()
     part_of = serpy.MethodField(
         label="partOf"
     )
 
-    def get_ctx(self, obj: Dict) -> Dict:
+    def get_ctx(self, obj: Dict) -> Optional[JSONLDContext]:
         direct_request: Optional[bool] = self.context.get("direct_request")
         return get_jsonld_context(self.context.get("request")) if direct_request else None
 
@@ -42,12 +43,10 @@ class BaseSource(ContextDictSerializer):
 
         return get_identifier(req, "source", source_id=source_id)
 
-    def get_title(self, obj: SolrResult) -> List[Dict]:
-        req = self.context.get("request")
-        transl: Dict = req.app.translations
-        field_config: LabelConfig = {"title_s": ("records.title", None)}
-
-        return get_display_fields(obj, transl, field_config)
+    def get_label(self, obj: SolrResult) -> Dict:
+        return {
+            "none": obj.get("main_title_s")
+        }
 
     def get_part_of(self, obj: Dict) -> Optional[List]:
         # Do not show 'partOf' if the result is embedded in the source it is part of.
