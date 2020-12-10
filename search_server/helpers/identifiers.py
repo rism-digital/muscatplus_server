@@ -40,7 +40,18 @@ RELATIONSHIP_LABELS = {
     "edt": "records.editor",
     "dte": "records.dedicatee",
     "pbl": "records.publisher",
-    "cmp": "records.composer"
+    "cmp": "records.composer",
+    "oth": "records.other"
+}
+
+QUALIFIER_LABELS = {
+    None: "records.unknown",
+    "Ascertained": "records.ascertained",
+    "Verified": "records.verified",
+    "Conjectural": "records.conjectural",
+    "Alleged": "records.alleged",
+    "Doubtful": "records.doubtful",
+    "Misattributed": "records.misattributed"
 }
 
 # A type that represents the fact that the JSON-LD context can be given either by URI or an embedded context object.
@@ -64,61 +75,159 @@ def get_jsonld_context(request) -> JSONLDContext:
 
 
 RISM_JSONLD_CONTEXT: Dict = {
-    "@version": 1.1,
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "rism": "https://rism.online/api/v1#",
-    "rismdata": "https://rism.online/api/datatypes-v1#",
-    "relators": "http://id.loc.gov/vocabulary/relators/",
-    "dcterms": "http://purl.org/dc/terms/",
-    "as": "http://www.w3.org/ns/activitystreams#",
-    "hydra": "http://www.w3.org/ns/hydra/core#",
-    "type": "@type",
-    "id": "@id",
-    "PartialCollectionView": "hydra:PartialCollectionView",
-    "Collection": "hydra:Collection",
-    "totalItems": "hydra:totalItems",
-    "member": "hydra:member",
-    "view": "hydra:view",
-    "next": "hydra:next",
-    "previous": "hydra:previous",
-    "first": "hydra:first",
-    "last": "hydra:last",
+    "@context": {
+        "@version": 1.1,
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "rism": "https://rism.online/api/v1#",
+        "rismdata": "https://rism.online/api/datatypes-v1#",
+        "relators": "http://id.loc.gov/vocabulary/relators/",
+        "dcterms": "http://purl.org/dc/terms/",
+        "as": "http://www.w3.org/ns/activitystreams#",
+        "hydra": "http://www.w3.org/ns/hydra/core#",
+        "geojson": "https://purl.org/geojson/vocab#",
+        "type": "@type",
+        "id": "@id",
+        "none": "@none",
+        "rism:SourceRelationship": {
+            "@id": "rism:SourceRelationship",
 
-    "name": {
-        "@id": "rdfs:label",
-        "@container": [
-            "@language",
-            "@set"
-        ],
-        "@context": {
-            "none": "@none"
-        }
-    },
-    "seeAlso": {
-        "@type": "@id",
-        "@id": "rdfs:seeAlso",
-        "@container": "@set"
-    },
-    "partOf": {
-        "@id": "dcterms:partOf",
-        "@type": "@id",
-        "@container": "@set"
-    },
-    "profile": {
-        "@type": "@vocab",
-        "@id": "dcterms:conformsTo"
-    },
-    "musicIncipit": {
-        "@id": "rdf:value",
-        "@type": "rismdata:pae"  # a custom datatype IRI may not be recognized by some processors.
-    },
-    "textIncipit": {
-        "@id": "rdf:value"
-    },
-    "items": {
-        "@type": "@id",
-        "@id": "as:items",
-        "@container": "@list"
+        },
+        "label": {
+            "@id": "rdfs:label",
+            "@container": [
+                "@language",
+                "@set"
+            ]
+        },
+        "roleLabel": {
+            "@id": "rdfs:label",
+            "@container": [
+                "@language",
+                "@set"
+            ]
+        },
+        "qualifier": {
+            "@id": "rismdata",
+            "@type": "@id"
+        },
+        "qualifierLabel": {
+            "@id": "rdf:label",
+            "@container": [
+                "@language",
+                "@set"
+            ]
+        },
+        "value": {
+            "@id": "rdf:value",
+            "@container": [
+                "@language",
+                "@set"
+            ]
+        },
+        "partOf": {
+            "@id": "dcterms:isPartOf",
+            "@type": "@id",
+            "@container": "@set"
+        },
+        "summary": {
+            "@type": "@id",
+            "@id": "rism:Summary"
+        },
+        "creator": {
+            "@id": "rism:SourceRelationship",
+            "@type": "@id",
+            "@context": {
+                "role": {
+                    "@id": "relators",
+                    "@type": "@id"
+                },
+                "relatedTo": {
+                    "@type": "@id",
+                    "@id": "dcterms:creator"
+                }
+            }
+        },
+        "related": {
+            "@id": "rism:RelationshipList",
+            "@type": "@id",
+            "@context": {
+                "items": {
+                    "@container": "@list",
+                    "@id": "rism:SourceRelationship",
+                    "@type": "@id",
+                    "@context": {
+                        "role": {
+                            "@id": "relators",
+                            "@type": "@id"
+                        },
+                        "relatedTo": {
+                            "@type": "@id",
+                            "@id": "dcterms:contributor"
+                        }
+                    }
+                }
+            }
+        },
+        "items": {
+            "@type": "@id",
+            "@id": "as:items",
+            "@container": "@list"
+        },
+        "relatedTo": {
+            "@type": "@id",
+            "@id": "dcterms:contributor"
+        },
+        "location": {
+            "@id": "rism:location",
+            "@context": {
+                "coordinates": {
+                    "@container": "@list",
+                    "@id": "geojson:coordinates"
+                }
+            }
+        },
+        # "PartialCollectionView": "hydra:PartialCollectionView",
+        # "Collection": "hydra:Collection",
+        # "totalItems": "hydra:totalItems",
+        # "member": "hydra:member",
+        # "view": "hydra:view",
+        # "next": "hydra:next",
+        # "previous": "hydra:previous",
+        # "first": "hydra:first",
+        # "last": "hydra:last",
+        #
+        # "name": {
+        #     "@id": "rdfs:label",
+        #     "@container": [
+        #         "@language",
+        #         "@set"
+        #     ],
+        #     "@context": {
+        #         "none": "@none"
+        #     }
+        # },
+        # "seeAlso": {
+        #     "@type": "@id",
+        #     "@id": "rdfs:seeAlso",
+        #     "@container": "@set"
+        # },
+
+        # "profile": {
+        #     "@type": "@vocab",
+        #     "@id": "dcterms:conformsTo"
+        # },
+        # "musicIncipit": {
+        #     "@id": "rdf:value",
+        #     "@type": "rismdata:pae"  # a custom datatype IRI may not be recognized by some processors.
+        # },
+        # "textIncipit": {
+        #     "@id": "rdf:value"
+        # },
+        # "items": {
+        #     "@type": "@id",
+        #     "@id": "as:items",
+        #     "@container": "@list"
+        # }
     }
 }
