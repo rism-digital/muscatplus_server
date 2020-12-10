@@ -7,7 +7,7 @@ import serpy
 
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier, RELATIONSHIP_LABELS, RISM_JSONLD_CONTEXT, \
-    get_jsonld_context, JSONLDContext
+    get_jsonld_context, JSONLDContext, QUALIFIER_LABELS
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, SolrManager
 
@@ -49,7 +49,7 @@ class SourceRelationshipList(ContextDictSerializer):
         label="type",
         value="rism:RelationshipList"
     )
-    heading = serpy.MethodField()
+    label = serpy.MethodField()
     items = serpy.MethodField()
 
     def get_ctx(self, obj: SolrResult) -> Optional[Dict]:
@@ -62,18 +62,17 @@ class SourceRelationshipList(ContextDictSerializer):
 
         return get_identifier(req, "relationships_list", source_id=source_id)
 
-    def get_heading(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
         transl: Dict = req.app.translations
 
-        return {
-            "label": transl.get("records.people_institutions")
-        }
+        return transl.get("records.people_institutions")
 
     def get_items(self, obj: SolrResult) -> Optional[List[Dict]]:
         conn = SolrManager(SolrConnection)
         fq: List = [f"source_id:{obj.get('id')}",
-                    "type:source_person_relationship OR type:source_institution_relationship"]
+                    "type:source_person_relationship OR type:source_institution_relationship",
+                    "!relationship_s:cre"]
 
         conn.search("*:*", fq=fq)
 
@@ -93,9 +92,13 @@ class SourceRelationship(ContextDictSerializer):
     srid = serpy.MethodField(
         label="id"
     )
-    heading = serpy.MethodField()
+    rtype = StaticField(
+        label="type",
+        value="rism:SourceRelationship"
+    )
     role = serpy.MethodField()
     qualifier = serpy.MethodField()
+
     related_to = serpy.MethodField(
         label="relatedTo"
     )
@@ -112,22 +115,35 @@ class SourceRelationship(ContextDictSerializer):
 
         return get_identifier(req, "relationship", source_id=source_id, relationship_id=relationship_id)
 
-    def get_heading(self, obj: Dict) -> List[Dict]:
+    def get_role(self, obj: Dict) -> Optional[Dict]:
+        relator: Optional[str] = obj.get("relationship_s")
+        if not relator:
+            return None
+
         req = self.context.get("request")
         transl: Dict = req.app.translations
 
-        role: Optional[str] = obj.get("relationship_s")
-        translation_key: str = RELATIONSHIP_LABELS.get(role)
+        translation_key: str = RELATIONSHIP_LABELS.get(relator)
 
-        return [{
+        return {
+            "type": f"relators:{relator}",
             "label": transl.get(translation_key)
-        }]
+        }
 
-    def get_role(self, obj: Dict) -> Optional[str]:
-        return f"relators:{t}" if (t := obj.get("relationship_s")) else None
+    def get_qualifier(self, obj: Dict) -> Optional[Dict]:
+        qualifier: Optional[str] = obj.get('qualifier_s')
+        if not qualifier:
+            return None
 
-    def get_qualifier(self, obj: Dict) -> Optional[str]:
-        return f"rism:{q}" if (q := obj.get('qualifier_s')) else None
+        req = self.context.get("request")
+        transl: Dict = req.app.translations
+
+        translation_key: str = QUALIFIER_LABELS.get(qualifier)
+
+        return {
+            "type": f"rismdata:{qualifier}",
+            "label": transl.get(translation_key)
+        }
 
     def get_related_to(self, obj: Dict) -> Optional[Dict]:
         req = self.context.get("request")
@@ -152,5 +168,5 @@ class SourceRelationship(ContextDictSerializer):
         return {
             "id": identifier,
             "type": objtype,
-            "name": name
+            "label": name
         }

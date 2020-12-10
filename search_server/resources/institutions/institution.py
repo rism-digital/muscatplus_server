@@ -45,10 +45,7 @@ class Institution(ContextDictSerializer):
         attr="alternate_names_sm",
         required=False
     )
-    location = serpy.Field(
-        attr="location_loc",
-        required=False
-    )
+    location = serpy.MethodField()
     sources = serpy.MethodField()
 
     def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
@@ -80,3 +77,13 @@ class Institution(ContextDictSerializer):
                                           context={"request": self.context.get("request")})
 
         return sources.data
+
+    def get_location(self, obj: SolrResult) -> Optional[Dict]:
+        loc: str = obj.get("location_loc")
+        if not loc:
+            return None
+
+        return {
+            "type": "geojson:Point",
+            "coordinates": loc.split(",")
+        }

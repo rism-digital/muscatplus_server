@@ -3,6 +3,7 @@ from typing import Dict, Optional, List
 
 import serpy
 
+from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier, ID_SUB, get_jsonld_context, JSONLDContext
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.resources.people.base_person import BasePerson
@@ -16,9 +17,9 @@ class SourceCreator(ContextDictSerializer):
     ctx = serpy.MethodField(
         label="@context"
     )
-    cid = serpy.MethodField(
-        label="id"
-    )
+    # cid = serpy.MethodField(
+    #     label="id"
+    # )
     heading = serpy.MethodField()
     qualifier = serpy.MethodField()
     related_to = serpy.MethodField(

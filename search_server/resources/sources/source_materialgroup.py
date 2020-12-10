@@ -32,7 +32,7 @@ class SourceMaterialGroupList(ContextDictSerializer):
         label="type",
         value="rism:MaterialGroupList"
     )
-    heading = serpy.MethodField()
+    label = serpy.MethodField()
     items = serpy.MethodField()
 
     def get_mid(self, obj: Dict) -> str:
@@ -41,13 +41,11 @@ class SourceMaterialGroupList(ContextDictSerializer):
 
         return get_identifier(req, "materialgroups_list", source_id=source_id)
 
-    def get_heading(self, obj: Dict) -> Dict:
+    def get_label(self, obj: Dict) -> Dict:
         req = self.context.get("request")
         transl: Dict = req.app.translations
 
-        return {
-            "label": transl.get("records.material_description")
-        }
+        return transl.get("records.material_description")
 
     def get_items(self, obj: Dict) -> Optional[List]:
         conn = SolrManager(SolrConnection)
@@ -77,7 +75,7 @@ class SourceMaterialGroup(ContextDictSerializer):
         label="type",
         value="rism:MaterialGroup"
     )
-    heading = serpy.MethodField()
+    label = serpy.MethodField()
 
     def get_ctx(self, obj: Dict) -> Dict:
         pass
@@ -90,5 +88,5 @@ class SourceMaterialGroup(ContextDictSerializer):
 
         return get_identifier(req, "materialgroup", source_id=source_id, materialgroup_id=materialgroup_id)
 
-    def get_heading(self, obj: Dict) -> List[Dict]:
+    def get_label(self, obj: Dict) -> List[Dict]:
         pass

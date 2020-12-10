@@ -13,7 +13,7 @@ class SourceNoteList(ContextDictSerializer):
     ctx = serpy.MethodField(
         label="@context"
     )
-    heading = serpy.MethodField()
+    label = serpy.MethodField()
     ntype = StaticField(
         label="type",
         value="rism:NoteList"
@@ -24,13 +24,11 @@ class SourceNoteList(ContextDictSerializer):
         direct_request: bool = self.context.get("direct_request")
         return get_jsonld_context(self.context.get("request")) if direct_request else None
 
-    def get_heading(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
         transl: Dict = req.app.translations
 
-        return {
-            "label": transl.get("records.further_information")
-        }
+        return transl.get("records.further_information")
 
     def get_items(self, obj: SolrResult) -> Optional[List]:
         req = self.context.get("request")

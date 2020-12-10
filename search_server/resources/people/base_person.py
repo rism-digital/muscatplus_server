@@ -20,6 +20,9 @@ class BasePerson(ContextDictSerializer):
         label="type",
         value="rism:Person"
     )
+    type_label = serpy.MethodField(
+        label="typeLabel"
+    )
     label = serpy.MethodField()
 
     def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
@@ -38,3 +41,7 @@ class BasePerson(ContextDictSerializer):
 
         return {"none": [f"{name}{dates}"]}
 
+    def get_type_label(self, obj: SolrResult) -> Optional[Dict]:
+        req = self.context.get("request")
+        transl = req.app.translations
+        return transl.get("records.person")

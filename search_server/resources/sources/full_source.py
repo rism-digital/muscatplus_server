@@ -1,21 +1,20 @@
+import logging
 import re
 from typing import Dict, List, Optional
-import logging
 
 import pysolr
 import serpy
 
 from search_server.helpers.display_fields import get_display_fields
-from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context
+from search_server.helpers.identifiers import ID_SUB, get_identifier, get_jsonld_context
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult, has_results
 from search_server.resources.sources.base_source import BaseSource
-from search_server.resources.sources.source_creator import SourceCreator
-from search_server.resources.sources.source_incipit import SourceIncipit, SourceIncipitList
+from search_server.resources.sources.source_holding import SourceHolding
+from search_server.resources.sources.source_incipit import SourceIncipitList
 from search_server.resources.sources.source_materialgroup import SourceMaterialGroupList
 from search_server.resources.sources.source_note import SourceNoteList
 from search_server.resources.sources.source_relationship import SourceRelationshipList, SourceRelationship
-from search_server.resources.sources.source_holding import SourceHolding
 from search_server.resources.subjects.subject import Subject
 
 log = logging.getLogger(__name__)
@@ -43,8 +42,7 @@ class SourceItemList(ContextDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
-
-    heading = serpy.MethodField()
+    label = serpy.MethodField()
 
     def get_ctx(self, obj: SolrResult) -> Optional[Dict]:
         direct_request: bool = self.context.get("direct_request")
@@ -56,13 +54,11 @@ class SourceItemList(ContextDictSerializer):
 
         return get_identifier(req, "sourceitem_list", source_id=source_id)
 
-    def get_heading(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
         transl: Dict = req.app.translations
 
-        return {
-            "label": transl.get("records.items_in_source")
-        }
+        return transl.get("records.items_in_source")
 
 
 class FullSource(BaseSource):
@@ -88,7 +84,7 @@ class FullSource(BaseSource):
     def get_creator(self, obj: SolrResult) -> Optional[Dict]:
         fq = [f"source_id:{obj.get('id')}",
               "type:source_person_relationship",
-              "relationship_id:creator"]
+              "relationship_s:cre"]
 
         res = SolrConnection.search("*:*", fq=fq)
 
@@ -102,7 +98,8 @@ class FullSource(BaseSource):
 
     def get_related(self, obj: SolrResult) -> Optional[Dict]:
         fq: List = [f"source_id:{obj.get('id')}",
-                    "type:source_person_relationship OR type:source_institution_relationship"]
+                    "type:source_person_relationship OR type:source_institution_relationship",
+                    "!relationship_s:cre"]
 
         if not has_results(fq=fq):
             return None

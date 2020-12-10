@@ -8,7 +8,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier, ID_SUB, RISM_JSONLD_CONTEXT, get_jsonld_context, \
     JSONLDContext
 from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult, SolrConnection, SolrManager
+from search_server.helpers.solr_connection import SolrResult, SolrConnection, SolrManager, result_count
 from search_server.resources.sources.base_source import BaseSource
 
 
@@ -40,12 +40,14 @@ class Subject(ContextDictSerializer):
         label="type",
         value="rism:Subject"
     )
-    heading = serpy.MethodField()
+    label = serpy.MethodField()
     term = serpy.StrField(
         attr="term_s"
     )
     notes = serpy.MethodField()
-    alternate_terms = serpy.MethodField()
+    alternate_terms = serpy.MethodField(
+        label="alternateTerms"
+    )
     sources = serpy.MethodField()
 
     def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
@@ -58,13 +60,11 @@ class Subject(ContextDictSerializer):
 
         return get_identifier(req, "subject", subject_id=subject_id)
 
-    def get_heading(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
         transl: Dict = req.app.translations
 
-        return {
-            "label": transl.get("records.subject_heading")
-        }
+        return transl.get("records.subject_heading")
 
     def get_notes(self, obj: SolrResult) -> Optional[List]:
         direct_request: bool = self.context.get("direct_request")
@@ -84,7 +84,7 @@ class Subject(ContextDictSerializer):
 
         return obj.get("alternate_terms_sm")
 
-    def get_sources(self, obj: SolrResult) -> Optional[List]:
+    def get_sources(self, obj: SolrResult) -> Optional[Dict]:
         # Only give a list of sources for this term if we are looking at a dedicated page for this subject heading, and
         # it is not embedded in another type of record.
         direct_request: bool = self.context.get("direct_request")
@@ -92,20 +92,18 @@ class Subject(ContextDictSerializer):
         if not direct_request:
             return None
 
-        conn = SolrManager(SolrConnection)
-        fq: List = [
-            "type:source",
-            f"subject_ids:{obj.get('id')}"
-        ]
-        sort: str = "main_title_ans asc"
+        subject_id: str = obj.get("id")
 
-        conn.search("*:*", fq=fq, sort=sort)
+        fq: List = ["type:source",
+                    f"subject_ids:{subject_id}"]
+        num_results: int = result_count(fq=fq)
 
-        if conn.hits == 0:
+        if num_results == 0:
             return None
 
-        sources = BaseSource(conn.results,
-                             many=True,
-                             context={"request": self.context.get("request")})
+        ident: str = re.sub(ID_SUB, "", subject_id)
 
-        return sources.data
+        return {
+            "id": get_identifier(self.context.get("request"), "subject_sources", subject_id=ident),
+            "totalItems": num_results
+        }

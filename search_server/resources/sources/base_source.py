@@ -69,8 +69,5 @@ class BaseSource(ContextDictSerializer):
         return [{
             "id": get_identifier(req, "source", source_id=rel_id),
             "type": "rism:Source",
-            "display": {
-                "label": transl.get("records.parent_record"),
-                "value": {"none": obj.get("source_membership_title_s")}
-            }
+            "label": {"none": obj.get("source_membership_title_s")}
         }]
