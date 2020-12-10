@@ -2,12 +2,16 @@ import asyncio
 import logging
 from typing import Dict, Callable, Optional
 
+import pysolr
 import uvloop
 import yaml
 from sanic import Sanic, request, response
 
+from search_server.exceptions import InvalidQueryException
 from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
+from search_server.helpers.semantic_web import to_turtle, to_rdf
 from search_server.resources.institutions.institution import handle_institution_request
+from search_server.resources.people.person_source import handle_person_source_request
 from search_server.resources.search.search import handle_search_request
 from search_server.resources.siglum.sigla import handle_sigla_request
 from search_server.resources.sources.full_source import handle_source_request
@@ -26,6 +30,7 @@ from search_server.resources.sources.source_relationship import (
 
 from search_server.helpers.languages import load_translations
 from search_server.resources.subjects.subject import handle_subject_request
+from search_server.resources.subjects.subject_source import handle_subject_source_request
 
 config: Dict = yaml.safe_load(open('configuration.yml', 'r'))
 app = Sanic("search_server")
@@ -79,6 +84,8 @@ async def _handle_request(req: request.Request, handler: Callable, **kwargs) -> 
     :param kwargs: A set of options to be passed to the
     :return: A JSON Response, or an error if not successful.
     """
+    accept: Optional[str] = req.headers.get("Accept")
+
     data_obj: Optional[Dict] = handler(req, **kwargs)
 
     if not data_obj:
@@ -86,6 +93,54 @@ async def _handle_request(req: request.Request, handler: Callable, **kwargs) -> 
             "The requested resource was not found",
             status=404
         )
+
+    response_headers: Dict = {}
+
+    if accept and "text/turtle" in accept:
+        log.debug("Sending Turtle")
+
+        turtle_resp: str = to_turtle(data_obj)
+        response_headers["Content-Type"] = "text/turtle"
+
+        return response.text(
+            turtle_resp,
+            headers=response_headers
+        )
+    elif accept and "application/n-quads" in accept:
+        log.debug("Sending RDF")
+        rdf_resp: str = to_rdf(data_obj)
+        response_headers["Content-Type"] = "application/n-quads"
+
+        return response.text(
+            rdf_resp,
+            headers=response_headers
+        )
+    else:
+        log.debug("Sending JSON-LD")
+        # The default return type is JSON-LD
+        response_headers["Content-Type"] = "application/ld+json"
+
+        return response.json(
+            data_obj,
+            headers=response_headers,
+            escape_forward_slashes=False,
+            indent=JSON_INDENT
+        )
+
+
+async def _handle_search_request(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
+    try:
+        data_obj: Dict = handler(req, **kwargs)
+    except InvalidQueryException as e:
+        return response.text(f"Invalid search query. {e}", status=400)
+    except pysolr.SolrError as e:
+        error_message: str = f"Error sending search to Solr. {e}"
+        log.exception(error_message)
+        return response.text(error_message, status=500)
+
+    if not data_obj:
+        return response.text("The request resource was not found",
+                             status=404)
 
     return response.json(
         data_obj,
@@ -187,6 +242,13 @@ async def person(req, person_id: str):
                                  person_id=person_id)
 
 
+@app.route("/people/<person_id:string>/sources/")
+async def person_sources(req, person_id: str):
+    return await _handle_search_request(req,
+                                        handle_person_source_request,
+                                        person_id=person_id)
+
+
 @app.route("/subjects/")
 async def subject_list(req):
     pass
@@ -197,6 +259,13 @@ async def subject(req, subject_id: str):
     return await _handle_request(req,
                                  handle_subject_request,
                                  subject_id=subject_id)
+
+
+@app.route("/subjects/<subject_id:string>/sources/")
+async def subject_sources(req, subject_id: str):
+    return await _handle_search_request(req,
+                                        handle_subject_source_request,
+                                        subject_id=subject_id)
 
 
 @app.route("/institutions/")
