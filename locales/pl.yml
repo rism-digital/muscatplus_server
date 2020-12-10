@@ -1,5 +1,6 @@
 pl:
   general:
+    e_mail: E-mail
     editor_help: Pomoc do edycji
     faq: Odpowiedzi na częste pytania
     female: kobieta
@@ -17,12 +18,14 @@ pl:
     rule_type: Standard
     scope_printed_music_rism: Zakres druków muzycznych w RISM
     searching: Wyszukiwanie
+    source_citation: Nazwa źródła informacji
     status: Status
     undetermined: Nieokreślony
     ungrouped_fields: Pola niezgrupowane
     unknown_fields: Pola nieznane
     unused: NIEWYKORZYSTANE – DO USUNIĘCIA
     uri: URI
+    url: URL
     using_muscat: Korzystanie z Muscatu
     validity: Ważność
     verified: Zweryfikowane
@@ -34,8 +37,9 @@ pl:
     arabic: Arabski
     aragonese: Aragoński
     armenian: Armeński
+    australian: Języki australijskie
     basque: Baskijski
-    benin: Benin
+    bengali: Bengali
     bosnian: Bośniacki
     bulgarian: Bułgarski
     catalan: Kataloński
@@ -99,6 +103,7 @@ pl:
     slovak: Słowacki
     slovenian: Słoweński
     sorbian: Łużycki
+    south_american: Indie Południowoamerykańskie (inne)
     spanish: Hiszpański
     swedish: Szwedzki
     swiss_german: Niemiecki szwajcarski
@@ -129,6 +134,7 @@ pl:
     austria_upper_austria: 'Austria: Górna Austria'
     austria_vienna: 'Austria: Wiedeń'
     belgium: Belgia
+    benin: Benin
     brazil: Brazylia
     bulgaria: Bułgaria
     cambodia: Kambodża
@@ -150,12 +156,15 @@ pl:
     germany_bavaria: 'Niemcy: Bawaria'
     germany_saxony: 'Niemcy: Saksonia'
     greece: Grecja
+    guatemala: Gwatemala
     guinea: Gwinea
     holy_see: Watykan
     honduras: Honduras
+    hong_kong: Hongkong
     hungary: Węgry
     iceland: Islandia
     india: Indie
+    indonesia: Indonezja
     iran: Iran, Republika Islamska
     iraq: Irak
     ireland: Irlandia
@@ -174,14 +183,18 @@ pl:
     montenegro: Czarnogóra
     netherlands: Niderlandy
     new_zealand: Nowa Zelandia
+    northern_ireland: Irlandia Północna
     norway: Norwegia
+    papua_new_guinea: Papua Nowa Gwinea
     paraguay: Paragwaj
     peru: Peru
+    philippines: Filipiny
     poland: Polska
     portugal: Portugalia
     puerto_rico: Portoryko
     romania: Rumunia
     russian_federation: Federacja Rosyjska
+    saudi_arabia: Arabia Saudyjska
     serbia: Serbia
     slovakia: Słowacja
     slovenia: Słowenia
@@ -207,11 +220,13 @@ pl:
     abbreviations_terminology: Skróty i pojęcia
     access_restrictions: Ograniczenia dostępu
     accession_number: Numer akcesji
+    acronym: Akronim
     added_entry_name: Dodana nazwa wpisu
     additional_author: Dodatkowy autor
     additional_bibliographic_information: Dodatkowe informacje bibliograficzne
     additional_biographical_information: Dodatkowe informacje biograficzne
     additional_choir_voice: Dodatkowy głos chóralny
+    additional_codes: Dodatkowe kody zgodne ze standardowym numerem lub kodem
     additional_institution: Dodatkowa instytucja
     additional_personal_name: Dodatkowa osoba
     additional_personal_name_lit: Dodatkowa osoba
@@ -223,8 +238,9 @@ pl:
     af_minor: as-moll
     aide: Asystent
     aids: Pomoce
-    alleged: Domniemane
+    alleged: Rzekomy
     alternate_spelling: Alternatywna pisownia
+    archive: Archiwum
     arrangement: Aranżacja
     arrangement_statement: Uwaga do aranżacji
     arranger: Aranżer
@@ -232,8 +248,9 @@ pl:
     artistic_production: Autor produkcji artystycznej
     as_major: Ais-dur
     as_minor: ais-moll
-    ascertained: Stwierdzone
+    ascertained: Ustalony
     assignee: Cesjonariusz
+    associated_country: Państwo stowarzyszone
     associated_institution: Powiązana instytucja
     associated_name: Powiązana nazwa
     associated_name_lit: Powiązana nazwa
@@ -243,6 +260,8 @@ pl:
     author: Autor
     author_editor: Autor / edytor
     authorities: Hasła wzorcowe
+    authority_agency: Baza haseł wzorcowych
+    authority_record_control_number: Dodatkowe kody zgodne ze standardowym numerem lub kodem
     authority_reference: Odniesienie do bazy haseł wzorcowych
     autography: Autografia
     b_major: H-dur
@@ -261,6 +280,7 @@ pl:
     bound_with: Współoprawne z
     brass_instruments: Instrumenty dęte blaszane
     brief: Streszczenie
+    broader_term: Szerszy termin
     brother_of: Brat …
     byname: Przydomek
     c_major: C-dur
@@ -276,7 +296,7 @@ pl:
     c_plus_4: C+4
     c_plus_5: C+5
     catalog_opus_number: Numer katalogu / numer opus
-    catalog_works: Katalog dzieł
+    catalog_works: Katalog utworów
     cataloging_agency: Jednostka katalogująca
     cataloging_collection_convoluta: Katalogowanie kolekcji i klocka introligatorskiego
     cataloging_collections: Katalogowanie kolekcji
@@ -294,6 +314,7 @@ pl:
     choreographer: Choreograf
     chronological_subdivision: Dalszy podział chronologiczny
     chronological_term: Datowanie
+    city: Miejscowość
     clef: Klucz
     co-composer: Współkompozytor
     coded_date: Znormalizowana data
@@ -309,7 +330,8 @@ pl:
     conceptor: Autor koncepcji
     conductor: Dyrygent
     confused_with: Mylon(y/a) z …
-    conjectural: Spekulatywne
+    conjectural: Domyślny
+    contact: Kontakt
     contact_area: Obszar kontaktu
     content: Zawartość
     content_description: Opis źródła
@@ -317,15 +339,18 @@ pl:
     contributor: Kontrybutor
     control_fields: Pola kontrolne
     control_number_identifier: Identyfikator numeru kontrolnego
+    control_subfield: Podpole sterowania
     copy_examined: Katalogowany egzemplarz
     copyist: Kopista
     copyright_holder: Posiadacz praw autorskich
     costume_designer: Projektant kostiumów
     countries_places: Kraje i miejsca
+    country: Kraj
     country_active: Kraj aktywności artystycznej
     country_activity: Kraj aktywności artystycznej
     country_code: Kod kraju
     country_of_publication: Kraj publikacji
+    county_province: Stan, hrabstwo, prowincja...
     creation_production_note: Uwagi do wytworzenia / produkcji
     cs_major: Cis-dur
     cs_minor: cis-moll
@@ -341,6 +366,7 @@ pl:
     dedicatee: Adresat dedykacji
     department: Wydział
     depositor: Deponent
+    description: Opis
     description_area: Obszar opisu
     description_summary: Podsumowanie
     designer: Projektant
@@ -353,8 +379,9 @@ pl:
     dissertation_note: Uwaga do dysertacji
     distribution: Dystrybucja
     distributor: Dystrybutor
+    documentation_center: Centrum dokumentacji
     donor: Donator
-    doubtful: Wątpliwe
+    doubtful: Wątpliwy
     dramatic_roles_original: Postaci w oryginalnej pisowni
     dramatic_roles_standardized: Znormalizowane nazwy postaci
     ds_major: Dis-dur
@@ -362,6 +389,7 @@ pl:
     dubious: Wątpliwe
     e_major: E-dur
     e_minor: e-moll
+    earlier_heading: Wcześniejsza pozycja
     ecclesiastical_modes: Skale kościelne
     edition: Edycja
     edition_imprint_fields: Edycja, stopka wydawnicza itp. pola
@@ -369,6 +397,7 @@ pl:
     editor: Edytor
     ef_major: Es-dur
     ef_minor: es-moll
+    end_period: Okres końcowy
     engraver: Rytownik
     engraving: Sztych
     event_organizer: Organizator wydarzenia
@@ -394,6 +423,8 @@ pl:
     facsimile: Faksymile
     family_name: Nazwisko rodowe
     father_of: Ojciec …
+    field_link: Link do pola i numer kolejny
+    field_of_activity: Obszar działalności
     figured_bass_scores: Bas cyfrowany w partyturze i / lub w innych częściach
     fijian: Fidżyjski
     fingerprint_identifier: Identyfikator odcisku palca
@@ -441,10 +472,12 @@ pl:
     help_transposing_instruments: Pomoc przy transpozycji instrumentów
     history_institution: Historia instytucji
     holdings_location: Pola egzemplarza, lokalizacji itp.
+    identity: Tożsamość
     identity_area: Obszar tożsamości
     iiif_manifest: Manifest IIIF
     illustrator: Ilustrator
     images: Obrazy
+    immediate_parent_body: Natychmiastowy rodzic
     import: Import
     imprint: Stopka wydawnicza
     incipit: Incipit
@@ -462,6 +495,7 @@ pl:
     instrumentalist: Instrumentalista
     internal_note: Uwaga wewnętrzna
     introduction: Wprowadzenie
+    invalid_standard_number: Anulowany/nieważny standardowy numer lub kod
     isbn: ISBN
     ismn: ISMN
     issn: ISSN
@@ -481,6 +515,8 @@ pl:
     language_of_cataloging: Język katalogowania
     language_original_text: Język tekstu oryginalnego
     language_text: Język tekstu
+    later_heading: Późniejsza pozycja
+    latitude: Szerokość geograficzna
     leader: Leader
     library: Biblioteka
     library_information: Informacje o bibliotece
@@ -508,6 +544,7 @@ pl:
     location_on_source: Lokalizacje w źródle
     location_performance: Lokalizacja wykonania
     location_printer: Lokalizacja drukarni
+    longitude: Długość geograficzna
     lyricist: Autor słów
     main_entry_fields: Główne pola edycji
     married_name: Nazwisko po mężu
@@ -520,7 +557,7 @@ pl:
     media_type: Rodzaj nośnika
     mensural_clefs: Klucze menzuralne
     method_of_acquisition: Sposób nabycia
-    misattributed: Błędnie przypisane
+    misattributed: Błędnie przypisany
     miscellaneous: Pozostałe
     mode_10t: 'Skala: 10t – hypoeolska'
     mode_10tt: 'Skala: 10tt – hypoeolska, transponowana'
@@ -553,17 +590,21 @@ pl:
     multiple: Wielojęzyczny
     multiple_copies: Wiele kopii
     multiple_single_dates: Wiele pojedynczych dat
+    museum: Muzeum
     music_incipit: Incipit muzyczny
+    musical_composition: Kompozycja muzyczna
     name: Imię i nazwisko
     name_family: Nazwa rodziny
     name_printer: Nazwa drukarni
     name_variant: Alternatywna nazwa osoby
     name_variants: Alternatywne nazwy osoby
     named_dramatic_roles: Postaci
+    narrower_term: Węższy termin
     nationality: Narodowość
     nickname: Przezwisko
     no_linguistic_content: Brak zawartości językowej
     non_migrated_bound: Non-migrated bound with value from 563
+    not_applicable: Nie dotyczy
     note_external_resource: Uwaga o zasobie zewnętrznym
     note_fields: Pola uwag
     note_on_performance: Uwaga o wykonaniu
@@ -592,6 +633,8 @@ pl:
     origin: Pochodzenie
     original_cataloging_agency: Jednostka katalogująca pierwotny rekord
     other: Pozostałe
+    other_associated_place: Inne powiązane miejsce
+    other_designation: Inne oznaczenie
     other_form: Inna forma
     other_form_of_name: Wariant nazwy instytucji
     other_function: Inna funkcja
@@ -628,11 +671,13 @@ pl:
     place_activity: Miejsce aktywności artystycznej
     place_birth: Miejsce urodzenia
     place_death: Miejsce śmierci
+    place_of_residence: Miejsce zamieszkania/siedziba główna
     place_origin: Miejsce pochodzenia
     place_publication: Miejsce publikacji
     places: Miejsca
     plate_number: Numer wydawniczy
     plucked_instruments: Instrumenty szarpane
+    postal_code: Kod pocztowy
     postal_place: Rejon pocztowy
     preceding_entry: Poprzedzający wpis
     printer: Drukarnia
@@ -643,14 +688,18 @@ pl:
     provenance: Pochodzenie
     provenance_notes: Uwagi o pochodzeniu
     pseudonym: Pseudonim
+    public_note: Inne informacje kontaktowe
     publisher: Wydawca
     publisher_copyist: Wydawca, kopista
     publishing_printing_production: Informacje o publikacji, druku i produkcji
+    qualifying_information: Informacje kwalifikacyjne
     range_dates: Zakres dat
+    real_world_object_uri: Rezonans magnetyczny obiektu świata rzeczywistego
     record_actions: Działania na rekordzie
     record_audit: RECORD AUDIT
     record_origin: Pochodzenie rekordu
     record_status: Status rekordu
+    reference_instruction_phrase: Referencyjna fraza instrukcji w podpolu $i
     reference_record_id: Referncyjny identyfikator RISM
     references: Odniesienia
     references_and_notes: Odniesienia i uwagi
@@ -665,9 +714,12 @@ pl:
     related_work: Powiązane dzieło
     relation: Relacja
     relations: Relacje
+    relationship_designation: Oznaczenie relacji w $i lub $4
+    relationship_information: Informacje o relacjach
     religious_name: Imię z wyznania
     religious_order: Zgromadzenie zakonne
     reproduction: Reprodukcja
+    research_institute: Instytut badawczy
     retrospective_conversion: Konwersja retrospektywna
     rism_id_number: RISM ID
     role: Rola
@@ -682,17 +734,22 @@ pl:
     shelfmark: Sygnatura
     shelfmark_olim: Sygnatura (wcześniejsza)
     short_title: Skrócony tytuł
+    sigla: Sigla
+    siglum: Siglum
     single_date: Pojedyncza data
     sister_of: Siostra …
     sketches: Szkice
     solo_voice: Głos solowy
     soloist_instrument: Instrument solowy
+    source: Źródło
     source_data_found: Odnalezione źródło danych
     source_data_not_found: Brak źródła danych
     source_description: Uwaga o źródle opisu
     source_details: Dane źródła
     source_number_code: Źródło numeru lub kodu
     source_of_acquisition_note: Uwaga o źródle nabycia
+    source_of_information: Źródło informacji
+    source_of_term: Źródło terminu
     source_type: Rodzaj źródła
     special_production_technique: Specjalna technika produkcji
     standard: Standardowy
@@ -702,13 +759,16 @@ pl:
     standard_watermarks: Standardowe znaki wodne
     standardized_title: Znormalizowany tytuł
     standardized_titles_printed_music: Znormalizowane tytuły dla druków muzycznych
-    standardized_titles_subject_headings: Znormalizowane tytuły – słowa kluczowe
+    standardized_titles_subject_headings: Znormalizowane tytuły – hasła przedmiotowe
+    start_period: Okres startowy
+    street_address: Ulica, numer, numer lokalu
     strings: Instrumenty strunowe
     subheading: Pod-nagłówek
     subheading_general: Ogólny dalszy podział podnagłówków
     subject_access_fields: Pola haseł tematycznych
-    subject_heading: Słowo kluczowe
-    subject_headings: Słowa kluczowe
+    subject_heading: Hasło przedmiotowe
+    subject_headings: Hasła przedmiotowe
+    subordinate_unit: Jednostka podporządkowana
     succeeding_entry: Kolejny wpis
     summary: Podsumowanie
     supplementary_material: Materiał uzupełniający
@@ -716,6 +776,7 @@ pl:
     technical_production: Produkcja techniczna
     temp_val: Temp val
     templates: Szablony
+    terms_of_availability: Warunki dostępności
     terms_voices_instruments: Określenia głosów i instrumentów
     text_author: Autor tekstu
     text_incipit: Incipit tekstowy
@@ -741,6 +802,7 @@ pl:
     type: Rodzaj
     type_institution: Rodzaj instytucji
     type_name_variant: Typ alternatywnej nazwy osoby
+    type_of_jurisdiction: Rodzaj jurysdykcji
     type_publication: Rodzaj publikacji
     type_relationship: Rodzaj relacji
     typescript: Maszynopis
@@ -758,4 +820,4 @@ pl:
     work: Dzieło
     work_number: Numer dzieła
     year: Rok
-    years_birth_death: Lata urodzenia i śmierci
+    years_birth_death: Rok urodzenia i śmierci
