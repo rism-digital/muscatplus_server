@@ -138,3 +138,14 @@ def has_results(**kwargs) -> bool:
     if res.hits > 0:
         return True
     return False
+
+
+def result_count(**kwargs) -> int:
+    """
+    Takes a Solr query and returns the number of results, but does not actually retrieve them.
+
+    :param kwargs: Keyword arguments to pass to the Solr query
+    :return: The number of hits
+    """
+    res = SolrConnection.search("*:*", rows=0, **kwargs)
+    return res.hits
