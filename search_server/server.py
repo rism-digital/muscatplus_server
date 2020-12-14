@@ -100,7 +100,7 @@ async def _handle_request(req: request.Request, handler: Callable, **kwargs) -> 
         log.debug("Sending Turtle")
 
         turtle_resp: str = to_turtle(data_obj)
-        response_headers["Content-Type"] = "text/turtle"
+        response_headers["Content-Type"] = "text/turtle; charset=utf-8"
 
         return response.text(
             turtle_resp,
@@ -109,7 +109,7 @@ async def _handle_request(req: request.Request, handler: Callable, **kwargs) -> 
     elif accept and "application/n-quads" in accept:
         log.debug("Sending RDF")
         rdf_resp: str = to_rdf(data_obj)
-        response_headers["Content-Type"] = "application/n-quads"
+        response_headers["Content-Type"] = "application/n-quads; charset=utf-8"
 
         return response.text(
             rdf_resp,
@@ -118,7 +118,7 @@ async def _handle_request(req: request.Request, handler: Callable, **kwargs) -> 
     else:
         log.debug("Sending JSON-LD")
         # The default return type is JSON-LD
-        response_headers["Content-Type"] = "application/ld+json"
+        response_headers["Content-Type"] = "application/ld+json; charset=utf-8"
 
         return response.json(
             data_obj,
