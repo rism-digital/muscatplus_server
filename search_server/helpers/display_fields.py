@@ -130,7 +130,7 @@ FIELD_CONFIG: LabelConfig = {
 def get_display_fields(record: SolrResult, translations: Dict, field_config: Optional[LabelConfig] = None) -> Optional[List]:
     """
     Returns a list of translated display fields for a given record. Uses the metadata fields to configure
-    the label, based on the Solr field.
+    the label, based on the Solr field. Supports direct value output, or a function for translating the values.
 
     :param translations: A dictionary of the available application translations
     :param field_config: An optional configuration dictionary
@@ -147,7 +147,7 @@ def get_display_fields(record: SolrResult, translations: Dict, field_config: Opt
             continue
 
         label_translation, value_translator = translation_map
-        log.debug(value_translator)
+
         # If the second key is None, set the translator function
         # to the default translator.
         if value_translator is None:

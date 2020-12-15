@@ -35,7 +35,7 @@ RELATIONSHIP_LABELS = {
     "cre": "records.composer_author",  # A special case, where the cre relator code is used to label the 100 main entry field.
     "lyr": "records.lyricist",
     "fmo": "records.former_owner",
-    "scr": "records.scribe",
+    "scr": "records.copyist",
     "arr": "records.arranger",
     "edt": "records.editor",
     "dte": "records.dedicatee",

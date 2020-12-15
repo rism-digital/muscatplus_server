@@ -89,7 +89,6 @@ class FullSource(BaseSource):
         res = SolrConnection.search("*:*", fq=fq)
 
         if res.hits == 0:
-            log.warning("No creator record found for %s", obj.get('id'))
             return None
 
         creator = SourceRelationship(res.docs[0], context={"request": self.context.get('request')})
