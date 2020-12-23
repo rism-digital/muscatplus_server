@@ -11,6 +11,8 @@ from search_server.exceptions import InvalidQueryException
 from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.helpers.semantic_web import to_turtle, to_rdf
 from search_server.resources.institutions.institution import handle_institution_request
+from search_server.resources.institutions.institutions_list import handle_institutions_list_request
+from search_server.resources.people.people_list import handle_people_list_request
 from search_server.resources.people.person_source import handle_person_source_request
 from search_server.resources.search.search import handle_search_request
 from search_server.resources.siglum.sigla import handle_sigla_request
@@ -19,6 +21,7 @@ from search_server.resources.sources.source_creator import handle_creator_reques
 from search_server.resources.sources.source_holding import handle_holding_request
 from search_server.resources.sources.source_incipit import handle_incipit_request, handle_incipits_list_request
 from search_server.resources.people.person import handle_person_request
+from search_server.resources.sources.source_list import handle_source_list_request
 from search_server.resources.sources.source_materialgroup import (
     handle_materialgroups_list_request,
     handle_materialgroups_request
@@ -160,8 +163,9 @@ async def context(req) -> response.HTTPResponse:
 
 
 @app.route("/sources/")
-def source_list(req):
-    pass
+async def source_list(req):
+    return await _handle_search_request(req,
+                                        handle_source_list_request)
 
 
 @app.route("/sources/<source_id:string>/")
@@ -222,6 +226,7 @@ async def creator(req, source_id: str):
                                  handle_creator_request,
                                  source_id=source_id)
 
+
 @app.route("/sources/<source_id:string>/holdings/<holding_id:string>/")
 async def holding(req, source_id: str, holding_id: str):
     return await _handle_request(req,
@@ -232,7 +237,8 @@ async def holding(req, source_id: str, holding_id: str):
 
 @app.route("/people/")
 async def get_people(req):
-    pass
+    return await _handle_search_request(req,
+                                        handle_people_list_request)
 
 
 @app.route("/people/<person_id:string>/")
@@ -270,7 +276,8 @@ async def subject_sources(req, subject_id: str):
 
 @app.route("/institutions/")
 async def institution_list(req):
-    pass
+    return await _handle_search_request(req,
+                                        handle_institutions_list_request)
 
 
 @app.route("/institutions/<institution_id:string>")
