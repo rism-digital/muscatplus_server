@@ -5,7 +5,7 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier, ID_SUB, RISM_JSONLD_CONTEXT, get_jsonld_context, \
+from search_server.helpers.identifiers import get_identifier, ID_SUB, get_jsonld_context, \
     JSONLDContext
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult

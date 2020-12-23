@@ -15,7 +15,7 @@ def handle_subject_source_request(req, subject_id: str) -> Dict:
     request_compiler = SearchRequest(req)
     request_compiler.filters += ["type:source", f"subject_ids:subject_{subject_id}"]
 
-    solr_params = request_compiler.compile()
+    solr_params: Dict = request_compiler.compile()
     solr_res: pysolr.Results = SolrConnection.search(**solr_params)
 
     subject_source_results = SubjectResults(solr_res, context={"request": req})

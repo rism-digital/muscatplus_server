@@ -3,9 +3,8 @@ from typing import Dict, Optional, List
 
 import serpy
 
-from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context, \
+from search_server.helpers.identifiers import ID_SUB, get_identifier, get_jsonld_context, \
     JSONLDContext
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
@@ -29,6 +28,9 @@ class BaseSource(ContextDictSerializer):
         value="rism:Source"
     )
     label = serpy.MethodField()
+    source_type = serpy.MethodField(
+        label="sourceType"
+    )
     part_of = serpy.MethodField(
         label="partOf"
     )
@@ -45,7 +47,14 @@ class BaseSource(ContextDictSerializer):
 
     def get_label(self, obj: SolrResult) -> Dict:
         return {
-            "none": obj.get("main_title_s")
+            "none": [obj.get("main_title_s")]
+        }
+
+    # TODO: Move translations of the source types to the locales
+    #  and make this a proper language map.
+    def get_source_type(self, obj: SolrResult) -> Dict:
+        return {
+            "none": [obj["subtype_s"]]
         }
 
     def get_part_of(self, obj: Dict) -> Optional[List]:
@@ -64,10 +73,9 @@ class BaseSource(ContextDictSerializer):
 
         req = self.context.get("request")
         rel_id: str = re.sub(ID_SUB, "", member_id)
-        transl: Dict = req.app.translations
 
         return [{
             "id": get_identifier(req, "source", source_id=rel_id),
             "type": "rism:Source",
-            "label": {"none": obj.get("source_membership_title_s")}
+            "label": {"none": [obj.get("source_membership_title_s")]}
         }]
