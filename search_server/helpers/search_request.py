@@ -19,9 +19,12 @@ class SearchRequest:
     in other places where paginated interactions with Solr are required, such as viewing a person's list of
     related sources.
     """
-    def __init__(self, req):
+    default_sort = "id asc"
+
+    def __init__(self, req, sort: Optional[str] = None):
         self._req = req
         self.filters: List = []
+        self.sorts: List = []
         # If there is no q parameter it will return all results
         self._requested_query: str = req.args.get("q", "*:*")
         self._page: Optional[str] = req.args.get("page", None)
@@ -29,6 +32,7 @@ class SearchRequest:
 
     def compile(self) -> Dict:
         filters: List = self.filters
+        sorts: List = self.sorts if self.sorts else ["id asc"]
 
         # If page is set, try to parse out the page number from the
         # value. If it's not a number, flag the request as invalid.
@@ -48,5 +52,6 @@ class SearchRequest:
             "q": [self._requested_query],
             "start": start_row,
             "rows": return_rows,
+            "sort": ", ".join(sorts),
             "fq": filters
         }
