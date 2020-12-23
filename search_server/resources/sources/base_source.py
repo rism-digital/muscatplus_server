@@ -7,7 +7,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier, get_jsonld_context, \
     JSONLDContext
 from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult
+from search_server.helpers.solr_connection import SolrResult, SolrConnection
 
 
 class BaseSource(ContextDictSerializer):
@@ -74,8 +74,10 @@ class BaseSource(ContextDictSerializer):
         req = self.context.get("request")
         rel_id: str = re.sub(ID_SUB, "", member_id)
 
-        return [{
-            "id": get_identifier(req, "source", source_id=rel_id),
-            "type": "rism:Source",
-            "label": {"none": [obj.get("source_membership_title_s")]}
-        }]
+        fq = ["type:source", f"source_id:{member_id}"]
+        res = SolrConnection.search("*:*", fq=fq)
+
+        if res.hits == 0:
+            return None
+
+        return BaseSource(res.docs, many=True, context={"request": req}).data
