@@ -39,7 +39,11 @@ class SourceIncipitList(ContextDictSerializer):
     lid = serpy.MethodField(
         label="id"
     )
-    heading = serpy.MethodField()
+    ltype = StaticField(
+        label="type",
+        value="rism:IncipitList"
+    )
+    label = serpy.MethodField()
     items = serpy.MethodField()
 
     def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
@@ -52,13 +56,11 @@ class SourceIncipitList(ContextDictSerializer):
 
         return get_identifier(req, "incipits_list", source_id=source_id)
 
-    def get_heading(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
         transl: Dict = req.app.translations
 
-        return {
-            "label": transl.get("records.incipits")
-        }
+        return transl.get("records.incipits")
 
     def get_items(self, obj: SolrResult) -> Optional[List]:
         conn = SolrManager(SolrConnection)
@@ -87,6 +89,10 @@ class SourceIncipit(ContextDictSerializer):
         label="type",
         value="rism:Incipit"
     )
+    title = serpy.StrField(
+        attr="title_s",
+        required=False
+    )
     music_incipit = serpy.StrField(
         label="musicIncipit",
         attr="music_incipit_s",
@@ -95,6 +101,11 @@ class SourceIncipit(ContextDictSerializer):
     text_incipit = serpy.StrField(
         label="textIncipit",
         attr="text_incipit_s",
+        required=False
+    )
+    work_number = serpy.StrField(
+        label="workNumber",
+        attr="work_num_s",
         required=False
     )
 
