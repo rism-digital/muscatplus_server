@@ -48,6 +48,7 @@ class Person(BasePerson):
 
             ret.append({
                 "id": base.format(ident=ident),
+                "type": source
             })
 
         return ret
@@ -85,6 +86,6 @@ class Person(BasePerson):
         transl = req.app.translations
 
         return {
-            "label": [transl.get("records.name_variants")],
+            "label": transl.get("records.name_variants"),
             "values": {"none": obj.get("name_variants_sm")}
         }
