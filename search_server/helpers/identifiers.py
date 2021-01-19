@@ -6,7 +6,8 @@ ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_")
 EXTERNAL_IDS: Dict = {
     "viaf": "https://viaf.org/viaf/{ident}",
     "dnb": "http://d-nb.info/gnd/{ident}",
-    "wkp": "https://www.wikidata.org/wiki/{ident}"
+    "wkp": "https://www.wikidata.org/wiki/{ident}",
+    "isil": "https://ld.zdb-services.de/resource/organisations/{ident}"
 }
 
 
@@ -16,7 +17,7 @@ def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) ->
     for use in an "id" field, including the incoming request information on host and scheme (http/https).
 
     :param request: A Sanic request object
-    :param template: A string containing formatting variables
+    :param viewname: A string of the view for which we will retrieve the URL. Matches the function name in server.py.
     :param kwargs: A set of keywords matching the template formatting variables
     :return: A templated string
     """
