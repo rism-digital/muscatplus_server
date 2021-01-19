@@ -6,7 +6,7 @@ import serpy
 
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier, ID_SUB, get_jsonld_context, \
-    JSONLDContext
+    JSONLDContext, EXTERNAL_IDS
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult
 from search_server.resources.institutions.institution_relationship import InstitutionRelationship
@@ -40,6 +40,10 @@ class Institution(ContextDictSerializer):
         value="rism:Institution"
     )
     label = serpy.MethodField()
+    siglum = serpy.Field(
+        attr="siglum_s",
+        required=False
+    )
     other_names = serpy.Field(
         label="otherNames",
         attr="alternate_names_sm",
@@ -47,6 +51,9 @@ class Institution(ContextDictSerializer):
     )
     location = serpy.MethodField()
     sources = serpy.MethodField()
+    see_also = serpy.MethodField(
+        label="seeAlso"
+    )
 
     def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
         direct_request: Optional[bool] = self.context.get("direct_request")
@@ -87,3 +94,22 @@ class Institution(ContextDictSerializer):
             "type": "geojson:Point",
             "coordinates": loc.split(",")
         }
+
+    def get_see_also(self, obj: SolrResult) -> Optional[List[Dict]]:
+        external_ids: Optional[List] = obj.get("external_ids")
+        if not external_ids:
+            return None
+
+        ret: List = []
+        for ext in external_ids:
+            source, ident = ext.split(":")
+            base = EXTERNAL_IDS.get(source)
+            if not base:
+                continue
+
+            ret.append({
+                "id": base.format(ident=ident),
+                "type": source
+            })
+
+        return ret
