@@ -132,6 +132,15 @@ async def _handle_request(req: request.Request, handler: Callable, **kwargs) -> 
 
 
 async def _handle_search_request(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
+    accept: Optional[str] = req.headers.get("Accept")
+
+    # Check whether we can respond with the correct content type. Note that
+    # this server does not handle HTML responses; these are handled before
+    # the request reaches this server.
+    if accept and (("application/ld+json" not in accept) or ("application/json" not in accept)):
+        return response.text("Supported content types for search interfaces are 'application/json' and application/ld+json'",
+                             status=406)
+
     try:
         data_obj: Dict = handler(req, **kwargs)
     except InvalidQueryException as e:
@@ -145,8 +154,13 @@ async def _handle_search_request(req: request.Request, handler: Callable, **kwar
         return response.text("The request resource was not found",
                              status=404)
 
+    response_headers: Dict = {
+        "Content-Type": "application/ld+json; charset=utf-8"
+    }
+
     return response.json(
         data_obj,
+        headers=response_headers,
         escape_forward_slashes=False,
         indent=JSON_INDENT
     )
