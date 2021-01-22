@@ -24,15 +24,18 @@ class SearchRequest:
     def __init__(self, req, sort: Optional[str] = None):
         self._req = req
         self.filters: List = []
-        self.sorts: List = []
         # If there is no q parameter it will return all results
         self._requested_query: str = req.args.get("q", "*:*")
         self._page: Optional[str] = req.args.get("page", None)
         self._return_rows: Optional[str] = req.args.get("rows", None)
+        self.sorts: List = []
 
     def compile(self) -> Dict:
         filters: List = self.filters
-        sorts: List = self.sorts if self.sorts else ["id asc"]
+        if self._req.args.get("q"):
+            sorts = ["score desc"]
+        else:
+            sorts = ["main_title_ans asc"]
 
         # If page is set, try to parse out the page number from the
         # value. If it's not a number, flag the request as invalid.

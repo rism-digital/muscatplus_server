@@ -38,6 +38,8 @@ class SearchResult(ContextDictSerializer):
         req = self.context.get('request')
         id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
+        kwargs: Dict = {}
+
         if obj["type"] == "source":
             kwargs = {"source_id": id_value}
         elif obj["type"] == "person":
@@ -75,7 +77,8 @@ class SearchResult(ContextDictSerializer):
             label = transl.get("records.institution")
         else:
             label = {}
-        log.debug(obj["type"])
+            log.debug(obj["type"])
+
         return label
 
     def get_summary(self, obj: Dict) -> List[Dict]:
