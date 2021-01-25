@@ -34,6 +34,7 @@ def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) ->
 RELATIONSHIP_LABELS = {
     None: "records.unknown",
     "cre": "records.composer_author",  # A special case, where the cre relator code is used to label the 100 main entry field.
+    "dpt": "records.depositor",
     "lyr": "records.lyricist",
     "fmo": "records.former_owner",
     "scr": "records.copyist",
