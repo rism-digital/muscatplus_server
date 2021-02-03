@@ -5,6 +5,8 @@ from search_server.resources.search.pagination import parse_page_number, parse_r
 
 import logging
 
+import ujson
+
 log = logging.getLogger(__name__)
 
 
@@ -23,15 +25,52 @@ class SearchRequest:
 
     def __init__(self, req, sort: Optional[str] = None):
         self._req = req
+        self._app_config = req.app.config
         self.filters: List = []
         # If there is no q parameter it will return all results
         self._requested_query: str = req.args.get("q", "*:*")
         self._page: Optional[str] = req.args.get("page", None)
         self._return_rows: Optional[str] = req.args.get("rows", None)
         self.sorts: List = []
+        self._alias_map = {f"{cnf['alias']}": f"{solr_f}" for solr_f, cnf in self._app_config["search"]["facet_fields"].items()}
+
+    def _get_requested_filters(self) -> List:
+        fqs: List = self._req.args.getlist("fq")
+        if not fqs:
+            return []
+
+        requested_filters: List = []
+
+        for filt in fqs:
+            # split the incoming filters
+            field, value = filt.split(":")
+            # Map them to the actual solr fields
+            new_val = f"{self._alias_map[field]}:{value}"
+            requested_filters.append(new_val)
+
+        return requested_filters
+
+    def _get_facets(self) -> str:
+        facet_cfg: Dict = self._app_config["search"]["facet_fields"]
+        json_facets: Dict = {}
+
+        for solr_field, field_cfg in facet_cfg.items():
+            field_alias = field_cfg["alias"]
+
+            json_facets[field_alias] = {
+                "type": "terms",
+                "field": solr_field,
+                "sort": f"{field_cfg['sort']}",
+                "limit": 50
+            }
+
+        # Serialize the JSON to a string so that it can go over the Solr API.
+        # PySolr will transparently 'do the right thing' with the request.
+        return ujson.dumps(json_facets)
 
     def compile(self) -> Dict:
-        filters: List = self.filters
+        filters: List = self.filters + self._get_requested_filters()
+
         if self._req.args.get("q"):
             sorts = ["score desc"]
         else:
@@ -56,5 +95,6 @@ class SearchRequest:
             "start": start_row,
             "rows": return_rows,
             "sort": ", ".join(sorts),
-            "fq": filters
+            "fq": filters,
+            "json.facet": self._get_facets()
         }
