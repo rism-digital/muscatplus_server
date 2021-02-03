@@ -11,6 +11,7 @@ from search_server.exceptions import InvalidQueryException
 from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.helpers.semantic_web import to_turtle, to_rdf
 from search_server.resources.institutions.institution import handle_institution_request
+from search_server.resources.institutions.institution_source import handle_institution_source_request
 from search_server.resources.institutions.institutions_list import handle_institutions_list_request
 from search_server.resources.people.people_list import handle_people_list_request
 from search_server.resources.people.person_source import handle_person_source_request
@@ -137,9 +138,9 @@ async def _handle_search_request(req: request.Request, handler: Callable, **kwar
     # Check whether we can respond with the correct content type. Note that
     # this server does not handle HTML responses; these are handled before
     # the request reaches this server.
-    if accept and (("application/ld+json" not in accept) or ("application/json" not in accept)):
-        return response.text("Supported content types for search interfaces are 'application/json' and application/ld+json'",
-                             status=406)
+    # if accept and (("application/ld+json" not in accept) or ("application/json" not in accept)):
+    #     return response.text("Supported content types for search interfaces are 'application/json' and application/ld+json'",
+    #                          status=406)
 
     try:
         data_obj: Dict = handler(req, **kwargs)
@@ -269,6 +270,11 @@ async def person_sources(req, person_id: str):
                                         person_id=person_id)
 
 
+@app.route("/people/<person_id:string>/relationships/<related_id:string>")
+async def person_person_relationship(req, person_id: str, related_id: str):
+    pass
+
+
 @app.route("/subjects/")
 async def subject_list(req):
     pass
@@ -300,6 +306,12 @@ async def institution(req, institution_id: str):
                                  handle_institution_request,
                                  institution_id=institution_id)
 
+
+@app.route("/institutions/<institution_id:string>/sources/")
+async def institution_sources(req, institution_id: str):
+    return await _handle_search_request(req,
+                                        handle_institution_source_request,
+                                        institution_id=institution_id)
 
 @app.route("/sigla/")
 async def sigla(req):

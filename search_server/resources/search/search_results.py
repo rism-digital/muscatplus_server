@@ -1,21 +1,16 @@
 import logging
 import re
-from abc import abstractmethod
 from typing import Dict, Optional, List
 
 import pysolr
 import serpy
 
-from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import (
     get_identifier,
-    get_jsonld_context,
-    JSONLDContext,
     ID_SUB
 )
-from search_server.helpers.serializers import ContextDictSerializer, ContextSerializer
+from search_server.helpers.serializers import ContextDictSerializer
 from search_server.resources.search.base_search import BaseSearchResults
-from search_server.resources.search.pagination import Pagination
 
 
 log = logging.getLogger(__name__)

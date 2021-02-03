@@ -43,6 +43,9 @@ class SourceHolding(ContextDictSerializer):
     held_by = serpy.MethodField(
         label="heldBy"
     )
+    material_held = serpy.MethodField(
+        label="materialHeld"
+    )
 
     def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
         direct_request: Optional[bool] = self.context.get("direct_request")
@@ -51,7 +54,7 @@ class SourceHolding(ContextDictSerializer):
     def get_sid(self, obj: Dict) -> str:
         req = self.context.get('request')
 
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_membership_id"))
+        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
         holding_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "holding", source_id=source_id, holding_id=holding_id)
@@ -64,8 +67,14 @@ class SourceHolding(ContextDictSerializer):
             "id": get_identifier(req, "institution", institution_id=institution_id),
             "label": {
                 "none": [f"{obj.get('holding_institution_s')}"]
-            }
+            },
+            "siglum": obj.get("siglum_s")
         }
 
     def get_shelfmark(self, obj: Dict) -> Dict:
         return {"none": [f"{obj.get('shelfmark_s')}"]}
+
+    def get_material_held(self, obj: Dict) -> Optional[Dict]:
+        if mh := obj.get("material_held_sm"):
+            return {"none": mh}
+        return None

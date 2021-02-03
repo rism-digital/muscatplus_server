@@ -4,7 +4,7 @@ common:
   context_uri: yes  # if false, displays the full JSON-LD context inline
 
 solr:
-  server: "http://localhost:8983/solr/muscat-plus-ingest"
+  server: "http://localhost:8983/solr/muscatplus_live"
 
 search:
   rows: 20
@@ -12,3 +12,40 @@ search:
     - 20
     - 40
     - 100
+  facet_fields:
+    type:
+      display_name: "Record type"
+      alias: "type"
+      sort: "index asc"
+    source_type_sm:
+      display_name: "Source type"
+      alias: "source-type"
+      sort: "count desc"
+    rism_series_sm:
+      display_name: "RISM series"
+      alias: "rism-series"
+      sort: "index asc"
+    creator_name_s:
+      display_name: "Composer / Author"
+      alias: "creator"
+      sort: "count asc"
+    institutions_sm:
+      display_name: "Related institutions"
+      alias: "related-institutions"
+      sort: "count desc"
+    related_people_sm:
+      display_name: "Related people"
+      alias: "related-people"
+      sort: "count desc"
+    roles_sm:
+      display_name: "Roles"
+      alias: "roles"
+      sort: "index asc"
+    qualifier_s:
+      display_name: "Relationship qualifier"
+      alias: "qualifier"
+      sort: "count desc"
+    relationship_s:
+      display_name: "Relationship"
+      alias: "relationship"
+      sort: "index asc"

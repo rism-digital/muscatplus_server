@@ -8,8 +8,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier, ID_SUB, get_jsonld_context, \
     JSONLDContext, EXTERNAL_IDS
 from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult
-from search_server.resources.institutions.institution_relationship import InstitutionRelationship
+from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
 
 
 def handle_institution_request(req, institution_id: str) -> Optional[Dict]:
@@ -68,22 +67,21 @@ class Institution(ContextDictSerializer):
     def get_label(self, obj: SolrResult) -> Dict:
         return {"none": [f"{obj.get('name_s')}"]}
 
-    def get_sources(self, obj: SolrResult) -> Optional[List]:
-        conn = SolrManager(SolrConnection)
-        fq: List = ["type:source_institution_relationship",
-                    f"institution_id:{obj.get('institution_id')}"]
+    def get_sources(self, obj: SolrResult) -> Optional[Dict]:
+        institution_id: str = obj.get("institution_id")
+        fq: List = ["type:source",
+                    f"holding_institution_ids:{institution_id}"]
+        num_results: int = result_count(fq=fq)
 
-        sort: str = "title_s asc"
-
-        conn.search("*:*", fq=fq, sort=sort)
-
-        if conn.hits == 0:
+        if num_results == 0:
             return None
 
-        sources = InstitutionRelationship(conn.results, many=True,
-                                          context={"request": self.context.get("request")})
+        ident: str = re.sub(ID_SUB, "", institution_id)
 
-        return sources.data
+        return {
+            "id": get_identifier(self.context.get("request"), "institution_sources", institution_id=ident),
+            "totalItems": num_results
+        }
 
     def get_location(self, obj: SolrResult) -> Optional[Dict]:
         loc: str = obj.get("location_loc")

@@ -7,6 +7,7 @@ import serpy
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import JSONLDContext, get_jsonld_context, get_identifier
 from search_server.helpers.serializers import ContextSerializer
+from search_server.resources.search.facets import FacetList
 from search_server.resources.search.pagination import Pagination
 
 
@@ -34,6 +35,7 @@ class BaseSearchResults(ContextSerializer):
     )
     view = serpy.MethodField()
     items = serpy.MethodField()
+    facets = serpy.MethodField()
 
     def get_ctx(self, obj: pysolr.Results) -> JSONLDContext:
         return get_jsonld_context(self.context.get("request"))
@@ -51,6 +53,12 @@ class BaseSearchResults(ContextSerializer):
     def get_view(self, obj: pysolr.Results) -> Dict:
         p = Pagination(obj, context={"request": self.context.get('request')})
         return p.data
+
+    def get_facets(self, obj: pysolr.Results) -> Optional[Dict]:
+        facets: Dict = FacetList(obj, context={"request": self.context.get("request")}).data
+        if facets and facets.get("items"):
+            return facets
+        return None
 
     @abstractmethod
     def get_items(self, obj: pysolr.Results) -> Optional[List]:

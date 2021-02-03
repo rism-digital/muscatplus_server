@@ -5,8 +5,9 @@ import pysolr
 import serpy
 
 from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier, ID_SUB
-from search_server.helpers.solr_connection import SolrConnection, SolrResult, has_results, result_count
+from search_server.helpers.solr_connection import SolrConnection, SolrResult, has_results, result_count, SolrManager
 from search_server.resources.people.base_person import BasePerson
+from search_server.resources.people.person_person_relationship import PersonPersonRelationship
 
 
 def handle_person_request(req, person_id: str) -> Optional[Dict]:
@@ -32,6 +33,9 @@ class Person(BasePerson):
     sources = serpy.MethodField()
     name_variants = serpy.MethodField(
         label="nameVariants"
+    )
+    related_people = serpy.MethodField(
+        label="relatedPeople"
     )
 
     def get_see_also(self, obj: SolrResult) -> Optional[List[Dict]]:
@@ -89,3 +93,25 @@ class Person(BasePerson):
             "label": transl.get("records.name_variants"),
             "values": {"none": obj.get("name_variants_sm")}
         }
+
+    def get_related_people(self, obj: SolrResult) -> Optional[List]:
+        # Do not show a link to sources this serializer is used for embedded results
+        if not self.context.get("direct_request"):
+            return None
+
+        person_id: str = obj.get("person_id")
+        fq: List = ["type:person_person_relationship",
+                    f"related_id:{person_id}"]
+
+        conn = SolrManager(SolrConnection)
+        conn.search("*:*", fq=fq, sort="name_s asc")
+
+        if conn.hits == 0:
+            return None
+
+        relationships = PersonPersonRelationship(conn.results,
+                                                 many=True,
+                                                 context={"request": self.context.get("request")})
+
+        return relationships.data
+

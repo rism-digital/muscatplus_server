@@ -50,11 +50,12 @@ class BaseSource(ContextDictSerializer):
             "none": [obj.get("main_title_s")]
         }
 
-    # TODO: Move translations of the source types to the locales
-    #  and make this a proper language map.
-    def get_source_type(self, obj: SolrResult) -> Dict:
+    def get_source_type(self, obj: SolrResult) -> Optional[Dict]:
+        if not obj.get("source_type_sm"):
+            return None
+
         return {
-            "none": [obj["subtype_s"]]
+            "none": obj["source_type_sm"]
         }
 
     def get_part_of(self, obj: Dict) -> Optional[List]:

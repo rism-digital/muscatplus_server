@@ -154,13 +154,13 @@ class FullSource(BaseSource):
         return None
 
     def get_holdings(self, obj: SolrResult) -> Optional[List[Dict]]:
-        fq: List = [f"source_membership_id:{obj.get('id')}",
+        fq: List = [f"source_id:{obj.get('id')}",
                     "type:holding"]
 
         if not has_results(fq=fq):
             return None
 
-        sort: str = "id asc"
+        sort: str = "siglum_s asc, shelfmark_s asc"
 
         conn = SolrManager(SolrConnection)
         conn.search("*:*", fq=fq, sort=sort)
