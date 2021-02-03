@@ -1,7 +1,7 @@
 import re
 from typing import Pattern, Dict, Union, Optional
 
-ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_")
+ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_")
 
 EXTERNAL_IDS: Dict = {
     "viaf": "https://viaf.org/viaf/{ident}",
@@ -188,48 +188,6 @@ RISM_JSONLD_CONTEXT: Dict = {
                     "@id": "geojson:coordinates"
                 }
             }
-        },
-        # "PartialCollectionView": "hydra:PartialCollectionView",
-        # "Collection": "hydra:Collection",
-        # "totalItems": "hydra:totalItems",
-        # "member": "hydra:member",
-        # "view": "hydra:view",
-        # "next": "hydra:next",
-        # "previous": "hydra:previous",
-        # "first": "hydra:first",
-        # "last": "hydra:last",
-        #
-        # "name": {
-        #     "@id": "rdfs:label",
-        #     "@container": [
-        #         "@language",
-        #         "@set"
-        #     ],
-        #     "@context": {
-        #         "none": "@none"
-        #     }
-        # },
-        # "seeAlso": {
-        #     "@type": "@id",
-        #     "@id": "rdfs:seeAlso",
-        #     "@container": "@set"
-        # },
-
-        # "profile": {
-        #     "@type": "@vocab",
-        #     "@id": "dcterms:conformsTo"
-        # },
-        # "musicIncipit": {
-        #     "@id": "rdf:value",
-        #     "@type": "rismdata:pae"  # a custom datatype IRI may not be recognized by some processors.
-        # },
-        # "textIncipit": {
-        #     "@id": "rdf:value"
-        # },
-        # "items": {
-        #     "@type": "@id",
-        #     "@id": "as:items",
-        #     "@container": "@list"
-        # }
+        }
     }
 }
