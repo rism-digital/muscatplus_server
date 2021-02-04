@@ -56,6 +56,10 @@ search:
       display_name: "Related institutions"
       alias: "related-institutions"
       sort: "count desc"
+    holding_institution_sm:
+      display_name: "Holding institution"
+      alias: "holding-institution"
+      sort: "index asc"
     related_people_sm:
       display_name: "Related people"
       alias: "related-people"
