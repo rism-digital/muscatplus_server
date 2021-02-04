@@ -152,7 +152,7 @@ async def _handle_search_request(req: request.Request, handler: Callable, **kwar
         return response.text(error_message, status=500)
 
     if not data_obj:
-        return response.text("The request resource was not found",
+        return response.text("The requested resource was not found",
                              status=404)
 
     response_headers: Dict = {
@@ -315,7 +315,7 @@ async def institution_sources(req, institution_id: str):
 
 @app.route("/sigla/")
 async def sigla(req):
-    return await _handle_request(req, handle_sigla_request)
+    return await _handle_search_request(req, handle_sigla_request)
 
 
 @app.route("/search/")
