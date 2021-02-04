@@ -45,12 +45,20 @@ class SearchRequest:
             # split the incoming filters
             field, value = filt.split(":")
             # Map them to the actual solr fields
+            # Ignore any parameters not explicitly configured
+            if field not in self._alias_map:
+                continue
+
             new_val = f"{self._alias_map[field]}:{value}"
             requested_filters.append(new_val)
 
         return requested_filters
 
     def _get_facets(self) -> str:
+        # This uses the alias feature for facets to map our 'public' name for the facet
+        # to the actual solr field name being used. This means that in the output of this
+        # (that is, when the search request is returned) the facets will be available by
+        # the alias, not by the solr field name as would be normally expected.
         facet_cfg: Dict = self._app_config["search"]["facet_fields"]
         json_facets: Dict = {}
 
@@ -92,9 +100,9 @@ class SearchRequest:
 
         return {
             "q": [self._requested_query],
+            "fq": filters,
             "start": start_row,
             "rows": return_rows,
             "sort": ", ".join(sorts),
-            "fq": filters,
             "json.facet": self._get_facets()
         }
