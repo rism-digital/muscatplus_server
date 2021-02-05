@@ -12,9 +12,9 @@ from search_server.helpers.solr_connection import SolrConnection, SolrResult
 
 
 def handle_holding_request(req, source_id: str, holding_id: str) -> Optional[Dict]:
-    fq: List = ["type:source_holding",
-                f"source_membership_id:source_{source_id}",
-                f"id:holding_{holding_id}"]
+    fq: List = ["type:holding",
+                f"source_id:source_{source_id}",
+                f"id:holding_{holding_id} OR id:holding_{holding_id}-source_{source_id}"]
     record: pysolr.Results = SolrConnection.search("*:*", fq=fq, rows=1)
 
     if record.hits == 0:
@@ -53,20 +53,20 @@ class SourceHolding(ContextDictSerializer):
 
     def get_sid(self, obj: Dict) -> str:
         req = self.context.get('request')
-
+        # find the holding id
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
-        holding_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "holding", source_id=source_id, holding_id=holding_id)
+        return get_identifier(req, "holding", source_id=source_id, holding_id=obj.get("holding_id_sni"))
 
     def get_held_by(self, obj: Dict) -> Dict:
         req = self.context.get('request')
-        institution_id: str = re.sub(ID_SUB, "", obj.get("holding_institution_id"))
+        institution_id: str = re.sub(ID_SUB, "", obj.get("institution_id"))
 
         return {
             "id": get_identifier(req, "institution", institution_id=institution_id),
+            "type": "rism:Institution",
             "label": {
-                "none": [f"{obj.get('holding_institution_s')}"]
+                "none": [f"{obj.get('institution_s')}"]
             },
             "siglum": obj.get("siglum_s")
         }
