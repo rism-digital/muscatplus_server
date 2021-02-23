@@ -78,6 +78,11 @@ _KEY_MODE_MAP: Dict = {
     "8byz": "records.octoechos8",
 }
 
+_CLEF_MAP: Dict = {
+    "G-2": "records.g_minus_2_treble",
+    "C-1": "records.c_minus_1"
+}
+
 
 def key_mode_value_translator(value: str, translations: Dict) -> Dict:
     """
@@ -91,6 +96,13 @@ def key_mode_value_translator(value: str, translations: Dict) -> Dict:
     :return: A dictionary corresponding to a language map for that value.
     """
     trans_key: Optional[str] = _KEY_MODE_MAP.get(value)
+    if not trans_key:
+        return {"none": [value]}
+    return translations.get(trans_key)
+
+
+def clef_translator(value: str, translations: Dict) -> Dict:
+    trans_key: Optional[str] = _CLEF_MAP.get(value)
     if not trans_key:
         return {"none": [value]}
     return translations.get(trans_key)
@@ -123,7 +135,10 @@ FIELD_CONFIG: LabelConfig = {
     "source_title_s": ("records.title_on_source", None),
     "additional_title_s": ("records.additional_title", None),
     "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
-    "scoring_summary_sm": ("records.scoring_summary", None)
+    "scoring_summary_sm": ("records.scoring_summary", None),
+    "clef_s": ("records.clef", clef_translator),
+    "key_s": ("records.key_signature", None),
+    "work_num_s": ("records.work_number", None)
 }
 
 
