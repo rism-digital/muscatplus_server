@@ -197,12 +197,12 @@ async def incipits_list(req, source_id: str):
                                  source_id=source_id)
 
 
-@app.route("/sources/<source_id:string>/incipits/<incipit_id:string>/")
-async def incipit(req, source_id: str, incipit_id: str):
+@app.route("/sources/<source_id:string>/incipits/<work_num:string>/")
+async def incipit(req, source_id: str, work_num: str):
     return await _handle_request(req,
                                  handle_incipit_request,
                                  source_id=source_id,
-                                 incipit_id=incipit_id)
+                                 work_num=work_num)
 
 
 @app.route("/sources/<source_id:string>/materialgroups/")
