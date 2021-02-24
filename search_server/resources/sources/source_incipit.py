@@ -1,6 +1,6 @@
 import re
 from typing import Dict, Optional, List
-
+import logging
 import pysolr
 import serpy
 
@@ -17,6 +17,8 @@ from search_server.helpers.identifiers import (
 )
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, SolrManager
+
+log = logging.getLogger(__name__)
 
 vrv_tk = verovio.toolkit()
 vrv_tk.setInputFrom(verovio.PAE)
@@ -67,8 +69,9 @@ def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
     fq: List = ["type:source_incipit",
                 f"source_id:source_{source_id}",
                 f"work_num_s:{work_num}"]
+    sort: str = "work_num_ans asc"
 
-    record: pysolr.Results = SolrConnection.search("*:*", fq=fq, rows=1)
+    record: pysolr.Results = SolrConnection.search("*:*", fq=fq, sort=sort, rows=1)
 
     if record.hits == 0:
         return None
@@ -126,7 +129,7 @@ class SourceIncipitList(ContextDictSerializer):
         conn = SolrManager(SolrConnection)
         fq: List = [f"source_id:{obj.get('id')}",
                     "type:source_incipit"]
-        sort: str = "work_num_s asc"
+        sort: str = "work_num_ans asc"
 
         conn.search("*:*", fq=fq, sort=sort)
 
