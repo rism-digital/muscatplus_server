@@ -215,7 +215,12 @@ class SourceIncipit(ContextDictSerializer):
 
         pae_code: str = _incipit_to_pae(obj)
 
-        vrv_tk.loadData(pae_code)
+        load_status: bool = vrv_tk.loadData(pae_code)
+
+        if not load_status:
+            log.error("Could not load music incipit for %s", obj.get("id"))
+            return None
+
         svg: str = vrv_tk.renderToSVG()
         mid: str = vrv_tk.renderToMIDI()
         b64midi = f"data:audio/midi;base64,{mid}"
