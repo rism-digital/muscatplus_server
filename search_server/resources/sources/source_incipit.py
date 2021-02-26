@@ -34,7 +34,8 @@ vrv_tk.setOptions(ujson.dumps({
     "scale": 40,
     "adjustPageHeight": 1,
     "svgHtml5": "true",
-    "svgFormatRaw": "true"
+    "svgFormatRaw": "true",
+    "svgRemoveXlink": "true"
 }))
 
 
