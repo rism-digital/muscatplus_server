@@ -134,11 +134,6 @@ FIELD_CONFIG: LabelConfig = {
     "main_title_s": ("records.standardized_title", None),
     "source_title_s": ("records.title_on_source", None),
     "additional_title_s": ("records.additional_title", None),
-    "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
-    "scoring_summary_sm": ("records.scoring_summary", None),
-    "clef_s": ("records.clef", clef_translator),
-    "key_s": ("records.key_signature", None),
-    "work_num_s": ("records.work_number", None)
 }
 
 

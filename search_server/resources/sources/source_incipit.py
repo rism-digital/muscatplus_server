@@ -7,7 +7,8 @@ import serpy
 import ujson
 import verovio
 
-from search_server.helpers.display_fields import get_display_fields
+from search_server.helpers.display_fields import get_display_fields, LabelConfig, key_mode_value_translator, \
+    clef_translator
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import (
     ID_SUB,
@@ -200,7 +201,19 @@ class SourceIncipit(ContextDictSerializer):
         req = self.context.get("request")
         transl: Dict = req.app.translations
 
-        return get_display_fields(obj, transl)
+        field_config: LabelConfig = {
+            "text_incipit_s": ("records.text_incipit", None),
+            "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
+            "scoring_summary_sm": ("records.scoring_summary", None),
+            "clef_s": ("records.clef", clef_translator),
+            "key_s": ("records.key_signature", None),
+            "work_num_s": ("records.work_number", None),
+            "role_s": ("records.role", None),
+            "scoring_sm": ("records.scoring_in_movement", None),
+            "general_notes_sm": ("records.general_note_incipits", None)
+        }
+
+        return get_display_fields(obj, transl, field_config)
 
     def get_text_incipit(self, obj: SolrResult) -> Optional[Dict]:
         if not obj.get("text_incipit_s"):
