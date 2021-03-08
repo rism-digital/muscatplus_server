@@ -139,12 +139,18 @@ class SourceMaterialGroup(ContextDictSerializer):
 
         fields: LabelConfig = {
             "source_type_sm": ("records.source_type", None),
-            "date_statements_sm": ("records.date", None),
             "physical_extent_sm": ("records.extent", None),
             "parts_held_sm": ("records.parts_held", None),
             "parts_extent_sm": ("records.parts_held_extent", None),
             "plate_numbers_sm": ("records.plate_number", None),
-            "general_notes_sm": ("records.general_note", None)
+            "printing_techniques_sm": ("records.printing_technique", None),
+            "book_formats_sm": ("records.book_format", None),
+            "general_notes_sm": ("records.general_note", None),
+            "binding_notes_sm": ("records.binding_note", None),
+            "watermark_notes_sm": ("records.watermark_description", None),
+            "place_publication_sm": ("records.place_publication", None),
+            "name_publisher_sm": ("records.publisher", None),
+            "date_statements_sm": ("records.date", None),
         }
 
         return get_display_fields(obj, transl, field_config=fields)
