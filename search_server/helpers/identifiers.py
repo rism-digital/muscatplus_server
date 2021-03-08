@@ -43,7 +43,8 @@ RELATIONSHIP_LABELS = {
     "dte": "records.dedicatee",
     "pbl": "records.publisher",
     "cmp": "records.composer",
-    "oth": "records.other"
+    "oth": "records.other",
+    "prf": "records.performer"
 }
 
 QUALIFIER_LABELS = {
