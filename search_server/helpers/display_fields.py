@@ -132,6 +132,7 @@ def _default_translator(value: Union[str, List], translations: Dict) -> Dict:
 # This field config will be the default used if one is not provided.
 FIELD_CONFIG: LabelConfig = {
     "main_title_s": ("records.standardized_title", None),
+    "scoring_summary_sm": ("records.scoring_summary", None),
     "source_title_s": ("records.title_on_source", None),
     "additional_title_s": ("records.additional_title", None),
 }
