@@ -69,20 +69,14 @@ class SourceRelationshipList(ContextDictSerializer):
         return transl.get("records.people_institutions")
 
     def get_items(self, obj: SolrResult) -> Optional[List[Dict]]:
-        conn = SolrManager(SolrConnection)
-        fq: List = [f"source_id:{obj.get('id')}",
-                    "type:source_person_relationship OR type:source_institution_relationship",
-                    "!relationship_s:cre"]
-
-        conn.search("*:*", fq=fq)
-
-        if conn.hits == 0:
+        relationships: Optional[List] = obj.get("relationships_json")
+        if not relationships:
             return None
 
-        relationship = SourceRelationship(conn.results, many=True,
-                                          context={"request": self.context.get("request")})
+        relationship_list = SourceRelationship(relationships, many=True,
+                                               context={"request": self.context.get("request")})
 
-        return relationship.data
+        return relationship_list.data
 
 
 class SourceRelationship(ContextDictSerializer):

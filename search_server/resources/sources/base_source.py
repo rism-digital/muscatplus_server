@@ -58,27 +58,25 @@ class BaseSource(ContextDictSerializer):
             "none": obj["source_type_sm"]
         }
 
-    def get_part_of(self, obj: Dict) -> Optional[List]:
+    def get_part_of(self, obj: Dict) -> Optional[Dict]:
+        # This source is not part of another source; return None
+        if 'source_membership_json' not in obj:
+            return None
+
         # Do not show 'partOf' if the result is embedded in the source it is part of.
         if not self.context.get("direct_request"):
             return None
 
-        this_id: Optional[str] = obj.get("source_id")
-        member_id: Optional[str] = obj.get("source_membership_id")
+        source_membership: Dict = obj.get('source_membership_json', {})
 
-        # If either the source_id or member_id are missing, or if
-        # they are the same value, then we don't have enough information
-        # to show a 'partOf' relationship.
-        if not this_id or not member_id or (this_id == member_id):
-            return None
+        req = self.context.get('request')
+        parent_source_id: str = re.sub(ID_SUB, "", source_membership.get("source_id"))
+        ident: str = get_identifier(req, "source", source_id=parent_source_id)
 
-        req = self.context.get("request")
-        rel_id: str = re.sub(ID_SUB, "", member_id)
+        parent_title: Optional[str] = source_membership.get("main_title")
 
-        fq = ["type:source", f"source_id:{member_id}"]
-        res = SolrConnection.search("*:*", fq=fq)
-
-        if res.hits == 0:
-            return None
-
-        return BaseSource(res.docs, many=True, context={"request": req}).data
+        return {
+            "id": ident,
+            "type": "rism:Source",
+            "label": {"none": [parent_title]}
+        }

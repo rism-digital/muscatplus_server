@@ -4,7 +4,7 @@ from typing import Dict, Optional, List
 import pysolr
 import serpy
 
-from search_server.helpers.fields import StaticField
+from search_server.helpers.fields import StaticField, LanguageMapField
 from search_server.helpers.identifiers import get_identifier, ID_SUB, get_jsonld_context, \
     JSONLDContext, EXTERNAL_IDS
 from search_server.helpers.serializers import ContextDictSerializer
@@ -38,12 +38,10 @@ class Institution(ContextDictSerializer):
         label="type",
         value="rism:Institution"
     )
-    label = serpy.MethodField()
-    siglum = serpy.Field(
-        attr="siglum_s",
-        required=False
+    label = LanguageMapField(
+        attr="name_s"
     )
-    other_names = serpy.Field(
+    other_names = LanguageMapField(
         label="otherNames",
         attr="alternate_names_sm",
         required=False
@@ -52,6 +50,10 @@ class Institution(ContextDictSerializer):
     sources = serpy.MethodField()
     see_also = serpy.MethodField(
         label="seeAlso"
+    )
+    siglum = LanguageMapField(
+        attr="siglum_s",
+        required=False
     )
 
     def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
@@ -63,9 +65,6 @@ class Institution(ContextDictSerializer):
         institution_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "institution", institution_id=institution_id)
-
-    def get_label(self, obj: SolrResult) -> Dict:
-        return {"none": [f"{obj.get('name_s')}"]}
 
     def get_sources(self, obj: SolrResult) -> Optional[Dict]:
         institution_id: str = obj.get("institution_id")

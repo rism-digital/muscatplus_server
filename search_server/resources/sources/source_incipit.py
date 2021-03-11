@@ -27,13 +27,13 @@ vrv_tk.setOptions(ujson.dumps({
     "footer": 'none',
     "header": 'none',
     "pageMarginTop": 0,
-    "pageMarginBottom": 0,
+    "pageMarginBottom": 25,  # Artificially inflate the bottom margin until rism-digital/verovio#1960 is fixed.
     "pageMarginLeft": 0,
     "pageMarginRight": 0,
     "adjustPageWidth": "true",
     "spacingStaff": 1,
     "scale": 40,
-    "adjustPageHeight": 1,
+    "adjustPageHeight": "true",
     "svgHtml5": "true",
     "svgFormatRaw": "true",
     "svgRemoveXlink": "true"
@@ -54,15 +54,15 @@ def _incipit_to_pae(obj: SolrResult) -> str:
     keysig = obj.get("key_s")
     incip = obj.get("music_incipit_s")
 
+    # indentation is significant; otherwise empty spaces will be added to start of every line.
     pae_code: str = f"""
-            @start:pae-file
-            @clef:{clef}
-            @keysig:{keysig}
-            @key:{key_or_mode}
-            @timesig:{timesig}
-            @data:{incip}
-            @end:pae-file
-            """
+@start:pae-file
+@clef:{clef}
+@keysig:{keysig}
+@key:{key_or_mode}
+@timesig:{timesig}
+@data:{incip}
+@end:pae-file"""
 
     return pae_code
 
@@ -157,14 +157,6 @@ class SourceIncipit(ContextDictSerializer):
         label="type",
         value="rism:Incipit"
     )
-    title = serpy.StrField(
-        attr="title_s",
-        required=False
-    )
-    text_incipit = serpy.MethodField(
-        label="textIncipit"
-    )
-
     rendered = serpy.MethodField()
 
     def get_ctx(self, obj: Dict) -> Optional[Dict]:
@@ -202,6 +194,7 @@ class SourceIncipit(ContextDictSerializer):
         transl: Dict = req.app.translations
 
         field_config: LabelConfig = {
+            "title_s": ("records.title_movement_tempo", None),
             "text_incipit_s": ("records.text_incipit", None),
             "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
             "scoring_summary_sm": ("records.scoring_summary", None),
@@ -215,20 +208,11 @@ class SourceIncipit(ContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config)
 
-    def get_text_incipit(self, obj: SolrResult) -> Optional[Dict]:
-        if not obj.get("text_incipit_s"):
-            return None
-
-        return {
-            "none": [f"{obj.get('text_incipit_s')}"]
-        }
-
     def get_rendered(self, obj: SolrResult) -> Optional[List]:
         if not obj.get("music_incipit_s"):
             return None
 
         pae_code: str = _incipit_to_pae(obj)
-
         load_status: bool = vrv_tk.loadData(pae_code)
 
         if not load_status:

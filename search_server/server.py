@@ -19,7 +19,7 @@ from search_server.resources.search.search import handle_search_request
 from search_server.resources.siglum.sigla import handle_sigla_request
 from search_server.resources.sources.full_source import handle_source_request
 from search_server.resources.sources.source_creator import handle_creator_request
-from search_server.resources.sources.source_holding import handle_holding_request
+from search_server.resources.sources.source_exemplar import handle_holding_request
 from search_server.resources.sources.source_incipit import handle_incipit_request, handle_incipits_list_request
 from search_server.resources.people.person import handle_person_request
 from search_server.resources.sources.source_list import handle_source_list_request
@@ -59,11 +59,11 @@ else:
 logging.basicConfig(format="[%(asctime)s] [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
                     level=LOGLEVEL)
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 translations: Optional[Dict] = load_translations("locales/")
 if not translations:
-    log.error("No translations can be loaded.")
+    log.critical("No translations can be loaded.")
 
 app.translations = translations
 app.context_uri = context_uri
@@ -240,6 +240,11 @@ async def creator(req, source_id: str):
     return await _handle_request(req,
                                  handle_creator_request,
                                  source_id=source_id)
+
+
+@app.route("/sources/<source_id:string>/holdings/")
+async def holding_list(req, source_id: str):
+    pass
 
 
 @app.route("/sources/<source_id:string>/holdings/<holding_id:string>/")

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict, Optional, List
 import serpy
 
 
@@ -15,3 +15,8 @@ class StaticField(serpy.Field):
 
     def as_getter(self, serializer_field_name, serializer_cls) -> Any:
         return self.to_value
+
+
+class LanguageMapField(serpy.Field):
+    def to_value(self, value: Any) -> Dict[str, List]:
+        return {"none": [value]}
