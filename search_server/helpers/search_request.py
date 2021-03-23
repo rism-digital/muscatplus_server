@@ -2,7 +2,7 @@ from typing import Dict, Optional, List
 
 from search_server.exceptions import InvalidQueryException, PaginationParseException
 from search_server.resources.search.pagination import parse_page_number, parse_row_number
-
+import urllib.parse
 import logging
 
 import ujson
@@ -43,13 +43,24 @@ class SearchRequest:
 
         for filt in fqs:
             # split the incoming filters
-            field, value = filt.split(":")
+            field, raw_value = filt.split(":")
             # Map them to the actual solr fields
             # Ignore any parameters not explicitly configured
             if field not in self._alias_map:
                 continue
 
-            new_val = f"{self._alias_map[field]}:{value}"
+            # do some processing and normalization on the value. First ensure we have a non-entity string.
+            # This should convert the URL-encoded parameters back to 'normal' characters
+            unencoded_value: str = urllib.parse.unquote_plus(raw_value)
+
+            # Then remove any quotes (single or double)
+            value: str = unencoded_value.replace("\"", "").replace("'", "")
+
+            log.debug("Query value: %s", value)
+
+            # Finally, ensure that we *always* pass it to Solr as a quoted value. (The single quotes here will
+            # get converted to double-quotes by the internals of the API).
+            new_val = f"{self._alias_map[field]}:\"{value}\""
             requested_filters.append(new_val)
 
         return requested_filters
