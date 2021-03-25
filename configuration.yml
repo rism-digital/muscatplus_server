@@ -38,8 +38,8 @@ search:
       alias: "item-filter"
       sort: "count desc"
       display_value_map:
-        "True": "Include item records"
-        "False": "Hide item records"
+        "True": "Only item records"
+        "False": "Only parent records"
     key_mode_s:
       display_name: "Key or mode"
       alias: "key-mode"
@@ -76,3 +76,10 @@ search:
       display_name: "Relationship"
       alias: "relationship"
       sort: "index asc"
+    has_digitization_b:
+      display_name: "Links to digitizations"
+      alias: "digitization"
+      sort: "count desc"
+      display_value_map:
+        "True": "Only digitized sources"
+        "False": "Non-digitized sources"
