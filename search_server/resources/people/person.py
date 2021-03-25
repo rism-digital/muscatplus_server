@@ -10,6 +10,7 @@ from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier, ID_S
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.people.person_institution_relationship import PersonInstitutionRelationshipList
+from search_server.resources.people.person_note import PersonNoteList
 from search_server.resources.people.person_person_relationship import PersonRelationshipList
 from search_server.resources.people.person_place_relationship import PersonPlaceRelationshipList
 
@@ -41,7 +42,13 @@ class Person(BasePerson):
         label="nameVariants"
     )
     relations = serpy.MethodField()
+    notes = serpy.MethodField(
+        label="notes"
+    )
     sources = serpy.MethodField()
+    external_links = serpy.MethodField(
+        label="externalLinks"
+    )
 
     def get_see_also(self, obj: SolrResult) -> Optional[List[Dict]]:
         external_ids: Optional[List] = obj.get("external_ids")
@@ -109,8 +116,10 @@ class Person(BasePerson):
         transl: Dict = req.app.translations
 
         field_config: Dict = {
+            "other_dates_s": ("records.other_life_dates", None),
             "name_variants_sm": ("records.name_variants", None),
-            "gender_s": ("records.gender", None)
+            "gender_s": ("records.gender", None),
+            "roles_sm": ("records.profession_or_function", None)
         }
 
         return get_display_fields(obj, transl, field_config)
@@ -149,12 +158,14 @@ class Person(BasePerson):
             "items": items
         }
 
-    def get_references(self, obj: SolrResult) -> Optional[Dict]:
-        req = self.context.get("request")
-        transl = req.app.translations
+    def get_notes(self, obj: SolrResult) -> Optional[Dict]:
+        notelist: Dict = PersonNoteList(obj, context={"request": self.context.get("request")}).data
 
-        return {
-            "type": "rism:PersonReferencesNotes",
-            "label": transl.get("records.references_and_notes"),
-            "items": items
-        }
+        # Check that the items is not empty; if not, return the note list object.
+        if notelist.get("items"):
+            return notelist
+
+        return None
+
+    def get_external_links(self, obj: SolrResult) -> Optional[Dict]:
+        pass
