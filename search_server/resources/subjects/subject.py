@@ -5,11 +5,9 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier, ID_SUB, RISM_JSONLD_CONTEXT, get_jsonld_context, \
-    JSONLDContext
-from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult, SolrConnection, SolrManager, result_count
-from search_server.resources.sources.base_source import BaseSource
+from search_server.helpers.identifiers import get_identifier, ID_SUB
+from search_server.helpers.serializers import JSONLDContextDictSerializer
+from search_server.helpers.solr_connection import SolrResult, SolrConnection, result_count
 
 
 def handle_subject_request(req, subject_id: str) -> Optional[Dict]:
@@ -29,10 +27,7 @@ def handle_subject_request(req, subject_id: str) -> Optional[Dict]:
     return subject.data
 
 
-class Subject(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context"
-    )
+class Subject(JSONLDContextDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
@@ -49,10 +44,6 @@ class Subject(ContextDictSerializer):
         label="alternateTerms"
     )
     sources = serpy.MethodField()
-
-    def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
-        direct_request: bool = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context.get("request")

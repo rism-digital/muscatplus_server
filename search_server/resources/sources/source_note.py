@@ -1,28 +1,20 @@
-from typing import Union, Optional, Dict, List
+from typing import Optional, Dict, List
 
 import serpy
 
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_jsonld_context, JSONLDContext
-from search_server.helpers.serializers import ContextDictSerializer
+from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 
 
-class SourceNoteList(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context"
-    )
+class SourceNoteList(JSONLDContextDictSerializer):
     label = serpy.MethodField()
     ntype = StaticField(
         label="type",
         value="rism:NoteList"
     )
     items = serpy.MethodField()
-
-    def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
-        direct_request: bool = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")

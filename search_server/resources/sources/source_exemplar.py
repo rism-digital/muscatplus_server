@@ -6,9 +6,8 @@ import serpy
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import ID_SUB, get_identifier, RISM_JSONLD_CONTEXT, get_jsonld_context, \
-    JSONLDContext
-from search_server.helpers.serializers import ContextDictSerializer
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, SolrManager
 
 
@@ -28,10 +27,7 @@ def handle_holding_request(req, source_id: str, holding_id: str) -> Optional[Dic
     return holding.data
 
 
-class SourceExemplarList(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context"
-    )
+class SourceExemplarList(JSONLDContextDictSerializer):
     lid = serpy.MethodField(
         label="id"
     )
@@ -41,10 +37,6 @@ class SourceExemplarList(ContextDictSerializer):
     )
     label = serpy.MethodField()
     items = serpy.MethodField()
-
-    def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
-        direct_request: bool = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_lid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
@@ -74,11 +66,7 @@ class SourceExemplarList(ContextDictSerializer):
                               context={"request": self.context.get("request")}).data
 
 
-class SourceExemplar(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context",
-    )
-
+class SourceExemplar(JSONLDContextDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
@@ -90,10 +78,6 @@ class SourceExemplar(ContextDictSerializer):
         label="heldBy"
     )
     summary = serpy.MethodField()
-
-    def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
-        direct_request: Optional[bool] = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_sid(self, obj: Dict) -> str:
         req = self.context.get('request')
