@@ -1,7 +1,7 @@
+import logging
 import re
 from typing import Dict, List, Optional
 
-import pysolr
 import serpy
 
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
@@ -9,16 +9,12 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import (
     ID_SUB,
     get_identifier,
-    JSONLDContext,
-    get_jsonld_context,
     RELATIONSHIP_LABELS,
     QUALIFIER_LABELS
 )
-
 from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult
+from search_server.helpers.solr_connection import SolrResult
 
-import logging
 log = logging.getLogger(__name__)
 
 

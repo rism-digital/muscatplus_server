@@ -5,9 +5,8 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField, LanguageMapField
-from search_server.helpers.identifiers import get_identifier, ID_SUB, get_jsonld_context, \
-    JSONLDContext, EXTERNAL_IDS
-from search_server.helpers.serializers import ContextDictSerializer
+from search_server.helpers.identifiers import get_identifier, ID_SUB, EXTERNAL_IDS
+from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
 
 
@@ -27,10 +26,7 @@ def handle_institution_request(req, institution_id: str) -> Optional[Dict]:
     return institution.data
 
 
-class Institution(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context"
-    )
+class Institution(JSONLDContextDictSerializer):
     iid = serpy.MethodField(
         label="id"
     )
@@ -55,10 +51,6 @@ class Institution(ContextDictSerializer):
         attr="siglum_s",
         required=False
     )
-
-    def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
-        direct_request: Optional[bool] = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_iid(self, obj: SolrResult) -> str:
         req = self.context.get("request")

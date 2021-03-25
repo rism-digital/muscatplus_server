@@ -57,25 +57,42 @@ QUALIFIER_LABELS = {
     "Misattributed": "records.misattributed"
 }
 
-# A type that represents the fact that the JSON-LD context can be given either by URI or an embedded context object.
-JSONLDContext = Union[str, Dict]
+PERSON_RELATIONSHIP_LABELS = {
+    None: "records.unknown",
+    "brother of": "records.brother_of",
+    "child of": "records.child_of",
+    "mother of": "records.mother_of",
+    "confused with": "records.confused_with",
+    "sister of": "records.sister_of",
+    "married to": "records.married_to",
+    "father of": "records.father_of",
+    "related to": "records.related_to",
+    "other": "records.other"
+}
 
+PERSON_PLACE_RELATIONSHIP_LABELS = {
+    None: "records.unknown",
+    "go": "records.place_birth",
+    "ha": "records.place_origin",
+    "so": "records.place_death",
+    "wl": "records.country_active",
+    "wo": "records.place_active",
+    "wr": "records.region_active",
+}
 
-def get_jsonld_context(request) -> JSONLDContext:
-    """
-    Returns the configured JSON-LD context string. If the `context_uri` setting is
-    set to True in the server configuration file, this will return the URI for the
-    "context" handler. If it is set to False, it will return the full JSON-LD Context
-    object inline.
-
-    :param request: A Sanic request object, with the 'app.context_uri' setting added to it during applicaton startup.
-    :return: Either a string representing the URI to the context object, or the context object itself as a Dictionary.
-    """
-    if request.app.context_uri:
-        return get_identifier(request, "context")
-
-    return RISM_JSONLD_CONTEXT
-
+PERSON_NAME_VARIANT_TYPES = {
+    None: "records.unknown",
+    "bn": "records.nickname",
+    "da": "records.pseudonym",
+    "do": "records.religious_name",
+    "ee": "records.married_name",
+    "gg": "records.birth_name",
+    "in": "records.initials",
+    "tn": "records.baptismal_name",
+    "ub": "records.translation",
+    "xx": "general.undetermined",
+    "z": "records.alternate_spelling"
+}
 
 RISM_JSONLD_CONTEXT: Dict = {
     "@context": {

@@ -3,9 +3,8 @@ from typing import Dict, Optional, List
 
 import serpy
 
-from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier, ID_SUB, get_jsonld_context, JSONLDContext
-from search_server.helpers.serializers import ContextDictSerializer
+from search_server.helpers.identifiers import get_identifier, ID_SUB
+from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.resources.people.base_person import BasePerson
 
 
@@ -13,10 +12,7 @@ def handle_creator_request(req, source_id: str) -> Optional[Dict]:
     pass
 
 
-class SourceCreator(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context"
-    )
+class SourceCreator(JSONLDContextDictSerializer):
     # cid = serpy.MethodField(
     #     label="id"
     # )
@@ -25,10 +21,6 @@ class SourceCreator(ContextDictSerializer):
     related_to = serpy.MethodField(
         label="relatedTo"
     )
-
-    def get_ctx(self, obj: Dict) -> Optional[JSONLDContext]:
-        direct_request: bool = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_cid(self, obj: Dict) -> str:
         req = self.context.get("request")

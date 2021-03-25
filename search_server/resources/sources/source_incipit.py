@@ -1,22 +1,24 @@
+import logging
 import re
 from typing import Dict, Optional, List
-import logging
+
 import pysolr
 import serpy
-
 import ujson
 import verovio
 
-from search_server.helpers.display_fields import get_display_fields, LabelConfig, key_mode_value_translator, \
+from search_server.helpers.display_fields import (
+    get_display_fields,
+    LabelConfig,
+    key_mode_value_translator,
     clef_translator
+)
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import (
     ID_SUB,
-    get_identifier,
-    get_jsonld_context,
-    JSONLDContext
+    get_identifier
 )
-from search_server.helpers.serializers import ContextDictSerializer
+from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, SolrManager
 
 log = logging.getLogger(__name__)
@@ -97,10 +99,7 @@ def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[Dict]
     return incipit.data
 
 
-class SourceIncipitList(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context"
-    )
+class SourceIncipitList(JSONLDContextDictSerializer):
     lid = serpy.MethodField(
         label="id"
     )
@@ -110,10 +109,6 @@ class SourceIncipitList(ContextDictSerializer):
     )
     label = serpy.MethodField()
     items = serpy.MethodField()
-
-    def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
-        direct_request: bool = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_lid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
@@ -143,10 +138,7 @@ class SourceIncipitList(ContextDictSerializer):
                              context={"request": self.context.get("request")}).data
 
 
-class SourceIncipit(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context"
-    )
+class SourceIncipit(JSONLDContextDictSerializer):
     incip_id = serpy.MethodField(
         label="id"
     )
@@ -158,10 +150,6 @@ class SourceIncipit(ContextDictSerializer):
         value="rism:Incipit"
     )
     rendered = serpy.MethodField()
-
-    def get_ctx(self, obj: Dict) -> Optional[Dict]:
-        direct_request: bool = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_incip_id(self, obj: Dict) -> str:
         req = self.context.get("request")

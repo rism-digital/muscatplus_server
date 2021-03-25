@@ -6,10 +6,9 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import ID_SUB, get_identifier, RELATIONSHIP_LABELS, RISM_JSONLD_CONTEXT, \
-    get_jsonld_context, JSONLDContext, QUALIFIER_LABELS
-from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrResult, SolrManager
+from search_server.helpers.identifiers import ID_SUB, get_identifier, RELATIONSHIP_LABELS, QUALIFIER_LABELS
+from search_server.helpers.serializers import JSONLDContextDictSerializer
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 
 log = logging.getLogger()
 
@@ -37,24 +36,16 @@ def handle_relationships_request(req, source_id: str, relationship_id: str) -> O
     return relationship.data
 
 
-class SourceRelationshipList(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context"
-    )
-
+class SourceRelationshipList(JSONLDContextDictSerializer):
     mid = serpy.MethodField(
         label="id"
     )
     rtype = StaticField(
         label="type",
-        value="rism:RelationshipList"
+        value="rism:SourceRelationshipList"
     )
     label = serpy.MethodField()
     items = serpy.MethodField()
-
-    def get_ctx(self, obj: SolrResult) -> Optional[Dict]:
-        direct_request: bool = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_mid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
@@ -79,10 +70,7 @@ class SourceRelationshipList(ContextDictSerializer):
         return relationship_list.data
 
 
-class SourceRelationship(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context"
-    )
+class SourceRelationship(JSONLDContextDictSerializer):
     srid = serpy.MethodField(
         label="id"
     )
@@ -96,10 +84,6 @@ class SourceRelationship(ContextDictSerializer):
     related_to = serpy.MethodField(
         label="relatedTo"
     )
-
-    def get_ctx(self, obj: Dict) -> Optional[JSONLDContext]:
-        direct_request: bool = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_srid(self, obj: Dict) -> str:
         req = self.context.get("request")

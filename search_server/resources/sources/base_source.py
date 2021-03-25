@@ -1,25 +1,20 @@
 import re
-from typing import Dict, Optional, List
+from typing import Dict, Optional
 
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import ID_SUB, get_identifier, get_jsonld_context, \
-    JSONLDContext
-from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult, SolrConnection
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.serializers import JSONLDContextDictSerializer
+from search_server.helpers.solr_connection import SolrResult
 
 
-class BaseSource(ContextDictSerializer):
+class BaseSource(JSONLDContextDictSerializer):
     """
     A base source serializer for providing a basic set of information for
     a RISM Source. A full record of the source is provided by the full source
     serializer, which adds additional information to this
     """
-    ctx = serpy.MethodField(
-        label="@context",
-    )
-
     sid = serpy.MethodField(
         label="id"
     )
@@ -34,10 +29,6 @@ class BaseSource(ContextDictSerializer):
     part_of = serpy.MethodField(
         label="partOf"
     )
-
-    def get_ctx(self, obj: Dict) -> Optional[JSONLDContext]:
-        direct_request: Optional[bool] = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_sid(self, obj: Dict) -> str:
         req = self.context.get('request')

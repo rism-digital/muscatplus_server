@@ -5,13 +5,12 @@ import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import JSONLDContext, get_jsonld_context, get_identifier
-from search_server.helpers.serializers import ContextSerializer
+from search_server.helpers.serializers import JSONLDContextSerializer
 from search_server.resources.search.facets import FacetList
 from search_server.resources.search.pagination import Pagination
 
 
-class BaseSearchResults(ContextSerializer):
+class BaseSearchResults(JSONLDContextSerializer):
     """
     A Base Search Results serializer. Consumes a Solr response directly, and will manage the pagination
     data structures, but the actual serialization of the results is left to the classes derived from this
@@ -20,9 +19,6 @@ class BaseSearchResults(ContextSerializer):
 
     Implementing classes must implement the `get_items` method.
     """
-    ctx = serpy.MethodField(
-        label="@context"
-    )
     sid = serpy.MethodField(
         label="id"
     )
@@ -36,9 +32,6 @@ class BaseSearchResults(ContextSerializer):
     view = serpy.MethodField()
     items = serpy.MethodField()
     facets = serpy.MethodField()
-
-    def get_ctx(self, obj: pysolr.Results) -> JSONLDContext:
-        return get_jsonld_context(self.context.get("request"))
 
     def get_sid(self, obj: pysolr.Results) -> str:
         """

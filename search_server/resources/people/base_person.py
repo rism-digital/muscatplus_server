@@ -1,18 +1,15 @@
 import re
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict
 
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_jsonld_context, ID_SUB, get_identifier, JSONLDContext
-from search_server.helpers.serializers import ContextDictSerializer
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 
 
-class BasePerson(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context"
-    )
+class BasePerson(JSONLDContextDictSerializer):
     pid = serpy.MethodField(
         label="id"
     )
@@ -24,10 +21,6 @@ class BasePerson(ContextDictSerializer):
         label="typeLabel"
     )
     label = serpy.MethodField()
-
-    def get_ctx(self, obj: SolrResult) -> Optional[JSONLDContext]:
-        direct_request: bool = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context.get("request")

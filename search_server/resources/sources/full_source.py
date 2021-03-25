@@ -6,11 +6,11 @@ import pysolr
 import serpy
 
 from search_server.helpers.display_fields import get_display_fields
-from search_server.helpers.identifiers import ID_SUB, get_identifier, get_jsonld_context
-from search_server.helpers.serializers import ContextDictSerializer
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult, has_results
 from search_server.resources.sources.base_source import BaseSource
-from search_server.resources.sources.source_exemplar import SourceExemplar, SourceExemplarList
+from search_server.resources.sources.source_exemplar import SourceExemplarList
 from search_server.resources.sources.source_incipit import SourceIncipitList
 from search_server.resources.sources.source_materialgroup import SourceMaterialGroupList
 from search_server.resources.sources.source_note import SourceNoteList
@@ -36,18 +36,11 @@ def handle_source_request(req, source_id: str) -> Optional[Dict]:
     return source.data
 
 
-class SourceItemList(ContextDictSerializer):
-    ctx = serpy.MethodField(
-        label="@context"
-    )
+class SourceItemList(JSONLDContextDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-
-    def get_ctx(self, obj: SolrResult) -> Optional[Dict]:
-        direct_request: bool = self.context.get("direct_request")
-        return get_jsonld_context(self.context.get("request")) if direct_request else None
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
