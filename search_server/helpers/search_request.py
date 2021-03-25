@@ -56,8 +56,6 @@ class SearchRequest:
             # Then remove any quotes (single or double)
             value: str = unencoded_value.replace("\"", "").replace("'", "")
 
-            log.debug("Query value: %s", value)
-
             # Finally, ensure that we *always* pass it to Solr as a quoted value. (The single quotes here will
             # get converted to double-quotes by the internals of the API).
             new_val = f"{self._alias_map[field]}:\"{value}\""
