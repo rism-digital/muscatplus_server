@@ -13,6 +13,7 @@ class PersonExternalLinkList(JSONLDContextDictSerializer):
         value="rism:PersonExternalLinkList"
     )
     label = serpy.MethodField()
+    items = serpy.MethodField()
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
@@ -28,7 +29,7 @@ class PersonExternalLinkList(JSONLDContextDictSerializer):
 class PersonExternalLink(JSONLDContextDictSerializer):
     ptype = StaticField(
         label="type",
-        value="rism:PersonExternalLinkList"
+        value="rism:PersonExternalLink"
     )
     url = serpy.MethodField()
     note = serpy.MethodField()

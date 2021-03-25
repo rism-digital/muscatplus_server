@@ -9,6 +9,7 @@ from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier, ID_SUB, PERSON_NAME_VARIANT_TYPES
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
 from search_server.resources.people.base_person import BasePerson
+from search_server.resources.people.person_external_links import PersonExternalLinkList
 from search_server.resources.people.person_institution_relationship import PersonInstitutionRelationshipList
 from search_server.resources.people.person_note import PersonNoteList
 from search_server.resources.people.person_person_relationship import PersonRelationshipList
@@ -168,4 +169,8 @@ class Person(BasePerson):
         return None
 
     def get_external_links(self, obj: SolrResult) -> Optional[Dict]:
-        pass
+        if 'external_links_json' not in obj:
+            return None
+
+        return PersonExternalLinkList(obj, context={"request": self.context.get("request")}).data
+
