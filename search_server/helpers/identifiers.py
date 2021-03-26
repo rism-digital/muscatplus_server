@@ -4,10 +4,21 @@ from typing import Pattern, Dict, Union, Optional
 ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_")
 
 EXTERNAL_IDS: Dict = {
-    "viaf": "https://viaf.org/viaf/{ident}",
-    "dnb": "http://d-nb.info/gnd/{ident}",
-    "wkp": "https://www.wikidata.org/wiki/{ident}",
-    "isil": "https://ld.zdb-services.de/resource/organisations/{ident}"
+    "viaf": {"label": "Virtual Internet Authority File (VIAF)", "ident": "https://viaf.org/viaf/{ident}"},
+    "dnb": {"label": "Deutsche Nationalbibliothek (GND)", "ident": "http://d-nb.info/gnd/{ident}"},
+    "wkp": {"label": "Wikidata", "ident": "https://www.wikidata.org/wiki/{ident}"},
+    "isil": {"label": "International Standard Identifier for Libraries and Related Organizations (ISIL)",
+             "ident": "https://ld.zdb-services.de/resource/organisations/{ident}"},
+    "bne": {"label": "Biblioteca Nacional de España", "ident": "{ident}"},
+    "bnf": {"label": "Bibliothèque Nationale de France", "ident": "{ident}"},
+    "iccu": {"label": "Istituto Centrale per il Catalogo Unico", "ident": "{ident}"},
+    "isni": {"label": "International Standard Name Identifier", "ident": "{ident}"},
+    "lc": {"label": "Library of Congress", "ident": "{ident}"},
+    "nlp": {"label": "Biblioteka Narodowa", "ident": "{ident}"},
+    "nkc": {"label": "Národní knihovna České republiky", "ident": "{ident}"},
+    "swnl": {"label": "Schweizerische Nationalbibliothek", "ident": "{ident}"},
+    "moc": {"label": "MARC Organization Code", "ident": "{ident}"},
+    "orcid": {"label": "Open Researcher and Contributor ID (ORCiD)", "ident": "{ident}"},
 }
 
 
