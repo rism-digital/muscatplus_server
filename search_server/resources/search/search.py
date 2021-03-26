@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 
 async def handle_search_request(req) -> response.HTTPResponse:
     request_compiler = SearchRequest(req)
-    request_compiler.filters += ["type:source OR type:person OR type:institution OR type:place"]
 
     try:
         solr_params = request_compiler.compile()

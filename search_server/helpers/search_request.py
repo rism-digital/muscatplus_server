@@ -37,7 +37,8 @@ class SearchRequest:
     def _get_requested_filters(self) -> List:
         fqs: List = self._req.args.getlist("fq")
         if not fqs:
-            return []
+            # Return a list of the default filters
+            return ["type:source OR type:person OR type:institution OR type:place OR type:source_incipit"]
 
         requested_filters: List = []
 
