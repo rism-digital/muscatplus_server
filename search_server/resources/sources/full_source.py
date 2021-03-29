@@ -9,6 +9,7 @@ from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult, has_results
+from search_server.resources.shared.external_link import ExternalResourcesList
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.source_exemplar import SourceExemplarList
 from search_server.resources.sources.source_incipit import SourceIncipitList
@@ -66,6 +67,9 @@ class FullSource(BaseSource):
     incipits = serpy.MethodField()
     see_also = serpy.MethodField(
         label="seeAlso"
+    )
+    external_links = serpy.MethodField(
+        label="externalLinks"
     )
     items = serpy.MethodField()
 
@@ -142,6 +146,12 @@ class FullSource(BaseSource):
 
     def get_see_also(self, obj: SolrResult) -> Optional[List]:
         pass
+
+    def get_external_links(self, obj: SolrResult) -> Optional[Dict]:
+        if 'external_links_json' not in obj:
+            return None
+
+        return ExternalResourcesList(obj, context={"request": self.context.get("request")}).data
 
     def get_items(self, obj: SolrResult) -> Optional[List]:
         this_id: str = obj.get("source_id")
