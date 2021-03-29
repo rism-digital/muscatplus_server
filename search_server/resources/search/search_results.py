@@ -41,6 +41,11 @@ class SearchResult(ContextDictSerializer):
             kwargs = {"person_id": id_value}
         elif obj["type"] == "institution":
             kwargs = {"institution_id": id_value}
+        elif obj["type"] == "place":
+            kwargs = {"place_id": id_value}
+        elif obj["type"] == "source_incipit":
+            # TODO: Process incipit for source id and incipit id
+            kwargs = {"incipit_id": id_value}
 
         return get_identifier(req, obj.get("type"), **kwargs)
 
@@ -70,6 +75,10 @@ class SearchResult(ContextDictSerializer):
             label = transl.get("records.person")
         elif obj["type"] == "institution":
             label = transl.get("records.institution")
+        elif obj["type"] == "place":
+            label = transl.get("records.place")
+        elif obj["type"] == "source_incipit":
+            label = transl.get("records.incipit")
         else:
             label = {}
             log.debug(obj["type"])
