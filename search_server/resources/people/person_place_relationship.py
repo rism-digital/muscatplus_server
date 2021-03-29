@@ -36,9 +36,6 @@ class PersonPlaceRelationshipList(JSONLDContextDictSerializer):
         return transl.get("records.related_place")
 
     def get_items(self, obj: SolrResult) -> Optional[List[Dict]]:
-        if 'related_places_json' not in obj:
-            return None
-
         return PersonPlaceRelationship(obj["related_places_json"], many=True,
                                        context={"request": self.context.get("request")}).data
 
@@ -52,7 +49,8 @@ class PersonPlaceRelationship(JSONLDContextDictSerializer):
         value="rism:PersonPlaceRelationship"
     )
     role = serpy.MethodField()
-    related_to = serpy.MethodField()
+    # related_to = serpy.MethodField()
+    value = serpy.MethodField()
 
     def get_pid(self, obj: Dict) -> str:
         req = self.context.get("request")
@@ -72,7 +70,11 @@ class PersonPlaceRelationship(JSONLDContextDictSerializer):
 
         translation_key: str = PERSON_PLACE_RELATIONSHIP_LABELS.get(obj['relationship'])
 
-        return transl.get(translation_key)
+        return {"label": transl.get(translation_key)}
 
-    def get_related_to(self, obj: Dict) -> Dict:
-        pass
+    # TODO: Fill this in with the appropriate linking values when the places are attached to the authorities.
+    # def get_related_to(self, obj: Dict) -> Dict:
+    #     pass
+
+    def get_value(self, obj: Dict) -> Optional[Dict]:
+        return {"none": [obj.get("name")]}

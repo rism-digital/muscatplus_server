@@ -9,11 +9,13 @@ from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier, ID_SUB, PERSON_NAME_VARIANT_TYPES
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
 from search_server.resources.people.base_person import BasePerson
-from search_server.resources.people.person_external_links import PersonExternalLinkList
 from search_server.resources.people.person_institution_relationship import PersonInstitutionRelationshipList
+from search_server.resources.people.person_name_variant import NameVariantList
 from search_server.resources.people.person_note import PersonNoteList
 from search_server.resources.people.person_person_relationship import PersonRelationshipList
 from search_server.resources.people.person_place_relationship import PersonPlaceRelationshipList
+from search_server.resources.shared.external_authority import external_authority_list
+from search_server.resources.shared.external_link import ExternalResourcesList
 
 log = logging.getLogger()
 
@@ -47,45 +49,21 @@ class Person(BasePerson):
         label="notes"
     )
     sources = serpy.MethodField()
-    external_links = serpy.MethodField(
-        label="externalLinks"
+    external_resources = serpy.MethodField(
+        label="externalResources"
     )
 
     def get_see_also(self, obj: SolrResult) -> Optional[List[Dict]]:
-        external_ids: Optional[List] = obj.get("external_ids")
-        if not external_ids:
+        if 'external_ids' not in obj:
             return None
 
-        ret: List = []
-        for ext in external_ids:
-            source, ident = ext.split(":")
-            base = EXTERNAL_IDS.get(source)
-            if not base:
-                continue
-
-            ret.append({
-                "id": base.format(ident=ident),
-                "type": source
-            })
-
-        return ret
+        return external_authority_list(obj['external_ids'])
 
     def get_name_variants(self, obj: SolrResult) -> Optional[List]:
         if 'name_variants_json' not in obj:
             return None
 
-        req = self.context.get("request")
-        transl: Dict = req.app.translations
-
-        res: List = []
-        for variant_type, names in obj.get("name_variants_json").items():
-            transl_key = PERSON_NAME_VARIANT_TYPES.get(variant_type)
-            res.append({
-                "label": transl.get(transl_key),
-                "value": names
-            })
-
-        return res
+        return NameVariantList(obj, context={"request": self.context.get("request")}).data
 
     def get_sources(self, obj: SolrResult) -> Optional[Dict]:
         # Do not show a link to sources this serializer is used for embedded results
@@ -98,8 +76,8 @@ class Person(BasePerson):
         if person_id == "person_30004985":
             return None
 
-        fq: List = ["type:source_person_relationship",
-                    f"person_id:{person_id}"]
+        fq: List = ["type:source",
+                    f"creator_id:{person_id} OR related_people_ids:{person_id}"]
         num_results: int = result_count(fq=fq)
 
         if num_results == 0:
@@ -117,8 +95,8 @@ class Person(BasePerson):
         transl: Dict = req.app.translations
 
         field_config: Dict = {
+            "date_statement_s": ("records.years_birth_death", None),
             "other_dates_s": ("records.other_life_dates", None),
-            "name_variants_sm": ("records.name_variants", None),
             "gender_s": ("records.gender", None),
             "roles_sm": ("records.profession_or_function", None)
         }
@@ -168,9 +146,9 @@ class Person(BasePerson):
 
         return None
 
-    def get_external_links(self, obj: SolrResult) -> Optional[Dict]:
-        if 'external_links_json' not in obj:
+    def get_external_resources(self, obj: SolrResult) -> Optional[Dict]:
+        if 'external_resources_json' not in obj:
             return None
 
-        return PersonExternalLinkList(obj, context={"request": self.context.get("request")}).data
+        return ExternalResourcesList(obj, context={"request": self.context.get("request")}).data
 

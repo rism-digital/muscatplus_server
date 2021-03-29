@@ -71,7 +71,7 @@ class PersonPersonRelationship(JSONLDContextDictSerializer):
 
         translation_key: str = PERSON_RELATIONSHIP_LABELS.get(obj['relationship'])
 
-        return transl.get(translation_key)
+        return {"label": transl.get(translation_key)}
 
     def get_related_to(self, obj: Dict) -> Dict:
         req = self.context.get("request")

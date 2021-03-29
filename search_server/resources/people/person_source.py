@@ -5,16 +5,16 @@ import pysolr
 
 from search_server.helpers.search_request import SearchRequest
 from search_server.helpers.solr_connection import SolrConnection
-from search_server.resources.people.person_source_relationship import PersonSourceRelationship
 from search_server.resources.search.search_results import BaseSearchResults
+from search_server.resources.sources.base_source import BaseSource
 
 log = logging.getLogger(__name__)
 
 
 def handle_person_source_request(req, person_id: str) -> Dict:
     request_compiler = SearchRequest(req)
-    request_compiler.filters += ["type:source_person_relationship",
-                                 f"person_id:person_{person_id}"]
+    request_compiler.filters += ["type:source",
+                                 f"creator_id:person_{person_id} OR related_people_ids:person_{person_id}"]
 
     solr_params = request_compiler.compile()
     solr_res: pysolr.Results = SolrConnection.search(**solr_params)
@@ -29,4 +29,4 @@ class PersonResults(BaseSearchResults):
         if obj.hits == 0:
             return None
 
-        return PersonSourceRelationship(obj.docs, many=True, context={"request": self.context.get("request")}).data
+        return BaseSource(obj.docs, many=True, context={"request": self.context.get("request")}).data
