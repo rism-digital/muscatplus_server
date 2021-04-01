@@ -275,12 +275,12 @@ async def person_sources(req, person_id: str):
                                         person_id=person_id)
 
 
-@app.route("/people/<person_id:string>/relationships/")
-async def person_relationships_list(req, person_id: str):
+@app.route("/people/<person_id:string>/people/")
+async def person_person_relationships_list(req, person_id: str):
     pass
 
 
-@app.route("/people/<person_id:string>/relationships/<related_id:string>")
+@app.route("/people/<person_id:string>/people/<related_id:string>")
 async def person_person_relationship(req, person_id: str, related_id: str):
     pass
 
