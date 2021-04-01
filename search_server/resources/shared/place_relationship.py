@@ -65,7 +65,7 @@ class PlaceRelationship(JSONLDContextDictSerializer):
 
         return {
             "id": get_identifier(req, "places.place", place_id=place_id),
-            "name": {"none": [obj.get("name")]},
+            "label": {"none": [obj.get("name")]},
             "type": "rism:Place"
         }
 

@@ -54,6 +54,6 @@ class InstitutionRelationship(JSONLDContextDictSerializer):
 
         return {
             "id": get_identifier(req, "institutions.institution", institution_id=institution_id),
-            "name": {"none": [obj.get("name")]},
+            "label": {"none": [obj.get("name")]},
             "type": "rism:Institution"
         }

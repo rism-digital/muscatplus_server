@@ -58,6 +58,6 @@ class PersonRelationship(JSONLDContextDictSerializer):
 
         return {
             "id": get_identifier(req, "people.person", person_id=person_id),
-            "name": {"none": [obj.get("name")]},
+            "label": {"none": [obj.get("name")]},
             "type": "rism:Person"
         }
