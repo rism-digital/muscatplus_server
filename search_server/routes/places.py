@@ -1,5 +1,8 @@
 from sanic import Blueprint
 
+from search_server.request_handlers import handle_request
+from search_server.resources.places.place import handle_place_request
+
 places_blueprint: Blueprint = Blueprint("places", url_prefix="/places")
 
 
@@ -10,4 +13,6 @@ async def place_list(req):
 
 @places_blueprint.route("/<place_id:string>/")
 async def place(req, place_id: str):
-    pass
+    return await handle_request(req,
+                                handle_place_request,
+                                place_id=place_id)

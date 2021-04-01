@@ -1,7 +1,7 @@
 import re
-from typing import Pattern, Dict, Union, Optional
+from typing import Pattern, Dict
 
-ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_")
+ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_")
 
 EXTERNAL_IDS: Dict = {
     "viaf": {"label": "Virtual Internet Authority File (VIAF)", "ident": "https://viaf.org/viaf/{ident}"},
