@@ -5,7 +5,7 @@ from typing import Dict, Optional, List
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier, ID_SUB, PERSON_RELATIONSHIP_LABELS
+from search_server.helpers.identifiers import get_identifier, ID_SUB, PERSON_RELATIONSHIP_LABELS, QUALIFIER_LABELS
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 
@@ -37,6 +37,7 @@ class PersonRelationship(JSONLDContextDictSerializer):
         value="rism:PersonRelationship"
     )
     role = serpy.MethodField()
+    qualifier = serpy.MethodField()
     related_to = serpy.MethodField(
         label="relatedTo"
     )
@@ -51,6 +52,20 @@ class PersonRelationship(JSONLDContextDictSerializer):
         translation_key: str = PERSON_RELATIONSHIP_LABELS.get(obj['relationship'])
 
         return {"label": transl.get(translation_key)}
+
+    def get_qualifier(self, obj: Dict) -> Optional[Dict]:
+        if 'qualifier' not in obj:
+            return None
+
+        qualifier: str = obj['qualifier']
+
+        req = self.context.get("request")
+        transl: Dict = req.app.translations
+
+        translation_key: str = QUALIFIER_LABELS.get(qualifier)
+
+        return {"label": transl.get(translation_key)}
+
 
     def get_related_to(self, obj: Dict) -> Dict:
         req = self.context.get("request")

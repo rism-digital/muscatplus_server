@@ -78,7 +78,19 @@ PERSON_RELATIONSHIP_LABELS = {
     "married to": "records.married_to",
     "father of": "records.father_of",
     "related to": "records.related_to",
-    "other": "records.other"
+    "other": "records.other",
+    "cre": "records.composer_author",  # A special case, where the cre relator code is used to label the 100 main entry field.
+    "dpt": "records.depositor",
+    "lyr": "records.lyricist",
+    "fmo": "records.former_owner",
+    "scr": "records.copyist",
+    "arr": "records.arranger",
+    "edt": "records.editor",
+    "dte": "records.dedicatee",
+    "pbl": "records.publisher",
+    "cmp": "records.composer",
+    "oth": "records.other",
+    "prf": "records.performer"
 }
 
 PERSON_PLACE_RELATIONSHIP_LABELS = {
