@@ -371,6 +371,16 @@ async def sigla(req):
     return await _handle_search_request(req, handle_sigla_request)
 
 
+@app.route("/places/")
+async def place_list(req):
+    pass
+
+
+@app.route("/places/<place_id:string>/")
+async def place(req, place_id: str):
+    pass
+
+
 @app.route("/search/")
 async def search(req):
     return await handle_search_request(req)
