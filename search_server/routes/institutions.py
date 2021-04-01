@@ -5,7 +5,6 @@ from search_server.resources.institutions.institution import handle_institution_
 from search_server.resources.institutions.institution_source import handle_institution_source_request
 from search_server.resources.institutions.institutions_list import handle_institutions_list_request
 
-
 institutions_blueprint: Blueprint = Blueprint("institutions", url_prefix="/institutions")
 
 

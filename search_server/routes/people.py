@@ -1,8 +1,9 @@
+from sanic import Blueprint
+
 from search_server.request_handlers import handle_search_request, handle_request
 from search_server.resources.people.people_list import handle_people_list_request
 from search_server.resources.people.person import handle_person_request
 from search_server.resources.people.person_source import handle_person_source_request
-from sanic import Blueprint
 
 people_blueprint: Blueprint = Blueprint("people", url_prefix="/people")
 

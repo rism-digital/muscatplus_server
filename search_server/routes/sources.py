@@ -1,3 +1,5 @@
+from sanic import Blueprint
+
 from search_server.request_handlers import handle_search_request, handle_request
 from search_server.resources.sources.full_source import handle_source_request
 from search_server.resources.sources.source_creator import handle_creator_request
@@ -8,8 +10,6 @@ from search_server.resources.sources.source_materialgroup import handle_material
     handle_materialgroups_request
 from search_server.resources.sources.source_relationship import handle_relationships_list_request, \
     handle_relationships_request
-
-from sanic import Blueprint
 
 sources_blueprint: Blueprint = Blueprint("sources", url_prefix="/sources")
 
