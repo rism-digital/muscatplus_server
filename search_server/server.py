@@ -297,6 +297,8 @@ async def person_place_relationship(req, person_id: str, related_id: str):
 
 @app.route("/subjects/")
 async def subject_list(req):
+@app.route("/people/<person_id:string>/institutions/")
+async def person_institution_relationships_list(req, person_id: str):
     pass
 
 
@@ -312,6 +314,9 @@ async def subject_sources(req, subject_id: str):
     return await _handle_search_request(req,
                                         handle_subject_source_request,
                                         subject_id=subject_id)
+@app.route("/people/<person_id:string/institutions/<related_id:string>")
+async def person_institution_relationship(req, person_id: str, related_id: str):
+    pass
 
 
 @app.route("/institutions/")
@@ -333,6 +338,34 @@ async def institution_sources(req, institution_id: str):
                                         handle_institution_source_request,
                                         institution_id=institution_id)
 
+@app.route("/institutions/<institution_id:string>/people/")
+async def institution_person_relationships_list(req, institution_id: str):
+    pass
+
+
+@app.route("/institutions/<institution_id:string>/people/<related_id:string>")
+async def institution_person_relationship(req, institution_id: str, related_id: str):
+    pass
+
+
+@app.route("/institutions/<institution_id:string>/places/")
+async def institution_place_relationships_list(req, institution_id: str):
+    pass
+
+
+@app.route("/institutions/<institution_id:string>/places/<related_id:string>")
+async def institution_place_relationship(req, institution_id: str, related_id: str):
+    pass
+
+
+@app.route("/institutions/<institution_id:string>/institutions/")
+async def institution_institution_relationships_list(req, institution_id: str):
+    pass
+
+
+@app.route("/institutions/<institution_id:string/institutions/<related_id:string>")
+async def institution_institution_relationship(req, institution_id: str, related_id: str):
+    pass
 @app.route("/sigla/")
 async def sigla(req):
     return await _handle_search_request(req, handle_sigla_request)
