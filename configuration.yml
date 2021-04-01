@@ -38,8 +38,8 @@ search:
       alias: "item-filter"
       sort: "count desc"
       display_value_map:
-        "True": "Only item records"
-        "False": "Only parent records"
+        "True": "Item records only"
+        "False": "Collection records only"
     key_mode_s:
       display_name: "Key or mode"
       alias: "key-mode"
