@@ -54,7 +54,12 @@ class PlaceRelationship(JSONLDContextDictSerializer):
         return {"label": transl.get(translation_key)}
 
     # TODO: Fill this in with the appropriate linking values when the places are attached to the authorities.
-    def get_related_to(self, obj: Dict) -> Dict:
+    def get_related_to(self, obj: Dict) -> Optional[Dict]:
+        # For values that are not linked to authority records we don't have the ID -- so we can't construct a relatedTo
+        # object.
+        if 'place_id' not in obj:
+            return None
+
         req = self.context.get("request")
         place_id = re.sub(ID_SUB, "", obj.get("place_id"))
 
