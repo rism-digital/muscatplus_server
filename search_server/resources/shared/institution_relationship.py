@@ -10,9 +10,9 @@ from search_server.helpers.solr_connection import SolrResult
 
 
 class InstitutionRelationshipList(JSONLDContextDictSerializer):
-    rid = serpy.MethodField(
-        label="id"
-    )
+    # rid = serpy.MethodField(
+    #     label="id"
+    # )
     rtype = StaticField(
         label="type",
         value="rism:InstitutionRelationshipList"
