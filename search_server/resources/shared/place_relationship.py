@@ -12,22 +12,13 @@ from search_server.helpers.solr_connection import SolrResult
 log = logging.getLogger()
 
 
-class PersonPlaceRelationshipList(JSONLDContextDictSerializer):
-    pid = serpy.MethodField(
-        label="id"
-    )
+class PlaceRelationshipList(JSONLDContextDictSerializer):
     rtype = StaticField(
         label="type",
-        value="rism:PersonPlaceRelationshipList"
+        value="rism:PlaceRelationshipList"
     )
     label = serpy.MethodField()
     items = serpy.MethodField()
-
-    def get_pid(self, obj: SolrResult) -> str:
-        req = self.context.get("request")
-        person_id: str = re.sub(ID_SUB, "", obj.get("id"))
-
-        return get_identifier(req, "person_place_relationships_list", person_id=person_id)
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
@@ -36,30 +27,20 @@ class PersonPlaceRelationshipList(JSONLDContextDictSerializer):
         return transl.get("records.related_place")
 
     def get_items(self, obj: SolrResult) -> Optional[List[Dict]]:
-        return PersonPlaceRelationship(obj["related_places_json"], many=True,
-                                       context={"request": self.context.get("request")}).data
+        return PlaceRelationship(obj["related_places_json"], many=True,
+                                 context={"request": self.context.get("request")}).data
 
 
-class PersonPlaceRelationship(JSONLDContextDictSerializer):
-    pid = serpy.MethodField(
-        label="id"
-    )
+class PlaceRelationship(JSONLDContextDictSerializer):
     ptype = StaticField(
         label="type",
-        value="rism:PersonPlaceRelationship"
+        value="rism:PlaceRelationship"
     )
     role = serpy.MethodField()
-    # related_to = serpy.MethodField()
+    related_to = serpy.MethodField(
+        label="relatedTo"
+    )
     value = serpy.MethodField()
-
-    def get_pid(self, obj: Dict) -> str:
-        req = self.context.get("request")
-        person_id: str = re.sub(ID_SUB, "", obj.get("this_person_id"))
-        # TODO: When places are linked to the authority file records, put the place ID in the index
-        #  and then add it to the identifier
-        relationship_id: str = obj.get("id")
-
-        return get_identifier(req, "person_place_relationship", person_id=person_id, related_id=relationship_id)
 
     def get_role(self, obj: Dict) -> Optional[Dict]:
         if 'relationship' not in obj:
@@ -73,8 +54,22 @@ class PersonPlaceRelationship(JSONLDContextDictSerializer):
         return {"label": transl.get(translation_key)}
 
     # TODO: Fill this in with the appropriate linking values when the places are attached to the authorities.
-    # def get_related_to(self, obj: Dict) -> Dict:
-    #     pass
+    def get_related_to(self, obj: Dict) -> Dict:
+        req = self.context.get("request")
+        place_id = re.sub(ID_SUB, "", obj.get("place_id"))
+
+        return {
+            "id": get_identifier(req, "place", place_id=place_id),
+            "name": {"none": [obj.get("name")]},
+            "type": "rism:Place"
+        }
 
     def get_value(self, obj: Dict) -> Optional[Dict]:
+        """
+        Used for occasions where the entry is not linked to an item in the Place authority record, but is
+        simply given as a name. In other words, if there is a place ID mentioned, skip this.
+        """
+        if "place_id" in obj:
+            return None
+
         return {"none": [obj.get("name")]}

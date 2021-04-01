@@ -6,16 +6,16 @@ import pysolr
 import serpy
 
 from search_server.helpers.display_fields import get_display_fields
-from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier, ID_SUB, PERSON_NAME_VARIANT_TYPES
+from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
 from search_server.resources.people.base_person import BasePerson
-from search_server.resources.people.person_institution_relationship import PersonInstitutionRelationshipList
 from search_server.resources.people.person_name_variant import NameVariantList
 from search_server.resources.people.person_note import PersonNoteList
-from search_server.resources.people.person_person_relationship import PersonRelationshipList
-from search_server.resources.people.person_place_relationship import PersonPlaceRelationshipList
+from search_server.resources.shared.place_relationship import PlaceRelationshipList
 from search_server.resources.shared.external_authority import external_authority_list
 from search_server.resources.shared.external_link import ExternalResourcesList
+from search_server.resources.shared.institution_relationship import InstitutionRelationshipList
+from search_server.resources.shared.person_relationship import PersonRelationshipList
 
 log = logging.getLogger()
 
@@ -111,17 +111,18 @@ class Person(BasePerson):
 
         if 'related_people_json' in obj:
             items.append(
-                PersonRelationshipList(obj, context={"request": self.context.get("request")}).data
+                PersonRelationshipList(obj,
+                                       context={"request": self.context.get("request")}).data
             )
 
         if 'related_institutions_json' in obj:
             items.append(
-                PersonInstitutionRelationshipList(obj, context={"request": self.context.get("request")}).data
+                InstitutionRelationshipList(obj, context={"request": self.context.get("request")}).data
             )
 
         if "related_places_json" in obj:
             items.append(
-                PersonPlaceRelationshipList(obj, context={"request": self.context.get("request")}).data
+                PlaceRelationshipList(obj, context={"request": self.context.get("request")}).data
             )
 
         # if there are no relationships, return None
@@ -132,7 +133,7 @@ class Person(BasePerson):
         transl: Dict = req.app.translations
 
         return {
-            "type": "rism:PersonRelations",
+            "type": "rism:Relations",
             "label": transl.get("records.relations"),
             "items": items
         }

@@ -9,19 +9,24 @@ from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 
 
-class PersonInstitutionRelationshipList(JSONLDContextDictSerializer):
-    pid = serpy.MethodField(
+class InstitutionRelationshipList(JSONLDContextDictSerializer):
+    rid = serpy.MethodField(
         label="id"
     )
     rtype = StaticField(
         label="type",
-        value="rism:PersonInstitutionRelationshipList"
+        value="rism:InstitutionRelationshipList"
     )
     label = serpy.MethodField()
     items = serpy.MethodField()
 
-    def get_pid(self, obj: SolrResult) -> str:
-        pass
+    def get_rid(self, obj: SolrResult) -> str:
+        req = self.context.get("request")
+        obj_type: str = obj.get("type")
+        obj_fieldname: str = f"{obj_type}_id"
+
+
+        return get_identifier(req, "", "")
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
@@ -30,24 +35,18 @@ class PersonInstitutionRelationshipList(JSONLDContextDictSerializer):
         return transl.get("records.associated_institution")
 
     def get_items(self, obj: SolrResult) -> Optional[List]:
-        return PersonInstitutionRelationship(obj["related_institutions_json"], many=True,
-                                             context={"request": self.context.get("request")}).data
+        return InstitutionRelationship(obj["related_institutions_json"], many=True,
+                                       context={"request": self.context.get("request")}).data
 
 
-class PersonInstitutionRelationship(JSONLDContextDictSerializer):
-    pid = serpy.MethodField(
-        label="id"
-    )
+class InstitutionRelationship(JSONLDContextDictSerializer):
     rtype = StaticField(
         label="type",
-        value="rism:PersonInstitutionRelationship"
+        value="rism:InstitutionRelationship"
     )
     related_to = serpy.MethodField(
         label="relatedTo"
     )
-
-    def get_pid(self, obj: Dict) -> str:
-        pass
 
     def get_related_to(self, obj: Dict) -> Dict:
         req = self.context.get("request")

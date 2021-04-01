@@ -13,21 +13,12 @@ log = logging.getLogger()
 
 
 class PersonRelationshipList(JSONLDContextDictSerializer):
-    pid = serpy.MethodField(
-        label="id"
-    )
     rtype = StaticField(
         label="type",
-        value="rism:PersonPersonRelationshipList"
+        value="rism:PersonRelationshipList"
     )
     label = serpy.MethodField()
     items = serpy.MethodField()
-
-    def get_pid(self, obj: SolrResult) -> str:
-        req = self.context.get("request")
-        person_id: str = re.sub(ID_SUB, "", obj.get("id"))
-
-        return get_identifier(req, "person_relationships_list", person_id=person_id)
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
@@ -36,31 +27,19 @@ class PersonRelationshipList(JSONLDContextDictSerializer):
         return transl.get("records.related_personal_name")
 
     def get_items(self, obj: SolrResult) -> Optional[List[Dict]]:
-        return PersonPersonRelationship(obj["related_people_json"], many=True,
-                                        context={"request": self.context.get("request")}).data
+        return PersonRelationship(obj["related_people_json"], many=True,
+                                  context={"request": self.context.get("request")}).data
 
 
-class PersonPersonRelationship(JSONLDContextDictSerializer):
-    prid = serpy.MethodField(
-        label="id"
-    )
-
+class PersonRelationship(JSONLDContextDictSerializer):
     ptype = StaticField(
         label="type",
-        value="rism:PersonPersonRelationship"
+        value="rism:PersonRelationship"
     )
     role = serpy.MethodField()
     related_to = serpy.MethodField(
         label="relatedTo"
     )
-
-    def get_prid(self, obj: Dict) -> str:
-        person_id = re.sub(ID_SUB, "", obj.get('this_person_id'))
-        relationship_id = obj.get("id")
-        req = self.context.get("request")
-
-        return get_identifier(req, "person_person_relationship",
-                              person_id=person_id, related_id=f"{relationship_id}")
 
     def get_role(self, obj: Dict) -> Optional[Dict]:
         if 'relationship' not in obj:
