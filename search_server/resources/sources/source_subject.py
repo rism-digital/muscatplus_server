@@ -22,7 +22,7 @@ class SourceSubject(ContextDictSerializer):
         req = self.context.get("request")
         subject_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "subject", subject_id=subject_id)
+        return get_identifier(req, "subjects.subject", subject_id=subject_id)
 
     def get_term(self, obj: Dict) -> Dict:
         term: Optional[str] = obj.get("subject")

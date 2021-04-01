@@ -47,7 +47,7 @@ class SourceItemList(JSONLDContextDictSerializer):
         req = self.context.get("request")
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
-        return get_identifier(req, "sourceitem_list", source_id=source_id)
+        return get_identifier(req, "sources.sourceitem_list", source_id=source_id)
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")

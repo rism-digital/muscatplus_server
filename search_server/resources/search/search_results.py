@@ -34,20 +34,26 @@ class SearchResult(ContextDictSerializer):
         id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
         kwargs: Dict = {}
+        route: str = ""
 
         if obj["type"] == "source":
             kwargs = {"source_id": id_value}
+            route = "sources.source"
         elif obj["type"] == "person":
             kwargs = {"person_id": id_value}
+            route = "people.person"
         elif obj["type"] == "institution":
             kwargs = {"institution_id": id_value}
+            route = "institutions.institution"
         elif obj["type"] == "place":
             kwargs = {"place_id": id_value}
+            route = "places.place"
         elif obj["type"] == "source_incipit":
             # TODO: Process incipit for source id and incipit id
             kwargs = {"incipit_id": id_value}
+            route = "incipits.incipit"
 
-        return get_identifier(req, obj.get("type"), **kwargs)
+        return get_identifier(req, route, **kwargs)
 
     def get_label(self, obj: Dict) -> Dict:
         label: str

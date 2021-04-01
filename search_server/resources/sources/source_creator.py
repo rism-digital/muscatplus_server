@@ -26,7 +26,7 @@ class SourceCreator(JSONLDContextDictSerializer):
         req = self.context.get("request")
         source_id: str = re.sub(ID_SUB, "", obj.get("person_id"))
 
-        return get_identifier(req, "creator", source_id=source_id)
+        return get_identifier(req, "sources.creator", source_id=source_id)
 
     def get_heading(self, obj: Dict) -> List:
         req = self.context.get("request")

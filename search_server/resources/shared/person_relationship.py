@@ -57,7 +57,7 @@ class PersonRelationship(JSONLDContextDictSerializer):
         person_id = re.sub(ID_SUB, "", obj.get('other_person_id'))
 
         return {
-            "id": get_identifier(req, "person", person_id=person_id),
+            "id": get_identifier(req, "people.person", person_id=person_id),
             "name": {"none": [obj.get("name")]},
             "type": "rism:Person"
         }

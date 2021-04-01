@@ -42,7 +42,7 @@ class SourceExemplarList(JSONLDContextDictSerializer):
         req = self.context.get("request")
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
-        return get_identifier(req, "holding_list", source_id=source_id)
+        return get_identifier(req, "institution.holding_list", source_id=source_id)
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
@@ -84,14 +84,14 @@ class SourceExemplar(JSONLDContextDictSerializer):
         # find the holding id
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
-        return get_identifier(req, "holding", source_id=source_id, holding_id=obj.get("holding_id_sni"))
+        return get_identifier(req, "institutions.holding", source_id=source_id, holding_id=obj.get("holding_id_sni"))
 
     def get_held_by(self, obj: Dict) -> Dict:
         req = self.context.get('request')
         institution_id: str = re.sub(ID_SUB, "", obj.get("institution_id"))
 
         return {
-            "id": get_identifier(req, "institution", institution_id=institution_id),
+            "id": get_identifier(req, "institutions.institution", institution_id=institution_id),
             "type": "rism:Institution",
             "label": {
                 "none": [f"{obj.get('institution_s')}"]

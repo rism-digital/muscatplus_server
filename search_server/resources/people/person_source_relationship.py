@@ -26,7 +26,7 @@ class PersonSourceRelationship(ContextDictSerializer):
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
         relationship_id: str = f"{obj.get('relationship_id')}"
 
-        return get_identifier(req, "relationship", source_id=source_id, relationship_id=relationship_id)
+        return get_identifier(req, "sources.relationship", source_id=source_id, relationship_id=relationship_id)
 
     def get_role(self, obj: Dict) -> Optional[str]:
         if t := obj.get("relationship_s"):
@@ -42,7 +42,7 @@ class PersonSourceRelationship(ContextDictSerializer):
         source_id: str = re.sub(ID_SUB, "", obj.get('source_id'))
 
         return {
-            "id": get_identifier(req, "source", source_id=source_id),
+            "id": get_identifier(req, "sources.source", source_id=source_id),
             "type": "rism:Source",
             "label": {"none": [obj.get("main_title_s")]}
         }

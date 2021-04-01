@@ -25,7 +25,7 @@ class InstitutionRelationshipList(JSONLDContextDictSerializer):
         obj_type: str = obj.get("type")
         obj_fieldname: str = f"{obj_type}_id"
 
-
+        # TODO: Finish me!
         return get_identifier(req, "", "")
 
     def get_label(self, obj: SolrResult) -> Dict:
@@ -53,7 +53,7 @@ class InstitutionRelationship(JSONLDContextDictSerializer):
         institution_id = re.sub(ID_SUB, "", obj.get("institution_id"))
 
         return {
-            "id": get_identifier(req, "institution", institution_id=institution_id),
+            "id": get_identifier(req, "institutions.institution", institution_id=institution_id),
             "name": {"none": [obj.get("name")]},
             "type": "rism:Institution"
         }

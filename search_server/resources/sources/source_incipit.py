@@ -114,7 +114,7 @@ class SourceIncipitList(JSONLDContextDictSerializer):
         req = self.context.get("request")
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
-        return get_identifier(req, "incipits_list", source_id=source_id)
+        return get_identifier(req, "sources.incipits_list", source_id=source_id)
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
@@ -157,7 +157,7 @@ class SourceIncipit(JSONLDContextDictSerializer):
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
         work_num: str = f"{obj.get('work_num_s')}"
 
-        return get_identifier(req, "incipit", source_id=source_id, work_num=work_num)
+        return get_identifier(req, "sources.incipit", source_id=source_id, work_num=work_num)
 
     def get_label(self, obj: SolrResult) -> Optional[Dict]:
         title: Optional[str] = obj.get("title_s")

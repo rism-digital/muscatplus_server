@@ -26,7 +26,7 @@ class BasePerson(JSONLDContextDictSerializer):
         req = self.context.get("request")
         person_id: str = re.sub(ID_SUB, "", obj.get('person_id'))
 
-        return get_identifier(req, "person", person_id=person_id)
+        return get_identifier(req, "people.person", person_id=person_id)
 
     def get_label(self, obj: SolrResult) -> Dict:
         name: str = obj.get("name_s")

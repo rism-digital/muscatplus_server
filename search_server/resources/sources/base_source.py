@@ -34,7 +34,7 @@ class BaseSource(JSONLDContextDictSerializer):
         req = self.context.get('request')
         source_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "source", source_id=source_id)
+        return get_identifier(req, "sources.source", source_id=source_id)
 
     def get_label(self, obj: SolrResult) -> Dict:
         return {
@@ -62,7 +62,7 @@ class BaseSource(JSONLDContextDictSerializer):
 
         req = self.context.get('request')
         parent_source_id: str = re.sub(ID_SUB, "", source_membership.get("source_id"))
-        ident: str = get_identifier(req, "source", source_id=parent_source_id)
+        ident: str = get_identifier(req, "sources.source", source_id=parent_source_id)
 
         parent_title: Optional[str] = source_membership.get("main_title")
 

@@ -49,7 +49,7 @@ class Subject(JSONLDContextDictSerializer):
         req = self.context.get("request")
         subject_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "subject", subject_id=subject_id)
+        return get_identifier(req, "subjects.subject", subject_id=subject_id)
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
@@ -95,6 +95,6 @@ class Subject(JSONLDContextDictSerializer):
         ident: str = re.sub(ID_SUB, "", subject_id)
 
         return {
-            "id": get_identifier(self.context.get("request"), "subject_sources", subject_id=ident),
+            "id": get_identifier(self.context.get("request"), "subjects.subject_sources", subject_id=ident),
             "totalItems": num_results
         }

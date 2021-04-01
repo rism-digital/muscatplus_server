@@ -51,7 +51,7 @@ class SourceRelationshipList(JSONLDContextDictSerializer):
         req = self.context.get("request")
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
-        return get_identifier(req, "relationships_list", source_id=source_id)
+        return get_identifier(req, "sources.relationships_list", source_id=source_id)
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
@@ -91,7 +91,7 @@ class SourceRelationship(JSONLDContextDictSerializer):
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
         relationship_id: str = f"{obj.get('relationship_id')}"
 
-        return get_identifier(req, "relationship", source_id=source_id, relationship_id=relationship_id)
+        return get_identifier(req, "sources.relationship", source_id=source_id, relationship_id=relationship_id)
 
     def get_role(self, obj: Dict) -> Optional[Dict]:
         relator: Optional[str] = obj.get("relationship_s")
@@ -135,13 +135,13 @@ class SourceRelationship(JSONLDContextDictSerializer):
             objtype = "rism:Person"
             dates: Optional[str] = f" ({d})" if (d := obj.get("date_statement_s")) else ""
             name = {"none": [f"{obj.get('name_s')}{dates}"]}
-            identifier = get_identifier(req, "person", person_id=person_id)
+            identifier = get_identifier(req, "people.person", person_id=person_id)
         else:
             # reltype is source_institution_identifier
             institution_id: str = re.sub(ID_SUB, "", obj.get("institution_id"))
             objtype = "rism:Institution"
             name = {"none": [obj.get("name_s")]}
-            identifier = get_identifier(req, "institution", institution_id=institution_id)
+            identifier = get_identifier(req, "institutions.institution", institution_id=institution_id)
 
         return {
             "id": identifier,

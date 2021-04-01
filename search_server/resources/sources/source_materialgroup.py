@@ -41,7 +41,7 @@ class SourceMaterialGroupList(ContextDictSerializer):
         req = self.context.get("request")
         source_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "materialgroups_list", source_id=source_id)
+        return get_identifier(req, "sources.materialgroups_list", source_id=source_id)
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
@@ -71,7 +71,7 @@ class SourceMaterialGroup(ContextDictSerializer):
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
         materialgroup_id: str = f"{obj.get('group_num')}"
 
-        return get_identifier(req, "materialgroup", source_id=source_id, materialgroup_id=materialgroup_id)
+        return get_identifier(req, "sources.materialgroup", source_id=source_id, materialgroup_id=materialgroup_id)
 
     def get_label(self, obj: Dict) -> Optional[Dict]:
         group_num: Optional[str] = obj.get("group_num")
@@ -163,10 +163,10 @@ def _relationshiplist_from_json(fielddata: List, reltype: str, req) -> List:
             rel_num: str = re.sub(ID_SUB, "", rel_id)
 
             if reltype == "person":
-                identifier = get_identifier(req, "person", person_id=rel_num)
+                identifier = get_identifier(req, "people.person", person_id=rel_num)
                 objtype = "rism:Person"
             else:
-                identifier = get_identifier(req, "institution", institution_id=rel_num)
+                identifier = get_identifier(req, "institutions.institution", institution_id=rel_num)
                 objtype = "rism:Institution"
 
             source_rel.update({

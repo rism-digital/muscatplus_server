@@ -59,7 +59,7 @@ class PlaceRelationship(JSONLDContextDictSerializer):
         place_id = re.sub(ID_SUB, "", obj.get("place_id"))
 
         return {
-            "id": get_identifier(req, "place", place_id=place_id),
+            "id": get_identifier(req, "places.place", place_id=place_id),
             "name": {"none": [obj.get("name")]},
             "type": "rism:Place"
         }
