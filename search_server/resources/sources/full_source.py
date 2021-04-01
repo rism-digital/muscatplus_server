@@ -10,6 +10,8 @@ from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult, has_results
 from search_server.resources.shared.external_link import ExternalResourcesList
+from search_server.resources.shared.institution_relationship import InstitutionRelationshipList
+from search_server.resources.shared.person_relationship import PersonRelationshipList
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.source_exemplar import SourceExemplarList
 from search_server.resources.sources.source_incipit import SourceIncipitList
@@ -88,10 +90,37 @@ class FullSource(BaseSource):
         return creator.data
 
     def get_related(self, obj: SolrResult) -> Optional[Dict]:
-        if 'relationships_json' not in obj:
+        # if 'relationships_json' not in obj:
+        #     return None
+        #
+        # return SourceRelationshipList(obj, context={"request": self.context.get("request")}).data
+        if not self.context.get("direct_request"):
             return None
 
-        return SourceRelationshipList(obj, context={"request": self.context.get("request")}).data
+        items: List = []
+        if 'related_people_json' in obj:
+            items.append(
+                PersonRelationshipList(obj,
+                                       context={"request": self.context.get("request")}).data
+            )
+
+        if 'related_institutions_json' in obj:
+            items.append(
+                InstitutionRelationshipList(obj,
+                                            context={"request": self.context.get("request")}).data
+            )
+
+        if not items:
+            return None
+
+        req = self.context.get("request")
+        transl: Dict = req.app.translations
+
+        return {
+            "type": "rism:Relations",
+            "label": transl.get("records.relations"),
+            "items": items
+        }
 
     def get_materials(self, obj: SolrResult) -> Optional[Dict]:
         if 'material_groups_json' not in obj:
