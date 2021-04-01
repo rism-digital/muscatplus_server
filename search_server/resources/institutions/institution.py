@@ -5,8 +5,8 @@ import pysolr
 import serpy
 
 from search_server.helpers.display_fields import get_display_fields
-from search_server.helpers.fields import StaticField, LanguageMapField
-from search_server.helpers.identifiers import get_identifier, ID_SUB, EXTERNAL_IDS
+from search_server.helpers.fields import StaticField
+from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
 from search_server.resources.shared.external_authority import external_authority_list
