@@ -1,5 +1,6 @@
-from typing import Callable, Optional, Dict
 import logging
+from typing import Callable, Optional, Dict
+
 import pysolr
 from sanic import request, response
 
