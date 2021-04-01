@@ -295,25 +295,11 @@ async def person_place_relationship(req, person_id: str, related_id: str):
     pass
 
 
-@app.route("/subjects/")
-async def subject_list(req):
 @app.route("/people/<person_id:string>/institutions/")
 async def person_institution_relationships_list(req, person_id: str):
     pass
 
 
-@app.route("/subjects/<subject_id:string>/")
-async def subject(req, subject_id: str):
-    return await _handle_request(req,
-                                 handle_subject_request,
-                                 subject_id=subject_id)
-
-
-@app.route("/subjects/<subject_id:string>/sources/")
-async def subject_sources(req, subject_id: str):
-    return await _handle_search_request(req,
-                                        handle_subject_source_request,
-                                        subject_id=subject_id)
 @app.route("/people/<person_id:string/institutions/<related_id:string>")
 async def person_institution_relationship(req, person_id: str, related_id: str):
     pass
@@ -366,6 +352,27 @@ async def institution_institution_relationships_list(req, institution_id: str):
 @app.route("/institutions/<institution_id:string/institutions/<related_id:string>")
 async def institution_institution_relationship(req, institution_id: str, related_id: str):
     pass
+
+
+@app.route("/subjects/")
+async def subject_list(req):
+    pass
+
+
+@app.route("/subjects/<subject_id:string>/")
+async def subject(req, subject_id: str):
+    return await _handle_request(req,
+                                 handle_subject_request,
+                                 subject_id=subject_id)
+
+
+@app.route("/subjects/<subject_id:string>/sources/")
+async def subject_sources(req, subject_id: str):
+    return await _handle_search_request(req,
+                                        handle_subject_source_request,
+                                        subject_id=subject_id)
+
+
 @app.route("/sigla/")
 async def sigla(req):
     return await _handle_search_request(req, handle_sigla_request)
