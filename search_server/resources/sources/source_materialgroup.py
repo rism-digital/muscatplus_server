@@ -9,11 +9,11 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import (
     ID_SUB,
     get_identifier,
-    RELATIONSHIP_LABELS,
-    QUALIFIER_LABELS
 )
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
+from search_server.resources.shared.institution_relationship import InstitutionRelationshipList
+from search_server.resources.shared.person_relationship import PersonRelationshipList
 
 log = logging.getLogger(__name__)
 
@@ -81,25 +81,29 @@ class SourceMaterialGroup(ContextDictSerializer):
         return {"none": [f"Group {group_num}"]}
 
     def get_related(self, obj: Dict) -> Optional[Dict]:
-        people_json = obj.get("people")
-        institutions_json = obj.get("institutions")
+        items: List = []
         req = self.context.get("request")
 
-        # These will always return a list, even if the data passed in is empty.
-        people_items: List = _relationshiplist_from_json(people_json, "person", req)
-        institution_items: List = _relationshiplist_from_json(institutions_json, "institution", req)
+        if 'people' in obj:
+            items.append(
+                PersonRelationshipList(obj,
+                                       context={"request": req}).data
+            )
+        if 'institutions' in obj:
+            items.append(
+                InstitutionRelationshipList(obj,
+                                            context={"request": req}).data
+            )
 
-        all_items = people_items + institution_items
-
-        if not all_items:
+        if not items:
             return None
 
         transl: Dict = req.app.translations
 
         return {
-            "label": transl.get("records.people_institutions"),
-            "type": "rism:RelationshipList",
-            "items": all_items
+            "type": "rism:Relations",
+            "label": transl.get("records.relations"),
+            "items": items
         }
 
     def get_summary(self, obj: Dict) -> List[Dict]:
@@ -123,59 +127,3 @@ class SourceMaterialGroup(ContextDictSerializer):
         }
 
         return get_display_fields(obj, transl, field_config=fields)
-
-
-def _relationshiplist_from_json(fielddata: List, reltype: str, req) -> List:
-    if not fielddata:
-        return []
-
-    transl: Dict = req.app.translations
-
-    items: List = []
-    for rel in fielddata:
-        source_rel: Dict = {
-            "type": "rism:SourceRelationship"
-        }
-        name: Optional[str] = rel.get("name")
-        role: Optional[str] = rel.get("role")
-        qualifier: Optional[str] = rel.get("qualifier")
-
-        if role:
-            r_translation_key: str = RELATIONSHIP_LABELS.get(role)
-            source_rel.update({
-                "role": {
-                    "type": f"relators:{role}",
-                    "label": transl.get(r_translation_key)
-                }
-            })
-
-        if qualifier:
-            q_translation_key: str = QUALIFIER_LABELS.get(qualifier)
-            source_rel.update({
-                "qualifier": {
-                    "type": f"rismdata:{qualifier}",
-                    "label": transl.get(q_translation_key)
-                }
-            })
-
-        if name:
-            rel_id = rel.get("id")
-            rel_num: str = re.sub(ID_SUB, "", rel_id)
-
-            if reltype == "person":
-                identifier = get_identifier(req, "people.person", person_id=rel_num)
-                objtype = "rism:Person"
-            else:
-                identifier = get_identifier(req, "institutions.institution", institution_id=rel_num)
-                objtype = "rism:Institution"
-
-            source_rel.update({
-                "relatedTo": {
-                    "id": identifier,
-                    "type": objtype,
-                    "label": {"none": [name]}
-                }
-            })
-        items.append(source_rel)
-
-    return items

@@ -10,33 +10,95 @@ from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult, has_results
 from search_server.resources.shared.external_link import ExternalResourcesList
-from search_server.resources.shared.institution_relationship import InstitutionRelationshipList
-from search_server.resources.shared.person_relationship import PersonRelationshipList
+from search_server.resources.shared.institution_relationship import InstitutionRelationshipList, InstitutionRelationship
+from search_server.resources.shared.person_relationship import PersonRelationshipList, PersonRelationship
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.source_exemplar import SourceExemplarList
 from search_server.resources.sources.source_incipit import SourceIncipitList
 from search_server.resources.sources.source_materialgroup import SourceMaterialGroupList
 from search_server.resources.sources.source_note import SourceNoteList
-from search_server.resources.sources.source_relationship import SourceRelationshipList, SourceRelationship
 from search_server.resources.sources.source_subject import SourceSubject
 
 log = logging.getLogger(__name__)
 
 
-def handle_source_request(req, source_id: str) -> Optional[Dict]:
+def _source_lookup(source_id: str) -> Optional[Dict]:
+    """ Helper method for looking up a single source. """
     fq: List = ["type:source",
                 f"id:source_{source_id}"]
+
+    # TODO: Fill in the `fl` parameter to only retrieve the fields that are necessary for representing the source.
     record: pysolr.Results = SolrConnection.search("*:*", fq=fq, rows=1)
 
     if record.hits == 0:
         return None
 
-    source_record = record.docs[0]
+    return record.docs[0]
 
-    source = FullSource(source_record, context={"request": req,
-                                                "direct_request": True})
 
-    return source.data
+def handle_source_request(req, source_id: str) -> Optional[Dict]:
+    source_record: Optional[Dict] = _source_lookup(source_id)
+    if not source_record:
+        return None
+
+    return FullSource(source_record, context={"request": req,
+                                              "direct_request": True}).data
+
+
+def handle_people_relationships_list_request(req, source_id: str) -> Optional[Dict]:
+    # TODO: Do we want to create a search interface? Or is just listing them enough? What happens
+    #   if we have hundreds of relationships?
+    pass
+
+
+def handle_person_relationship_request(req, source_id: str, relationship_id: str) -> Optional[Dict]:
+    source_record: Optional[Dict] = _source_lookup(source_id)
+    if not source_record:
+        return None
+
+    if 'related_people_json' not in source_record:
+        return None
+
+    target_relationship: List = [f for f in source_record['related_people_json'] if f.get("id") == relationship_id]
+    if not target_relationship:
+        return None
+
+    return PersonRelationship(target_relationship[0], context={"request": req,
+                                                               "direct_request": True}).data
+
+
+def handle_institutions_relationships_list_request(req, source_id: str) -> Optional[Dict]:
+    pass
+
+
+def handle_institution_relationship_request(req, source_id: str, relationship_id: str) -> Optional[Dict]:
+    source_record: Optional[Dict] = _source_lookup(source_id)
+    if not source_record:
+        return None
+
+    if 'related_institutions_json' not in source_record:
+        return None
+
+    target_relationship: List = [f for f in source_record["related_institutions_json"] if f.get("id") == relationship_id]
+    if not target_relationship:
+        return None
+
+    return InstitutionRelationship(target_relationship[0], context={"request": req,
+                                                                    "direct_request": True}).data
+
+
+def handle_creator_request(req, source_id: str) -> Optional[Dict]:
+    source_record: Optional[Dict] = _source_lookup(source_id)
+    if not source_record:
+        return None
+
+    if 'creator_json' not in source_record:
+        return None
+
+    creator = source_record['creator_json'][0]
+
+    return PersonRelationship(creator, context={"request": req,
+                                                "direct_request": True}).data
 
 
 class SourceItemList(JSONLDContextDictSerializer):
@@ -67,9 +129,6 @@ class FullSource(BaseSource):
     notes = serpy.MethodField()
     exemplars = serpy.MethodField()
     incipits = serpy.MethodField()
-    see_also = serpy.MethodField(
-        label="seeAlso"
-    )
     external_links = serpy.MethodField(
         label="externalLinks"
     )
@@ -85,35 +144,28 @@ class FullSource(BaseSource):
         if 'creator_json' not in obj:
             return None
 
-        creator = SourceRelationship(obj["creator_json"][0], context={"request": self.context.get('request')})
-
-        return creator.data
+        return PersonRelationship(obj["creator_json"][0],
+                                  context={"request": self.context.get('request')}).data
 
     def get_related(self, obj: SolrResult) -> Optional[Dict]:
-        # if 'relationships_json' not in obj:
-        #     return None
-        #
-        # return SourceRelationshipList(obj, context={"request": self.context.get("request")}).data
-        if not self.context.get("direct_request"):
-            return None
-
         items: List = []
+        req = self.context.get("request")
+
         if 'related_people_json' in obj:
             items.append(
                 PersonRelationshipList(obj,
-                                       context={"request": self.context.get("request")}).data
+                                       context={"request": req}).data
             )
 
         if 'related_institutions_json' in obj:
             items.append(
                 InstitutionRelationshipList(obj,
-                                            context={"request": self.context.get("request")}).data
+                                            context={"request": req}).data
             )
 
         if not items:
             return None
 
-        req = self.context.get("request")
         transl: Dict = req.app.translations
 
         return {
@@ -142,14 +194,13 @@ class FullSource(BaseSource):
     def get_notes(self, obj: SolrResult) -> Optional[List]:
         # This does not perform an extra Solr lookup to get the notes, so we can just render it and then
         # look to see if anything came back.
-        notelist_obj = SourceNoteList(obj, context={"request": self.context.get("request")})
+        notelist = SourceNoteList(obj, context={"request": self.context.get("request")}).data
 
-        notelist_data = notelist_obj.data
+        # Check to see if any notes were actually rendered; if not, return None
+        if 'items' not in notelist:
+            return None
 
-        if notelist_data.get("items"):
-            return notelist_data
-
-        return None
+        return notelist
 
     def get_exemplars(self, obj: SolrResult) -> Optional[List[Dict]]:
         """
@@ -172,9 +223,6 @@ class FullSource(BaseSource):
             return None
 
         return SourceIncipitList(obj, context={"request": self.context.get("request")}).data
-
-    def get_see_also(self, obj: SolrResult) -> Optional[List]:
-        pass
 
     def get_external_links(self, obj: SolrResult) -> Optional[Dict]:
         if 'external_links_json' not in obj:

@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import serpy
 
@@ -28,14 +28,18 @@ class InstitutionRelationshipList(JSONLDContextDictSerializer):
         # TODO: Finish me!
         return get_identifier(req, "", "")
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: Union[Dict, SolrResult]) -> Dict:
         req = self.context.get("request")
         transl: Dict = req.app.translations
 
         return transl.get("records.associated_institution")
 
-    def get_items(self, obj: SolrResult) -> Optional[List]:
-        return InstitutionRelationship(obj["related_institutions_json"], many=True,
+    def get_items(self, obj: Union[Dict, SolrResult]) -> Optional[List]:
+        if "institutions" in obj:
+            itemlist = obj["institutions"]
+        else:
+            itemlist = obj["related_institutions_json"]
+        return InstitutionRelationship(itemlist, many=True,
                                        context={"request": self.context.get("request")}).data
 
 

@@ -1,6 +1,8 @@
+import re
 from typing import Dict, List, Optional, Callable, Tuple, Union
 import logging
 
+from search_server.helpers.identifiers import ID_SUB
 from search_server.helpers.solr_connection import SolrResult
 
 LabelConfig = Dict[str, Tuple[str, Optional[Callable]]]
@@ -108,6 +110,20 @@ def clef_translator(value: str, translations: Dict) -> Dict:
     return translations.get(trans_key)
 
 
+def id_translator(value: str, translations: Dict) -> Dict:
+    """
+    Strips an ID prefix off a Solr index so that we can return the bare ID
+    as part of a record display. Uses ID_SUB regex to strip the prefix
+    ("source_12345" -> "12345")
+
+    :param value:
+    :param translations:
+    :return: Language Map value for RISM ID
+    """
+    idval: str = re.sub(ID_SUB, "", value)
+    return {"none": [idval]}
+
+
 def _default_translator(value: Union[str, List], translations: Dict) -> Dict:
     """
     If the parameter given for a value translator in the field configuration is None,
@@ -135,6 +151,7 @@ FIELD_CONFIG: LabelConfig = {
     "scoring_summary_sm": ("records.scoring_summary", None),
     "source_title_s": ("records.title_on_source", None),
     "additional_title_s": ("records.additional_title", None),
+    "source_id": ("records.rism_id_number", id_translator)
 }
 
 
