@@ -15,12 +15,12 @@ async def subject_list(req):
 @subjects_blueprint.route("/<subject_id:string>/")
 async def subject(req, subject_id: str):
     return await handle_request(req,
-                                 handle_subject_request,
-                                 subject_id=subject_id)
+                                handle_subject_request,
+                                subject_id=subject_id)
 
 
 @subjects_blueprint.route("/<subject_id:string>/sources/")
 async def subject_sources(req, subject_id: str):
     return await handle_search_request(req,
-                                        handle_subject_source_request,
-                                        subject_id=subject_id)
+                                       handle_subject_source_request,
+                                       subject_id=subject_id)
