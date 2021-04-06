@@ -48,7 +48,7 @@ class SearchResult(ContextDictSerializer):
         elif obj["type"] == "place":
             kwargs = {"place_id": id_value}
             route = "places.place"
-        elif obj["type"] == "source_incipit":
+        elif obj["type"] == "incipit":
             # TODO: Process incipit for source id and incipit id
             kwargs = {"incipit_id": id_value}
             route = "incipits.incipit"
