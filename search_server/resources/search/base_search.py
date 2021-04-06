@@ -32,6 +32,7 @@ class BaseSearchResults(JSONLDContextSerializer):
     view = serpy.MethodField()
     items = serpy.MethodField()
     facets = serpy.MethodField()
+    modes = serpy.MethodField()
 
     def get_sid(self, obj: pysolr.Results) -> str:
         """
@@ -52,6 +53,19 @@ class BaseSearchResults(JSONLDContextSerializer):
         if facets and facets.get("items"):
             return facets
         return None
+
+    def get_modes(self, obj: pysolr.Results) -> Optional[Dict]:
+        req = self.context.get("request")
+        cfg: Dict = req.app.config
+
+        modes = cfg["search"]["modes"]
+
+        return {
+            "alias": "mode",
+            "label": {"none": ["Mode"]},  # TODO: Translate!
+            "type": "rism:Facet",
+            "items": [{"value": k, "label": {"none": [v['display_name']]}} for k, v in modes.items()]
+        }
 
     @abstractmethod
     def get_items(self, obj: pysolr.Results) -> Optional[List]:
