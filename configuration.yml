@@ -12,74 +12,110 @@ search:
     - 20
     - 40
     - 100
-  facet_fields:
-    type:
-      display_name: "Record type"
-      alias: "type"
-      sort: "index asc"
-      display_value_map:
-        person: Person
-        place: Place
-        institution: Institution
-        source: Source
-        person_person_relationship: Person to person relationship
-        source_person_relationship: Source to person relationship
-        source_institution_relationship: Source to institution relationship
-        holding: Holding
-        subject: Subject
-        source_incipit: Incipit
-        source_materialgroup: Source material group
-    source_type_sm:
+  modes:
+    everything:
+      display_name: "Everything"
+      record_types:  # these get converted to Solr lookups: [type:source OR type:person OR ...]
+        - source
+        - person
+        - institution
+        - incipit
+    sources:
+      display_name: "Sources"
+      record_types:
+        - source
+    people:
+      display_name: "People"
+      record_types:
+        - person
+    institutions:
+      display_name: "Institutions"
+      record_types:
+        - institution
+    incipits:
+      display_name: "Incipits"
+      record_types:
+        - incipit
+  facets:
+    source_type_sm: &SOURCE_TYPE
       display_name: "Source type"
       alias: "source-type"
       sort: "count desc"
-    is_item_record_b:
+    is_item_record_b: &IS_ITEM_RECORD
       display_name: "Filter item records"
       alias: "item-filter"
       sort: "count desc"
       display_value_map:
         "True": "Item records only"
         "False": "Collection records only"
-    key_mode_s:
+    key_mode_s: &KEY_MODE
       display_name: "Key or mode"
       alias: "key-mode"
       sort: "index asc"
-    rism_series_sm:
+    rism_series_sm: &RISM_SERIES
       display_name: "RISM series"
       alias: "rism-series"
       sort: "index asc"
-    creator_name_s:
+    creator_name_s: &CREATOR_NAME
       display_name: "Composer / Author"
       alias: "creator"
       sort: "count asc"
-    institutions_sm:
+    institutions_sm: &INSTITUTIONS
       display_name: "Related institutions"
       alias: "related-institutions"
       sort: "count desc"
-    holding_institution_sm:
+    holding_institutions_sm: &HOLDING_INSTITUTIONS
       display_name: "Holding institution"
       alias: "holding-institution"
       sort: "index asc"
-    related_people_sm:
+    related_people_sm: &RELATED_PEOPLE
       display_name: "Related people"
       alias: "related-people"
       sort: "count desc"
-    roles_sm:
+    roles_sm: &ROLES
       display_name: "Roles"
       alias: "roles"
-      sort: "index asc"
-    qualifier_s:
+      sort: "count desc"
+    qualifier_s: &QUALIFIER
       display_name: "Relationship qualifier"
       alias: "qualifier"
       sort: "count desc"
-    relationship_s:
+    relationship_s: &RELATIONSHIP
       display_name: "Relationship"
       alias: "relationship"
       sort: "index asc"
-    has_digitization_b:
+    has_digitization_b: &HAS_DIGITIZATION
       display_name: "Links to digitizations"
       alias: "digitization"
       sort: "count desc"
       display_value_map:
         "True": "Only digitized sources"
         "False": "Non-digitized sources"
+  # Configure the filters to show when a specific type of search is being performed.
+  filters:
+    everything:
+      source_type_sm:
+        <<: *SOURCE_TYPE
+    sources:
+      source_type_sm:
+        <<: *SOURCE_TYPE
+      is_item_record_b:
+        <<: *IS_ITEM_RECORD
+      key_mode_s:
+        <<: *KEY_MODE
+      rism_series_sm:
+        <<: *RISM_SERIES
+      creator_name_s:
+        <<: *CREATOR_NAME
+      holding_institutions_sm:
+        <<: *HOLDING_INSTITUTIONS
+      has_digitization_b:
+        <<: *HAS_DIGITIZATION
+    people:
+      roles_sm:
+        <<: *ROLES
+    institutions:
+      roles_sm:
+        <<: *ROLES
+    incipits:
+
