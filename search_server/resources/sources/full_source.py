@@ -13,7 +13,7 @@ from search_server.resources.shared.external_link import ExternalResourcesList
 from search_server.resources.shared.institution_relationship import InstitutionRelationshipList, InstitutionRelationship
 from search_server.resources.shared.person_relationship import PersonRelationshipList, PersonRelationship
 from search_server.resources.sources.base_source import BaseSource
-from search_server.resources.sources.source_exemplar import SourceExemplarList
+from search_server.resources.sources.source_exemplar import ExemplarList
 from search_server.resources.sources.source_incipit import SourceIncipitList
 from search_server.resources.sources.source_materialgroup import SourceMaterialGroupList
 from search_server.resources.sources.source_note import SourceNoteList
@@ -214,7 +214,7 @@ class FullSource(BaseSource):
         if not has_results(fq=fq):
             return None
 
-        return SourceExemplarList(obj, context={"request": self.context.get("request")}).data
+        return ExemplarList(obj, context={"request": self.context.get("request")}).data
 
     def get_incipits(self, obj: SolrResult) -> Optional[Dict]:
         fq: List = [f"source_id:{obj.get('id')}",

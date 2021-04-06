@@ -21,13 +21,13 @@ def handle_holding_request(req, source_id: str, holding_id: str) -> Optional[Dic
         return None
 
     holding_record = record.docs[0]
-    holding = SourceExemplar(holding_record, context={"request": req,
+    holding = Exemplar(holding_record, context={"request": req,
                                                      "direct_request": True})
 
     return holding.data
 
 
-class SourceExemplarList(JSONLDContextDictSerializer):
+class ExemplarList(JSONLDContextDictSerializer):
     lid = serpy.MethodField(
         label="id"
     )
@@ -61,18 +61,18 @@ class SourceExemplarList(JSONLDContextDictSerializer):
         if conn.hits == 0:
             return None
 
-        return SourceExemplar(conn.results,
-                              many=True,
-                              context={"request": self.context.get("request")}).data
+        return Exemplar(conn.results,
+                        many=True,
+                        context={"request": self.context.get("request")}).data
 
 
-class SourceExemplar(JSONLDContextDictSerializer):
+class Exemplar(JSONLDContextDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
     stype = StaticField(
         label="type",
-        value="rism:SourceExemplar"
+        value="rism:Exemplar"
     )
     held_by = serpy.MethodField(
         label="heldBy"
@@ -96,9 +96,6 @@ class SourceExemplar(JSONLDContextDictSerializer):
             "label": {
                 "none": [f"{obj.get('institution_s')}"]
             },
-            "siglum": {
-                "none": [obj.get("siglum_s")]
-            }
         }
 
     def get_summary(self, obj: SolrResult) -> List[Dict]:
