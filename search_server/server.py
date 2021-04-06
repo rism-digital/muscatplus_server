@@ -11,6 +11,7 @@ from search_server.helpers.languages import load_translations
 from search_server.request_handlers import handle_search_request
 from search_server.resources.search.search import handle_search_request
 from search_server.resources.siglum.sigla import handle_sigla_request
+from search_server.routes.incipits import incipits_blueprint
 from search_server.routes.institutions import institutions_blueprint
 from search_server.routes.people import people_blueprint
 from search_server.routes.places import places_blueprint
@@ -26,6 +27,7 @@ app.blueprint(people_blueprint)
 app.blueprint(places_blueprint)
 app.blueprint(institutions_blueprint)
 app.blueprint(subjects_blueprint)
+app.blueprint(incipits_blueprint)
 
 # Make the configuration globally available in the app instance.
 app.config.update(config)
