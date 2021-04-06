@@ -187,9 +187,9 @@ def parse_row_number(req, row_query_string: Optional[str]) -> int:
         return search_config['rows']
 
     try:
-        rows = int(row_query_string)
+        rows: int = int(row_query_string)
     except ValueError as e:
-        raise PaginationParseException("Invalid value for rows. If provided, it must be a whole number.") from e
+        raise PaginationParseException("Invalid value for rows. If provided, it must be a whole number.")
 
     if rows not in search_config['page_sizes']:
         raise PaginationParseException(f"Invalid value for page size. Only {', '.join([str(v) for v in search_config['page_sizes']])} are acceptable values")
@@ -223,7 +223,7 @@ def parse_page_number(page_query_string: Optional[str]) -> int:
     try:
         this_page: int = int(page_query_string)
     except ValueError as e:
-        raise PaginationParseException("Page number must be an integer") from e
+        raise PaginationParseException("Page number must be an integer")
     if this_page < 1:
         raise PaginationParseException("Page number must be greater than 0")
 
