@@ -1,4 +1,5 @@
 import logging
+from typing import Dict
 
 import pysolr
 from sanic import response
@@ -12,12 +13,12 @@ log = logging.getLogger(__name__)
 
 
 async def handle_search_request(req) -> response.HTTPResponse:
-    request_compiler = SearchRequest(req)
-
     try:
-        solr_params = request_compiler.compile()
+        request_compiler = SearchRequest(req)
     except InvalidQueryException as e:
         return response.text(f"Invalid search query. {e}", status=400)
+
+    solr_params: Dict = request_compiler.compile()
 
     try:
         solr_res: pysolr.Results = SolrConnection.search(**solr_params)
