@@ -1,11 +1,63 @@
 import collections
+import errno
 import glob
-from typing import Dict, Union, Optional, List
-import yaml
-import os
 import logging
+import os
+import re
+from typing import Dict, Optional, List, Pattern, Union
+
+import yaml
 
 log = logging.getLogger(__name__)
+
+# Removes ruby crud in the YML files.
+REMOVE_ACTIVESUPPORT: Pattern = re.compile(r"!map:ActiveSupport::HashWithIndifferentAccess")
+
+
+def language_labels(translations: Dict) -> Dict:
+    """
+    Loads in the language configuration file and correlates it with the available translations to produce a
+    dictionary with the general shape of:
+
+    {...
+    "ger": {"en": ["German"],
+            "de": ["Deutsch"],
+            "fr": ["Allemand"],
+            ...}
+    ...}
+
+    This uses the 'SharedLanguageLabels.yml' file from Muscat. There is a bit of processing needed to get
+    pyyaml happy with that file, since Rails seems to need to inject some custom entries in the yml file.
+
+    Caches the result after constructing it the first time so that subsequent lookups do not need to
+    open the file and construct the dictionary again.
+
+    :return: A dictionary of language labels to translated values.
+    """
+    fn: str = "SharedLanguageLabels.yml"
+
+    if not os.path.exists(fn):
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), fn)
+
+    with open(fn, "r") as input_yaml:
+        # stripping the ruby-specific tags out with regex is easier than trying to get pyyaml to ignore it. Trust me.
+        yml: str = input_yaml.read()
+        cleaned_yml: str = re.sub(REMOVE_ACTIVESUPPORT, "", yml)
+
+        try:
+            lang_contents: Dict = yaml.safe_load(
+                cleaned_yml
+            )
+        except yaml.YAMLError:
+            log.error("Problem loading language labels %s; It was skipped.", fn)
+            raise
+
+    res: Dict = {}
+    for abbrev, label in lang_contents.items():
+        transl_key: str = label["label"]
+        res[abbrev] = translations[transl_key]
+
+    return res
 
 
 def __flatten(d: Dict) -> Dict:
@@ -39,7 +91,7 @@ def load_translations(path: str) -> Optional[Dict]:
     """
     if not os.path.exists(path):
         log.error("The path for loading the language files does not exist: %s", path)
-        return None
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
 
     locale_files: List = glob.glob(f"{path}/*.yml")
     output: Dict = collections.defaultdict(dict)
@@ -68,7 +120,18 @@ def load_translations(path: str) -> Optional[Dict]:
             if translation_value:
                 output[translation_key].update({lang: [translation_value]})
 
-    return dict(output) or None
+    translations: Dict = dict(output)
+
+    # combine the translations with the values of the language codes, to keep everything in the same spot.
+    # namespace the language codes with 'langcodes' (similar to 'general' or 'records'). Language labels
+    # can then be looked up with "langcodes.ger".
+    labels: Dict = language_labels(translations)
+    namespaced_labels: Dict = {f"langcodes.{k}": v for k, v in labels.items()}
+    translations.update(namespaced_labels)
+
+    return translations
+
+
 def languages_translator(value: Union[str, List], translations: Dict) -> Dict:
     """
         A value translator that takes a language code and returns
