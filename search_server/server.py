@@ -35,7 +35,6 @@ app.blueprint(festivals_blueprint)
 app.config.update(config)
 
 debug_mode: bool = config['common']['debug']
-context_uri: bool = config['common']['context_uri']
 
 if debug_mode:
     LOGLEVEL = logging.DEBUG
@@ -53,6 +52,8 @@ if not translations:
     log.critical("No translations can be loaded.")
 
 app.translations = translations
+
+context_uri: bool = config['common']['context_uri']
 app.context_uri = context_uri
 
 
