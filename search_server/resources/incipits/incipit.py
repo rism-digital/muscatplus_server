@@ -93,13 +93,13 @@ def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[Dict]
     if not incipit_record:
         return None
 
-    incipit = SourceIncipit(incipit_record, context={"request": req,
+    incipit = Incipit(incipit_record, context={"request": req,
                                                      "direct_request": True})
 
     return incipit.data
 
 
-class SourceIncipitList(JSONLDContextDictSerializer):
+class IncipitList(JSONLDContextDictSerializer):
     lid = serpy.MethodField(
         label="id"
     )
@@ -125,7 +125,7 @@ class SourceIncipitList(JSONLDContextDictSerializer):
     def get_items(self, obj: SolrResult) -> Optional[List]:
         conn = SolrManager(SolrConnection)
         fq: List = [f"source_id:{obj.get('id')}",
-                    "type:source_incipit"]
+                    "type:incipit"]
         sort: str = "work_num_ans asc"
 
         conn.search("*:*", fq=fq, sort=sort)
@@ -133,12 +133,12 @@ class SourceIncipitList(JSONLDContextDictSerializer):
         if conn.hits == 0:
             return None
 
-        return SourceIncipit(conn.results,
-                             many=True,
-                             context={"request": self.context.get("request")}).data
+        return Incipit(conn.results,
+                       many=True,
+                       context={"request": self.context.get("request")}).data
 
 
-class SourceIncipit(JSONLDContextDictSerializer):
+class Incipit(JSONLDContextDictSerializer):
     incip_id = serpy.MethodField(
         label="id"
     )
