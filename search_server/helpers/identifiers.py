@@ -42,21 +42,21 @@ def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) ->
 
 
 # Map between relator codes and the chosen translation string for that relator.
-RELATIONSHIP_LABELS = {
-    None: "records.unknown",
-    "cre": "records.composer_author",  # A special case, where the cre relator code is used to label the 100 main entry field.
-    "dpt": "records.depositor",
-    "lyr": "records.lyricist",
-    "fmo": "records.former_owner",
-    "scr": "records.copyist",
-    "arr": "records.arranger",
-    "edt": "records.editor",
-    "dte": "records.dedicatee",
-    "pbl": "records.publisher",
-    "cmp": "records.composer",
-    "oth": "records.other",
-    "prf": "records.performer"
-}
+# RELATIONSHIP_LABELS = {
+#     None: "records.unknown",
+#     "cre": "records.composer_author",  # A special case, where the cre relator code is used to label the 100 main entry field.
+#     "dpt": "records.depositor",
+#     "lyr": "records.lyricist",
+#     "fmo": "records.former_owner",
+#     "scr": "records.copyist",
+#     "arr": "records.arranger",
+#     "edt": "records.editor",
+#     "dte": "records.dedicatee",
+#     "pbl": "records.publisher",
+#     "cmp": "records.composer",
+#     "oth": "records.other",
+#     "prf": "records.performer"
+# }
 
 QUALIFIER_LABELS = {
     None: "records.unknown",
