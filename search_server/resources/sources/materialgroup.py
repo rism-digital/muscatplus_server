@@ -26,7 +26,7 @@ def handle_materialgroups_request(req, source_id: str, materialgroup_id: str) ->
     pass
 
 
-class SourceMaterialGroupList(ContextDictSerializer):
+class MaterialGroupList(ContextDictSerializer):
     mid = serpy.MethodField(
         label="id"
     )
@@ -51,15 +51,19 @@ class SourceMaterialGroupList(ContextDictSerializer):
 
     def get_items(self, obj: SolrResult) -> Optional[List]:
         material_groups: List[Dict] = obj.get("material_groups_json")
-        items = SourceMaterialGroup(material_groups, many=True,
-                                    context={"request": self.context.get('request')})
+        items = MaterialGroup(material_groups, many=True,
+                              context={"request": self.context.get('request')})
 
         return items.data
 
 
-class SourceMaterialGroup(ContextDictSerializer):
+class MaterialGroup(ContextDictSerializer):
     mid = serpy.MethodField(
         label="id"
+    )
+    mtype = StaticField(
+        label="type",
+        value="rism:MaterialGroup"
     )
     label = serpy.MethodField()
     summary = serpy.MethodField()
