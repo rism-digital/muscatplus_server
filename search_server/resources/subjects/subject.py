@@ -36,9 +36,7 @@ class Subject(JSONLDContextDictSerializer):
         value="rism:Subject"
     )
     label = serpy.MethodField()
-    term = serpy.StrField(
-        attr="term_s"
-    )
+    term = serpy.MethodField()
     notes = serpy.MethodField()
     alternate_terms = serpy.MethodField(
         label="alternateTerms"
@@ -57,30 +55,27 @@ class Subject(JSONLDContextDictSerializer):
 
         return transl.get("records.subject_heading")
 
-    def get_notes(self, obj: SolrResult) -> Optional[List]:
-        direct_request: bool = self.context.get("direct_request")
+    def get_term(self, obj: SolrResult) -> Dict:
+        return {"none": [obj.get('term_s')]}
 
+    def get_notes(self, obj: SolrResult) -> Optional[Dict]:
         # If we're not retrieving the full record with a direct request, do not show the notes
-        if not direct_request:
+        if not self.context.get("direct_request"):
             return None
 
-        return obj.get("notes_sm")
+        return {"none": [obj.get("notes_sm")]}
 
-    def get_alternate_terms(self, obj: SolrResult) -> Optional[List]:
-        direct_request: bool = self.context.get("direct_request")
-
+    def get_alternate_terms(self, obj: SolrResult) -> Optional[Dict]:
         # If we're not retrieving the full record with a direct request, do not show the alternate terms
-        if not direct_request:
+        if not self.context.get("direct_request"):
             return None
 
-        return obj.get("alternate_terms_sm")
+        return {"none": [obj.get("alternate_terms_sm")]}
 
     def get_sources(self, obj: SolrResult) -> Optional[Dict]:
         # Only give a list of sources for this term if we are looking at a dedicated page for this subject heading, and
         # it is not embedded in another type of record.
-        direct_request: bool = self.context.get("direct_request")
-
-        if not direct_request:
+        if not self.context.get("direct_request"):
             return None
 
         subject_id: str = obj.get("id")
