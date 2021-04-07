@@ -9,6 +9,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, SolrManager
+from search_server.resources.shared.external_link import ExternalResourcesList
 
 
 def handle_holding_request(req, source_id: str, holding_id: str) -> Optional[Dict]:
@@ -22,7 +23,7 @@ def handle_holding_request(req, source_id: str, holding_id: str) -> Optional[Dic
 
     holding_record = record.docs[0]
     holding = Exemplar(holding_record, context={"request": req,
-                                                     "direct_request": True})
+                                                "direct_request": True})
 
     return holding.data
 
@@ -78,6 +79,9 @@ class Exemplar(JSONLDContextDictSerializer):
         label="heldBy"
     )
     summary = serpy.MethodField()
+    external_links = serpy.MethodField(
+        label="externalLinks"
+    )
 
     def get_sid(self, obj: Dict) -> str:
         req = self.context.get('request')
@@ -107,6 +111,18 @@ class Exemplar(JSONLDContextDictSerializer):
             "former_shelfmarks_sm": ("records.shelfmark_olim", None),
             "material_held_sm": ("records.material_held", None),
             "local_numbers_sm": ("records.local_number", None),
+            "acquisition_notes_sm": ("records.source_of_acquisition_note", None),
+            "acquisition_date_s": ("records.date_of_acquisition", None),
+            "acquisition_method_s": ("records.method_of_acquisition", None),
+            "accession_number_s": ("records.accession_number", None),
+            "access_restrictions_sm": ("records.access_restrictions", None),
+            "provenance_notes_sm": ("records.provenance_notes", None),
         }
 
         return get_display_fields(obj, transl, field_config)
+
+    def get_external_links(self, obj: SolrResult) -> Optional[Dict]:
+        if 'external_links_json' not in obj:
+            return None
+
+        return ExternalResourcesList(obj, context={"request": self.context.get("request")}).data
