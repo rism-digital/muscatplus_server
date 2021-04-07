@@ -9,10 +9,10 @@ from search_server.resources.sources.full_source import (
     handle_institution_relationship_request,
     handle_creator_request
 )
-from search_server.resources.sources.source_exemplar import handle_holding_request
-from search_server.resources.sources.source_incipit import handle_incipits_list_request, handle_incipit_request
+from search_server.resources.sources.exemplar import handle_holding_request
+from search_server.resources.incipits.incipit import handle_incipits_list_request, handle_incipit_request
 from search_server.resources.sources.source_list import handle_source_list_request
-from search_server.resources.sources.source_materialgroup import (
+from search_server.resources.sources.materialgroup import (
     handle_materialgroups_list_request,
     handle_materialgroups_request
 )
