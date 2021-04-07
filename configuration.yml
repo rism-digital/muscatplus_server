@@ -91,6 +91,10 @@ search:
       display_value_map:
         "True": "Only digitized sources"
         "False": "Non-digitized sources"
+    liturgical_festivals_sm: &LITURGICAL_FESTIVALS
+      display_name: "Liturgical festivals"
+      alias: "festival"
+      sort: "count desc"
   # Configure the filters to show when a specific type of search is being performed.
   filters:
     everything:
@@ -111,6 +115,8 @@ search:
         <<: *HOLDING_INSTITUTIONS
       has_digitization_b:
         <<: *HAS_DIGITIZATION
+      liturgical_festivals_sm:
+        <<: *LITURGICAL_FESTIVALS
     people:
       roles_sm:
         <<: *ROLES
