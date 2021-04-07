@@ -5,19 +5,20 @@ from typing import Dict, List, Optional
 import pysolr
 import serpy
 
-from search_server.helpers.display_fields import get_display_fields
+from search_server.helpers.display_fields import get_display_fields, LabelConfig, id_translator
 from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.languages import languages_translator
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrManager, SolrResult, has_results
 from search_server.resources.shared.external_link import ExternalResourcesList
 from search_server.resources.shared.institution_relationship import InstitutionRelationshipList, InstitutionRelationship
 from search_server.resources.shared.person_relationship import PersonRelationshipList, PersonRelationship
 from search_server.resources.sources.base_source import BaseSource
-from search_server.resources.sources.source_exemplar import ExemplarList
-from search_server.resources.sources.source_incipit import SourceIncipitList
-from search_server.resources.sources.source_materialgroup import SourceMaterialGroupList
-from search_server.resources.sources.source_note import SourceNoteList
-from search_server.resources.sources.source_subject import SourceSubject
+from search_server.resources.sources.index_term import IndexTermsList
+from search_server.resources.sources.exemplar import ExemplarList
+from search_server.resources.incipits.incipit import IncipitList
+from search_server.resources.sources.materialgroup import MaterialGroupList
+from search_server.resources.sources.note import NoteList
 
 log = logging.getLogger(__name__)
 
@@ -125,7 +126,7 @@ class FullSource(BaseSource):
     creator = serpy.MethodField()
     related = serpy.MethodField()
     materials = serpy.MethodField()
-    subjects = serpy.MethodField()
+    index_terms = serpy.MethodField()
     notes = serpy.MethodField()
     exemplars = serpy.MethodField()
     incipits = serpy.MethodField()
@@ -138,7 +139,19 @@ class FullSource(BaseSource):
         req = self.context.get("request")
         transl: Dict = req.app.translations
 
-        return get_display_fields(obj, transl)
+        field_config: LabelConfig = {
+            "main_title_s": ("records.standardized_title", None),
+            "scoring_summary_sm": ("records.scoring_summary", None),
+            "source_title_s": ("records.title_on_source", None),
+            "additional_title_s": ("records.additional_title", None),
+            "key_mode_s": ("records.key_or_mode", None),
+            "language_text_sm": ("records.language_text", languages_translator),
+            "language_libretto_sm": ("records.language_libretto", languages_translator),
+            "language_original_sm": ("records.language_original_text", languages_translator),
+            "source_id": ("records.rism_id_number", id_translator)
+        }
+
+        return get_display_fields(obj, transl, field_config=field_config)
 
     def get_creator(self, obj: SolrResult) -> Optional[Dict]:
         if 'creator_json' not in obj:
@@ -178,23 +191,17 @@ class FullSource(BaseSource):
         if 'material_groups_json' not in obj:
             return None
 
-        return SourceMaterialGroupList(obj,
-                                       context={"request": self.context.get('request')}).data
+        return MaterialGroupList(obj,
+                                 context={"request": self.context.get('request')}).data
 
-    def get_subjects(self, obj: SolrResult) -> Optional[List]:
-        if 'subjects_json' not in obj:
-            return None
-
-        subjects = SourceSubject(obj['subjects_json'],
-                                 many=True,
-                                 context={"request": self.context.get("request")})
-
-        return subjects.data
+    def get_index_terms(self, obj: SolrResult) -> Optional[Dict]:
+        return IndexTermsList(obj,
+                              context={"request": self.context.get('request')}).data
 
     def get_notes(self, obj: SolrResult) -> Optional[List]:
         # This does not perform an extra Solr lookup to get the notes, so we can just render it and then
         # look to see if anything came back.
-        notelist = SourceNoteList(obj, context={"request": self.context.get("request")}).data
+        notelist = NoteList(obj, context={"request": self.context.get("request")}).data
 
         # Check to see if any notes were actually rendered; if not, return None
         if 'items' not in notelist:
@@ -218,11 +225,11 @@ class FullSource(BaseSource):
 
     def get_incipits(self, obj: SolrResult) -> Optional[Dict]:
         fq: List = [f"source_id:{obj.get('id')}",
-                    "type:source_incipit"]
+                    "type:incipit"]
         if not has_results(fq=fq):
             return None
 
-        return SourceIncipitList(obj, context={"request": self.context.get("request")}).data
+        return IncipitList(obj, context={"request": self.context.get("request")}).data
 
     def get_external_links(self, obj: SolrResult) -> Optional[Dict]:
         if 'external_links_json' not in obj:
@@ -248,7 +255,5 @@ class FullSource(BaseSource):
         # (remember that the SolrManager object automatically retrieves the next page of results when iterating)
         conn.search("*:*", fq=fq, sort=sort, rows=100)
 
-        sources = BaseSource(conn.results, many=True,
-                             context={"request": self.context.get("request")})
-
-        return sources.data
+        return BaseSource(conn.results, many=True,
+                          context={"request": self.context.get("request")}).data
