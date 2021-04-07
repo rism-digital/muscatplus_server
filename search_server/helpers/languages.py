@@ -69,3 +69,44 @@ def load_translations(path: str) -> Optional[Dict]:
                 output[translation_key].update({lang: [translation_value]})
 
     return dict(output) or None
+def languages_translator(value: Union[str, List], translations: Dict) -> Dict:
+    """
+        A value translator that takes a language code and returns
+        the translated value for that language, e.g., "ger" -> "German" for
+        English, "Deutsch" for German, etc. Used particularly for the 'LabelConfig' field configurations.
+        (see helpers/display_fields.py for more examples of how this is used.)
+
+        Performs a lookup on the translations with a prefixed translation key. See the functions above for
+        the special way in which translations for language codes are handled. The above example is
+        actually "langcodes.ger", for example.
+
+        Since there could be multiple values, takes a list of language code values and produces a dictionary
+        with the values merged. So if the language codes was ["eng", "ger"], the result dictionary would be
+
+        {"en": ["English", "German"],
+         "de": ["Englisch", "Deutsch"],
+         ...}
+    """
+    # normalize the incoming value to a list
+    if isinstance(value, str):
+        trans_value = [value]
+    else:
+        trans_value = value
+
+    all_values: List = []
+    for v in trans_value:
+        trans_key: str = f"langcodes.{v}"
+        if trans_key not in translations:
+            all_values.append({"none": [value]})
+        else:
+            all_values.append(translations[trans_key])
+
+    # merge the language values. Uses a set to merge duplicate keys, and a defaultdict so we can gather
+    # the keys without checking if they're in lang_dict already and create an empty set.
+    lang_dict = collections.defaultdict(set)
+    for trans in all_values:
+        for k, v in trans.items():
+            lang_dict[k].update(v)
+
+    # Unwrap the set into a list for the final result.
+    return {k: list(v) for k, v in lang_dict.items()}
