@@ -4,6 +4,7 @@ from typing import List, Optional, Dict
 import pysolr
 import serpy
 
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
@@ -34,6 +35,7 @@ class Place(JSONLDContextDictSerializer):
         value="rism:Place"
     )
     label = serpy.MethodField()
+    summary = serpy.MethodField()
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
@@ -43,3 +45,14 @@ class Place(JSONLDContextDictSerializer):
 
     def get_label(self, obj: SolrResult) -> Dict:
         return {"none": [obj.get("name_s")]}
+
+    def get_summary(self, obj: SolrResult) -> Optional[List]:
+        req = self.context.get("request")
+        transl: Dict = req.app.translations
+
+        field_config: LabelConfig = {
+            "country_s": ("records.country", None),
+            "district_s": ("records.place", None)  # TODO: Should be district
+        }
+
+        return get_display_fields(obj, transl, field_config)
