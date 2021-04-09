@@ -48,7 +48,8 @@ class LiturgicalFestival(JSONLDContextDictSerializer):
         transl: Dict = req.app.translations
 
         field_config: LabelConfig = {
-            "alternate_terms_sm": ("records.alternate_terms", None),
+            # should be "Alternate terms" but this is not available in the translations currently...
+            "alternate_terms_sm": ("records.other_form_of_name", None),
             "notes_sm": ("records.general_note", None)
         }
 
