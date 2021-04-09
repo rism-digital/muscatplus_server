@@ -95,6 +95,14 @@ search:
       display_name: "Liturgical festivals"
       alias: "festival"
       sort: "count desc"
+    gender_s: &GENDER
+      display_name: "Gender"
+      alias: "gender"
+      sort: "count desc"
+    institution_types_sm: &INSTITUTION_TYPES
+      display_name: "Institution type"
+      alias: "institution-type"
+      sort: "count desc"
   # Configure the filters to show when a specific type of search is being performed.
   filters:
     everything:
@@ -120,8 +128,12 @@ search:
     people:
       roles_sm:
         <<: *ROLES
+      gender_s:
+        <<: *GENDER
     institutions:
       roles_sm:
         <<: *ROLES
+      institution_types_sm:
+        <<: *INSTITUTION_TYPES
     incipits:
 
