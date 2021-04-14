@@ -48,6 +48,9 @@ class SearchResult(ContextDictSerializer):
         elif obj["type"] == "place":
             kwargs = {"place_id": id_value}
             route = "places.place"
+        elif obj["type"] == "liturgical_festival":
+            kwargs = {"festival_id": id_value}
+            route = "festivals.festival"
         elif obj["type"] == "incipit":
             # TODO: Process incipit for source id and incipit id
             kwargs = {"incipit_id": id_value}
@@ -60,7 +63,7 @@ class SearchResult(ContextDictSerializer):
 
         if obj["type"] == "source":
             label = obj.get("main_title_s")
-        elif obj["type"] == "person" or obj['type'] == "institution":
+        elif obj["type"] in ("person", "institution", "liturgical_festival"):
             label = obj.get("name_s")
         else:
             label = "[ Test Title ]"
@@ -83,8 +86,10 @@ class SearchResult(ContextDictSerializer):
             label = transl.get("records.institution")
         elif obj["type"] == "place":
             label = transl.get("records.place")
-        elif obj["type"] == "source_incipit":
+        elif obj["type"] == "incipit":
             label = transl.get("records.incipit")
+        elif obj["type"] == "liturgical_festival":
+            label = transl.get("records.liturgical_festival")
         else:
             label = {}
             log.debug(obj["type"])
