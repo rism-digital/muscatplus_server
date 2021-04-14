@@ -27,6 +27,6 @@ async def handle_search_request(req) -> response.HTTPResponse:
         log.exception(error_message)
         return response.text(f"Search error", status=500)
 
-    search_results = SearchResults(solr_res, context={"request": req})
+    search_results: Dict = SearchResults(solr_res, context={"request": req}).data
 
-    return response.json(search_results.data)
+    return response.json(search_results)
