@@ -30,7 +30,7 @@ class FacetList(ContextDictSerializer):
 
         req = self.context.get("request")
         cfg: Dict = req.app.config
-        current_mode: str = req.args.get("mode", "everything")
+        current_mode: str = req.args.get("mode", cfg["search"]["default_mode"])  # if no incoming mode, use the default
         filters = filters_for_mode(cfg, current_mode)
 
         # Get a lookup table for the alias / display so that we don't have to do this in the loop below.

@@ -12,26 +12,33 @@ search:
     - 20
     - 40
     - 100
+  default_mode: "sources"
   modes:
-    everything:
-      display_name: "Everything"
-      record_types:  # these get converted to Solr lookups: [type:source OR type:person OR ...]
-        - source
-        - person
-        - institution
-        - incipit
     sources:
       display_name: "Sources"
       record_types:
         - source
+      suggest_from:
+        - person
     people:
       display_name: "People"
       record_types:
         - person
+      suggest_from:
+        - liturgical_festival
+        - institution
     institutions:
       display_name: "Institutions"
       record_types:
         - institution
+      suggest_from:
+        - person
+    festivals:
+      display_name: "Liturgical Festivals"
+      record_types:
+        - liturgical_festival
+      suggest_from:
+        - person
     incipits:
       display_name: "Incipits"
       record_types:
@@ -105,9 +112,6 @@ search:
       sort: "count desc"
   # Configure the filters to show when a specific type of search is being performed.
   filters:
-    everything:
-      source_type_sm:
-        <<: *SOURCE_TYPE
     sources:
       source_type_sm:
         <<: *SOURCE_TYPE
@@ -136,4 +140,5 @@ search:
       institution_types_sm:
         <<: *INSTITUTION_TYPES
     incipits:
+    festivals:
 

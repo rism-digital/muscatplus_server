@@ -57,7 +57,7 @@ class SearchRequest:
         # If there is no q parameter it will return all results
         self._requested_query: str = req.args.get("q", "*:*")
         self._requested_filters: List = req.args.getlist("fq", [])
-        self._requested_mode: str = req.args.get("mode", "everything")
+        self._requested_mode: str = req.args.get("mode", self._app_config["search"]["default_mode"])
         self._page: Optional[str] = req.args.get("page", None)
         self._return_rows: Optional[str] = req.args.get("rows", None)
 
@@ -105,7 +105,7 @@ class SearchRequest:
         :return: A string with the appropriate "OR" statements applied.
         """
         modes: Dict = self._app_config["search"]["modes"]
-        mode_cfg: Dict = modes.get(self._requested_mode)
+        mode_cfg: Dict = modes[self._requested_mode]
         record_types: List = mode_cfg["record_types"]
         solr_types_field: List = [f"type:{v}" for v in record_types]
 
@@ -174,50 +174,3 @@ class SearchRequest:
             # "sort": ", ".join(sorts),
             "json.facet": self._get_facets()
         }
-
-    # def _get_requested_filters(self) -> List:
-    #     fqs: List = self._req.args.getlist("fq")
-    #     requested_filters: List = []
-    #
-    #     for filt in fqs:
-    #         # split the incoming filters
-    #         field, raw_value = filt.split(":")
-    #
-    #         # do some processing and normalization on the value. First ensure we have a non-entity string.
-    #         # This should convert the URL-encoded parameters back to 'normal' characters
-    #         unencoded_value: str = urllib.parse.unquote_plus(raw_value)
-    #
-    #         # Then remove any quotes (single or double)
-    #         value: str = unencoded_value.replace("\"", "").replace("'", "")
-    #
-    #     return requested_filters
-
-    # def _get_facets(self) -> str:
-    #     # This uses the alias feature for facets to map our 'public' name for the facet
-    #     # to the actual solr field name being used. This means that in the output of this
-    #     # (that is, when the search request is returned) the facets will be available by
-    #     # the alias, not by the solr field name as would be normally expected.
-    #     facet_cfg: Dict = self._app_config["search"]["facet_fields"]
-    #     json_facets: Dict = {}
-    #
-    #     for solr_field, field_cfg in facet_cfg.items():
-    #         field_alias = field_cfg["alias"]
-    #
-    #         json_facets[field_alias] = {
-    #             "type": "terms",
-    #             "field": solr_field,
-    #             "sort": f"{field_cfg['sort']}",
-    #             "limit": 50
-    #         }
-    #
-    #     # Serialize the JSON to a string so that it can go over the Solr API.
-    #     # PySolr will transparently 'do the right thing' with the request.
-    #     return ujson.dumps(json_facets)
-
-    # filters: List = self.filters + self._get_requested_filters()
-
-    # if self._req.args.get("q"):
-    #     sorts = ["score desc"]
-    # else:
-    #     sorts = ["main_title_ans asc"]
-
