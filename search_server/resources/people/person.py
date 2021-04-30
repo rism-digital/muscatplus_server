@@ -11,11 +11,11 @@ from search_server.helpers.solr_connection import SolrConnection, SolrResult, re
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.people.person_name_variant import NameVariantList
 from search_server.resources.people.person_note import PersonNoteList
-from search_server.resources.shared.place_relationship import PlaceRelationshipList
+# from search_server.resources.shared.place_relationship import PlaceRelationshipList
 from search_server.resources.shared.external_authority import external_authority_list
 from search_server.resources.shared.external_link import ExternalResourcesList
-from search_server.resources.shared.institution_relationship import InstitutionRelationshipList
-from search_server.resources.shared.person_relationship import PersonRelationshipList
+# from search_server.resources.shared.institution_relationship import InstitutionRelationshipList
+# from search_server.resources.shared.person_relationship import PersonRelationshipList
 
 log = logging.getLogger()
 
@@ -92,7 +92,7 @@ class Person(BasePerson):
 
     def get_summary(self, obj: SolrResult) -> List[Dict]:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         field_config: Dict = {
             "date_statement_s": ("records.years_birth_death", None),
@@ -109,34 +109,34 @@ class Person(BasePerson):
 
         items: List = []
 
-        if 'related_people_json' in obj:
-            items.append(
-                PersonRelationshipList(obj,
-                                       context={"request": self.context.get("request")}).data
-            )
-
-        if 'related_institutions_json' in obj:
-            items.append(
-                InstitutionRelationshipList(obj, context={"request": self.context.get("request")}).data
-            )
-
-        if "related_places_json" in obj:
-            items.append(
-                PlaceRelationshipList(obj, context={"request": self.context.get("request")}).data
-            )
-
-        # if there are no relationships, return None
-        if not items:
-            return None
-
-        req = self.context.get("request")
-        transl: Dict = req.app.translations
-
-        return {
-            "type": "rism:Relations",
-            "label": transl.get("records.relations"),
-            "items": items
-        }
+        # if 'related_people_json' in obj:
+        #     items.append(
+        #         PersonRelationshipList(obj,
+        #                                context={"request": self.context.get("request")}).data
+        #     )
+        #
+        # if 'related_institutions_json' in obj:
+        #     items.append(
+        #         InstitutionRelationshipList(obj, context={"request": self.context.get("request")}).data
+        #     )
+        #
+        # if "related_places_json" in obj:
+        #     items.append(
+        #         PlaceRelationshipList(obj, context={"request": self.context.get("request")}).data
+        #     )
+        #
+        # # if there are no relationships, return None
+        # if not items:
+        #     return None
+        #
+        # req = self.context.get("request")
+        # transl: Dict = req.app.ctx.translations
+        #
+        # return {
+        #     "type": "rism:Relations",
+        #     "label": transl.get("records.relations"),
+        #     "items": items
+        # }
 
     def get_notes(self, obj: SolrResult) -> Optional[Dict]:
         notelist: Dict = PersonNoteList(obj, context={"request": self.context.get("request")}).data

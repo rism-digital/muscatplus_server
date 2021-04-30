@@ -10,9 +10,9 @@ from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
 from search_server.resources.shared.external_authority import external_authority_list
-from search_server.resources.shared.institution_relationship import InstitutionRelationshipList
-from search_server.resources.shared.person_relationship import PersonRelationshipList
-from search_server.resources.shared.place_relationship import PlaceRelationshipList
+# from search_server.resources.shared.institution_relationship import InstitutionRelationshipList
+# from search_server.resources.shared.person_relationship import PersonRelationshipList
+# from search_server.resources.shared.place_relationship import PlaceRelationshipList
 
 
 def handle_institution_request(req, institution_id: str) -> Optional[Dict]:
@@ -61,7 +61,7 @@ class Institution(JSONLDContextDictSerializer):
 
     def get_summary(self, obj: SolrResult) -> Optional[Dict]:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         field_config: Dict = {
             "siglum_s": ("records.siglum", None),
@@ -109,29 +109,29 @@ class Institution(JSONLDContextDictSerializer):
 
         items: List = []
 
-        if 'related_people_json' in obj:
-            items.append(
-                PersonRelationshipList(obj, context={"request": self.context.get("request")}).data
-            )
-
-        if 'related_institutions_json' in obj:
-            items.append(
-                InstitutionRelationshipList(obj, context={"request": self.context.get("request")}).data
-            )
-
-        if 'related_places_json' in obj:
-            items.append(
-                PlaceRelationshipList(obj, context={"request": self.context.get("request")}).data
-            )
-
-        if not items:
-            return None
-
-        req = self.context.get("request")
-        transl: Dict = req.app.translations
-
-        return {
-            "type": "rism:Relations",
-            "label": transl.get("records.relations"),
-            "items": items
-        }
+        # if 'related_people_json' in obj:
+        #     items.append(
+        #         PersonRelationshipList(obj, context={"request": self.context.get("request")}).data
+        #     )
+        #
+        # if 'related_institutions_json' in obj:
+        #     items.append(
+        #         InstitutionRelationshipList(obj, context={"request": self.context.get("request")}).data
+        #     )
+        #
+        # if 'related_places_json' in obj:
+        #     items.append(
+        #         PlaceRelationshipList(obj, context={"request": self.context.get("request")}).data
+        #     )
+        #
+        # if not items:
+        #     return None
+        #
+        # req = self.context.get("request")
+        # transl: Dict = req.app.ctx.translations
+        #
+        # return {
+        #     "type": "rism:Relations",
+        #     "label": transl.get("records.relations"),
+        #     "items": items
+        # }

@@ -23,7 +23,7 @@ def get_jsonld_context(request) -> JSONLDContext:
     :param request: A Sanic request object, with the 'app.context_uri' setting added to it during applicaton startup.
     :return: Either a string representing the URI to the context object, or the context object itself as a Dictionary.
     """
-    if request.app.context_uri:
+    if request.app.ctx.context_uri:
         return get_identifier(request, "context")
 
     return RISM_JSONLD_CONTEXT

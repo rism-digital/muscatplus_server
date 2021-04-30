@@ -36,5 +36,5 @@ class BasePerson(JSONLDContextDictSerializer):
 
     def get_type_label(self, obj: SolrResult) -> Optional[Dict]:
         req = self.context.get("request")
-        transl = req.app.translations
+        transl = req.app.ctx.translations
         return transl.get("records.person")

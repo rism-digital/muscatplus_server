@@ -1,7 +1,8 @@
 ---
 common:
-  debug: yes
+  debug: no
   context_uri: yes  # if false, displays the full JSON-LD context inline
+  secret: EvGw3ND0zB47Sp6Lk8R5M4Bh7PXmwB6x9WJVyYQx8TD72P5kM3ap39bNyEkSWFq1
 
 solr:
   server: "http://localhost:8983/solr/muscatplus_live"
@@ -45,7 +46,7 @@ search:
         - incipit
   facets:
     source_type_sm: &SOURCE_TYPE
-      display_name: "Source type"
+      display_name: "Source type"  # records.source_type
       alias: "source-type"
       sort: "count desc"
     is_item_record_b: &IS_ITEM_RECORD
@@ -56,19 +57,19 @@ search:
         "True": "Item records only"
         "False": "Collection records only"
     key_mode_s: &KEY_MODE
-      display_name: "Key or mode"
+      display_name: "Key or mode"  # records.key_or_mode
       alias: "key-mode"
       sort: "index asc"
     rism_series_sm: &RISM_SERIES
-      display_name: "RISM series"
+      display_name: "RISM series"  # records.rism_series
       alias: "rism-series"
       sort: "index asc"
     creator_name_s: &CREATOR_NAME
-      display_name: "Composer / Author"
+      display_name: "Composer / Author"  # records.composer_author
       alias: "creator"
-      sort: "count asc"
+      sort: "count desc"
     institutions_sm: &INSTITUTIONS
-      display_name: "Related institutions"
+      display_name: "Related institutions"  # records.related_institution
       alias: "related-institutions"
       sort: "count desc"
     holding_institutions_sm: &HOLDING_INSTITUTIONS

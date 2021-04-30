@@ -56,7 +56,7 @@ class BaseSearchResults(JSONLDContextSerializer):
 
     def get_modes(self, obj: pysolr.Results) -> Optional[Dict]:
         req = self.context.get("request")
-        cfg: Dict = req.app.config
+        cfg: Dict = req.app.ctx.config
 
         modes = cfg["search"]["modes"]
 

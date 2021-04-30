@@ -1,127 +1,18 @@
-import re
 from typing import Dict, List, Optional, Callable, Tuple, Union
 import logging
 
-from search_server.helpers.identifiers import ID_SUB
 from search_server.helpers.solr_connection import SolrResult
 
-LabelConfig = Dict[str, Tuple[str, Optional[Callable]]]
+LabelConfig = Dict[str, Tuple[str, Optional[Union[Callable, Dict]]]]
 
 log = logging.getLogger(__name__)
 
-_KEY_MODE_MAP: Dict = {
-    "A": "records.a_major",
-    "a": "records.a_minor",
-    "A|b": "records.af_major",
-    "a|b": "records.af_minor",
-    "A|x": "records.as_major",
-    "a|x": "records.as_minor",
-    "B": "records.b_major",
-    "b": "records.b_minor",
-    "B|b": "records.bf_major",
-    "b|b": "records.bf_minor",
-    "C": "records.c_major",
-    "c": "records.c_minor",
-    "C|b": "records.cf_major",
-    "c|b": "records.cf_minor",
-    "C|x": "records.cs_major",
-    "c|x": "records.cs_minor",
-    "D": "records.d_major",
-    "d": "records.d_minor",
-    "D|b": "records.df_major",
-    "d|b": "records.df_minor",
-    "D|x": "records.ds_major",
-    "d|x": "records.ds_minor",
-    "E": "records.e_major",
-    "e": "records.e_minor",
-    "E|b": "records.ef_major",
-    "e|b": "records.ef_minor",
-    "F": "records.f_major",
-    "f": "records.f_minor",
-    "F|x": "records.fs_major",
-    "f|x": "records.fs_minor",
-    "G": "records.g_major",
-    "g": "records.g_minor",
-    "G|b": "records.gf_major",
-    "g|b": "records.gf_minor",
-    "G|x": "records.gs_major",
-    "g|x": "records.gs_minor",
-    "1t": "records.mode_1t",
-    "1tt": "records.mode_1tt",
-    "2t": "records.mode_2t",
-    "2tt": "records.mode_2tt",
-    "3t": "records.mode_3t",
-    "3tt": "records.mode_3tt",
-    "4t": "records.mode_4t",
-    "4tt": "records.mode_4tt",
-    "5t": "records.mode_5t",
-    "5tt": "records.mode_5tt",
-    "6t": "records.mode_6t",
-    "6tt": "records.mode_6tt",
-    "7t": "records.mode_7t",
-    "7tt": "records.mode_7tt",
-    "8t": "records.mode_8t",
-    "8tt": "records.mode_8tt",
-    "9t": "records.mode_9t",
-    "9tt": "records.mode_9tt",
-    "10t": "records.mode_10t",
-    "10tt": "records.mode_10tt",
-    "11t": "records.mode_11t",
-    "11tt": "records.mode_11tt",
-    "12t": "records.mode_12t",
-    "12tt": "records.mode_12tt",
-    "1byz": "records.octoechos1",
-    "2byz": "records.octoechos2",
-    "3byz": "records.octoechos3",
-    "4byz": "records.octoechos4",
-    "5byz": "records.octoechos5",
-    "6byz": "records.octoechos6",
-    "7byz": "records.octoechos7",
-    "8byz": "records.octoechos8",
+FIELD_CONFIG: LabelConfig = {
+    "main_title_s": ("records.standardized_title", None),
+    "scoring_summary_sm": ("records.scoring_summary", None),
+    "source_title_s": ("records.title_on_source", None),
+    "additional_title_s": ("records.additional_title", None)
 }
-
-_CLEF_MAP: Dict = {
-    "G-2": "records.g_minus_2_treble",
-    "C-1": "records.c_minus_1"
-}
-
-
-def key_mode_value_translator(value: str, translations: Dict) -> Dict:
-    """
-    Returns a translated value from the Solr records. Keys and modes are stored as simple values,
-    and the key/mode map provides a mapping between these values and the correct translation string.
-
-    If for some reason the value is not found in the map, it is returned with a language code of "none".
-
-    :param value: A key or mode value from the Solr index
-    :param translations: A dictionary of available translations
-    :return: A dictionary corresponding to a language map for that value.
-    """
-    trans_key: Optional[str] = _KEY_MODE_MAP.get(value)
-    if not trans_key:
-        return {"none": [value]}
-    return translations.get(trans_key)
-
-
-def clef_translator(value: str, translations: Dict) -> Dict:
-    trans_key: Optional[str] = _CLEF_MAP.get(value)
-    if not trans_key:
-        return {"none": [value]}
-    return translations.get(trans_key)
-
-
-def id_translator(value: str, translations: Dict) -> Dict:
-    """
-    Strips an ID prefix off a Solr index so that we can return the bare ID
-    as part of a record display. Uses ID_SUB regex to strip the prefix
-    ("source_12345" -> "12345")
-
-    :param value:
-    :param translations:
-    :return: Language Map value for RISM ID
-    """
-    idval: str = re.sub(ID_SUB, "", value)
-    return {"none": [idval]}
 
 
 def _default_translator(value: Union[str, List], translations: Dict) -> Dict:
@@ -132,6 +23,8 @@ def _default_translator(value: Union[str, List], translations: Dict) -> Dict:
     none is declared.
 
     See: https://github.com/w3c/json-ld-syntax/issues/102
+
+    Additional specialized translators are defined in the display_translators module.
 
     :param value: The field value
     :param translations: Not used, but provided so that this method has the same signature as the others.
@@ -146,13 +39,6 @@ def _default_translator(value: Union[str, List], translations: Dict) -> Dict:
 # value will use the default translator function, returning a language key of "none".
 # The function for translating takes two arguments: The string to translate, and a dictionary of available translations.
 # This field config will be the default used if one is not provided.
-FIELD_CONFIG: LabelConfig = {
-    "main_title_s": ("records.standardized_title", None),
-    "scoring_summary_sm": ("records.scoring_summary", None),
-    "source_title_s": ("records.title_on_source", None),
-    "additional_title_s": ("records.additional_title", None),
-    "source_id": ("records.rism_id_number", id_translator)
-}
 
 
 def get_display_fields(record: Union[SolrResult, Dict], translations: Dict, field_config: Optional[LabelConfig] = None) -> Optional[List]:
@@ -174,6 +60,8 @@ def get_display_fields(record: Union[SolrResult, Dict], translations: Dict, fiel
         if field not in record:
             continue
 
+        # deconstruct the translation map tuple into the translation
+        # key and the translator function
         label_translation, value_translator = translation_map
 
         # If the second key is None, set the translator function

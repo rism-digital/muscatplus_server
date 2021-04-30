@@ -53,6 +53,6 @@ async def institution_institutions_relationships_list(req, institution_id: str):
     pass
 
 
-@institutions_blueprint.route("/<institution_id:string/institutions/<relationship_id:string>")
+@institutions_blueprint.route("/<institution_id:string>/institutions/<relationship_id:string>")
 async def institution_institution_relationship(req, institution_id: str, relationship_id: str):
     pass

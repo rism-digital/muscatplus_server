@@ -20,7 +20,7 @@ from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
 
 config: Dict = yaml.safe_load(open('configuration.yml', 'r'))
-app = Sanic("search_server")
+app = Sanic("mp_server")
 
 # register routes with their blueprints
 app.blueprint(sources_blueprint)
@@ -31,8 +31,8 @@ app.blueprint(subjects_blueprint)
 app.blueprint(incipits_blueprint)
 app.blueprint(festivals_blueprint)
 
-# Make the configuration globally available in the app instance.
-app.config.update(config)
+app.config.FORWARDED_SECRET = config['common']['secret']
+app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
 
 debug_mode: bool = config['common']['debug']
 
@@ -51,10 +51,13 @@ translations: Optional[Dict] = load_translations("locales/")
 if not translations:
     log.critical("No translations can be loaded.")
 
-app.translations = translations
+app.ctx.translations = translations
 
 context_uri: bool = config['common']['context_uri']
-app.context_uri = context_uri
+app.ctx.context_uri = context_uri
+
+# Make the application configuration object available in the app context
+app.ctx.config = config
 
 
 @app.middleware('response')

@@ -45,7 +45,7 @@ class MaterialGroupList(ContextDictSerializer):
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         return transl.get("records.material_description")
 
@@ -102,7 +102,7 @@ class MaterialGroup(ContextDictSerializer):
         if not items:
             return None
 
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         return {
             "type": "rism:Relations",
@@ -112,7 +112,7 @@ class MaterialGroup(ContextDictSerializer):
 
     def get_summary(self, obj: Dict) -> List[Dict]:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         fields: LabelConfig = {
             "source_type": ("records.source_type", None),

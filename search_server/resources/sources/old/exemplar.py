@@ -47,7 +47,7 @@ class ExemplarList(JSONLDContextDictSerializer):
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         return transl.get("records.exemplars")
 
@@ -94,17 +94,21 @@ class Exemplar(JSONLDContextDictSerializer):
         req = self.context.get('request')
         institution_id: str = re.sub(ID_SUB, "", obj.get("institution_id"))
 
+        institution_name: str = obj.get("institution_s")
+        if 'siglum_s' in obj:
+            institution_name += f" ({obj['siglum_s']})"
+
         return {
             "id": get_identifier(req, "institutions.institution", institution_id=institution_id),
             "type": "rism:Institution",
             "label": {
-                "none": [f"{obj.get('institution_s')}"]
+                "none": [f"{institution_name}"]
             },
         }
 
     def get_summary(self, obj: SolrResult) -> List[Dict]:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "shelfmark_s": ("records.shelfmark", None),

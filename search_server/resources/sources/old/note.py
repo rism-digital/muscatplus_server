@@ -18,13 +18,13 @@ class NoteList(JSONLDContextDictSerializer):
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         return transl.get("records.references_and_notes")
 
     def get_items(self, obj: SolrResult) -> Optional[List]:
         req = self.context.get("request")
-        transl = req.app.translations
+        transl = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "general_notes_sm": ("records.general_note", None),

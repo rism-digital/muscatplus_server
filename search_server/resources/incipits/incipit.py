@@ -9,10 +9,9 @@ import verovio
 
 from search_server.helpers.display_fields import (
     get_display_fields,
-    LabelConfig,
-    key_mode_value_translator,
-    clef_translator
+    LabelConfig
 )
+from search_server.helpers.display_translators import key_mode_value_translator, clef_translator
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import (
     ID_SUB,
@@ -23,11 +22,14 @@ from search_server.helpers.solr_connection import SolrConnection, SolrResult, So
 
 log = logging.getLogger(__name__)
 
+# Disable chatty logging for Verovio.
+verovio.enableLog(False)
 vrv_tk = verovio.toolkit()
 vrv_tk.setInputFrom(verovio.PAE)
 vrv_tk.setOptions(ujson.dumps({
     "footer": 'none',
     "header": 'none',
+    "breaks": 'none',
     "pageMarginTop": 0,
     "pageMarginBottom": 25,  # Artificially inflate the bottom margin until rism-digital/verovio#1960 is fixed.
     "pageMarginLeft": 0,
@@ -42,35 +44,8 @@ vrv_tk.setOptions(ujson.dumps({
 }))
 
 
-def _incipit_to_pae(obj: SolrResult) -> str:
-    """
-    This function assumes that all the data is complete in the
-    Solr result; any checks for whether the data needed to return
-    the PAE code is present should be done before calling this function.
-    :param obj: A Solr result object for an incipit.
-    :return: A string formatted as Plaine and Easie code
-    """
-    clef = obj.get("clef_s")
-    timesig = obj.get("timesig_s")
-    key_or_mode = obj.get("key_mode_s")
-    keysig = obj.get("key_s")
-    incip = obj.get("music_incipit_s")
-
-    # indentation is significant; otherwise empty spaces will be added to start of every line.
-    pae_code: str = f"""
-@start:pae-file
-@clef:{clef}
-@keysig:{keysig}
-@key:{key_or_mode}
-@timesig:{timesig}
-@data:{incip}
-@end:pae-file"""
-
-    return pae_code
-
-
 def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
-    fq: List = ["type:source_incipit",
+    fq: List = ["type:incipit",
                 f"source_id:source_{source_id}",
                 f"work_num_s:{work_num}"]
     sort: str = "work_num_ans asc"
@@ -93,10 +68,8 @@ def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[Dict]
     if not incipit_record:
         return None
 
-    incipit = Incipit(incipit_record, context={"request": req,
-                                                     "direct_request": True})
-
-    return incipit.data
+    return Incipit(incipit_record, context={"request": req,
+                                            "direct_request": True}).data
 
 
 class IncipitList(JSONLDContextDictSerializer):
@@ -118,7 +91,7 @@ class IncipitList(JSONLDContextDictSerializer):
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         return transl.get("records.incipits")
 
@@ -142,44 +115,41 @@ class Incipit(JSONLDContextDictSerializer):
     incip_id = serpy.MethodField(
         label="id"
     )
-    label = serpy.MethodField()
-    summary = serpy.MethodField()
-
     itype = StaticField(
         label="type",
         value="rism:Incipit"
     )
+    label = serpy.MethodField()
+    within = serpy.MethodField()
+    summary = serpy.MethodField()
     rendered = serpy.MethodField()
 
     def get_incip_id(self, obj: Dict) -> str:
         req = self.context.get("request")
-
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
         work_num: str = f"{obj.get('work_num_s')}"
 
         return get_identifier(req, "sources.incipit", source_id=source_id, work_num=work_num)
 
     def get_label(self, obj: SolrResult) -> Optional[Dict]:
-        title: Optional[str] = obj.get("title_s")
-        t_incipit: Optional[str] = obj.get("text_incipit_s")
+        return {"none": [f"{obj.get('work_num_s')}"]}
 
-        if not title and not t_incipit:
-            return {
-                "none": ["[No title]"]
-            }
+    def get_within(self, obj: SolrResult) -> Optional[Dict]:
+        if not self.context.get("direct_request"):
+            return None
 
-        if title:
-            label = title
-        else:
-            label = f"[{t_incipit}]"
+        req = self.context.get("request")
+        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
         return {
-            "none": [f"{label}"]
+            "id": get_identifier(req, "sources.source", source_id=source_id),
+            "type": "rism:Source",
+            "label": {"none": [f"{obj.get('source_title_s')}"]}
         }
 
     def get_summary(self, obj: SolrResult) -> List[Dict]:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "title_s": ("records.title_movement_tempo", None),
@@ -200,7 +170,11 @@ class Incipit(JSONLDContextDictSerializer):
         if not obj.get("music_incipit_s"):
             return None
 
-        pae_code: str = _incipit_to_pae(obj)
+        # Use the pre-cached version.
+        pae_code: Optional[str] = obj.get("original_pae_sni")
+        if not pae_code:
+            return None
+
         load_status: bool = vrv_tk.loadData(pae_code)
 
         if not load_status:

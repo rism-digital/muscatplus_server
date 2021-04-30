@@ -12,6 +12,8 @@ log = logging.getLogger(__name__)
 
 # Removes ruby crud in the YML files.
 REMOVE_ACTIVESUPPORT: Pattern = re.compile(r"!map:ActiveSupport::HashWithIndifferentAccess")
+# A list of the languages we support
+SUPPORTED_LANGUAGES: List = ["de", "en", "es", "fr", "it", "pl", "pt"]
 
 
 def language_labels(translations: Dict) -> Dict:
@@ -98,6 +100,12 @@ def load_translations(path: str) -> Optional[Dict]:
 
     for locale_file in locale_files:
         log.debug("Opening %s", locale_file)
+
+        lang, ext = os.path.splitext(os.path.basename(locale_file))
+        if lang not in SUPPORTED_LANGUAGES:
+            log.warning("'%s' is not a supported language, so %s will not be loaded", lang, locale_file)
+            continue
+
         try:
             locale_contents: Dict = yaml.safe_load(
                 open(locale_file, "r")
@@ -105,8 +113,6 @@ def load_translations(path: str) -> Optional[Dict]:
         except yaml.YAMLError:
             log.error("Problem loading locale %s; It was skipped.", locale_file)
             continue
-
-        lang, ext = os.path.splitext(os.path.basename(locale_file))
 
         try:
             translations: Dict = locale_contents[lang]

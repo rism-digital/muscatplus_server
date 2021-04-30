@@ -51,7 +51,7 @@ class Subject(JSONLDContextDictSerializer):
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         return transl.get("records.subject_heading")
 

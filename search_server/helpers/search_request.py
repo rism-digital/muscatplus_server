@@ -44,7 +44,7 @@ class SearchRequest:
 
     def __init__(self, req, sort: Optional[str] = None):
         self._req = req
-        self._app_config = req.app.config
+        self._app_config = req.app.ctx.config
 
         # Validate the incoming request to see if we can parse it.
         # This will raise an exception if there is anything wrong.

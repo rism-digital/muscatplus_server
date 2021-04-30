@@ -48,7 +48,7 @@ class Place(JSONLDContextDictSerializer):
 
     def get_summary(self, obj: SolrResult) -> Optional[List]:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "country_s": ("records.country", None),

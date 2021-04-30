@@ -23,9 +23,6 @@ class BaseSource(JSONLDContextDictSerializer):
         value="rism:Source"
     )
     label = serpy.MethodField()
-    source_type = serpy.MethodField(
-        label="sourceType"
-    )
     part_of = serpy.MethodField(
         label="partOf"
     )
@@ -39,14 +36,6 @@ class BaseSource(JSONLDContextDictSerializer):
     def get_label(self, obj: SolrResult) -> Dict:
         return {
             "none": [obj.get("main_title_s")]
-        }
-
-    def get_source_type(self, obj: SolrResult) -> Optional[Dict]:
-        if not obj.get("source_type_sm"):
-            return None
-
-        return {
-            "none": obj["source_type_sm"]
         }
 
     def get_part_of(self, obj: Dict) -> Optional[Dict]:

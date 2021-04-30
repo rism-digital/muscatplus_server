@@ -10,6 +10,7 @@ from search_server.helpers.identifiers import (
     ID_SUB
 )
 from search_server.helpers.serializers import ContextDictSerializer
+from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.search.base_search import BaseSearchResults
 
 
@@ -58,11 +59,13 @@ class SearchResult(ContextDictSerializer):
 
         return get_identifier(req, route, **kwargs)
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: SolrResult) -> Dict:
         label: str
 
         if obj["type"] == "source":
             label = obj.get("main_title_s")
+        elif obj["type"] == "institution":
+            label = _format_institution_label(obj)
         elif obj["type"] in ("person", "institution", "liturgical_festival"):
             label = obj.get("name_s")
         else:
@@ -75,7 +78,7 @@ class SearchResult(ContextDictSerializer):
 
     def get_type_label(self, obj: Dict) -> Dict:
         req = self.context.get("request")
-        transl = req.app.translations
+        transl = req.app.ctx.translations
         label: Dict
 
         if obj["type"] == "source":
@@ -112,3 +115,14 @@ class SearchResults(BaseSearchResults):
             return None
 
         return SearchResult(obj.docs, many=True, context={"request": self.context.get("request")}).data
+
+
+def _format_institution_label(obj: SolrResult) -> str:
+    city = siglum = ""
+
+    if 'city_s' in obj:
+        city = f", {obj['city_s']}"
+    if 'siglum_s' in obj:
+        siglum = f" ({obj['siglum_s']})"
+
+    return f"{obj['name_s']}{city}{siglum}"

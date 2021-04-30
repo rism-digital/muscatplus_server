@@ -45,7 +45,7 @@ class LiturgicalFestival(JSONLDContextDictSerializer):
 
     def get_summary(self, obj: SolrResult) -> Optional[List]:
         req = self.context.get("request")
-        transl: Dict = req.app.translations
+        transl: Dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             # should be "Alternate terms" but this is not available in the translations currently...

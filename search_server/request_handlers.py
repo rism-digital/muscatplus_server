@@ -64,7 +64,7 @@ async def handle_request(req: request.Request, handler: Callable, **kwargs) -> r
             data_obj,
             headers=response_headers,
             escape_forward_slashes=False,
-            indent=(4 if req.app.config['common']['debug'] else 0)
+            indent=(4 if req.app.ctx.config['common']['debug'] else 0)
         )
 
 

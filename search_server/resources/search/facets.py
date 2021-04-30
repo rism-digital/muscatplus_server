@@ -29,7 +29,7 @@ class FacetList(ContextDictSerializer):
             return None
 
         req = self.context.get("request")
-        cfg: Dict = req.app.config
+        cfg: Dict = req.app.ctx.config
         current_mode: str = req.args.get("mode", cfg["search"]["default_mode"])  # if no incoming mode, use the default
         filters = filters_for_mode(cfg, current_mode)
 
