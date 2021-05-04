@@ -44,7 +44,7 @@ class Person(BasePerson):
     name_variants = serpy.MethodField(
         label="nameVariants"
     )
-    related = serpy.MethodField()
+    relationships = serpy.MethodField()
     notes = serpy.MethodField(
         label="notes"
     )
@@ -103,7 +103,7 @@ class Person(BasePerson):
 
         return get_display_fields(obj, transl, field_config)
 
-    def get_related(self, obj: SolrResult) -> Optional[Dict]:
+    def get_relationships(self, obj: SolrResult) -> Optional[Dict]:
         if not self.context.get("direct_request"):
             return None
 

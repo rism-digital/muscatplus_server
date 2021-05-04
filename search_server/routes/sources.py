@@ -1,9 +1,8 @@
 from sanic import Blueprint
 
 from search_server.request_handlers import handle_request
-# from search_server.resources.sources.exemplar import handle_holding_request
 from search_server.resources.incipits.incipit import handle_incipits_list_request, handle_incipit_request
-from search_server.resources.sources.full_source import (
+from search_server.resources.sources.handlers import (
     handle_source_request,
     handle_people_relationships_list_request,
     handle_person_relationship_request,
@@ -11,12 +10,6 @@ from search_server.resources.sources.full_source import (
     handle_institution_relationship_request,
     handle_creator_request
 )
-
-# from search_server.resources.sources.source_list import handle_source_list_request
-# from search_server.resources.sources.materialgroup import (
-#     handle_materialgroups_list_request,
-#     handle_materialgroups_request
-# )
 
 
 sources_blueprint: Blueprint = Blueprint("sources", url_prefix="/sources")
@@ -44,17 +37,17 @@ async def incipit(req, source_id: str, work_num: str):
                                 work_num=work_num)
 
 
-@sources_blueprint.route("/<source_id:string>/materials/")
-async def materials_list(req, source_id: str):
+@sources_blueprint.route("/<source_id:string>/material-groups/")
+async def material_groups_list(req, source_id: str):
     return await handle_request(req,
-                                handle_materials_list_request,
+                                handle_material_groups_list_request,
                                 source_id=source_id)
 
 
-@sources_blueprint.route("/<source_id:string>/materials/<material_id:string>/")
-async def materialgroup(req, source_id: str, material_id: str):
+@sources_blueprint.route("/<source_id:string>/material-groups/<material_id:string>/")
+async def material_group(req, source_id: str, material_id: str):
     return await handle_request(req,
-                                handle_materials_request,
+                                handle_material_group_request,
                                 source_id=source_id,
                                 materialgroup_id=material_id)
 
@@ -96,14 +89,14 @@ async def creator(req, source_id: str):
                                 source_id=source_id)
 
 
-@sources_blueprint.route("/<source_id:string>/holdings/")
-async def holding_list(req, source_id: str):
+@sources_blueprint.route("/<source_id:string>/exemplars/")
+async def exemplar_list(req, source_id: str):
     pass
 
 
 @sources_blueprint.route("/<source_id:string>/exemplars/<exemplar_id:string>/")
-async def exemplar(req, source_id: str, holding_id: str):
+async def exemplar(req, source_id: str, exemplar_id: str):
     return await handle_request(req,
                                 handle_exemplar_request,
                                 source_id=source_id,
-                                holding_id=holding_id)
+                                exemplar_id=exemplar_id)
