@@ -225,9 +225,9 @@ def printing_techniques_translator(values: List, translations: Dict) -> Dict:
     printing techniques, we need to gather all possible printing techniques and return
     them.
 
-    :param values:
-    :param translations:
-    :return:
+    :param values: A list of values to translate
+    :param translations: The source of all translations
+    :return: A dictionary of translated terms.
     """
     result: Dict = {k: [] for k in SUPPORTED_LANGUAGES}
     for technique in values:
@@ -243,7 +243,21 @@ def printing_techniques_translator(values: List, translations: Dict) -> Dict:
     return result
 
 
-def instrumentation_json_value_translator(values: List, translations: Dict) -> Dict:
+def secondary_literature_json_value_translator(values: List, translations: Dict) -> Dict:
+    works: List = []
+    for work in values:
+        reference: Optional[str] = work.get("reference")
+        number_page: Optional[str] = f"{n}" if (n := work.get("number_page")) else None
+        ref = ", ".join(f for f in [reference, number_page] if f)
+        works.append(ref)
+
+    return {"none": works}
+
+
+def scoring_json_value_translator(values: List, translations: Dict) -> Dict:
+    # Simply coalesces the instrumentation into a single list from a JSON
+    # list taken from Solr. Does not do any translations of the instrumentation
+    # (yet).
     instruments: List = []
     for inst in values:
         voice: Optional[str] = inst.get("voice_instrument")

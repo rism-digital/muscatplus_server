@@ -19,7 +19,7 @@ class MaterialGroupsSection(JSONLDContextDictSerializer):
         label="type",
         value="rism:MaterialGroupsSection"
     )
-    groups = serpy.MethodField()
+    items = serpy.MethodField()
 
     def get_label(self, obj: SolrResult):
         req = self.context.get("request")
@@ -27,7 +27,7 @@ class MaterialGroupsSection(JSONLDContextDictSerializer):
 
         return transl.get("records.material_description")
 
-    def get_groups(self, obj: SolrResult) -> List[Dict]:
+    def get_items(self, obj: SolrResult) -> List[Dict]:
         mgdata: List = obj.get("material_groups_json")
         return MaterialGroup(mgdata,
                              many=True,
@@ -74,8 +74,8 @@ class MaterialGroup(JSONLDContextDictSerializer):
         return get_display_fields(obj, transl, field_config=field_config)
 
     def get_relationships(self, obj: Dict) -> Optional[Dict]:
-        if 'related_people_json' not in obj and 'related_institutions_json' not in obj:
+        # a set is disjoint if there are no keys in common.
+        if {'related_people_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
             return None
+        return RelationshipsSection(obj, context={"request": self.context.get("request")}).data
 
-        return RelationshipsSection(obj,
-                                    context={"request": self.context.get("request")}).data

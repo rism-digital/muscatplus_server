@@ -46,7 +46,7 @@ class Institution(JSONLDContextDictSerializer):
     see_also = serpy.MethodField(
         label="seeAlso"
     )
-    related = serpy.MethodField()
+    relationships = serpy.MethodField()
 
     def get_iid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
@@ -103,7 +103,7 @@ class Institution(JSONLDContextDictSerializer):
 
         return external_authority_list(obj['external_ids'])
 
-    def get_related(self, obj: SolrResult) -> Optional[Dict]:
+    def get_relationships(self, obj: SolrResult) -> Optional[Dict]:
         if not self.context.get("direct_request"):
             return None
 

@@ -4,8 +4,11 @@ from typing import Dict, Optional, List
 import serpy
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
-from search_server.helpers.display_translators import instrumentation_json_value_translator, \
-    dramatic_roles_json_value_translator, title_json_value_translator
+from search_server.helpers.display_translators import (
+    dramatic_roles_json_value_translator,
+    title_json_value_translator,
+    secondary_literature_json_value_translator,
+    scoring_json_value_translator)
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.languages import languages_translator
@@ -46,10 +49,13 @@ class ContentsSection(JSONLDContextDictSerializer):
             "source_title_s": ("records.title_on_source", None),
             "variant_title_s": ("records.variant_source_title", None),
             "standard_titles_json": ("records.standardized_title", title_json_value_translator),
+            "works_catalogue_json": ("records.catalog_works", secondary_literature_json_value_translator),
             "additional_titles_json": ("records.additional_title", title_json_value_translator),
+            "opus_numbers_sm": ("records.opus_number", None),
             "description_summary_sm": ("records.description_summary", None),
             "dramatic_roles_json": ("records.named_dramatic_roles", dramatic_roles_json_value_translator),
-            "instrumentation_json": ("records.total_scoring", instrumentation_json_value_translator),
+            "scoring_json": ("records.total_scoring", scoring_json_value_translator),
+            "colophon_notes_sm": ("records.colophon", None),
             "language_text_sm": ("records.language_text", languages_translator),
             "language_libretto_sm": ("records.language_libretto", languages_translator),
             "language_original_sm": ("records.language_original_text", languages_translator),
@@ -63,10 +69,14 @@ class ContentsSection(JSONLDContextDictSerializer):
         if 'subjects_json' not in obj:
             return None
 
-        return SourceSubjectList(obj, context={"request": self.context.get("request")}).data
+        return SourceSubjectSection(obj, context={"request": self.context.get("request")}).data
 
 
-class SourceSubjectList(JSONLDContextDictSerializer):
+class SourceSubjectSection(JSONLDContextDictSerializer):
+    stype = StaticField(
+        label="type",
+        value="rism:SourceSubjectSection"
+    )
     label = serpy.MethodField()
     items = serpy.MethodField()
 

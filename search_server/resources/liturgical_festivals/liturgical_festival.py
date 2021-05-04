@@ -34,16 +34,24 @@ class LiturgicalFestival(JSONLDContextDictSerializer):
     label = serpy.MethodField()
     summary = serpy.MethodField()
 
-    def get_fid(self, obj: SolrResult) -> str:
+    def get_fid(self, obj: Dict) -> str:
         req = self.context.get("request")
         festival_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "festivals.festival", festival_id=festival_id)
 
-    def get_label(self, obj: SolrResult) -> Dict:
-        return {"none": [f"{obj.get('name_s')}"]}
+    def get_label(self, obj: Dict) -> Dict:
+        # This serializer can also be used by the 'liturgical festival' section
+        # on a source, which has a different name field.
+        if 'name' in obj:
+            return {"none": [f"{obj.get('name')}"]}
+        else:
+            return {"none": [f"{obj.get('name_s')}"]}
 
-    def get_summary(self, obj: SolrResult) -> Optional[List]:
+    def get_summary(self, obj: Dict) -> Optional[List]:
+        if not self.context.get("direct_request"):
+            return None
+
         req = self.context.get("request")
         transl: Dict = req.app.ctx.translations
 

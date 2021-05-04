@@ -16,7 +16,7 @@ class RelationshipsSection(JSONLDContextDictSerializer):
     )
     items = serpy.MethodField()
 
-    def get_label(self, obj: Dict):
+    def get_label(self, obj: Dict) -> Dict:
         req = self.context.get("request")
         transl: Dict = req.app.ctx.translations
 
