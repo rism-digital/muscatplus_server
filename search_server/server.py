@@ -8,7 +8,8 @@ from sanic import Sanic, response
 
 from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.helpers.languages import load_translations
-from search_server.request_handlers import handle_search_request
+from search_server.request_handlers import handle_search_request, handle_request
+from search_server.resources.countries.country import handle_country_request
 from search_server.resources.search.search import handle_search_request
 from search_server.resources.siglum.sigla import handle_sigla_request
 from search_server.routes.festivals import festivals_blueprint
@@ -83,3 +84,10 @@ async def sigla(req):
 @app.route("/search/")
 async def search(req):
     return await handle_search_request(req)
+
+
+@app.route("/countries/<country_id:string>/")
+async def countries(req, country_id: str):
+    return await handle_request(req,
+                                handle_country_request,
+                                country_id=country_id)
