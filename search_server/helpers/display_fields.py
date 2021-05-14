@@ -26,11 +26,13 @@ def _default_translator(value: Union[str, List], translations: Dict) -> Dict:
 
     Additional specialized translators are defined in the display_translators module.
 
+    Ensures the values sent back are always strings!
+
     :param value: The field value
     :param translations: Not used, but provided so that this method has the same signature as the others.
     :return: A dictionary containing a default language map of the value.
     """
-    return {"none": value if isinstance(value, list) else [value]}
+    return {"none": [str(v) for v in value] if isinstance(value, list) else [str(value)]}
 
 
 # The field configuration should have a Solr field on one side, and a Tuple on the other. The tuple
