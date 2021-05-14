@@ -10,6 +10,7 @@ from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.helpers.languages import load_translations
 from search_server.request_handlers import handle_search_request, handle_request
 from search_server.resources.countries.country import handle_country_request
+from search_server.resources.front.front import handle_front_request
 from search_server.resources.search.search import handle_search_request
 from search_server.resources.siglum.sigla import handle_sigla_request
 from search_server.routes.festivals import festivals_blueprint
@@ -68,7 +69,7 @@ async def add_cors(req, resp):
 
 @app.route("/")
 async def root(req):
-    return response.json({"message": "Hello World"})
+    return await handle_request(req, handle_front_request)
 
 
 @app.route("/api/v1/context.json")
