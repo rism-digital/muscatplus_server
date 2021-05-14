@@ -155,6 +155,12 @@ class SearchRequest:
         return ujson.dumps(json_facets)
 
     def compile(self) -> Dict:
+        """
+        Assembles the incoming data into a form that is appropriate for
+        Solr.
+        :return: A dictionary containing keys and values that is suitable for
+            use as a Solr query.
+        """
         mode_filter: str = self._modes_to_filter()
         self.filters.append(mode_filter)
 
