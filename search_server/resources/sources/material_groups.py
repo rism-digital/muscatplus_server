@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List, Optional
 
 import serpy
@@ -9,7 +10,6 @@ from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.sources.relationships import RelationshipsSection
 
-import logging
 log = logging.getLogger("muscat_indexer")
 
 

@@ -29,4 +29,6 @@ class PersonResults(BaseSearchResults):
         if obj.hits == 0:
             return None
 
-        return BaseSource(obj.docs, many=True, context={"request": self.context.get("request")}).data
+        return BaseSource(obj.docs,
+                          many=True,
+                          context={"request": self.context.get("request")}).data

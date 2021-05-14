@@ -36,6 +36,9 @@ class Pagination(ContextDictSerializer):
     total_pages = serpy.MethodField(
         label="totalPages"
     )
+    this_page = serpy.MethodField(
+        label="thisPage"
+    )
 
     def _number_of_pages(self, total: int) -> int:
         """
@@ -69,6 +72,15 @@ class Pagination(ContextDictSerializer):
         :return: the total number of pages
         """
         return self._number_of_pages(obj.hits)
+
+    def get_this_page(self, obj: pysolr.Results) -> int:
+        """
+        :param obj: A pysolr Results object
+        :return: The current page number
+        """
+        req = self.context.get("request")
+
+        return parse_page_number_from_request(req)
 
     def get_first(self, total_results: int) -> str:  # noqa
         """

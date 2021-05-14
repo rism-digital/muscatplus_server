@@ -69,10 +69,10 @@ class ContentsSection(JSONLDContextDictSerializer):
         if 'subjects_json' not in obj:
             return None
 
-        return SourceSubjectSection(obj, context={"request": self.context.get("request")}).data
+        return SourceSubjectsSection(obj, context={"request": self.context.get("request")}).data
 
 
-class SourceSubjectSection(JSONLDContextDictSerializer):
+class SourceSubjectsSection(JSONLDContextDictSerializer):
     stype = StaticField(
         label="type",
         value="rism:SourceSubjectSection"

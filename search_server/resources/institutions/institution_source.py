@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List, Optional
 
 import pysolr
@@ -6,6 +7,8 @@ from search_server.helpers.search_request import SearchRequest
 from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.search.base_search import BaseSearchResults
 from search_server.resources.sources.base_source import BaseSource
+
+log = logging.getLogger(__name__)
 
 
 def handle_institution_source_request(req, institution_id: str) -> Dict:

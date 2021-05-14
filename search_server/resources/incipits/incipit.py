@@ -120,7 +120,9 @@ class Incipit(JSONLDContextDictSerializer):
         value="rism:Incipit"
     )
     label = serpy.MethodField()
-    within = serpy.MethodField()
+    part_of = serpy.MethodField(
+        label="partOf"
+    )
     summary = serpy.MethodField()
     rendered = serpy.MethodField()
 
@@ -134,7 +136,7 @@ class Incipit(JSONLDContextDictSerializer):
     def get_label(self, obj: SolrResult) -> Optional[Dict]:
         return {"none": [f"{obj.get('work_num_s')}"]}
 
-    def get_within(self, obj: SolrResult) -> Optional[Dict]:
+    def get_part_of(self, obj: SolrResult) -> Optional[Dict]:
         if not self.context.get("direct_request"):
             return None
 
