@@ -5,7 +5,7 @@ import serpy
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult, SolrManager, SolrConnection
-from search_server.resources.incipits.incipit import IncipitList, Incipit
+from search_server.resources.incipits.incipit import Incipit
 
 
 class IncipitsSection(JSONLDContextDictSerializer):

@@ -27,7 +27,7 @@ class ReferencesNotesSection(JSONLDContextDictSerializer):
         label="liturgicalFestivals"
     )
 
-    def get_label(self, obj: SolrResult):
+    def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
         transl: Dict = req.app.ctx.translations
 
