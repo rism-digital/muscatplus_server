@@ -113,7 +113,7 @@ class Pagination(ContextDictSerializer):
 
         # if the next page is beyond the total number of pages, return
         # None, which will omit it from the response.
-        if next_page > last_page:
+        if this_page == last_page:
             return None
 
         return replace_query_param(req.url, PAGE_QUERY_PARAM, next_page)
@@ -157,13 +157,16 @@ class Pagination(ContextDictSerializer):
         :param obj: a pysolr Results object
         :return: The URL to the next page, or None if the last page is also the first page.
         """
+        req = self.context.get("request")
+
         last_page: int = self._number_of_pages(obj.hits)
+        this_page: int = parse_page_number_from_request(req)
 
         # Show the last page link only if there is more than one page
         # If the number of results are zero, or are less than the total on a results page
         # , then the first and last pages are the same and the number of pages is 1, so we will not show the 'last_page'
         # link
-        if last_page <= 1:
+        if last_page <= 1 or this_page == last_page:
             return None
 
         req = self.context.get("request")
