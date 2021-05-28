@@ -1,6 +1,6 @@
 ---
 common:
-  debug: no
+  debug: yes
   context_uri: yes  # if false, displays the full JSON-LD context inline
   secret: EvGw3ND0zB47Sp6Lk8R5M4Bh7PXmwB6x9WJVyYQx8TD72P5kM3ap39bNyEkSWFq1
 
@@ -16,34 +16,20 @@ search:
   default_mode: "sources"
   modes:
     sources:
-      display_name: "Sources"
-      record_types:
-        - source
-      suggest_from:
-        - person
+      display_name: "records.sources"
+      record_type: "source"
     people:
-      display_name: "People"
-      record_types:
-        - person
-      suggest_from:
-        - liturgical_festival
-        - institution
+      display_name: "records.people"
+      record_type: "person"
     institutions:
-      display_name: "Institutions"
-      record_types:
-        - institution
-      suggest_from:
-        - person
+      display_name: "records.institutions"
+      record_type: "institution"
     festivals:
-      display_name: "Liturgical Festivals"
-      record_types:
-        - liturgical_festival
-      suggest_from:
-        - person
+      display_name: "records.liturgical_festivals"
+      record_type: "liturgical_festival"
     incipits:
-      display_name: "Incipits"
-      record_types:
-        - incipit
+      display_name: "records.incipits"
+      record_type: "incipit"
   facets:
     source_type_sm: &SOURCE_TYPE
       display_name: "Source type"  # records.source_type
