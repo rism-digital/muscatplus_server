@@ -57,14 +57,45 @@ class BaseSearchResults(JSONLDContextSerializer):
     def get_modes(self, obj: pysolr.Results) -> Optional[Dict]:
         req = self.context.get("request")
         cfg: Dict = req.app.ctx.config
+        transl: Dict = req.app.ctx.translations
 
-        modes = cfg["search"]["modes"]
+        facet_results: Optional[Dict] = obj.raw_response.get('facets')
+        if not facet_results:
+            return None
+
+        mode_facet: Optional[Dict] = facet_results.get("mode")
+        # if, for some reason, we don't have a mode facet we return gracefully.
+        if not mode_facet:
+            return None
+
+        mode_buckets: List = mode_facet.get("buckets", [])
+        mode_items: List = []
+        mode_config: Dict = cfg['search']['modes']
+        # Put the returned modes into a dictionary so we can look up the buckets by the key. The format is
+        # {type: count}, where 'type' is the value from the Solr type field, and 'count' is the number of
+        # records returned.
+        mode_results: Dict = {f"{mode['val']}": mode['count'] for mode in mode_buckets}
+
+        # This will ensure the modes are returned in the order they're listed in the configuration file. Otherwise
+        #  they are returned by the order of results.
+        for mode, config in mode_config.items():
+            record_type = config['record_type']
+            if record_type not in mode_results:
+                continue
+
+            translation_key: str = config['display_name']
+
+            mode_items.append({
+                "value": mode,
+                "label": transl.get(translation_key),
+                "count": mode_results[record_type]
+            })
 
         return {
             "alias": "mode",
-            "label": {"none": ["Mode"]},  # TODO: Translate!
+            "label": {"none": ["Result type"]},  # TODO: Translate!
             "type": "rism:Facet",
-            "items": [{"value": k, "label": {"none": [v['display_name']]}} for k, v in modes.items()]
+            "items": mode_items
         }
 
     @abstractmethod

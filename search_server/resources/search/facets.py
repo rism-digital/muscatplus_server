@@ -40,8 +40,9 @@ class FacetList(ContextDictSerializer):
         facets: List[Dict] = []
 
         for alias, res in facet_result.items():
-            # Ignore the 'count' field in the solr result
-            if alias == "count":
+            # Ignore the 'count' field in the solr result. Also skip the 'mode' facet since we handle that
+            # in a separate block.
+            if alias in ("count", "mode"):
                 continue
 
             items: List = []

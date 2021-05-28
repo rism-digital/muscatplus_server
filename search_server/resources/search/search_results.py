@@ -5,6 +5,7 @@ from typing import Dict, Optional, List
 import pysolr
 import serpy
 
+from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.identifiers import (
     get_identifier,
     ID_SUB
@@ -15,6 +16,14 @@ from search_server.resources.search.base_search import BaseSearchResults
 
 
 log = logging.getLogger(__name__)
+
+
+class SearchResults(BaseSearchResults):
+    def get_items(self, obj: pysolr.Results) -> Optional[List]:
+        if obj.hits == 0:
+            return None
+
+        return SearchResult(obj.docs, many=True, context={"request": self.context.get("request")}).data
 
 
 class SearchResult(ContextDictSerializer):
@@ -29,6 +38,9 @@ class SearchResult(ContextDictSerializer):
         label="type"
     )
     summary = serpy.MethodField()
+    part_of = serpy.MethodField(
+        label="partOf"
+    )
 
     def get_srid(self, obj: Dict) -> str:
         req = self.context.get('request')
@@ -76,6 +88,36 @@ class SearchResult(ContextDictSerializer):
     def get_result_type(self, obj: Dict) -> str:
         return f"rism:{obj.get('type').title()}"
 
+    def get_part_of(self, obj: SolrResult) -> Optional[Dict]:
+        """
+            Provides a pointer back to a parent. Used for Items in Sources and Incipits.
+        """
+        obj_type: str = obj["type"]
+
+        if obj_type not in ("source", "incipit"):
+            return None
+
+        is_item: bool = obj.get('is_item_record_b', False)
+        req = self.context.get("request")
+
+        parent_title: str
+        parent_source_id: str
+
+        if obj_type == "source" and is_item:
+            parent_title = obj.get("source_membership_title_s")
+            parent_source_id = re.sub(ID_SUB, "", obj.get("source_membership_id"))
+        elif obj_type == "incipit":
+            parent_title = obj.get("source_title_s")
+            parent_source_id = re.sub(ID_SUB, "", obj.get("source_id"))
+        else:
+            return None
+
+        return {
+            "id": get_identifier(req, "sources.source", source_id=parent_source_id),
+            "type": "rism:Source",
+            "label": {"none": [parent_title]}
+        }
+
     def get_type_label(self, obj: Dict) -> Dict:
         req = self.context.get("request")
         transl = req.app.ctx.translations
@@ -99,22 +141,29 @@ class SearchResult(ContextDictSerializer):
 
         return label
 
-    def get_summary(self, obj: Dict) -> List[Dict]:
-        return [{
-            "label": {"en": ["A label"]},
-            "value": {"none": ["A value"]}
-        }, {
-            "label": {"de": ["A German label"]},
-            "value": {"none": ["A German value"]}
-        }]
+    def get_summary(self, obj: Dict) -> Optional[List[Dict]]:
+        field_config: LabelConfig
+        obj_type: str = obj['type']
 
-
-class SearchResults(BaseSearchResults):
-    def get_items(self, obj: pysolr.Results) -> Optional[List]:
-        if obj.hits == 0:
+        if obj_type == "source":
+            field_config = {
+                "source_type_sm": ("records.source_type", None)  # TODO: The value of this field should be translatable
+            }
+        elif obj_type == "person":
+            field_config = {
+                "roles_sm": ("records.profession_or_function", None)
+            }
+        elif obj_type == "institution":
+            field_config = {}
+        elif obj_type == "place":
+            field_config = {}
+        else:
             return None
 
-        return SearchResult(obj.docs, many=True, context={"request": self.context.get("request")}).data
+        req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
+
+        return get_display_fields(obj, transl, field_config=field_config)
 
 
 def _format_institution_label(obj: SolrResult) -> str:
