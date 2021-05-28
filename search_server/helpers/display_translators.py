@@ -177,7 +177,7 @@ _PERSON_NAME_VARIANT_TYPES_MAP = {
     "in": "records.initials",
     "tn": "records.baptismal_name",
     "ub": "records.translation",
-    "xx": "general.undetermined",
+    "xx": "records.uncategorized",
     "z": "records.alternate_spelling"
 }
 
