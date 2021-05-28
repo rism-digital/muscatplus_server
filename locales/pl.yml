@@ -28,7 +28,6 @@ pl:
     url: URL
     using_muscat: Korzystanie z Muscatu
     validity: Ważność
-    verified: Zweryfikowane
     when_to_input_new_record: Kiedy wprowadzić nowy rekord (dla druków muzycznych)
     workflow: Przepływ pracy
     'yes': Tak
@@ -648,13 +647,13 @@ pl:
     other_shelfmark: Inna sygnatura
     other_standard_identifier: Identyfikator innego standardu
     other_variant: Inny wariant
-    paper_maker: Producent papieru
     papermaker: Producent papieru
     parallel_form: Współistniejąca forma nazwy
     parent_record: Rekord macierzysty
     parts_held: Głosy
     parts_held_extent: Głosy, objętość
     patron: Sponsor
+    people: Osoby
     people_institutions: Osoby i instytucje
     percussion: Perkusja
     performance: Wykonanie
@@ -744,6 +743,7 @@ pl:
     solo_voice: Głos solowy
     soloist_instrument: Instrument solowy
     source: Źródło
+    sources: Źródła
     source_data_found: Odnalezione źródło danych
     source_data_not_found: Brak źródła danych
     source_description: Uwaga o źródle opisu
@@ -802,6 +802,7 @@ pl:
     translator: Tłumacz
     transparency: Przezrocze
     type: Rodzaj
+    type_designer: Typograf
     type_institution: Rodzaj instytucji
     type_name_variant: Typ alternatywnej nazwy osoby
     type_of_jurisdiction: Rodzaj jurysdykcji
@@ -809,11 +810,13 @@ pl:
     type_relationship: Rodzaj relacji
     typescript: Maszynopis
     typography: Typografia
+    uncategorized: Bez kategorii
     unknown: Nieznane
     unparsed_fingerprint: Nieprzeanalizowany odcisk palca
     variant_ms_title: Alternatywny tytuł w rękopisie
     variant_source_title: Alternatywny tytuł w źródle
     variations: Wariacje
+    verified: Zweryfikowane
     vocalist: Wokalista
     voice_instrument: Głos/instrument
     volume_year_page: Wolumen, rok, strona
@@ -823,3 +826,13 @@ pl:
     work_number: Numer dzieła
     year: Rok
     years_birth_death: Rok urodzenia i śmierci
+  relations:
+    P60191: "Źródło powiązane"
+    P60198: "Materiał dodatkowy"
+    P60311: "Skopiowane z"
+    P60312: "Skopiowano w"
+    P60195: "Opublikowany w"
+    P60242: "Rozmieszczenie"
+    P60274: "Ułożone jako"
+    P60194: "Wstawić do"
+    P60183: "Wstawić"

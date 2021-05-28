@@ -28,7 +28,6 @@ it:
     url: URL
     using_muscat: Guida a Muscat
     validity: Validità
-    verified: Verificata
     when_to_input_new_record: Quando inserire una nuova scheda (edizioni musicali
       a stampa)
     workflow: Workflow
@@ -406,7 +405,7 @@ it:
     event_organizer: Organizzatore
     event_place: Luogo dell’evento
     excerpts: Estratti
-    exemplars: Possesso
+    exemplars: Esemplari
     extent: Estensione
     extent_parts: Estensione (parti)
     external_resource: Localizzazione e accesso elettronico
@@ -649,13 +648,13 @@ it:
     other_shelfmark: Altra segnatura
     other_standard_identifier: Riferimento autorità
     other_variant: Altra forma di ricerca
-    paper_maker: Fabbricante di carta
     papermaker: Fabbricante di carta
     parallel_form: Forma parallela del nome
     parent_record: Notizia principale
     parts_held: Parti staccate esistenti
     parts_held_extent: Parti staccate, estensione
     patron: Committente
+    people: Persone
     people_institutions: Persone ed istituzioni
     percussion: Strumenti a percussione
     performance: Esecutori
@@ -745,6 +744,7 @@ it:
     solo_voice: Voce solista
     soloist_instrument: Strumento solista
     source: Fonte
+    sources: Fontes
     source_data_found: Fonte dei dati
     source_data_not_found: Fonte consultata senza esito
     source_description: Copa esaminata per la catalogazione
@@ -803,6 +803,7 @@ it:
     translator: Traduttore
     transparency: Trasparente
     type: Tipo
+    type_designer: Fonditore
     type_institution: Tipo di istituzione
     type_name_variant: Descrizione della variante del nome
     type_of_jurisdiction: Tipo di giurisdizione
@@ -810,11 +811,13 @@ it:
     type_relationship: Relazione
     typescript: Dattiloscritto
     typography: Stampa tipografica
+    uncategorized: Non categorizzato
     unknown: Sconosciuto
     unparsed_fingerprint: Impronta non analizzata
     variant_ms_title: Varianti del titolo diplomatico
     variant_source_title: Varianti del titolo diplomatico
     variations: Variazioni
+    verified: Verificata
     vocalist: Cantante
     voice_instrument: Voce/strumento
     volume_year_page: Volume, anno, pagina
@@ -824,3 +827,13 @@ it:
     work_number: Numero dell'opera
     year: Anno
     years_birth_death: Data di nascita e di morte
+  relations:
+    P60191: "Fonte correlata"
+    P60198: "Materiale addizionale"
+    P60311: "Copiato da"
+    P60312: "Copiato in"
+    P60195: "Pubblicato in"
+    P60242: "Arrangiamento di"
+    P60274: "Arrangiato come"
+    P60194: "Inserto in"
+    P60183: "Inserto"

@@ -28,7 +28,6 @@ en:
     url: URL
     using_muscat: Using Muscat
     validity: Validity
-    verified: Verified
     when_to_input_new_record: When to input a new record (printed music)
     workflow: Workflow
     'yes': 'Yes'
@@ -648,13 +647,13 @@ en:
     other_shelfmark: Other shelfmark
     other_standard_identifier: Other standard identifier
     other_variant: Other variant
-    paper_maker: Paper maker
     papermaker: Papermaker
     parallel_form: Paralell form of name
     parent_record: Parent record
     parts_held: Parts held
     parts_held_extent: Parts held and extent
     patron: Patron
+    people: People
     people_institutions: People and institutions
     percussion: Percussion
     performance: Performance
@@ -744,6 +743,7 @@ en:
     solo_voice: Solo voice
     soloist_instrument: Soloist intrument
     source: Source
+    sources: Sources
     source_data_found: Source data found
     source_data_not_found: Source data not found
     source_description: Source of description note
@@ -802,6 +802,7 @@ en:
     translator: Translator
     transparency: Transparency
     type: Type
+    type_designer: Type designer
     type_institution: Type of institution
     type_name_variant: Type of name variant
     type_of_jurisdiction: Type of jurisdiction
@@ -809,11 +810,13 @@ en:
     type_relationship: Type of relationship
     typescript: Typescript
     typography: Typography
+    uncategorized: Uncategorized
     unknown: Unknown
     unparsed_fingerprint: Unparsed fingerprint
     variant_ms_title: Variant title on manuscript
     variant_source_title: Variant title on source
     variations: Variations
+    verified: Verified
     vocalist: Vocalist
     voice_instrument: Voice/instrument
     volume_year_page: Volume, year, page
@@ -823,3 +826,13 @@ en:
     work_number: Work number
     year: Year
     years_birth_death: Years of birth and death
+  relations:
+    P60191: "Correlated source"
+    P60198: "Additional material"
+    P60311: "Copied from"
+    P60312: "Copied in"
+    P60195: "Published in"
+    P60242: "Arrangement of"
+    P60274: "Arranged as"
+    P60194: "Insert in"
+    P60183: "Insert"

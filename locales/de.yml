@@ -28,7 +28,6 @@ de:
     url: URL
     using_muscat: Editor Hilfe
     validity: Gültigkeit
-    verified: Gesichert
     when_to_input_new_record: Wann soll einen neuen Eintrag erstellt werden (Musikdrucke)
     workflow: Workflow
     'yes': Ja
@@ -648,13 +647,13 @@ de:
     other_shelfmark: Weitere Signatur
     other_standard_identifier: Normdatenverweise
     other_variant: andere Suchform
-    paper_maker: Papierhersteller
     papermaker: Papierhersteller
     parallel_form: Parallele Namensformen
     parent_record: Übergeordneter Eintrag
     parts_held: Vorhandene Stimmen
     parts_held_extent: Stimmenmaterial
     patron: Mäzen/Auftraggeber
+    people: Personen
     people_institutions: Personen und Körperschaften
     percussion: Schlaginstrumente
     performance: Mitwirkende
@@ -744,6 +743,7 @@ de:
     solo_voice: Solostimme
     soloist_instrument: Solistisches Instrument
     source: Quelle
+    sources: Quellen
     source_data_found: Literaturnachweis
     source_data_not_found: Quelle ohne Ergebnis konsultiert
     source_description: Vorlageexemplar
@@ -802,6 +802,7 @@ de:
     translator: Übersetzer
     transparency: Transparentfolie
     type: Typ
+    type_designer: Schriftentwerfer
     type_institution: Typ der Körperschaft
     type_name_variant: Art der Namensvariante
     type_of_jurisdiction: Art der Gerichtsbarkeit
@@ -809,11 +810,13 @@ de:
     type_relationship: Beziehung
     typescript: Maschinenschrift
     typography: Typendruck
+    uncategorized: Nicht kategorisiert
     unknown: Unbekannt
     unparsed_fingerprint: Zusammenhängender Fingerprint
     variant_ms_title: Weiterer diplomatischer Titel
     variant_source_title: Weiterer diplomatischer Titel
     variations: Variationen
+    verified: Gesichert
     vocalist: Sänger
     voice_instrument: Besetzung
     volume_year_page: Jahrgang, Seite
@@ -823,3 +826,13 @@ de:
     work_number: Incipitnummer
     year: Jahr
     years_birth_death: Geburts- und Todesdaten
+  relations:
+    P60191: "Korrelierte Quelle"
+    P60198: "Zusätzliches Material"
+    P60311: "Kopiert von"
+    P60312: "Kopiert in"
+    P60195: "Publiziert in"
+    P60242: "Bearbeitung von"
+    P60274: "Bearbeitung als"
+    P60194: "Einfügen in"
+    P60183: "Einfügen"

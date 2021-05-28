@@ -29,7 +29,6 @@ fr:
     url: URL
     using_muscat: Aide de Muscat
     validity: Validité
-    verified: Vérifié
     when_to_input_new_record: Quand saisir une nouvelle notice (musique imprimée)
     workflow: Flux de travail
     'yes': Oui
@@ -649,13 +648,13 @@ fr:
     other_shelfmark: Autre cote
     other_standard_identifier: Référence d'authorité
     other_variant: Autre forme de recherche
-    paper_maker: Papetier
     papermaker: Papetier
     parallel_form: Forme de nom parallèle
     parent_record: Notice principale
     parts_held: Parties existantes
     parts_held_extent: Parties, extension
     patron: Mécène
+    people: Personnes
     people_institutions: Personnes et institutions
     percussion: Percussions
     performance: Exécuteurs
@@ -745,6 +744,7 @@ fr:
     solo_voice: Voix seule
     soloist_instrument: Instrument soliste
     source: Source
+    sources: Sources
     source_data_found: Source des données
     source_data_not_found: Source consultée sans résultat
     source_description: Copie consultée pour le catalogage
@@ -803,6 +803,7 @@ fr:
     translator: Traducteur
     transparency: Transparent
     type: Type
+    type_designer: Créateur de caractères
     type_institution: Type d'institution
     type_name_variant: Description de la variante du nom
     type_of_jurisdiction: Type de juridiction
@@ -810,11 +811,13 @@ fr:
     type_relationship: Relation
     typescript: Tapuscrit
     typography: Typographie
+    uncategorized: Non classé
     unknown: Inconnu
     unparsed_fingerprint: Empreinte non analysée
     variant_ms_title: Variante du titre diplomatique
     variant_source_title: Variante du titre diplomatique
     variations: Variations
+    verified: Vérifié
     vocalist: Vocaliste
     voice_instrument: Voix/instrument
     volume_year_page: Volume, année, page
@@ -824,3 +827,13 @@ fr:
     work_number: Numéro de l'œuvre
     year: Année
     years_birth_death: Dates de naissance et de mort
+  relations:
+    P60191: "Source corrélée"
+    P60198: "Matériel supplémentaire"
+    P60311: "Copié de"
+    P60312: "Copié dans"
+    P60195: "Publié dans"
+    P60242: "Arrangement de"
+    P60274: "Arrangement comme"
+    P60194: "Insertion dans"
+    P60183: "Insertion"

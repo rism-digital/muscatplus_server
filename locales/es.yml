@@ -28,7 +28,6 @@ es:
     url: URL
     using_muscat: Uso de Muscat
     validity: Validez
-    verified: Verificada
     when_to_input_new_record: Cuándo crear un nuevo registro (música impresa)
     workflow: Flujo de trabajo
     'yes': Sí
@@ -645,13 +644,13 @@ es:
     other_shelfmark: Otra signatura
     other_standard_identifier: Otro identificador estándar
     other_variant: Otra variante
-    paper_maker: Fabricante de papel
     papermaker: Fabricante de papel
     parallel_form: Forma paralela de nombre
     parent_record: Registro madre
     parts_held: Particellas conservadas
     parts_held_extent: Particellas conservadas y extensión de las mismas
     patron: Comitente
+    people: Personas
     people_institutions: Personas e instituciones
     percussion: ''
     performance: Interpretación
@@ -741,6 +740,7 @@ es:
     solo_voice: Voz solista
     soloist_instrument: Instrumento solista
     source: Fuente
+    sources: Fuentes
     source_data_found: Fuente de los datos encontrados
     source_data_not_found: Fuente de los datos no encontrados
     source_description: Copia examinada para la catalogación
@@ -799,6 +799,7 @@ es:
     translator: Traductor
     transparency: Transparencia
     type: Tipo
+    type_designer: Fundidor
     type_institution: Tipo de institución
     type_name_variant: Tipo de variante de nombre
     type_of_jurisdiction: Tipo de jurisdicción
@@ -806,11 +807,13 @@ es:
     type_relationship: Tipo de relación
     typescript: Escrito mecanografiado
     typography: Tipografía
+    uncategorized: Sin categorizar
     unknown: Desconcido
     unparsed_fingerprint: Identificador tipográfico no disgregado
     variant_ms_title: Variante de título en fuente
     variant_source_title: Variante de título en fuente
     variations: Variaciones
+    verified: Verificada
     vocalist: Cantante
     voice_instrument: Voz/instrumento
     volume_year_page: Volumen, año, página
@@ -820,3 +823,13 @@ es:
     work_number: Número de obra
     year: Año
     years_birth_death: Años de nacimiento y muerte
+  relations:
+    P60191: "Fuente relacionada"
+    P60198: "Material adicional"
+    P60311: "Copiado de"
+    P60312: "Copiado en"
+    P60195: "Publicado en"
+    P60242: "Arreglo de"
+    P60274: "Arreglo como"
+    P60194: "Insertar en"
+    P60183: "Insertar"
