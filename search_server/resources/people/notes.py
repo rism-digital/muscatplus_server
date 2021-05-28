@@ -8,21 +8,22 @@ from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 
 
-class PersonNoteList(JSONLDContextDictSerializer):
+class NotesSection(JSONLDContextDictSerializer):
     label = serpy.MethodField()
     ntype = StaticField(
         label="type",
-        value="rism:NoteList"
+        value="rism:NotesSection"
     )
-    items = serpy.MethodField()
+    notes = serpy.MethodField()
 
     def get_label(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
         transl: Dict = req.app.ctx.translations
 
+        # TODO: Change this to just 'notes' when the translation is available.
         return transl.get("records.references_and_notes")
 
-    def get_items(self, obj: SolrResult) -> Optional[List]:
+    def get_notes(self, obj: SolrResult) -> Optional[List]:
         req = self.context.get("request")
         transl = req.app.ctx.translations
 

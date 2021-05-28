@@ -9,13 +9,11 @@ from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
 from search_server.resources.people.base_person import BasePerson
-from search_server.resources.people.person_name_variant import NameVariantList
-from search_server.resources.people.person_note import PersonNoteList
-# from search_server.resources.shared.place_relationship import PlaceRelationshipList
+from search_server.resources.people.name_variant import NameVariantSection
+from search_server.resources.people.notes import NotesSection
 from search_server.resources.shared.external_authority import external_authority_list
 from search_server.resources.shared.external_link import ExternalResourcesList
-# from search_server.resources.shared.institution_relationship import InstitutionRelationshipList
-# from search_server.resources.shared.person_relationship import PersonRelationshipList
+from search_server.resources.shared.relationship import RelationshipsSection
 
 log = logging.getLogger()
 
@@ -63,10 +61,10 @@ class Person(BasePerson):
         if 'name_variants_json' not in obj:
             return None
 
-        return NameVariantList(obj, context={"request": self.context.get("request")}).data
+        return NameVariantSection(obj, context={"request": self.context.get("request")}).data
 
     def get_sources(self, obj: SolrResult) -> Optional[Dict]:
-        # Do not show a link to sources this serializer is used for embedded results
+        # Do not show a link to sources if this serializer is used for embedded results
         if not self.context.get("direct_request"):
             return None
 
@@ -76,18 +74,11 @@ class Person(BasePerson):
         if person_id == "person_30004985":
             return None
 
-        fq: List = ["type:source",
-                    f"creator_id:{person_id} OR related_people_ids:{person_id}"]
-        num_results: int = result_count(fq=fq)
-
-        if num_results == 0:
-            return None
-
         ident: str = re.sub(ID_SUB, "", person_id)
 
         return {
             "id": get_identifier(self.context.get("request"), "people.person_sources", person_id=ident),
-            "totalItems": num_results
+            "totalItems": obj.get("source_count_i", 0)
         }
 
     def get_summary(self, obj: SolrResult) -> List[Dict]:
@@ -107,39 +98,17 @@ class Person(BasePerson):
         if not self.context.get("direct_request"):
             return None
 
-        items: List = []
+        # sets are cool; two sets are disjoint if they have no keys in common. We
+        # can use this to check whether these keys are in the solr result; if not,
+        # we have no relationships to render, so we can return None.
+        if {'related_people_json', 'related_places_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
+            return None
 
-        # if 'related_people_json' in obj:
-        #     items.append(
-        #         PersonRelationshipList(obj,
-        #                                context={"request": self.context.get("request")}).data
-        #     )
-        #
-        # if 'related_institutions_json' in obj:
-        #     items.append(
-        #         InstitutionRelationshipList(obj, context={"request": self.context.get("request")}).data
-        #     )
-        #
-        # if "related_places_json" in obj:
-        #     items.append(
-        #         PlaceRelationshipList(obj, context={"request": self.context.get("request")}).data
-        #     )
-        #
-        # # if there are no relationships, return None
-        # if not items:
-        #     return None
-        #
-        # req = self.context.get("request")
-        # transl: Dict = req.app.ctx.translations
-        #
-        # return {
-        #     "type": "rism:Relations",
-        #     "label": transl.get("records.relations"),
-        #     "items": items
-        # }
+        req = self.context.get("request")
+        return RelationshipsSection(obj, context={"request": req}).data
 
     def get_notes(self, obj: SolrResult) -> Optional[Dict]:
-        notelist: Dict = PersonNoteList(obj, context={"request": self.context.get("request")}).data
+        notelist: Dict = NotesSection(obj, context={"request": self.context.get("request")}).data
 
         # Check that the items is not empty; if not, return the note list object.
         if notelist.get("items"):
