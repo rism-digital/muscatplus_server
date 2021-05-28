@@ -1,21 +1,19 @@
 import logging
 import re
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
-import pysolr
 import serpy
 
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrResult
-from search_server.resources.shared.relationship import Relationship
+from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.contents import ContentsSection
 from search_server.resources.sources.exemplars import ExemplarsSection
 from search_server.resources.sources.incipits import IncipitsSection
 from search_server.resources.sources.material_groups import MaterialGroupsSection
-from search_server.resources.sources.relationships import RelationshipsSection
 from search_server.resources.sources.references_notes import ReferencesNotesSection
+from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.source_items import SourceItemsSection
 from search_server.resources.sources.works import WorksSection
 

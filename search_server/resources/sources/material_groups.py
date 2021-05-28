@@ -8,7 +8,7 @@ from search_server.helpers.display_translators import printing_techniques_transl
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
-from search_server.resources.sources.relationships import RelationshipsSection
+from search_server.resources.shared.relationship import RelationshipsSection
 
 log = logging.getLogger("muscat_indexer")
 

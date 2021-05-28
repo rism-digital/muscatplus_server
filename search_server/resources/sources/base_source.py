@@ -22,6 +22,9 @@ class BaseSource(JSONLDContextDictSerializer):
         label="type",
         value="rism:Source"
     )
+    type_label = serpy.MethodField(
+        label="typeLabel"
+    )
     label = serpy.MethodField()
     part_of = serpy.MethodField(
         label="partOf"
@@ -37,6 +40,12 @@ class BaseSource(JSONLDContextDictSerializer):
         return {
             "none": [obj.get("main_title_s")]
         }
+
+    def get_type_label(self, obj: Dict) -> Dict:
+        req = self.context.get("request")
+        transl = req.app.ctx.translations
+
+        return transl.get("records.source")
 
     def get_part_of(self, obj: Dict) -> Optional[Dict]:
         # This source is not part of another source; return None
