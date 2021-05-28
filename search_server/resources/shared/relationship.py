@@ -1,3 +1,4 @@
+import itertools
 import re
 from typing import Dict, Optional, List, Callable
 
@@ -9,6 +10,32 @@ from search_server.helpers.display_translators import person_institution_relatio
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
+
+
+class RelationshipsSection(JSONLDContextDictSerializer):
+    label = serpy.MethodField()
+    stype = StaticField(
+        label="type",
+        value="rism:RelationshipsSection"
+    )
+    items = serpy.MethodField()
+
+    def get_label(self, obj: Dict) -> Dict:
+        req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
+
+        return transl.get("records.relations")
+
+    def get_items(self, obj: Dict) -> List[Dict]:
+        people: List = obj.get("related_people_json", [])
+        institutions: List = obj.get("related_institutions_json", [])
+        places: List = obj.get("related_places_json", [])
+
+        all_relationships = itertools.chain(people, institutions, places)
+
+        return Relationship(all_relationships,
+                            many=True,
+                            context={"request": self.context.get("request")}).data
 
 
 class Relationship(JSONLDContextDictSerializer):
@@ -28,11 +55,15 @@ class Relationship(JSONLDContextDictSerializer):
         transl: Dict = req.app.ctx.translations
 
         # We need different role translator functions for different types
-        # of realtionships.
+        # of relationships.
         relationship_translator: Callable
         if 'person_id' in obj or 'institution_id' in obj:
             relationship_translator = person_institution_relationship_labels_translator
         elif 'place_id' in obj:
+            relationship_translator = place_relationship_labels_translator
+        elif 'relationship' in obj:
+            # To get around a bug where place IDs are not stored in Muscat, but the relationship
+            # to them is. TODO: Fix this when the Muscat bug is fixed.
             relationship_translator = place_relationship_labels_translator
         else:
             # We don't know what kind of data we're dealing with, so bail.
@@ -48,7 +79,7 @@ class Relationship(JSONLDContextDictSerializer):
         if 'relationship' not in obj:
             return None
 
-        return f"rism:{obj.get('relationship')}"
+        return f"rism:{obj.get('relationship').replace(' ', '_')}"
 
     def get_qualifier(self, obj: Dict) -> Optional[str]:
         if 'qualifier' not in obj:
@@ -64,7 +95,12 @@ class Relationship(JSONLDContextDictSerializer):
             return _related_to_institution(req, obj)
         elif 'place_id' in obj:
             return _related_to_place(req, obj)
+        elif 'name' in obj:
+            # This will be selected as a non-linked label object
+            # if we can't find an id to create a linkable object.
+            return {"none": [obj['name']]}
         else:
+            # Something is wrong, but we can't find out what to display.
             return None
 
 
