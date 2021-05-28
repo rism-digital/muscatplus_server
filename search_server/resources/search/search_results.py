@@ -112,10 +112,17 @@ class SearchResult(ContextDictSerializer):
         else:
             return None
 
+        transl: Dict = req.app.ctx.translations
+
         return {
-            "id": get_identifier(req, "sources.source", source_id=parent_source_id),
-            "type": "rism:Source",
-            "label": {"none": [parent_title]}
+            "label": transl.get("records.item_part_of"),
+            "type": "rism:PartOfSection",
+            "source": {
+                "id": get_identifier(req, "sources.source", source_id=parent_source_id),
+                "type": "rism:Source",
+                "typeLabel": transl.get("records.source"),
+                "label": {"none": [parent_title]}
+            }
         }
 
     def get_type_label(self, obj: Dict) -> Dict:
@@ -147,7 +154,8 @@ class SearchResult(ContextDictSerializer):
 
         if obj_type == "source":
             field_config = {
-                "source_type_sm": ("records.source_type", None)  # TODO: The value of this field should be translatable
+                "creator_name_s": ("records.composer_author", None),
+                "source_type_sm": ("records.source_type", None),  # TODO: The value of this field should be translatable
             }
         elif obj_type == "person":
             field_config = {

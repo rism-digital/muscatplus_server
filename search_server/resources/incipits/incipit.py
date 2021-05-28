@@ -141,12 +141,18 @@ class Incipit(JSONLDContextDictSerializer):
             return None
 
         req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
         return {
-            "id": get_identifier(req, "sources.source", source_id=source_id),
-            "type": "rism:Source",
-            "label": {"none": [f"{obj.get('source_title_s')}"]}
+            "label": transl.get("records.item_part_of"),  # TODO: This should probably be changed to 'incipit part of'
+            "type": "rism:PartOfSection",
+            "source": {
+                "id": get_identifier(req, "sources.source", source_id=source_id),
+                "type": "rism:Source",
+                "typeLabel": transl.get("records.source"),
+                "label": {"none": [f"{obj.get('source_title_s')}"]}
+            }
         }
 
     def get_summary(self, obj: SolrResult) -> List[Dict]:

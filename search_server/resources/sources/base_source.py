@@ -61,11 +61,17 @@ class BaseSource(JSONLDContextDictSerializer):
         req = self.context.get('request')
         parent_source_id: str = re.sub(ID_SUB, "", source_membership.get("source_id"))
         ident: str = get_identifier(req, "sources.source", source_id=parent_source_id)
+        transl = req.app.ctx.translations
 
         parent_title: Optional[str] = source_membership.get("main_title")
 
         return {
-            "id": ident,
-            "type": "rism:Source",
-            "label": {"none": [parent_title]}
+            "label": transl.get("records.item_part_of"),
+            "type": "rism:PartOfSection",
+            "source": {
+                "id": ident,
+                "type": "rism:Source",
+                "typeLabel": transl.get("records.source"),
+                "label": {"none": [parent_title]}
+            }
         }
