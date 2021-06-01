@@ -692,6 +692,8 @@ en:
     public_note: Public note
     publisher: Publisher
     publisher_copyist: Publisher, copyist
+    publisher_number: Publisher Number
+    publisher_plate_number: Publisher or Plate number
     publishing_printing_production: Publishing, printing and production information
     qualifying_information: Qualifying information
     range_dates: Range of dates

@@ -692,6 +692,8 @@ de:
     public_note: Bemerkungen
     publisher: Verleger
     publisher_copyist: Schreiber, Verleger, Verlag
+    publisher_number: Verlagsnummer
+    publisher_plate_number: Verlags- oder Plattennummer
     publishing_printing_production: Abschrift oder Impressum
     qualifying_information: Qualifizierende Informationen
     range_dates: Datierungsbereich

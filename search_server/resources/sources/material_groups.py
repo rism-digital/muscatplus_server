@@ -66,6 +66,7 @@ class MaterialGroup(JSONLDContextDictSerializer):
             "printing_techniques": ("records.printing_technique", printing_techniques_translator),
             "book_formats": ("records.book_format", None),
             "plate_numbers": ("records.plate_number", None),
+            "publisher_numbers": ("records.publisher_number", None),
             "general_notes": ("records.general_note", None),
             "binding_notes": ("records.binding_note", None),
             "watermark_notes": ("records.watermark_description", None),

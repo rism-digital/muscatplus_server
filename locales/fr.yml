@@ -468,7 +468,7 @@ fr:
     gf_minor: Sol♭ mineur
     gs_major: Sol♯ majeur
     gs_minor: Sol♯ mineur
-    heading: Nom de personne
+    heading: Entrée principale
     heading_composer_name: Compositeur
     heading_personal_name: Compositeur/Auteur
     heading_personal_name1: Compositeur/Auteur
@@ -693,6 +693,8 @@ fr:
     public_note: Note publique
     publisher: Editeur
     publisher_copyist: Copiste ou maison d'édition
+    publisher_number: Numéro de l'éditeur
+    publisher_plate_number: Numéro d'éditeur ou de plaque
     publishing_printing_production: Copie ou données d'édition
     qualifying_information: Informations requises
     range_dates: Intervalle de dates
