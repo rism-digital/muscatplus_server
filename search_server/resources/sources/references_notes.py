@@ -43,7 +43,7 @@ class ReferencesNotesSection(JSONLDContextDictSerializer):
             "contents_notes_sm": ("records.contents_note", None),
             "performance_notes_sm": ("records.note_on_performance", None),
             "supplementary_material_sm": ("records.supplementary_material", None),
-            "bibliographic_reference_json": ("records.bibliographic_reference", secondary_literature_json_value_translator)
+            "bibliographic_references_json": ("records.bibliographic_reference", secondary_literature_json_value_translator)
         }
 
         return get_display_fields(obj, transl, field_config=field_config)

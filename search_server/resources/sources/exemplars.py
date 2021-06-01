@@ -53,8 +53,8 @@ class Exemplar(JSONLDContextDictSerializer):
     held_by = serpy.MethodField(
         label="heldBy"
     )
-    external_links = serpy.MethodField(
-        label="externalLinks"
+    external_resources = serpy.MethodField(
+        label="externalResources"
     )
 
     def get_sid(self, obj: Dict) -> str:
@@ -103,8 +103,8 @@ class Exemplar(JSONLDContextDictSerializer):
             },
         }
 
-    def get_external_links(self, obj: SolrResult) -> Optional[Dict]:
-        if 'external_links_json' not in obj:
+    def get_external_resources(self, obj: SolrResult) -> Optional[Dict]:
+        if 'external_resources_json' not in obj:
             return None
 
         return ExternalResourcesList(obj, context={"request": self.context.get("request")}).data
