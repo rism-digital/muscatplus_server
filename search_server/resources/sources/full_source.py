@@ -53,6 +53,11 @@ class FullSource(BaseSource):
     exemplars = serpy.MethodField()
     items = serpy.MethodField()
 
+    # In the full class view we don't want to display the summary as a top-level field
+    # so we'll always return None.
+    def get_summary(self, obj: Dict) -> None:
+        return None
+
     def get_contents(self, obj: SolrResult) -> Dict:
         req = self.context.get("request")
         return ContentsSection(obj, context={"request": req}).data

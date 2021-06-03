@@ -1,8 +1,9 @@
 import re
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 import serpy
 
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
@@ -29,6 +30,7 @@ class BaseSource(JSONLDContextDictSerializer):
     part_of = serpy.MethodField(
         label="partOf"
     )
+    summary = serpy.MethodField()
 
     def get_sid(self, obj: Dict) -> str:
         req = self.context.get('request')
@@ -75,3 +77,17 @@ class BaseSource(JSONLDContextDictSerializer):
                 "label": {"none": [parent_title]}
             }
         }
+
+    # This method will get overridden in the 'full source' class, and will be returned as 'None' since
+    # the summary is part of the 'contents' section. But in the base source view it will deliver some basic
+    # identification fields.
+    def get_summary(self, obj: Dict) -> Optional[List[Dict]]:
+        req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
+
+        field_config: LabelConfig = {
+            "source_type_sm": ("records.source_type", None),
+            "creator_name_s": ("records.composer_author", None),
+        }
+
+        return get_display_fields(obj, transl, field_config=field_config)
