@@ -1,15 +1,17 @@
 import itertools
+import logging
 import re
 from typing import Dict, Optional, List, Callable
 
 import serpy as serpy
 
-from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.display_translators import person_institution_relationship_labels_translator, \
     qualifier_labels_translator, place_relationship_labels_translator
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
+
+log = logging.getLogger("mp_server")
 
 
 class RelationshipsSection(JSONLDContextDictSerializer):
@@ -52,6 +54,7 @@ class Relationship(JSONLDContextDictSerializer):
     related_to = serpy.MethodField(
         label="relatedTo"
     )
+    name = serpy.MethodField()
 
     def get_label(self, obj: Dict) -> Dict:
         req = self.context.get("request")
@@ -103,6 +106,7 @@ class Relationship(JSONLDContextDictSerializer):
         # of actual keys, have any overlap. If they do, bail.
         if not {'person_id', 'institution_id', 'place_id'}.isdisjoint(obj.keys()):
             return None
+
         elif 'name' in obj:
             # This will be selected as a non-linked label object
             # if we can't find an id to create a linkable object.
