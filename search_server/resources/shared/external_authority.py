@@ -1,23 +1,41 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
+import serpy
+
+from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import EXTERNAL_IDS
+from search_server.helpers.serializers import ContextDictSerializer
 
 
-def external_authority_list(authority_list: List) -> List[Dict]:
-    externals: List = []
-    for ext in authority_list:
-        source, ident = ext.split(":")
-        base = EXTERNAL_IDS.get(source)
-        if not base:
-            continue
+class ExternalAuthoritiesSection(ContextDictSerializer):
+    label = serpy.MethodField()
+    etype = StaticField(
+        label="type",
+        value="rism:ExternalAuthoritiesSection"
+    )
+    items = serpy.MethodField()
 
-        label: str = base["label"]
-        uri: str = base["ident"].format(ident=ident)
+    def get_label(self, obj: List) -> Dict:
+        req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
 
-        externals.append({
-            "url": uri,
-            "label": {"none": [label]},
-            "type": source  # todo: convert this to a namespaced URI representing the external authorities.
-        })
+        return transl.get("records.authorities")
 
-    return externals
+    def get_items(self, obj: List) -> List[Dict]:
+        externals: List = []
+        for ext in obj:
+            source, ident = ext.split(":")
+            base = EXTERNAL_IDS.get(source)
+            if not base:
+                continue
+
+            label: str = base["label"]
+            uri: str = base["ident"].format(ident=ident)
+
+            externals.append({
+                "url": uri,
+                "label": {"none": [label]},
+                "type": "rism:ExternalAuthority"
+            })
+
+        return externals

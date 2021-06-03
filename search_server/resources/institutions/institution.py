@@ -9,7 +9,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
-from search_server.resources.shared.external_authority import external_authority_list
+from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 # from search_server.resources.shared.institution_relationship import InstitutionRelationshipList
 # from search_server.resources.shared.person_relationship import PersonRelationshipList
 # from search_server.resources.shared.place_relationship import PlaceRelationshipList
@@ -43,8 +43,8 @@ class Institution(JSONLDContextDictSerializer):
     summary = serpy.MethodField()
     location = serpy.MethodField()
     sources = serpy.MethodField()
-    see_also = serpy.MethodField(
-        label="seeAlso"
+    external_authorities = serpy.MethodField(
+        label="externalAuthorities"
     )
     relationships = serpy.MethodField()
 
@@ -97,11 +97,11 @@ class Institution(JSONLDContextDictSerializer):
             "coordinates": loc.split(",")
         }
 
-    def get_see_also(self, obj: SolrResult) -> Optional[List[Dict]]:
+    def get_external_authorities(self, obj: SolrResult) -> Optional[List[Dict]]:
         if 'external_ids' not in obj:
             return None
 
-        return external_authority_list(obj['external_ids'])
+        return ExternalAuthoritiesSection(obj['external_ids'], context={"request": self.context.get("request")}).data
 
     def get_relationships(self, obj: SolrResult) -> Optional[Dict]:
         if not self.context.get("direct_request"):

@@ -7,11 +7,11 @@ import serpy
 
 from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.identifiers import get_identifier, ID_SUB
-from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.people.name_variant import NameVariantSection
 from search_server.resources.people.notes import NotesSection
-from search_server.resources.shared.external_authority import external_authority_list
+from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_link import ExternalResourcesList
 from search_server.resources.shared.relationship import RelationshipsSection
 
@@ -35,8 +35,8 @@ def handle_person_request(req, person_id: str) -> Optional[Dict]:
 
 
 class Person(BasePerson):
-    see_also = serpy.MethodField(
-        label="seeAlso"
+    external_authorities = serpy.MethodField(
+        label="externalAuthorities"
     )
     summary = serpy.MethodField()
     name_variants = serpy.MethodField(
@@ -51,11 +51,11 @@ class Person(BasePerson):
         label="externalResources"
     )
 
-    def get_see_also(self, obj: SolrResult) -> Optional[List[Dict]]:
+    def get_external_authorities(self, obj: SolrResult) -> Optional[List[Dict]]:
         if 'external_ids' not in obj:
             return None
 
-        return external_authority_list(obj['external_ids'])
+        return ExternalAuthoritiesSection(obj['external_ids'], context={"request": self.context.get("request")}).data
 
     def get_name_variants(self, obj: SolrResult) -> Optional[List]:
         if 'name_variants_json' not in obj:
