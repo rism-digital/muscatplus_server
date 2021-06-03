@@ -86,8 +86,8 @@ class BaseSource(JSONLDContextDictSerializer):
         transl: Dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "source_type_sm": ("records.source_type", None),
             "creator_name_s": ("records.composer_author", None),
+            "source_type_sm": ("records.source_type", None),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
