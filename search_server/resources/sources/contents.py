@@ -40,7 +40,7 @@ class ContentsSection(JSONLDContextDictSerializer):
         return Relationship(obj["creator_json"][0],
                             context={"request": self.context.get('request')}).data
 
-    def get_summary(self, obj: SolrResult) -> Optional[Dict]:
+    def get_summary(self, obj: SolrResult) -> Optional[List[Dict]]:
         req = self.context.get("request")
         transl: Dict = req.app.ctx.translations
 
