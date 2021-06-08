@@ -155,7 +155,7 @@ class Incipit(JSONLDContextDictSerializer):
             }
         }
 
-    def get_summary(self, obj: SolrResult) -> List[Dict]:
+    def get_summary(self, obj: SolrResult) -> Optional[List[Dict]]:
         req = self.context.get("request")
         transl: Dict = req.app.ctx.translations
 
