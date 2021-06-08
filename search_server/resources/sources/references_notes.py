@@ -99,7 +99,7 @@ class LiturgicalFestivalsSection(JSONLDContextDictSerializer):
         req = self.context.get("request")
         transl: Dict = req.app.ctx.translations
 
-        return transl.get("records.location_performance")
+        return transl.get("records.liturgical_festivals")
 
     def get_items(self, obj: SolrResult) -> Optional[List]:
         liturgical_festivals = obj.get("liturgical_festivals_json", [])
