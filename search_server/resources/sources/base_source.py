@@ -8,6 +8,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
+from search_server.resources.shared.record_history import get_record_history
 
 
 class BaseSource(JSONLDContextDictSerializer):
@@ -31,6 +32,9 @@ class BaseSource(JSONLDContextDictSerializer):
         label="partOf"
     )
     summary = serpy.MethodField()
+    record_history = serpy.MethodField(
+        label="recordHistory"
+    )
 
     def get_sid(self, obj: Dict) -> str:
         req = self.context.get('request')
@@ -52,10 +56,6 @@ class BaseSource(JSONLDContextDictSerializer):
     def get_part_of(self, obj: Dict) -> Optional[Dict]:
         # This source is not part of another source; return None
         if 'source_membership_json' not in obj:
-            return None
-
-        # Do not show 'partOf' if the result is embedded in the source it is part of.
-        if not self.context.get("direct_request"):
             return None
 
         source_membership: Dict = obj.get('source_membership_json', {})
@@ -91,3 +91,9 @@ class BaseSource(JSONLDContextDictSerializer):
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
+
+    def get_record_history(self, obj: Dict) -> Dict:
+        req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
+
+        return get_record_history(obj, transl)
