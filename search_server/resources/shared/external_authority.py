@@ -19,7 +19,7 @@ class ExternalAuthoritiesSection(ContextDictSerializer):
         req = self.context.get("request")
         transl: Dict = req.app.ctx.translations
 
-        return transl.get("records.authorities")
+        return transl.get("records.other_standard_identifier")
 
     def get_items(self, obj: List) -> List[Dict]:
         externals: List = []
