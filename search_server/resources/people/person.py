@@ -10,9 +10,9 @@ from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.people.name_variant import NameVariantSection
-from search_server.resources.people.notes import NotesSection
+from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
-from search_server.resources.shared.external_link import ExternalResourcesList
+from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 
 log = logging.getLogger()
@@ -68,6 +68,11 @@ class Person(BasePerson):
         if not self.context.get("direct_request"):
             return None
 
+        # if no sources are attached to this organization, don't show this section.
+        source_count: int = obj.get("source_count_i", 0)
+        if source_count == 0:
+            return None
+
         person_id: str = obj.get('person_id')
 
         # Do not show the list of sources if we're looking at the 'Anonymus' user.
@@ -111,7 +116,7 @@ class Person(BasePerson):
         notelist: Dict = NotesSection(obj, context={"request": self.context.get("request")}).data
 
         # Check that the items is not empty; if not, return the note list object.
-        if notelist.get("items"):
+        if "notes" in notelist:
             return notelist
 
         return None
@@ -120,5 +125,5 @@ class Person(BasePerson):
         if 'external_resources_json' not in obj:
             return None
 
-        return ExternalResourcesList(obj, context={"request": self.context.get("request")}).data
+        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
 

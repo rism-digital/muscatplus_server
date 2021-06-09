@@ -82,8 +82,11 @@ class SourceSearchResult(ContextDictSerializer):
 
     def get_summary(self, obj: Dict) -> Optional[List[Dict]]:
         field_config: LabelConfig = {
+            "shelfmark_s": ("records.shelfmark", None),
+            "siglum_s": ("records.siglum", None),
             "creator_name_s": ("records.composer_author", None),
             "source_type_sm": ("records.source_type", None),  # TODO: The value of this field should be translatable
+
         }
 
         req = self.context.get("request")

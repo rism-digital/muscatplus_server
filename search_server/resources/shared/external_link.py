@@ -7,7 +7,7 @@ from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 
 
-class ExternalResourcesList(JSONLDContextDictSerializer):
+class ExternalResourcesSection(JSONLDContextDictSerializer):
     """
     Returns a formatted object of external links.
 
@@ -17,7 +17,7 @@ class ExternalResourcesList(JSONLDContextDictSerializer):
     """
     rtype = StaticField(
         label="type",
-        value="rism:ExternalResourceList"
+        value="rism:ExternalResourcesSection"
     )
     label = serpy.MethodField()
     items = serpy.MethodField()
@@ -40,9 +40,25 @@ class ExternalResource(JSONLDContextDictSerializer):
     )
     url = serpy.MethodField()
     label = serpy.MethodField()
+    resource_type = serpy.MethodField(
+        label="resourceType"
+    )
 
     def get_url(self, obj: Dict) -> Optional[str]:
         return obj.get("url")
 
     def get_label(self, obj: Dict) -> Optional[Dict]:
         return {"none": [n]} if (n := obj.get("note")) else None
+
+    def get_resource_type(self, obj: Dict) -> Optional[str]:
+        rtype: str = ""
+        link_type: Optional[str] = obj.get("link_type")
+
+        if link_type == "IIIF":
+            rtype = "IIIFManifestLink"
+        elif link_type == "Digitalization":
+            rtype = "DigitizationLink"
+        else:
+            rtype = "OtherLink"
+
+        return f"rism:{rtype}"

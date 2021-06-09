@@ -8,7 +8,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult, SolrManager, SolrConnection
-from search_server.resources.shared.external_link import ExternalResourcesList
+from search_server.resources.shared.external_link import ExternalResourcesSection
 
 
 class ExemplarsSection(JSONLDContextDictSerializer):
@@ -107,4 +107,4 @@ class Exemplar(JSONLDContextDictSerializer):
         if 'external_resources_json' not in obj:
             return None
 
-        return ExternalResourcesList(obj, context={"request": self.context.get("request")}).data
+        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
