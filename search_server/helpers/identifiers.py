@@ -18,7 +18,7 @@ EXTERNAL_IDS: Dict = {
     "nkc": {"label": "Národní knihovna České republiky", "ident": "{ident}"},
     "swnl": {"label": "Schweizerische Nationalbibliothek", "ident": "{ident}"},
     "moc": {"label": "MARC Organization Code", "ident": "{ident}"},
-    "orcid": {"label": "Open Researcher and Contributor ID (ORCiD)", "ident": "{ident}"},
+    "orcid": {"label": "Open Researcher and Contributor ID (ORCiD)", "ident": "https://orcid.org/{ident}"},
 }
 
 
