@@ -82,7 +82,7 @@ class Person(BasePerson):
         ident: str = re.sub(ID_SUB, "", person_id)
 
         return {
-            "id": get_identifier(self.context.get("request"), "people.person_sources", person_id=ident),
+            "url": get_identifier(self.context.get("request"), "people.person_sources", person_id=ident),
             "totalItems": obj.get("source_count_i", 0)
         }
 
