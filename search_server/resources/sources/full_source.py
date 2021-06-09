@@ -92,8 +92,8 @@ class FullSource(BaseSource):
 
         # if the only two keys in the references and notes section is 'label' and 'type'
         # then there is no content and we can hide this section.
-        # if not {'label', 'type'}.isdisjoint(refnotes.keys()):
-        #     return None
+        if {'notes', 'performanceLocations', 'liturgicalFestivals'}.isdisjoint(refnotes.keys()):
+            return None
 
         return refnotes
 
