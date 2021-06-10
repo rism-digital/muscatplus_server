@@ -50,6 +50,7 @@ class Institution(JSONLDContextDictSerializer):
         label="externalAuthorities"
     )
     relationships = serpy.MethodField()
+    notes = serpy.MethodField()
     external_resources = serpy.MethodField(
         label="externalResources"
     )
@@ -97,11 +98,15 @@ class Institution(JSONLDContextDictSerializer):
         }
 
     def get_location(self, obj: SolrResult) -> Optional[Dict]:
+        req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
+
         loc: str = obj.get("location_loc")
         if not loc:
             return None
 
         return {
+            "label": transl.get("records.location"),
             "type": "geojson:Point",
             "coordinates": loc.split(",")
         }
@@ -127,6 +132,7 @@ class Institution(JSONLDContextDictSerializer):
         notes: Dict = NotesSection(obj, context={"request": self.context.get("request")}).data
         if 'notes' in notes:
             return notes
+
         return None
 
     def get_external_resources(self, obj: SolrResult) -> Optional[Dict]:
