@@ -71,7 +71,18 @@ class SourceSearchResult(ContextDictSerializer):
         return get_identifier(req, "sources.source", source_id=id_value)
 
     def get_label(self, obj: Dict) -> Dict:
-        label: str = obj.get("main_title_s")
+        title: str = obj.get("main_title_s", "[No title]")
+        #  TODO: Translate source types
+        source_types: Optional[List] = obj.get("source_type_sm")
+        shelfmark: Optional[str] = obj.get("shelfmark_s")
+        siglum: Optional[str] = obj.get("siglum_s")
+        num_holdings: Optional[int] = obj.get("num_holdings_i")
+
+        label: str = title
+        if source_types:
+            label = f"{label}; {', '.join(source_types)}"
+        if siglum and shelfmark:
+            label = f"{label}; {siglum} {shelfmark}"
 
         return {"none": [label]}
 
@@ -82,11 +93,7 @@ class SourceSearchResult(ContextDictSerializer):
 
     def get_summary(self, obj: Dict) -> Optional[List[Dict]]:
         field_config: LabelConfig = {
-            "shelfmark_s": ("records.shelfmark", None),
-            "siglum_s": ("records.siglum", None),
             "creator_name_s": ("records.composer_author", None),
-            "source_type_sm": ("records.source_type", None),  # TODO: The value of this field should be translatable
-
         }
 
         req = self.context.get("request")
@@ -300,9 +307,10 @@ class IncipitSearchResult(ContextDictSerializer):
 
     def get_srid(self, obj: Dict) -> str:
         req = self.context.get('request')
-        id_value: str = re.sub(ID_SUB, "", obj.get("id"))
+        work_num: str = re.sub(ID_SUB, "", obj.get("work_num_s"))
+        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
-        return get_identifier(req, "incipits.incipit", incipit_id=id_value)
+        return get_identifier(req, "sources.incipit", source_id=source_id, work_num=work_num)
 
     def get_label(self, obj: Dict) -> Dict:
         label: str = _format_incipit_label(obj)

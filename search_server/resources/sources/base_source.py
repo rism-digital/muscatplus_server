@@ -43,9 +43,20 @@ class BaseSource(JSONLDContextDictSerializer):
         return get_identifier(req, "sources.source", source_id=source_id)
 
     def get_label(self, obj: SolrResult) -> Dict:
-        return {
-            "none": [obj.get("main_title_s")]
-        }
+        title: str = obj.get("main_title_s", "[No title]")
+        #  TODO: Translate source types
+        source_types: Optional[List] = obj.get("source_type_sm")
+        shelfmark: Optional[str] = obj.get("shelfmark_s")
+        siglum: Optional[str] = obj.get("siglum_s")
+        num_holdings: Optional[int] = obj.get("num_holdings_i")
+
+        label: str = title
+        if source_types:
+            label = f"{label}; {', '.join(source_types)}"
+        if siglum and shelfmark:
+            label = f"{label}; {siglum} {shelfmark}"
+
+        return {"none": [label]}
 
     def get_type_label(self, obj: Dict) -> Dict:
         req = self.context.get("request")
