@@ -134,7 +134,11 @@ class Incipit(JSONLDContextDictSerializer):
         return get_identifier(req, "sources.incipit", source_id=source_id, work_num=work_num)
 
     def get_label(self, obj: SolrResult) -> Optional[Dict]:
-        return {"none": [f"{obj.get('work_num_s')}"]}
+        work_num: str = obj['work_num_s']
+        source_title: str = obj["source_title_s"]
+        title: str = f" ({d})" if (d := obj.get("title_s")) else ""
+
+        return {"none": [f"{source_title}: {work_num}{title}"]}
 
     def get_part_of(self, obj: SolrResult) -> Optional[Dict]:
         if not self.context.get("direct_request"):
@@ -161,6 +165,7 @@ class Incipit(JSONLDContextDictSerializer):
 
         field_config: LabelConfig = {
             "title_s": ("records.title_movement_tempo", None),
+            "creator_name_s": ("records.composer_author", None),
             "text_incipit_s": ("records.text_incipit", None),
             "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
             "scoring_summary_sm": ("records.scoring_summary", None),
