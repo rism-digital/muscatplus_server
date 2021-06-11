@@ -12,7 +12,7 @@ EXTERNAL_IDS: Dict = {
     "bne": {"label": "Biblioteca Nacional de España", "ident": "{ident}"},
     "bnf": {"label": "Bibliothèque Nationale de France", "ident": "{ident}"},
     "iccu": {"label": "Istituto Centrale per il Catalogo Unico", "ident": "{ident}"},
-    "isni": {"label": "International Standard Name Identifier", "ident": "{ident}"},
+    "isni": {"label": "International Standard Name Identifier", "ident": "https://isni.org/isni/{ident}"},
     "lc": {"label": "Library of Congress", "ident": "{ident}"},
     "nlp": {"label": "Biblioteka Narodowa", "ident": "{ident}"},
     "nkc": {"label": "Národní knihovna České republiky", "ident": "{ident}"},
