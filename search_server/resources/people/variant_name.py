@@ -8,10 +8,10 @@ from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 
 
-class NameVariantSection(JSONLDContextDictSerializer):
+class VariantNamesSection(JSONLDContextDictSerializer):
     ntype = StaticField(
         label="type",
-        value="rism:NameVariantsSection"
+        value="rism:VariantNamesSection"
     )
     label = serpy.MethodField()
     items = serpy.MethodField()
@@ -23,7 +23,7 @@ class NameVariantSection(JSONLDContextDictSerializer):
         return transl.get("records.name_variants")
 
     def get_items(self, obj: SolrResult) -> List[Dict]:
-        return NameVariant(obj['name_variants_json'],
+        return NameVariant(obj['variant_names_json'],
                            many=True,
                            context={"request": self.context.get("request")}).data
 
@@ -31,7 +31,7 @@ class NameVariantSection(JSONLDContextDictSerializer):
 class NameVariant(JSONLDContextDictSerializer):
     vtype = StaticField(
         label="type",
-        value="rism:NameVariant"
+        value="rism:VariantName"
     )
     label = serpy.MethodField()
     value = serpy.MethodField()
@@ -39,6 +39,7 @@ class NameVariant(JSONLDContextDictSerializer):
     def get_label(self, obj: Dict) -> Dict:
         req = self.context.get("request")
         transl: Dict = req.app.ctx.translations
+
         return person_name_variant_labels_translator(obj['type'], transl)
 
     def get_value(self, obj: Dict) -> Dict:

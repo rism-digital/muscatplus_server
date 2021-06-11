@@ -9,7 +9,7 @@ from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.people.base_person import BasePerson
-from search_server.resources.people.name_variant import NameVariantSection
+from search_server.resources.people.variant_name import VariantNamesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_link import ExternalResourcesSection
@@ -58,10 +58,10 @@ class Person(BasePerson):
         return ExternalAuthoritiesSection(obj['external_ids'], context={"request": self.context.get("request")}).data
 
     def get_name_variants(self, obj: SolrResult) -> Optional[List]:
-        if 'name_variants_json' not in obj:
+        if 'variant_names_json' not in obj:
             return None
 
-        return NameVariantSection(obj, context={"request": self.context.get("request")}).data
+        return VariantNamesSection(obj, context={"request": self.context.get("request")}).data
 
     def get_sources(self, obj: SolrResult) -> Optional[Dict]:
         # Do not show a link to sources if this serializer is used for embedded results
