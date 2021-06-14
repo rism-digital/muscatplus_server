@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 def handle_institution_source_request(req, institution_id: str) -> Dict:
     request_compiler = SearchRequest(req)
     request_compiler.filters += ["type:source",
-                                 f"holding_institution_ids:institution_{institution_id}"]
+                                 f"holding_institutions_ids:institution_{institution_id}"]
 
     solr_params = request_compiler.compile()
     solr_res: pysolr.Results = SolrConnection.search(**solr_params)
