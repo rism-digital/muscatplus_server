@@ -93,7 +93,7 @@ class Institution(JSONLDContextDictSerializer):
         ident: str = re.sub(ID_SUB, "", institution_id)
 
         return {
-            "id": get_identifier(self.context.get("request"), "institutions.institution_sources", institution_id=ident),
+            "url": get_identifier(self.context.get("request"), "institutions.institution_sources", institution_id=ident),
             "totalItems": source_count
         }
 
