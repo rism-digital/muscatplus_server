@@ -1,8 +1,9 @@
 import logging
 from typing import Dict
 
-import pysolr
+
 from sanic import response
+from small_asc.client import Results, SolrError
 
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.search_request import SearchRequest
@@ -21,8 +22,8 @@ async def handle_search_request(req) -> response.HTTPResponse:
     solr_params: Dict = request_compiler.compile()
 
     try:
-        solr_res: pysolr.Results = SolrConnection.search(**solr_params)
-    except pysolr.SolrError:
+        solr_res: Results = SolrConnection.search(solr_params)
+    except SolrError:
         error_message: str = "Error parsing search parameters"
         log.exception(error_message)
         return response.text(f"Search error", status=500)

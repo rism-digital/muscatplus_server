@@ -1,34 +1,27 @@
 import re
 from typing import Dict, Optional, List
 
-import pysolr
 import serpy
 
 from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrResult
+from search_server.helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 
 
-def handle_institution_request(req, institution_id: str) -> Optional[Dict]:
-    fq: List = ["type:institution",
-                f"id:institution_{institution_id}"]
+async def handle_institution_request(req, institution_id: str) -> Optional[Dict]:
+    institution_record: Optional[dict] = SolrConnection.get(f"institution_{institution_id}")
 
-    record: pysolr.Results = SolrConnection.search("*:*", fq=fq)
-
-    if record.hits == 0:
+    if not institution_record:
         return None
 
-    institution_record = record.docs[0]
-    institution = Institution(institution_record, context={"request": req,
-                                                           "direct_request": True})
-
-    return institution.data
+    return Institution(institution_record, context={"request": req,
+                                                    "direct_request": True}).data
 
 
 class Institution(JSONLDContextDictSerializer):

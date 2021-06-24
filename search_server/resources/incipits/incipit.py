@@ -2,10 +2,10 @@ import logging
 import re
 from typing import Dict, Optional, List
 
-import pysolr
 import serpy
 import ujson
 import verovio
+from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.display_fields import (
     get_display_fields,
@@ -18,7 +18,7 @@ from search_server.helpers.identifiers import (
     get_identifier
 )
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrResult, SolrManager
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 
 log = logging.getLogger(__name__)
 
@@ -45,12 +45,15 @@ vrv_tk.setOptions(ujson.dumps({
 
 
 def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
-    fq: List = ["type:incipit",
-                f"source_id:source_{source_id}",
-                f"work_num_s:{work_num}"]
-    sort: str = "work_num_ans asc"
-
-    record: pysolr.Results = SolrConnection.search("*:*", fq=fq, sort=sort, rows=1)
+    json_request: JsonAPIRequest = {
+        "query": "*:*",
+        "filter": ["type:incipit",
+                   f"source_id:source_{source_id}",
+                   f"work_num_s:{work_num}"],
+        "sort": "work_num_ans asc",
+        "limit": 1
+    }
+    record: Results = SolrConnection.search(json_request)
 
     if record.hits == 0:
         return None
@@ -62,7 +65,7 @@ def handle_incipits_list_request(req, source_id: str) -> Optional[Dict]:
     pass
 
 
-def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[Dict]:
+async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[Dict]:
     incipit_record: Optional[SolrResult] = _fetch_incipit(source_id, work_num)
 
     if not incipit_record:

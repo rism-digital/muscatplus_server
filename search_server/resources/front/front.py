@@ -1,7 +1,7 @@
 from typing import Dict, List
 
-import pysolr
-import serpy as serpy
+import serpy
+from small_asc.client import Results
 
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
@@ -10,7 +10,7 @@ from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection
 
 
-def handle_front_request(req) -> Dict:
+async def handle_front_request(req) -> Dict:
     return Front({}, context={"request": req, "direct_request": True}).data
 
 
@@ -39,9 +39,8 @@ class Front(JSONLDContextDictSerializer):
             "rows": 0,
             "facet": "on"
         }
-        res: pysolr.Results = SolrConnection.search("*:*", **rq)
+        res: Results = SolrConnection.search({"params": {"q": "*:*", **rq}})
         fields = res.facets['facet_fields']
-        type_field: List = fields.get("type")
 
         # These two lines take a Solr facet list, which looks like
         # ["foo", 22, "bar", 20, "baz", 18] and turn it into a list

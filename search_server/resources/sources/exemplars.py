@@ -1,13 +1,14 @@
 import re
 from typing import Dict, Optional, List
 
-import serpy as serpy
+import serpy
+from small_asc.client import Results
 
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult, SolrManager, SolrConnection
+from search_server.helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.shared.external_link import ExternalResourcesSection
 
 
@@ -26,25 +27,25 @@ class ExemplarsSection(JSONLDContextDictSerializer):
         return transl.get("records.exemplars")
 
     def get_items(self, obj: SolrResult) -> Optional[Dict]:
-        conn = SolrManager(SolrConnection)
         fq: List = [f"source_id:{obj.get('id')}",
                     "type:holding"]
 
         sort: str = "siglum_s asc, shelfmark_ans asc"
-        conn.search("*:*", fq=fq, sort=sort)
+        results: Results = SolrConnection.search({"params": {"q": "*:*", "fq": fq, "sort": sort}},
+                                                 cursor=True)
 
-        if conn.hits == 0:
+        if results.hits == 0:
             return None
 
-        return Exemplar(conn.results,
+        return Exemplar(results,
                         many=True,
                         context={"request": self.context.get("request")}).data
 
 
 class Exemplar(JSONLDContextDictSerializer):
-    sid = serpy.MethodField(
-        label="id"
-    )
+    # sid = serpy.MethodField(
+    #     label="id"
+    # )
     stype = StaticField(
         label="type",
         value="rism:Exemplar"

@@ -2,7 +2,7 @@ import logging
 import math
 from typing import Optional, Dict
 
-import pysolr
+from small_asc.client import Results
 import serpy
 
 from search_server.exceptions import PaginationParseException
@@ -66,16 +66,16 @@ class Pagination(ContextDictSerializer):
         # we always have at least 1 page, even if there are zero results
         return max(1, pages)
 
-    def get_total_pages(self, obj: pysolr.Results) -> int:
+    def get_total_pages(self, obj: Results) -> int:
         """
-        :param obj: A pysolr Results object
+        :param obj: A Results object
         :return: the total number of pages
         """
         return self._number_of_pages(obj.hits)
 
-    def get_this_page(self, obj: pysolr.Results) -> int:
+    def get_this_page(self, obj: Results) -> int:
         """
-        :param obj: A pysolr Results object
+        :param obj: A Results object
         :return: The current page number
         """
         req = self.context.get("request")
@@ -95,13 +95,13 @@ class Pagination(ContextDictSerializer):
         # Vary the query dictionary for the first result page
         return remove_query_param(req.url, PAGE_QUERY_PARAM)
 
-    def get_next(self, obj: pysolr.Results) -> Optional[str]:
+    def get_next(self, obj: Results) -> Optional[str]:
         """
         Pretty self-explanatory. Gets the URL for the next page of results.
         The only corner case is that it will return None if the next page is
         calculated to be beyond the edge of all pages.
 
-        :param obj: A pysolr.Results object
+        :param obj: A Results object
         :return: The URL to the next page, or None if it is beyond the end of all pages.
         """
         req = self.context.get("request")
@@ -118,7 +118,7 @@ class Pagination(ContextDictSerializer):
 
         return replace_query_param(req.url, PAGE_QUERY_PARAM, next_page)
 
-    def get_previous(self, obj: pysolr.Results) -> Optional[str]:  # noqa
+    def get_previous(self, obj: Results) -> Optional[str]:  # noqa
         """
         Gets the link to the previous page. An important comment is inlined below
         to explain a particular edge-case and why it is that way.
@@ -149,12 +149,12 @@ class Pagination(ContextDictSerializer):
 
         return replace_query_param(url, PAGE_QUERY_PARAM, prev_page)
 
-    def get_last(self, obj: pysolr.Results) -> Optional[str]:
+    def get_last(self, obj: Results) -> Optional[str]:
         """
         Gets the last page of results. If there is only one page, then this will not
         be included in the pagination result.
 
-        :param obj: a pysolr Results object
+        :param obj: a Results object
         :return: The URL to the next page, or None if the last page is also the first page.
         """
         req = self.context.get("request")

@@ -1,29 +1,23 @@
 import re
 from typing import List, Optional, Dict
 
-import pysolr
 import serpy
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrResult
+from search_server.helpers.solr_connection import SolrResult, SolrConnection
 
 
-def handle_place_request(req, place_id: str) -> Optional[Dict]:
-    fq: List = ["type:place",
-                f"id:place_{place_id}"]
+async def handle_place_request(req, place_id: str) -> Optional[Dict]:
+    record: Optional[dict] = SolrConnection.get(f"place_{place_id}")
 
-    record: pysolr.Results = SolrConnection.search("*:*", fq=fq, rows=1)
-
-    if record.hits == 0:
+    if not record:
         return None
 
-    place_record = record.docs[0]
-
-    return Place(place_record, context={"request": req,
-                                        "direct_request": True}).data
+    return Place(record, context={"request": req,
+                                  "direct_request": True}).data
 
 
 class Place(JSONLDContextDictSerializer):

@@ -1,30 +1,19 @@
 import re
 from typing import Optional, Dict, List
 
-import pysolr
 import serpy
 
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult, SolrConnection, result_count
+from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
 
 
-def handle_subject_request(req, subject_id: str) -> Optional[Dict]:
-    fq: List = [
-        "type:subject",
-        f"id:subject_{subject_id}"
-    ]
-    record: pysolr.Results = SolrConnection.search("*:*", fq=fq, rows=1)
+async def handle_subject_request(req, subject_id: str) -> Optional[Dict]:
+    subject_record: Optional[dict] = SolrConnection.get(f"subject_{subject_id}")
 
-    if record.hits == 0:
-        return None
-
-    subject_record = record.docs[0]
-    subject = Subject(subject_record, context={"request": req,
-                                               "direct_request": True})
-
-    return subject.data
+    return Subject(subject_record, context={"request": req,
+                                            "direct_request": True}).data
 
 
 class Subject(JSONLDContextDictSerializer):
@@ -72,7 +61,7 @@ class Subject(JSONLDContextDictSerializer):
 
         return {"none": [obj.get("alternate_terms_sm")]}
 
-    def get_sources(self, obj: SolrResult) -> Optional[Dict]:
+    async def get_sources(self, obj: SolrResult) -> Optional[Dict]:
         # Only give a list of sources for this term if we are looking at a dedicated page for this subject heading, and
         # it is not embedded in another type of record.
         if not self.context.get("direct_request"):

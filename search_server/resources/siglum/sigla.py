@@ -1,6 +1,6 @@
 from typing import Dict, Optional, List
 
-import pysolr
+from small_asc.client import Results
 
 from search_server.helpers.search_request import SearchRequest
 from search_server.helpers.solr_connection import SolrConnection
@@ -14,14 +14,14 @@ def handle_sigla_request(req) -> Dict:
                                  "siglum_s:[* TO *]"]
 
     solr_params = request_compiler.compile()
-    solr_res: pysolr.Results = SolrConnection.search(**solr_params)
+    solr_res: Results = SolrConnection.search(**solr_params)
 
     sigla_results = SiglaResults(solr_res, context={"request": req})
     return sigla_results.data
 
 
 class SiglaResults(BaseSearchResults):
-    def get_items(self, obj: pysolr.Results) -> Optional[List]:
+    def get_items(self, obj: Results) -> Optional[List]:
         if obj.hits == 0:
             return None
 
