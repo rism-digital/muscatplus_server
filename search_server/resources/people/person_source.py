@@ -23,10 +23,13 @@ async def handle_person_source_request(req, person_id: str) -> Dict:
 
 
 class PersonResults(BaseSearchResults):
-    def get_items(self, obj: pysolr.Results) -> Optional[List]:
+    def get_modes(self, obj: Results) -> Optional[Dict]:
+        return None
+
+    def get_items(self, obj: Results) -> Optional[List]:
         if obj.hits == 0:
             return None
 
-        return BaseSource(obj.docs,
-                          many=True,
-                          context={"request": self.context.get("request")}).data
+        return SourceSearchResult(obj.docs,
+                                  many=True,
+                                  context={"request": self.context.get("request")}).data
