@@ -69,7 +69,8 @@ async def add_cors(req, resp):
 
 @app.route("/")
 async def root(req):
-    return await handle_request(req, handle_front_request)
+    return await handle_request(req,
+                                handle_front_request)
 
 
 @app.route("/api/v1/context.json")

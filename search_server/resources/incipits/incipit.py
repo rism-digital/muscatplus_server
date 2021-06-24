@@ -75,45 +75,6 @@ async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional
                                             "direct_request": True}).data
 
 
-class IncipitList(JSONLDContextDictSerializer):
-    lid = serpy.MethodField(
-        label="id"
-    )
-    ltype = StaticField(
-        label="type",
-        value="rism:IncipitList"
-    )
-    label = serpy.MethodField()
-    items = serpy.MethodField()
-
-    def get_lid(self, obj: SolrResult) -> str:
-        req = self.context.get("request")
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
-
-        return get_identifier(req, "sources.incipits_list", source_id=source_id)
-
-    def get_label(self, obj: SolrResult) -> Dict:
-        req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
-
-        return transl.get("records.incipits")
-
-    def get_items(self, obj: SolrResult) -> Optional[List]:
-        conn = SolrManager(SolrConnection)
-        fq: List = [f"source_id:{obj.get('id')}",
-                    "type:incipit"]
-        sort: str = "work_num_ans asc"
-
-        conn.search("*:*", fq=fq, sort=sort)
-
-        if conn.hits == 0:
-            return None
-
-        return Incipit(conn.results,
-                       many=True,
-                       context={"request": self.context.get("request")}).data
-
-
 class Incipit(JSONLDContextDictSerializer):
     incip_id = serpy.MethodField(
         label="id"

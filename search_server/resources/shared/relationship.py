@@ -3,7 +3,7 @@ import logging
 import re
 from typing import Dict, Optional, List, Callable
 
-import serpy as serpy
+import serpy
 
 from search_server.helpers.display_translators import person_institution_relationship_labels_translator, \
     qualifier_labels_translator, place_relationship_labels_translator
