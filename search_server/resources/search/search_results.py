@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Dict, Optional, List
 
-import pysolr
+from small_asc.client import Results
 import serpy
 
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
@@ -20,7 +20,51 @@ log = logging.getLogger(__name__)
 
 
 class SearchResults(BaseSearchResults):
-    def get_items(self, obj: pysolr.Results) -> Optional[List]:
+    def get_modes(self, obj: Results) -> Optional[Dict]:
+        req = self.context.get("request")
+        cfg: Dict = req.app.ctx.config
+        transl: Dict = req.app.ctx.translations
+
+        facet_results: Optional[Dict] = obj.raw_response.get('facets')
+        if not facet_results:
+            return None
+
+        mode_facet: Optional[Dict] = facet_results.get("mode")
+        # if, for some reason, we don't have a mode facet we return gracefully.
+        if not mode_facet:
+            return None
+
+        mode_buckets: List = mode_facet.get("buckets", [])
+        mode_items: List = []
+        mode_config: Dict = cfg['search']['modes']
+        # Put the returned modes into a dictionary so we can look up the buckets by the key. The format is
+        # {type: count}, where 'type' is the value from the Solr type field, and 'count' is the number of
+        # records returned.
+        mode_results: Dict = {f"{mode['val']}": mode['count'] for mode in mode_buckets}
+
+        # This will ensure the modes are returned in the order they're listed in the configuration file. Otherwise
+        #  they are returned by the order of results.
+        for mode, config in mode_config.items():
+            record_type = config['record_type']
+            if record_type not in mode_results:
+                continue
+
+            translation_key: str = config['label']
+
+            mode_items.append({
+                "value": mode,
+                "label": transl.get(translation_key),
+                "count": mode_results[record_type]
+            })
+
+        return {
+            "alias": "mode",
+            "label": {"none": ["Result type"]},  # TODO: Translate!
+            "type": "rism:ModeFacet",
+            "items": mode_items
+        }
+
+    def get_items(self, obj: Results) -> Optional[List]:
         if obj.hits == 0:
             return None
 
@@ -105,9 +149,9 @@ class SourceSearchResult(ContextDictSerializer):
         """
             Provides a pointer back to a parent. Used for Items in Sources and Incipits.
         """
-        is_item: bool = obj.get('is_item_record_b', False)
+        is_contents_record: bool = obj.get('is_contents_record_b', False)
         # if it isn't an item record, then it isn't part of anything!
-        if not is_item:
+        if not is_contents_record:
             return None
 
         req = self.context.get("request")
@@ -133,22 +177,32 @@ class SourceSearchResult(ContextDictSerializer):
 
     def get_flags(self, obj: Dict) -> Optional[Dict]:
         has_digitization: bool = obj.get("has_digitization_b", False)
-        is_item: bool = obj.get("is_item_record_b", False)
+        is_contents_record: bool = obj.get("is_contents_record_b", False)
+        # A record is collection record if it has the 'source_members_sm' key. If
+        # it has the key, then it is a collection record.
+        is_collection_record: bool = obj.get("source_members_sm", None) is not None
         has_incipits: bool = obj.get("has_incipits_b", False)
         has_iiif: bool = obj.get("has_iiif_manifest_b", False)
+        number_of_exemplars: int = obj.get("num_holdings_i", 0)
         flags: Dict = {}
 
         if has_digitization:
             flags.update({"hasDigitization": has_digitization})
 
-        if is_item:
-            flags.update({"isItem": is_item})
+        if is_contents_record:
+            flags.update({"isContentsRecord": is_contents_record})
+
+        if is_collection_record:
+            flags.update({"isCollectionRecord": is_collection_record})
 
         if has_incipits:
             flags.update({"hasIncipits": has_incipits})
 
         if has_iiif:
             flags.update({"hasIIIFManifest": has_iiif})
+
+        if number_of_exemplars > 0:
+            flags.update({"numberOfExemplars": number_of_exemplars})
 
         # return None if flags are empty.
         return flags or None
