@@ -1,12 +1,12 @@
 from abc import abstractmethod
 from typing import Dict, Optional, List
 
-import pysolr
+from small_asc.client import Results
 import serpy
 
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextSerializer
-from search_server.resources.search.facets import FacetList
+from search_server.resources.search.facets import get_facets
 from search_server.resources.search.pagination import Pagination
 
 
@@ -34,70 +34,27 @@ class BaseSearchResults(JSONLDContextSerializer):
     facets = serpy.MethodField()
     modes = serpy.MethodField()
 
-    def get_sid(self, obj: pysolr.Results) -> str:
+    def get_sid(self, obj: Results) -> str:
         """
         Simply reflects the incoming URL wholesale.
         """
         req = self.context.get('request')
         return req.url
 
-    def get_total_items(self, obj: pysolr.Results) -> int:
+    def get_total_items(self, obj: Results) -> int:
         return obj.hits
 
-    def get_view(self, obj: pysolr.Results) -> Dict:
+    def get_view(self, obj: Results) -> Dict:
         p = Pagination(obj, context={"request": self.context.get('request')})
         return p.data
 
-    def get_facets(self, obj: pysolr.Results) -> Optional[Dict]:
-        facets: Dict = FacetList(obj, context={"request": self.context.get("request")}).data
-        if facets and facets.get("items"):
-            return facets
-        return None
-
-    def get_modes(self, obj: pysolr.Results) -> Optional[Dict]:
-        req = self.context.get("request")
-        cfg: Dict = req.app.ctx.config
-        transl: Dict = req.app.ctx.translations
-
-        facet_results: Optional[Dict] = obj.raw_response.get('facets')
-        if not facet_results:
-            return None
-
-        mode_facet: Optional[Dict] = facet_results.get("mode")
-        # if, for some reason, we don't have a mode facet we return gracefully.
-        if not mode_facet:
-            return None
-
-        mode_buckets: List = mode_facet.get("buckets", [])
-        mode_items: List = []
-        mode_config: Dict = cfg['search']['modes']
-        # Put the returned modes into a dictionary so we can look up the buckets by the key. The format is
-        # {type: count}, where 'type' is the value from the Solr type field, and 'count' is the number of
-        # records returned.
-        mode_results: Dict = {f"{mode['val']}": mode['count'] for mode in mode_buckets}
-
-        # This will ensure the modes are returned in the order they're listed in the configuration file. Otherwise
-        #  they are returned by the order of results.
-        for mode, config in mode_config.items():
-            record_type = config['record_type']
-            if record_type not in mode_results:
-                continue
-
-            translation_key: str = config['display_name']
-
-            mode_items.append({
-                "value": mode,
-                "label": transl.get(translation_key),
-                "count": mode_results[record_type]
-            })
-
-        return {
-            "alias": "mode",
-            "label": {"none": ["Result type"]},  # TODO: Translate!
-            "type": "rism:Facet",
-            "items": mode_items
-        }
+    def get_facets(self, obj: Results) -> Optional[Dict]:
+        return get_facets(self.context.get('request'), obj)
 
     @abstractmethod
-    def get_items(self, obj: pysolr.Results) -> Optional[List]:
+    def get_modes(self, obj: Results) -> Optional[Dict]:
+        return None
+
+    @abstractmethod
+    def get_items(self, obj: Results) -> Optional[List]:
         pass
