@@ -16,116 +16,113 @@ search:
   default_mode: "sources"
   modes:
     sources:
-      display_name: "records.sources"
+      label: "records.sources"
       record_type: "source"
     people:
-      display_name: "records.people"
+      label: "records.people"
       record_type: "person"
     institutions:
-      display_name: "records.institutions"
+      label: "records.institutions"
       record_type: "institution"
     festivals:
-      display_name: "records.liturgical_festivals"
+      label: "records.liturgical_festivals"
       record_type: "liturgical_festival"
     incipits:
-      display_name: "records.incipits"
+      label: "records.incipits"
       record_type: "incipit"
-  facets:
-    source_type_sm: &SOURCE_TYPE
-      display_name: "Source type"  # records.source_type
+  # Allowed values for 'type' are:
+  #  - range: Creates a range facet over a set of scalar values (e.g., years).
+  #  - stats: Creates a read-only facet with some interesting pre-defined stats.
+  #  - toggle: Creates a simple on / off facet with a true or false value. Used only on boolean fields.
+  #  - selector: Creates a facet of values for which an OR query is applied to the values.
+  #  - filter: Creates a facet of values for which an AND query is applied to the values.
+  #
+  # Toggle facets have a field, 'active_value', which gives the value of the field when the toggle is switched 'on'.
+  #  This is not always intuitive -- if we want to filter out records who have a 'true' value for a given field,
+  #  then the 'active_value' must be 'false'. This is made even more confusing by the fact that toggle facets will
+  #  only be active when they are given as a query parameter. So to give an example of how a query parameter might:
+  #  translate to a Solr query:
+  #
+  #     ?fq=hide-source-contents:true  --> is_contents_record_b:false
+  #     ?fq=hide-source-contents:false -> (no filter on is_contents_record_b, which is the same as is_contents_record_b:true OR false)
+
+  facet_definitions:
+    DATE_RANGE: &DATE_RANGE
+      label: "records.dates"
+      alias: "date-range"
+      type: "range"
+      field: "date_ranges_im"
+      sort: "count desc"
+    HIDE_SOURCE_CONTENTS: &HIDE_SOURCE_CONTENTS
+      # Configures whether to show or hide Source Contents records.
+      label: "records.content"
+      alias: "hide-source-contents"
+      type: "toggle"
+      field: "is_contents_record_b"
+      active_value: false
+      sort: "count desc"
+    HIDE_SOURCE_COLLECTION_RECORD: &HIDE_SOURCE_COLLECTION_RECORD
+      label: "records.content"
+      alias: "hide-source-collection"
+      type: "toggle"
+      field: "is_collection_record_b"
+      active_value: false
+      sort: "count desc"
+    HIDE_SOURCE_COMPOSITE_VOLUME: &HIDE_SOURCE_COMPOSITE_VOLUME
+      label: "records.content"
+      alias: "hide-composite-volume"
+      type: "toggle"
+      field: "is_composite_volume_b"
+      active_value: false
+      sort: "count desc"
+    SHOW_SOURCE_INCIPITS: &SHOW_SOURCE_INCIPITS
+      label: "records.incipits"
+      alias: "has-incipits"
+      type: "toggle"
+      field: "has_incipits_b"
+      active_value: true
+      sort: "count desc"
+    SHOW_SOURCE_ARRANGEMENT: &SHOW_SOURCE_ARRANGEMENT
+      label: "records.arrangement"
+      alias: "is-arrangement"
+      type: "toggle"
+      field: "is_arrangement_b"
+      active_value: true
+      sort: "count desc"
+    PERSON_ROLE: &PERSON_ROLE
+      label: "records.role"
+      alias: "person-role"
+      type: "selector"
+      field: "roles_sm"
+      sort: "count desc"
+    SOURCE_TYPE: &SOURCE_TYPE
+      label: "records.source_type"
       alias: "source-type"
+      type: "selector"
+      field: "source_type_sm"
       sort: "count desc"
-    is_item_record_b: &IS_ITEM_RECORD
-      display_name: "Filter item records"
-      alias: "item-filter"
+    INSTIUTION_CITY: &INSTITUTION_CITY
+      label: "records.city"
+      alias: "city"
+      type: "filter"
+      field: "city_s"
       sort: "count desc"
-      display_value_map:
-        "True": "Item records only"
-        "False": "Collection records only"
-    key_mode_s: &KEY_MODE
-      display_name: "Key or mode"  # records.key_or_mode
-      alias: "key-mode"
-      sort: "index asc"
-    rism_series_sm: &RISM_SERIES
-      display_name: "RISM series"  # records.rism_series
-      alias: "rism-series"
-      sort: "index asc"
-    creator_name_s: &CREATOR_NAME
-      display_name: "Composer / Author"  # records.composer_author
-      alias: "creator"
-      sort: "count desc"
-    institutions_sm: &INSTITUTIONS
-      display_name: "Related institutions"  # records.related_institution
-      alias: "related-institutions"
-      sort: "count desc"
-    holding_institutions_sm: &HOLDING_INSTITUTIONS
-      display_name: "Holding institution"
-      alias: "holding-institution"
-      sort: "index asc"
-    related_people_sm: &RELATED_PEOPLE
-      display_name: "Related people"
-      alias: "related-people"
-      sort: "count desc"
-    roles_sm: &ROLES
-      display_name: "Roles"
-      alias: "roles"
-      sort: "count desc"
-    qualifier_s: &QUALIFIER
-      display_name: "Relationship qualifier"
-      alias: "qualifier"
-      sort: "count desc"
-    relationship_s: &RELATIONSHIP
-      display_name: "Relationship"
-      alias: "relationship"
-      sort: "index asc"
-    has_digitization_b: &HAS_DIGITIZATION
-      display_name: "Links to digitizations"
-      alias: "digitization"
-      sort: "count desc"
-      display_value_map:
-        "True": "Only digitized sources"
-        "False": "Non-digitized sources"
-    liturgical_festivals_sm: &LITURGICAL_FESTIVALS
-      display_name: "Liturgical festivals"
-      alias: "festival"
-      sort: "count desc"
-    gender_s: &GENDER
-      display_name: "Gender"
-      alias: "gender"
-      sort: "count desc"
-    institution_types_sm: &INSTITUTION_TYPES
-      display_name: "Institution type"
-      alias: "institution-type"
-      sort: "count desc"
+
   # Configure the filters to show when a specific type of search is being performed.
   filters:
     sources:
-      source_type_sm:
-        <<: *SOURCE_TYPE
-      is_item_record_b:
-        <<: *IS_ITEM_RECORD
-      key_mode_s:
-        <<: *KEY_MODE
-      rism_series_sm:
-        <<: *RISM_SERIES
-      creator_name_s:
-        <<: *CREATOR_NAME
-      holding_institutions_sm:
-        <<: *HOLDING_INSTITUTIONS
-      has_digitization_b:
-        <<: *HAS_DIGITIZATION
-      liturgical_festivals_sm:
-        <<: *LITURGICAL_FESTIVALS
+      - *HIDE_SOURCE_CONTENTS
+      - *HIDE_SOURCE_COLLECTION_RECORD
+      - *HIDE_SOURCE_COMPOSITE_VOLUME
+      - *DATE_RANGE
+      - *SOURCE_TYPE
+      - *SHOW_SOURCE_INCIPITS
+      - *SHOW_SOURCE_ARRANGEMENT
     people:
-      roles_sm:
-        <<: *ROLES
-      gender_s:
-        <<: *GENDER
+      - *DATE_RANGE
+      - *PERSON_ROLE
     institutions:
-      roles_sm:
-        <<: *ROLES
-      institution_types_sm:
-        <<: *INSTITUTION_TYPES
+      - *INSTITUTION_CITY
     incipits:
     festivals:
 
