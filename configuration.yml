@@ -61,16 +61,16 @@ search:
       field: "is_contents_record_b"
       active_value: false
       sort: "count desc"
-    HIDE_SOURCE_COLLECTION_RECORD: &HIDE_SOURCE_COLLECTION_RECORD
+    HIDE_SOURCE_COLLECTION_RECORDS: &HIDE_SOURCE_COLLECTION_RECORDS
       label: "records.content"
-      alias: "hide-source-collection"
+      alias: "hide-source-collections"
       type: "toggle"
       field: "is_collection_record_b"
       active_value: false
       sort: "count desc"
-    HIDE_SOURCE_COMPOSITE_VOLUME: &HIDE_SOURCE_COMPOSITE_VOLUME
+    HIDE_SOURCE_COMPOSITE_VOLUMES: &HIDE_SOURCE_COMPOSITE_VOLUMES
       label: "records.content"
-      alias: "hide-composite-volume"
+      alias: "hide-composite-volumes"
       type: "toggle"
       field: "is_composite_volume_b"
       active_value: false
@@ -112,8 +112,8 @@ search:
   filters:
     sources:
       - *HIDE_SOURCE_CONTENTS
-      - *HIDE_SOURCE_COLLECTION_RECORD
-      - *HIDE_SOURCE_COMPOSITE_VOLUME
+      - *HIDE_SOURCE_COLLECTION_RECORDS
+      - *HIDE_SOURCE_COMPOSITE_VOLUMES
       - *DATE_RANGE
       - *SOURCE_TYPE
       - *SHOW_SOURCE_INCIPITS

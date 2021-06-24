@@ -42,6 +42,12 @@ def filter_label_map(filters_config: List) -> Dict:
 
 
 def alias_config_map(filters_config: List) -> Dict:
+    """
+    A dictionary that maps the incoming API request 'alias' to the config block for that facet config.
+    :param filters_config: A list of all the filters for the map
+
+    :return:
+    """
     return {f"{cnf['alias']}": cnf for cnf in filters_config}
 
 
@@ -96,9 +102,7 @@ class SearchRequest:
 
         # Configure the facets to show for the selected mode.
         self._facets_for_mode: List = filters_for_mode(self._app_config, self._requested_mode)
-        self._alias_map: Dict = field_alias_map(self._facets_for_mode)
         self._alias_config_map: Dict = alias_config_map(self._facets_for_mode)
-        self._filter_type_map: Dict = filter_type_map(self._facets_for_mode)
 
     def _validate_incoming_request(self) -> None:
         """
@@ -152,6 +156,14 @@ class SearchRequest:
         for filt in self._requested_filters:
             field, raw_value = filt.split(":")
 
+            # If the field we're looking at is not one that we know about,
+            # ignore it and go to the next one.
+            if field not in self._alias_config_map:
+                continue
+
+            filter_config: dict = self._alias_config_map[field]
+            filter_type: str = filter_config['type']
+
             # do some processing and normalization on the value. First ensure we have a non-entity string.
             # This should convert the URL-encoded parameters back to 'normal' characters
             unencoded_value: str = urllib.parse.unquote_plus(raw_value)
@@ -161,25 +173,35 @@ class SearchRequest:
 
             # Finally, ensure that we pass it to Solr as a quoted value if it is not a range search.
             # This is because Solr interprets spaces in an unquoted value to be an implicit "AND".
-            # Range queries will not work when they are quoted, however.
-            # We use the previously-constructed alias map to map the public field name to the
+            #   - Range queries will not work when they are quoted.
+            #   - Toggle queries only accept 'true' (or "True" or "TRUE") as a value, to indicate they are active. All
+            #     other values provided will be ignored.
+            #
+            # We use the alias map to map the public API name to the
             # private solr field.
             value: str
 
-            if quoted_value.startswith("["):
+            if filter_type == 'range':
                 value = quoted_value
+            elif filter_type == "toggle":
+                # We only accept 'true' as a value for toggles; anything else will
+                # cause us to ignore this filter request. We do, however, try it against
+                # all possible case variants.
+                if raw_value.lower() != "true":
+                    continue
+
+                value = filter_config['active_value']
             else:
                 value = f"\"{quoted_value}\""
 
-            new_val: str = f"{self._alias_map[field]}:{value}"
+            new_val: str = f"{filter_config['alias']}:{value}"
 
             # Some field types need to be tagged to help modify their behaviour and interactions with
             # facets for multi-select faceting. See:
             # https://solr.apache.org/guide/8_8/faceting.html#tagging-and-excluding-filters
-            field_type: str = self._filter_type_map[field]
-            if field_type == "range":
+            if filter_type == "range":
                 new_val = f"{{!tag={RANGE_FILTER_TAG}}}{new_val}"
-            elif field_type == "selector":
+            elif filter_type == "selector":
                 new_val = f"{{!tag={SELECTOR_FILTER_TAG}}}{new_val}"
 
             filter_statements.append(new_val)
@@ -246,6 +268,11 @@ class SearchRequest:
         # These have already been checked in the validation, so they shouldn't raise an exception here.
         page_num: int = parse_page_number(self._page)
         return_rows: int = parse_row_number(self._req, self._return_rows)
+        # Results are 0-indexed, so a request for 'start 0 + 20 rows' will return the first through the 20th result.
+        # Then we simply take the page number and multiple it by the rows:
+        #  start: page:1 = start:0
+        #  start: page:2 = ((2 - 1) * 20) = start:20
+        #  start: page:3 = ((3 - 1) * 20) = start:40
         start_row: int = 0 if page_num == 1 else ((page_num - 1) * return_rows)
 
         return {
