@@ -29,18 +29,20 @@ vrv_tk.setInputFrom(verovio.PAE)
 vrv_tk.setOptions(ujson.dumps({
     "footer": 'none',
     "header": 'none',
-    "breaks": 'none',
+    "breaks": 'auto',
     "pageMarginTop": 0,
     "pageMarginBottom": 25,  # Artificially inflate the bottom margin until rism-digital/verovio#1960 is fixed.
     "pageMarginLeft": 0,
     "pageMarginRight": 0,
-    "adjustPageWidth": "true",
+    # "adjustPageWidth": "true",
+    "pageWidth": 1200,
     "spacingStaff": 1,
     "scale": 40,
     "adjustPageHeight": "true",
     "svgHtml5": "true",
     "svgFormatRaw": "true",
-    "svgRemoveXlink": "true"
+    "svgRemoveXlink": "true",
+    "svgViewBox": "true"
 }))
 
 
