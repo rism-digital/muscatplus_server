@@ -34,16 +34,26 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
 
         facet_type = facet_type_map[alias]
         translation_key: str = facet_label_map[alias]
+        translation: Optional[dict] = transl.get(translation_key)
+        label: dict
+        if translation:
+            label = translation
+        else:
+            label = {"none": [translation_key]}
+
+
 
         cfg: Dict = {
             "alias": alias,
-            "label": transl.get(translation_key),
+            "label": label,
             "type": _get_facet_type(facet_type)
         }
 
         if facet_type == "range":
             cfg.update(_create_range_facet(res))
-        elif facet_type in ("selector", "filter", "toggle"):
+        elif facet_type == "toggle":
+            cfg.update(_create_toggle_facet(res))
+        elif facet_type in ("selector", "filter"):
             if 'buckets' not in res:
                 continue
 
@@ -86,12 +96,23 @@ def _create_range_facet(res) -> Dict:
     return range_fields
 
 
+def _create_toggle_facet(res) -> Dict:
+    toggle_fields: dict = {
+        "value": "true"
+    }
+    return toggle_fields
+
+
 def _create_bucket_facet(res) -> Dict:
     value_buckets = res["buckets"]
 
     items: List = []
     for bucket in value_buckets:
-        value: str = urllib.parse.quote_plus(str(bucket['val']))
+        value: str
+        if isinstance(bucket['val'], bool):
+            value = str(bucket['val']).lower()
+        else:
+            value = urllib.parse.quote_plus(str(bucket['val']))
 
         items.append({
             "value": value,
@@ -104,55 +125,3 @@ def _create_bucket_facet(res) -> Dict:
     }
 
     return selector_fields
-
-
-# def get_items(self, obj: Results) -> Optional[List]:
-#     facet_result: Optional[Dict] = obj.raw_response.get('facets')
-#     if not facet_result:
-#         return None
-#
-#     req = self.context.get("request")
-#     cfg: Dict = req.app.ctx.config
-#     current_mode: str = req.args.get("mode", cfg["search"]["default_mode"])  # if no incoming mode, use the default
-#     filters = filters_for_mode(cfg, current_mode)
-#
-#     # Get a lookup table for the alias / display so that we don't have to do this in the loop below.
-#     facet_display_config: Dict = display_name_alias_map(filters)
-#     facet_value_displayname_map: Dict = display_value_alias_map(filters)
-#
-#
-#     facets: List[Dict] = []
-#
-#     for alias, res in facet_result.items():
-#         # Ignore the 'count' field in the solr result. Also skip the 'mode' facet since we handle that
-#         # in a separate block.
-#         if alias in ("count", "mode"):
-#             continue
-#
-#         items: List = []
-#         for bucket in res["buckets"]:
-#             displayName: str
-#             if alias in facet_value_displayname_map and (d := facet_value_displayname_map[alias].get(str(bucket['val']))):
-#                 display_name = d  # ignore warning
-#             else:
-#                 display_name = bucket['val']
-#
-#             items.append({
-#                 "value": urllib.parse.quote_plus(str(bucket['val'])),
-#                 "label": {"none": [display_name]},
-#                 "count": bucket['count']
-#             })
-#
-#         # If we don't have a list of values, don't show the facet.
-#         if not items:
-#             continue
-#
-#         f = {
-#             "alias": alias,
-#             "label": {"none": [facet_display_config[alias]]},
-#             "items": items,
-#             "type": "rism:Facet"
-#         }
-#         facets.append(f)
-#
-#     return facets
