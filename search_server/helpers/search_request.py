@@ -194,7 +194,7 @@ class SearchRequest:
             else:
                 value = f"\"{quoted_value}\""
 
-            new_val: str = f"{filter_config['alias']}:{value}"
+            new_val: str = f"{filter_config['field']}:{value}"
 
             # Some field types need to be tagged to help modify their behaviour and interactions with
             # facets for multi-select faceting. See:
