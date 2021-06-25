@@ -55,28 +55,28 @@ search:
       sort: "count desc"
     HIDE_SOURCE_CONTENTS: &HIDE_SOURCE_CONTENTS
       # Configures whether to show or hide Source Contents records.
-      label: "records.content"
+      label: "Hide source contents"
       alias: "hide-source-contents"
       type: "toggle"
       field: "is_contents_record_b"
       active_value: false
       sort: "count desc"
     HIDE_SOURCE_COLLECTION_RECORDS: &HIDE_SOURCE_COLLECTION_RECORDS
-      label: "records.content"
+      label: "Hide collection records"
       alias: "hide-source-collections"
       type: "toggle"
       field: "is_collection_record_b"
       active_value: false
       sort: "count desc"
     HIDE_SOURCE_COMPOSITE_VOLUMES: &HIDE_SOURCE_COMPOSITE_VOLUMES
-      label: "records.content"
+      label: "Hide composite volumes"
       alias: "hide-composite-volumes"
       type: "toggle"
       field: "is_composite_volume_b"
       active_value: false
       sort: "count desc"
     SHOW_SOURCE_INCIPITS: &SHOW_SOURCE_INCIPITS
-      label: "records.incipits"
+      label: "Has incipits"
       alias: "has-incipits"
       type: "toggle"
       field: "has_incipits_b"
