@@ -9,13 +9,13 @@ from search_server.resources.search.search_results import BaseSearchResults, Sou
 log = logging.getLogger(__name__)
 
 
-async def handle_person_source_request(req, person_id: str) -> Dict:
+async def handle_person_search_request(req, person_id: str) -> Dict:
     request_compiler = SearchRequest(req)
     request_compiler.filters += ["type:source",
                                  f"creator_id:person_{person_id} OR related_people_ids:person_{person_id}"]
 
     solr_params = request_compiler.compile()
-    solr_res: Results = SolrConnection.search(**solr_params)
+    solr_res: Results = SolrConnection.search(solr_params)
 
     person_source_results = PersonResults(solr_res, context={"request": req})
 
