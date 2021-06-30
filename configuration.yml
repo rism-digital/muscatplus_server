@@ -107,6 +107,12 @@ search:
       type: "filter"
       field: "city_s"
       sort: "count desc"
+    SOURCE_HOLDING_INSTITUTION: &SOURCE_HOLDING_INSTITUTION
+      label: "Source holding institution"
+      alias: "holding-institution"
+      type: "filter"
+      field: "holding_institutions_sm"
+      sort: "count desc"
 
   # Configure the filters to show when a specific type of search is being performed.
   filters:
@@ -118,6 +124,7 @@ search:
       - *SOURCE_TYPE
       - *SHOW_SOURCE_INCIPITS
       - *SHOW_SOURCE_ARRANGEMENT
+      - *SOURCE_HOLDING_INSTITUTION
     people:
       - *DATE_RANGE
       - *PERSON_ROLE
@@ -125,4 +132,3 @@ search:
       - *INSTITUTION_CITY
     incipits:
     festivals:
-
