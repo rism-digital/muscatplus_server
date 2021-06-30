@@ -1,5 +1,7 @@
 import logging
+import re
 import urllib.parse
+from re import Pattern
 from typing import Optional, List, Dict
 
 from search_server.helpers.search_request import (
@@ -9,6 +11,7 @@ from search_server.helpers.search_request import (
 from small_asc.client import Results
 
 log = logging.getLogger(__name__)
+RANGE_PARSING_REGEX: Pattern = re.compile(r'\[(?P<start>-?\d{,4})\s?TO\s?(?P<end>-?\d{,4})\]')
 
 
 def get_facets(req, obj: Results) -> Optional[Dict]:
@@ -32,6 +35,12 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
         if alias in ('count', 'mode'):
             continue
 
+        # Uses superset logic to check whether there are more
+        # keys in the result than just 'count'. If there are not,
+        # skip this key.
+        if not res.keys() > {"count"}:
+            continue
+
         facet_type = facet_type_map[alias]
         translation_key: str = facet_label_map[alias]
         translation: Optional[dict] = transl.get(translation_key)
@@ -41,8 +50,6 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
         else:
             label = {"none": [translation_key]}
 
-
-
         cfg: Dict = {
             "alias": alias,
             "label": label,
@@ -50,7 +57,7 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
         }
 
         if facet_type == "range":
-            cfg.update(_create_range_facet(res))
+            cfg.update(_create_range_facet(alias, res, req))
         elif facet_type == "toggle":
             cfg.update(_create_toggle_facet(res))
         elif facet_type in ("selector", "filter"):
@@ -77,12 +84,35 @@ def _get_facet_type(val) -> str:
         return "rism:Facet"
 
 
-def _create_range_facet(res) -> Dict:
+def _create_range_facet(alias, res, req) -> Dict:
     min_val = res["min"]
     max_val = res["max"]
+    incoming_args: list = req.args.getlist("fq", [])
+
+    # present these values as the min/max values
+    # unless there is a query argument that tells us otherwise.
+    lower: int = min_val
+    upper: int = max_val
+
+    for arg in incoming_args:
+        arg_name, arg_value = arg.split(":")
+        if arg_name != alias:
+            continue
+
+        if match := RANGE_PARSING_REGEX.search(arg_value):
+            lower = int(match.group("start"))
+            upper = int(match.group("end"))
 
     range_fields: dict = {
         "range": {
+            "lower": {
+                "label": {"none": ["Lower"]},
+                "value": lower
+            },
+            "upper": {
+                "label": {"none": ["Upper"]},
+                "value": upper
+            },
             "min": {
                 "label": {"none": ["Minimum"]},
                 "value": min_val
