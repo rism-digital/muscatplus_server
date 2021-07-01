@@ -35,10 +35,11 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
         if alias in ('count', 'mode'):
             continue
 
-        # Uses superset logic to check whether there are more
-        # keys in the result than just 'count'. If there are not,
-        # skip this key.
-        if not res.keys() > {"count"}:
+        # Uses set logic to check whether the keys in the result
+        # are equal to just the set of 'count'. This indicates that
+        # there is not enough information coming from solr to construct
+        # a facet response.
+        if res.keys() == {"count"}:
             continue
 
         facet_type = facet_type_map[alias]
