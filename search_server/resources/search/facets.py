@@ -61,11 +61,11 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
             cfg.update(_create_range_facet(alias, res, req))
         elif facet_type == "toggle":
             cfg.update(_create_toggle_facet(res))
-        elif facet_type in ("selector", "filter"):
+        elif facet_type == "select":
             if 'buckets' not in res:
                 continue
 
-            cfg.update(_create_bucket_facet(res))
+            cfg.update(_create_select_facet(res))
 
         facets[alias] = cfg
 
@@ -77,10 +77,8 @@ def _get_facet_type(val) -> str:
         return "rism:RangeFacet"
     elif val == "toggle":
         return "rism:ToggleFacet"
-    elif val == "selector":
-        return "rism:SelectorFacet"
-    elif val == "filter":
-        return "rism:FilterFacet"
+    elif val == "select":
+        return "rism:SelectFacet"
     else:
         return "rism:Facet"
 
@@ -134,7 +132,7 @@ def _create_toggle_facet(res) -> Dict:
     return toggle_fields
 
 
-def _create_bucket_facet(res) -> Dict:
+def _create_select_facet(res) -> Dict:
     value_buckets = res["buckets"]
 
     items: List = []
@@ -152,7 +150,17 @@ def _create_bucket_facet(res) -> Dict:
         })
 
     selector_fields = {
-        "items": items
+        "items": items,
+        "behaviours": {
+            "label": {"none": ["Behaviour"]},  # TODO: Translate these fields!
+            "items": [{
+                    "label": {"none": ["Intersection"]},
+                    "value": "intersection"
+                }, {
+                    "label": {"none": ["Union"]},
+                    "value": "union"
+            }]
+        }
     }
 
     return selector_fields
