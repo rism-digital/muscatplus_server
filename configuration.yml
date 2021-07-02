@@ -30,29 +30,43 @@ search:
     incipits:
       label: "records.incipits"
       record_type: "incipit"
-  # Allowed values for 'type' are:
-  #  - range: Creates a range facet over a set of scalar values (e.g., years).
-  #  - stats: Creates a read-only facet with some interesting pre-defined stats.
-  #  - toggle: Creates a simple on / off facet with a true or false value. Used only on boolean fields.
-  #  - selector: Creates a facet of values for which an OR query is applied to the values.
-  #  - filter: Creates a facet of values for which an AND query is applied to the values.
-  #
-  # Toggle facets have a field, 'active_value', which gives the value of the field when the toggle is switched 'on'.
-  #  This is not always intuitive -- if we want to filter out records who have a 'true' value for a given field,
-  #  then the 'active_value' must be 'false'. This is made even more confusing by the fact that toggle facets will
-  #  only be active when they are given as a query parameter. So to give an example of how a query parameter might:
-  #  translate to a Solr query:
-  #
-  #     ?fq=hide-source-contents:true  --> is_contents_record_b:false
-  #     ?fq=hide-source-contents:false -> (no filter on is_contents_record_b, which is the same as is_contents_record_b:true OR false)
-
   facet_definitions:
+    # Allowed values for 'type' are:
+    #  - range: Creates a range facet over a set of scalar values (e.g., years).
+    #  - stats: Creates a read-only facet with some interesting pre-defined stats.
+    #  - toggle: Creates a simple on / off facet with a true or false value. Used only on boolean fields.
+    #  - select: Creates a facet of values. For these facets, a 'behaviour' query parameter ('fb') sets
+    #       the behaviour of 'intersection' or 'union' at query-time More below.
+    #
+    # Toggle facets have a field, 'active_value', which gives the value of the field when the toggle is switched 'on'.
+    #  This is not always intuitive -- if we want to filter out records who have a 'true' value for a given field,
+    #  then the 'active_value' must be 'false'. This is made even more confusing by the fact that toggle facets will
+    #  only be active when they are given as a query parameter. So to give an example of how a query parameter might:
+    #  translate to a Solr query:
+    #
+    #     ?fq=hide-source-contents:true  --> is_contents_record_b:false
+    #     ?fq=hide-source-contents:false -> (no filter on is_contents_record_b, which is the same as is_contents_record_b:true OR false)
+    #
+    # Select facets take an optional query parameter to control their behaviour. By default,
+    #  select facets operate as 'intersection', which is the expected behaviour from a facet;
+    #  'union' turns the facet into a multi-value select.
+    #
+    # Some examples:
+    #  ?fq=source-type:foo&fq=source-type:bar  <-- default method, 'intersection'. Only sources of
+    #    both type 'foo' and 'bar' are kept.
+    #  ?fq=source-type:foo&fq=source-type:bar&bh=source-type:union  <-- 'union'. Shows *all* sources who
+    #    have either type 'foo' or type 'bar'.
+    #  ?fq=source-type:foo&fq=source-type:bar&bh=source-type:intersection  <-- same as the default method,
+    #    but the behaviour is explicitly defined.
+    #
+    #  Select facets also have a facet sort ('fs') parameter that can control how the facet values are sorted. This
+    #  is either 'count' (count desc, most to least) or 'alpha' (alphabetical asc, A-Z).
+    #
     DATE_RANGE: &DATE_RANGE
       label: "records.dates"
       alias: "date-range"
       type: "range"
       field: "date_ranges_im"
-      sort: "count desc"
     HIDE_SOURCE_CONTENTS: &HIDE_SOURCE_CONTENTS
       # Configures whether to show or hide Source Contents records.
       label: "Hide source contents"
@@ -60,59 +74,54 @@ search:
       type: "toggle"
       field: "is_contents_record_b"
       active_value: false
-      sort: "count desc"
     HIDE_SOURCE_COLLECTION_RECORDS: &HIDE_SOURCE_COLLECTION_RECORDS
       label: "Hide collection records"
       alias: "hide-source-collections"
       type: "toggle"
       field: "is_collection_record_b"
       active_value: false
-      sort: "count desc"
     HIDE_SOURCE_COMPOSITE_VOLUMES: &HIDE_SOURCE_COMPOSITE_VOLUMES
       label: "Hide composite volumes"
       alias: "hide-composite-volumes"
       type: "toggle"
       field: "is_composite_volume_b"
       active_value: false
-      sort: "count desc"
     SHOW_SOURCE_INCIPITS: &SHOW_SOURCE_INCIPITS
       label: "Has incipits"
       alias: "has-incipits"
       type: "toggle"
       field: "has_incipits_b"
       active_value: true
-      sort: "count desc"
     SHOW_SOURCE_ARRANGEMENT: &SHOW_SOURCE_ARRANGEMENT
       label: "records.arrangement"
       alias: "is-arrangement"
       type: "toggle"
       field: "is_arrangement_b"
       active_value: true
-      sort: "count desc"
     PERSON_ROLE: &PERSON_ROLE
       label: "records.role"
       alias: "person-role"
-      type: "selector"
+      type: "select"
       field: "roles_sm"
-      sort: "count desc"
+      default_sort: "count"
     SOURCE_TYPE: &SOURCE_TYPE
       label: "records.source_type"
       alias: "source-type"
-      type: "selector"
+      type: "select"
       field: "source_type_sm"
-      sort: "count desc"
+      default_sort: "count"
     INSTIUTION_CITY: &INSTITUTION_CITY
       label: "records.city"
       alias: "city"
-      type: "filter"
+      type: "select"
       field: "city_s"
-      sort: "count desc"
+      default_sort: "alpha"
     SOURCE_HOLDING_INSTITUTION: &SOURCE_HOLDING_INSTITUTION
       label: "Source holding institution"
       alias: "holding-institution"
-      type: "filter"
+      type: "select"
       field: "holding_institutions_sm"
-      sort: "count desc"
+      default_sort: "count"
 
   # Configure the filters to show when a specific type of search is being performed.
   filters:

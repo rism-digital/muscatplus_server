@@ -1,5 +1,6 @@
 import logging
 import urllib.parse
+from collections import defaultdict
 from typing import Dict, Optional, List
 
 from search_server.exceptions import InvalidQueryException, PaginationParseException
@@ -10,8 +11,9 @@ log = logging.getLogger(__name__)
 # Some of the facets and filters need to have a solr `{!tag}` prepended. We'll
 # define them up-front.
 RANGE_FILTER_TAG: str = "RANGE_FILTER"
-SELECTOR_FILTER_TAG: str = "SELECTOR_FILTER"
+SELECT_FILTER_TAG: str = "SELECT_FILTER"
 MODE_FILTER_TAG: str = "MODE_FILTER"
+TERM_FACET_LIMIT: int = 200   # The maximum number of results to return with a select facet ('term' facet in solr).
 
 
 # Some helper functions to work with the field and filter configurations.
@@ -61,6 +63,24 @@ def field_alias_map(filters_config: List) -> Dict:
     return {f"{cnf['alias']}": f"{cnf['field']}" for cnf in filters_config}
 
 
+def facet_modifier_map(requested_values: List) -> dict:
+    """
+    Used to combine other fields with facet modifiers. For example, a facet alias of 'source-type' might
+    have a facet sort of 'fs=source-type:alpha' and a behaviour of 'fb=source-type:union'. This function is
+    a generic one that creates a map of modifiers for specific parameters so that it can be looked up later.
+
+    :param requested_values: A list of 'alias:modifier' values.
+    :return: A dictionary mapping an alias to a modifier.
+    """
+    ret: dict = {}
+
+    for value in requested_values:
+        field_alias, modifier_value = value.split(":")
+        ret[field_alias] = modifier_value
+
+    return ret
+
+
 class SearchRequest:
     """
     Takes a number of parameters passed in from a search request and compiles them to produce a set of
@@ -96,6 +116,8 @@ class SearchRequest:
         # If there is no q parameter it will return all results
         self._requested_query: str = req.args.get("q", "*:*")
         self._requested_filters: List = req.args.getlist("fq", [])
+        self._requested_facet_behaviours: List = req.args.getlist("fb", [])
+        self._requested_facet_sorts: List = req.args.getlist("fs", [])
         self._requested_mode: str = req.args.get("mode", self._app_config["search"]["default_mode"])
         self._page: Optional[str] = req.args.get("page", None)
         self._return_rows: Optional[str] = req.args.get("rows", None)
@@ -103,6 +125,8 @@ class SearchRequest:
         # Configure the facets to show for the selected mode.
         self._facets_for_mode: List = filters_for_mode(self._app_config, self._requested_mode)
         self._alias_config_map: Dict = alias_config_map(self._facets_for_mode)
+        self._behaviour_for_facet: dict = facet_modifier_map(self._requested_facet_behaviours)
+        self._sort_for_facet: dict = facet_modifier_map(self._requested_facet_sorts)
 
     def _validate_incoming_request(self) -> None:
         """
@@ -151,8 +175,11 @@ class SearchRequest:
         return f"type:{record_type}"
 
     def _compile_filters(self) -> List:
-        filter_statements: List = []
+        raw_statements: defaultdict = defaultdict(list)
+        filter_statements: list = []
 
+        # in a first pass, gather all the fields and values
+        # into a dictionary {"fieldname":[value1, value2]}
         for filt in self._requested_filters:
             field, raw_value = filt.split(":")
 
@@ -161,59 +188,62 @@ class SearchRequest:
             if field not in self._alias_config_map:
                 continue
 
+            raw_statements[field].append(raw_value)
+
+        for field, values in raw_statements.items():
+            # if no behaviour is found, the default is 'intersection'
+            behaviour: str = self._behaviour_for_facet.get(field, "intersection")
+
             filter_config: dict = self._alias_config_map[field]
             filter_type: str = filter_config['type']
+            solr_field_name: str = filter_config['field']
 
             # do some processing and normalization on the value. First ensure we have a non-entity string.
             # This should convert the URL-encoded parameters back to 'normal' characters
-            unencoded_value: str = urllib.parse.unquote_plus(raw_value)
+            unencoded_values: list[str] = [urllib.parse.unquote_plus(s) for s in values]
 
-            # Then remove any quotes (single or double)
-            quoted_value: str = unencoded_value.replace("\"", "").replace("'", "")
-
-            # Finally, ensure that we pass it to Solr as a quoted value if it is not a range search.
-            # This is because Solr interprets spaces in an unquoted value to be an implicit "AND".
-            #   - Range queries will not work when they are quoted.
-            #   - Toggle queries only accept 'true' (or "True" or "TRUE") as a value, to indicate they are active. All
-            #     other values provided will be ignored.
-            #
-            # We use the alias map to map the public API name to the
-            # private solr field.
-            value: str
-
-            if filter_type == 'range':
-                value = quoted_value
-            elif filter_type == "toggle":
-                # We only accept 'true' as a value for toggles; anything else will
-                # cause us to ignore this filter request. We do, however, try it against
-                # all possible case variants.
-                if raw_value.lower() != "true":
-                    continue
-
-                value = filter_config['active_value']
-            else:
-                value = f"\"{quoted_value}\""
-
-            new_val: str = f"{filter_config['field']}:{value}"
+            # Then remove any quotes (single or double) to ensure we control how the values actually get
+            # to Solr.
+            quoted_values: list[str] = [s.replace("\"", "").replace("'", "") for s in unencoded_values]
 
             # Some field types need to be tagged to help modify their behaviour and interactions with
             # facets for multi-select faceting. See:
             # https://solr.apache.org/guide/8_8/faceting.html#tagging-and-excluding-filters
-            if filter_type == "range":
-                new_val = f"{{!tag={RANGE_FILTER_TAG}}}{new_val}"
-            elif filter_type == "selector":
-                new_val = f"{{!tag={SELECTOR_FILTER_TAG}}}{new_val}"
+            value: str
+            tag: str
 
-            filter_statements.append(new_val)
+            field_has_values: bool = len(quoted_values) > 0
+            if filter_type == 'range':
+                value = quoted_values[0] if field_has_values else ""
+                tag = f"{{!tag={RANGE_FILTER_TAG}}}"
+            elif filter_type == "toggle":
+                # We only accept 'true' as a value for toggles; anything else will
+                # cause us to ignore this filter request. We do, however, try it against
+                # all possible case variants.
+                if not field_has_values:
+                    continue
+
+                raw_value: str = quoted_values[0]
+                if raw_value.lower() != "true":
+                    continue
+
+                # uses the 'active value' to map a 'true' toggle to the actual field value
+                # in solr. This means we can say 'foo=true' maps to 'foo_s:false'.
+                value = filter_config['active_value']
+                tag = ""
+            else:
+                join_op = " OR " if behaviour == "union" else " AND "
+                value = join_op.join([f"\"{val}\"" for val in quoted_values])
+                tag = f"{{!tag={SELECT_FILTER_TAG}}}" if behaviour == "union" else ""
+
+            query_string: str = f"{tag}{solr_field_name}:({value})"
+
+            filter_statements.append(query_string)
 
         return filter_statements
 
     def _get_facets(self) -> dict:
-        # if there are no filter, return an empty string. This will cause Solr to not emit any facets through
-        # the JSON Facet API
         json_facets: dict = {}
-        # a list of all possible modes configured.
-        all_modes: str = " OR ".join([f"type:{v['record_type']}" for k, v in self._app_config['search']['modes'].items()])
 
         if self._facets_for_mode:
             for facet_cfg in self._facets_for_mode:
@@ -224,10 +254,14 @@ class SearchRequest:
                     solr_facet_def = _create_range_facet(facet_cfg)
                 elif facet_cfg['type'] == "toggle":
                     solr_facet_def = _create_toggle_facet(facet_cfg)
-                elif facet_cfg['type'] == "selector":
-                    solr_facet_def = _create_selector_facet(facet_cfg)
-                elif facet_cfg["type"] == "filter":
-                    solr_facet_def = _create_filter_facet(facet_cfg)
+                elif facet_cfg['type'] == "select":
+                    behaviour: str = self._behaviour_for_facet.get(facet_alias, "intersection")
+
+                    # Get the default sort from the config, and use that as the default sort value
+                    # unless something different is specified.
+                    default_sort: str = facet_cfg['default_sort']
+                    sort: str = self._sort_for_facet.get(facet_alias, default_sort)
+                    solr_facet_def = _create_select_facet(facet_cfg, behaviour, sort)
                 else:
                     continue
 
@@ -236,12 +270,16 @@ class SearchRequest:
         # Add a facet for the 'mode' block. This is special since we always want to return the counts for the query
         # regardless of the current filter selected. So if the user selects the 'person' mode, we still want to
         # show the count for the number of sources. This also allows us to omit a mode if there are zero results.
+        # a list of all possible modes configured.
+        all_modes: str = " OR ".join([f"{v['record_type']}" for k, v in self._app_config['search']['modes'].items()])
+        mode_query: str = f"type:({all_modes})"
+
         json_facets["mode"] = {
             "type": "terms",
             "field": "type",
             "domain": {
                 "excludeTags": MODE_FILTER_TAG,
-                "filter": all_modes
+                "filter": mode_query
             }
         }
 
@@ -333,31 +371,37 @@ def _create_toggle_facet(facet_cfg: Dict) -> Dict:
     return cfg
 
 
-def _create_selector_facet(facet_cfg: Dict) -> Dict:
+def _create_select_facet(facet_cfg: Dict, behaviour: str, sort: str) -> Dict:
+    """
+    Creates a Solr JSON Facet API definition for terms. This can be
+    :param facet_cfg: The configuration block for Solr facets.
+    :param behaviour:
+    :param sort:
+    :return:
+    """
     field_name: str = facet_cfg["field"]
 
     cfg: Dict = {
         "type": "terms",
         "field": f"{field_name}",
-        "domain": {
-            "excludeTags": [SELECTOR_FILTER_TAG]
-        }
+        "limit": TERM_FACET_LIMIT
     }
 
-    if sort := facet_cfg.get("sort"):
-        cfg.update({"sort": sort})
+    if behaviour == "union":
+        cfg.update({
+            "domain": {
+                "excludeTags": [SELECT_FILTER_TAG]
+            }
+        })
+
+    # Unless 'alpha' is explicitly set, either as a requested sort or as a default in the configuration,
+    # default to 'count'.
+    if sort == "alpha":
+        cfg.update({"sort": {"index": "asc"}})
+    else:
+        cfg.update({"sort": {"count": "desc"}})
+
+    print(cfg)
 
     return cfg
 
-
-def _create_filter_facet(facet_cfg: Dict) -> Dict:
-    field_name: str = facet_cfg["field"]
-    cfg: Dict = {
-        "type": "terms",
-        "field": f"{field_name}",
-    }
-
-    if sort := facet_cfg.get("sort"):
-        cfg.update({"sort": sort})
-
-    return cfg
