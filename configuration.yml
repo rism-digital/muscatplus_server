@@ -86,6 +86,12 @@ search:
       type: "toggle"
       field: "is_composite_volume_b"
       active_value: false
+    HAS_DIGITIZATION: &HAS_DIGITIZATION
+      label: "Digital images available"
+      alias: "has-digitization"
+      type: "toggle"
+      field: "has_digitization_b"
+      active_value: true
     SHOW_SOURCE_INCIPITS: &SHOW_SOURCE_INCIPITS
       label: "Has incipits"
       alias: "has-incipits"
@@ -123,12 +129,14 @@ search:
       field: "holding_institutions_sm"
       default_sort: "count"
 
+
   # Configure the filters to show when a specific type of search is being performed.
   filters:
     sources:
       - *HIDE_SOURCE_CONTENTS
       - *HIDE_SOURCE_COLLECTION_RECORDS
       - *HIDE_SOURCE_COMPOSITE_VOLUMES
+      - *HAS_DIGITIZATION
       - *DATE_RANGE
       - *SOURCE_TYPE
       - *SHOW_SOURCE_INCIPITS
