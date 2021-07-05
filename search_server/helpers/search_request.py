@@ -401,7 +401,5 @@ def _create_select_facet(facet_cfg: Dict, behaviour: str, sort: str) -> Dict:
     else:
         cfg.update({"sort": {"count": "desc"}})
 
-    print(cfg)
-
     return cfg
 
