@@ -24,12 +24,12 @@ search:
     institutions:
       label: "records.institutions"
       record_type: "institution"
-    festivals:
-      label: "records.liturgical_festivals"
-      record_type: "liturgical_festival"
-    incipits:
-      label: "records.incipits"
-      record_type: "incipit"
+#    festivals:
+#      label: "records.liturgical_festivals"
+#      record_type: "liturgical_festival"
+#    incipits:
+#      label: "records.incipits"
+#      record_type: "incipit"
   facet_definitions:
     # Allowed values for 'type' are:
     #  - range: Creates a range facet over a set of scalar values (e.g., years).
@@ -67,6 +67,11 @@ search:
       alias: "date-range"
       type: "range"
       field: "date_ranges_im"
+    NUM_HOLDINGS: &NUM_HOLDINGS
+      label: "Number of holdings"
+      alias: "num-holdings"
+      type: "range"
+      field: "num_holdings_i"
     HIDE_SOURCE_CONTENTS: &HIDE_SOURCE_CONTENTS
       # Configures whether to show or hide Source Contents records.
       label: "Hide source contents"
@@ -138,6 +143,7 @@ search:
       - *HIDE_SOURCE_COMPOSITE_VOLUMES
       - *HAS_DIGITIZATION
       - *DATE_RANGE
+      - *NUM_HOLDINGS
       - *SOURCE_TYPE
       - *SHOW_SOURCE_INCIPITS
       - *SHOW_SOURCE_ARRANGEMENT
