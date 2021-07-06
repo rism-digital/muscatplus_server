@@ -1,7 +1,8 @@
 from sanic import Blueprint
 
-from search_server.request_handlers import handle_request
+from search_server.request_handlers import handle_request, handle_search_request
 from search_server.resources.institutions.institution import handle_institution_request
+from search_server.resources.institutions.institution_search import handle_institution_search_request
 
 institutions_blueprint: Blueprint = Blueprint("institutions", url_prefix="/institutions")
 
@@ -19,7 +20,9 @@ async def institution(req, institution_id: str):
 
 @institutions_blueprint.route("/<institution_id:string>/sources/")
 async def institution_sources(req, institution_id: str):
-    pass
+    return await handle_search_request(req,
+                                       handle_institution_search_request,
+                                       institution_id=institution_id)
 
 
 @institutions_blueprint.route("/<institution_id:string>/people/")

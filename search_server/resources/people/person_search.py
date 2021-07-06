@@ -17,9 +17,7 @@ async def handle_person_search_request(req, person_id: str) -> Dict:
     solr_params = request_compiler.compile()
     solr_res: Results = SolrConnection.search(solr_params)
 
-    person_source_results = PersonResults(solr_res, context={"request": req})
-
-    return person_source_results.data
+    return PersonResults(solr_res, context={"request": req}).data
 
 
 class PersonResults(BaseSearchResults):
