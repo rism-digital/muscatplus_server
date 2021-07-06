@@ -221,6 +221,7 @@ class PersonSearchResult(ContextDictSerializer):
         label="typeLabel"
     )
     summary = serpy.MethodField()
+    flags = serpy.MethodField()
 
     def get_srid(self, obj: Dict) -> str:
         req = self.context.get('request')
@@ -249,6 +250,15 @@ class PersonSearchResult(ContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
+    def get_flags(self, obj: Dict) -> Optional[Dict]:
+        flags: Dict = {}
+        number_of_sources: int = obj.get("source_count_i", 0)
+
+        if number_of_sources > 0:
+            flags.update({"numberOfSources": number_of_sources})
+
+        return flags or None
+
 
 class InstitutionSearchResult(ContextDictSerializer):
     srid = serpy.MethodField(
@@ -262,6 +272,7 @@ class InstitutionSearchResult(ContextDictSerializer):
     type_label = serpy.MethodField(
         label="typeLabel"
     )
+    flags = serpy.MethodField()
 
     def get_srid(self, obj: Dict) -> str:
         req = self.context.get('request')
@@ -279,6 +290,15 @@ class InstitutionSearchResult(ContextDictSerializer):
         transl = req.app.ctx.translations
 
         return transl.get("records.institution")
+
+    def get_flags(self, obj: Dict) -> Optional[Dict]:
+        flags: Dict = {}
+        number_of_sources: int = obj.get("source_count_i", 0)
+
+        if number_of_sources > 0:
+            flags.update({"numberOfSources": number_of_sources})
+
+        return flags or None
 
 
 class PlaceSearchResult(ContextDictSerializer):
