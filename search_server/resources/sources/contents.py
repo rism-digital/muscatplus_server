@@ -60,6 +60,7 @@ class ContentsSection(JSONLDContextDictSerializer):
             "language_libretto_sm": ("records.language_libretto", languages_translator),
             "language_original_sm": ("records.language_original_text", languages_translator),
             "language_notes_sm": ("records.language_note", None),
+            "rism_series_identifiers_sm": ("records.series_statement", None),
             "rism_id": ("records.rism_id_number", None)
         }
 
