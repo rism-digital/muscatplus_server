@@ -80,6 +80,10 @@ class Exemplar(JSONLDContextDictSerializer):
             "acquisition_method_s": ("records.method_of_acquisition", None),
             "accession_number_s": ("records.accession_number", None),
             "access_restrictions_sm": ("records.access_restrictions", None),
+            "general_notes_sm": ("records.general_note", None),
+            "binding_notes_sm": ("records.binding_note", None),
+            "bound_with_sm": ("records.bound_with", None),
+            "watermark_notes_sm": ("records.watermark_description", None),
             "provenance_notes_sm": ("records.provenance_notes", None),
         }
 
