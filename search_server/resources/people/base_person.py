@@ -7,6 +7,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
+from search_server.resources.shared.record_history import get_record_history
 
 
 class BasePerson(JSONLDContextDictSerializer):
@@ -21,6 +22,9 @@ class BasePerson(JSONLDContextDictSerializer):
         label="typeLabel"
     )
     label = serpy.MethodField()
+    record_history = serpy.MethodField(
+        label="recordHistory"
+    )
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
@@ -38,3 +42,9 @@ class BasePerson(JSONLDContextDictSerializer):
         req = self.context.get("request")
         transl = req.app.ctx.translations
         return transl.get("records.person")
+
+    def get_record_history(self, obj: Dict) -> Dict:
+        req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
+
+        return get_record_history(obj, transl)

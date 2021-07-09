@@ -11,6 +11,7 @@ from search_server.helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
+from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import RelationshipsSection
 
 
@@ -46,6 +47,9 @@ class Institution(JSONLDContextDictSerializer):
     notes = serpy.MethodField()
     external_resources = serpy.MethodField(
         label="externalResources"
+    )
+    record_history = serpy.MethodField(
+        label="recordHistory"
     )
 
     def get_iid(self, obj: SolrResult) -> str:
@@ -133,3 +137,9 @@ class Institution(JSONLDContextDictSerializer):
             return None
 
         return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+
+    def get_record_history(self, obj: Dict) -> Dict:
+        req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
+
+        return get_record_history(obj, transl)
