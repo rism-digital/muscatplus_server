@@ -51,6 +51,7 @@ class Exemplar(JSONLDContextDictSerializer):
         value="rism:Exemplar"
     )
     summary = serpy.MethodField()
+    notes = serpy.MethodField()
     held_by = serpy.MethodField(
         label="heldBy"
     )
@@ -65,7 +66,7 @@ class Exemplar(JSONLDContextDictSerializer):
 
         return get_identifier(req, "sources.exemplar", source_id=source_id, exemplar_id=obj.get("holding_id_sni"))
 
-    def get_summary(self, obj: SolrResult) -> List[Dict]:
+    def get_summary(self, obj: SolrResult) -> Optional[List[Dict]]:
         req = self.context.get("request")
         transl: Dict = req.app.ctx.translations
 
@@ -80,14 +81,23 @@ class Exemplar(JSONLDContextDictSerializer):
             "acquisition_method_s": ("records.method_of_acquisition", None),
             "accession_number_s": ("records.accession_number", None),
             "access_restrictions_sm": ("records.access_restrictions", None),
+        }
+
+        return get_display_fields(obj, transl, field_config)
+
+    def get_notes(self, obj: SolrResult) -> Optional[list]:
+        req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
+
+        field_config: LabelConfig = {
             "general_notes_sm": ("records.general_note", None),
             "binding_notes_sm": ("records.binding_note", None),
             "bound_with_sm": ("records.bound_with", None),
             "watermark_notes_sm": ("records.watermark_description", None),
-            "provenance_notes_sm": ("records.provenance_notes", None),
+            "provenance_notes_sm": ("records.provenance_notes", None)
         }
 
-        return get_display_fields(obj, transl, field_config)
+        return get_display_fields(obj, transl, field_config=field_config)
 
     def get_held_by(self, obj: Dict) -> Dict:
         req = self.context.get('request')
