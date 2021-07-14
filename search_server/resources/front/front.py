@@ -49,9 +49,9 @@ class Front(JSONLDContextDictSerializer):
         zipped_list = zip(v_iter, v_iter)
 
         field_config: LabelConfig = {
-            "source": ("records.source", None),  # TODO: "Sources" once added to translations
+            "source": ("records.sources", None),
             "institution": ("records.institutions", None),
-            "person": ("records.person", None),  # TODO: "People" once added to translations
+            "person": ("records.people", None),
             "incipit": ("records.incipits", None),
         }
 
