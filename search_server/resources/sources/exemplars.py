@@ -10,6 +10,7 @@ from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.shared.external_link import ExternalResourcesSection
+from search_server.resources.shared.relationship import RelationshipsSection
 
 
 class ExemplarsSection(JSONLDContextDictSerializer):
@@ -31,8 +32,11 @@ class ExemplarsSection(JSONLDContextDictSerializer):
                     "type:holding"]
 
         sort: str = "siglum_s asc, shelfmark_ans asc"
-        results: Results = SolrConnection.search({"params": {"q": "*:*", "fq": fq, "sort": sort}},
-                                                 cursor=True)
+        results: Results = SolrConnection.search({
+                "query": "*:*",
+                "filter": fq,
+                "sort": sort
+        }, cursor=True)
 
         if results.hits == 0:
             return None
@@ -58,6 +62,7 @@ class Exemplar(JSONLDContextDictSerializer):
     external_resources = serpy.MethodField(
         label="externalResources"
     )
+    relationships = serpy.MethodField()
 
     def get_sid(self, obj: Dict) -> str:
         req = self.context.get('request')
@@ -117,6 +122,13 @@ class Exemplar(JSONLDContextDictSerializer):
                 "none": [f"{institution_name}"]
             },
         }
+
+    def get_relationships(self, obj: SolrResult) -> Optional[Dict]:
+        if {'related_people_json', 'related_places_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
+            return None
+
+        req = self.context.get("request")
+        return RelationshipsSection(obj, context={"request": req}).data
 
     def get_external_resources(self, obj: SolrResult) -> Optional[Dict]:
         if 'external_resources_json' not in obj:
