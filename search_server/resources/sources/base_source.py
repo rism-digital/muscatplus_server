@@ -45,7 +45,7 @@ class BaseSource(JSONLDContextDictSerializer):
     def get_label(self, obj: SolrResult) -> Dict:
         title: str = obj.get("main_title_s", "[No title]")
         #  TODO: Translate source types
-        source_types: Optional[List] = obj.get("source_type_sm")
+        source_types: Optional[List] = obj.get("material_group_types_sm")
         shelfmark: Optional[str] = obj.get("shelfmark_s")
         siglum: Optional[str] = obj.get("siglum_s")
         num_holdings: Optional[int] = obj.get("num_holdings_i")
@@ -98,7 +98,7 @@ class BaseSource(JSONLDContextDictSerializer):
 
         field_config: LabelConfig = {
             "creator_name_s": ("records.composer_author", None),
-            "source_type_sm": ("records.source_type", None),
+            "material_group_types_sm": ("records.type", None),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)

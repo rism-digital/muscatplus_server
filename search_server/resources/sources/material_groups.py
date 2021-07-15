@@ -53,7 +53,7 @@ class MaterialGroup(JSONLDContextDictSerializer):
         transl: Dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "source_type": ("records.type", None),
+            "material_group_types": ("records.type", None),
             "publication_place": ("records.place_publication", None),
             "publisher_copyist": ("records.publisher_copyist", None),
             "date_statements": ("records.date", None),

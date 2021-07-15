@@ -117,7 +117,7 @@ class SourceSearchResult(ContextDictSerializer):
     def get_label(self, obj: Dict) -> Dict:
         title: str = obj.get("main_title_s", "[No title]")
         #  TODO: Translate source types
-        source_types: Optional[List] = obj.get("source_type_sm")
+        source_types: Optional[List] = obj.get("material_group_types_sm")
         shelfmark: Optional[str] = obj.get("shelfmark_s")
         siglum: Optional[str] = obj.get("siglum_s")
         num_holdings: Optional[int] = obj.get("num_holdings_i")

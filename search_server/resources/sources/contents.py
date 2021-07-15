@@ -45,7 +45,7 @@ class ContentsSection(JSONLDContextDictSerializer):
         transl: Dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "source_type_sm": ("records.source_type", None),
+            "material_group_types_sm": ("records.type", None),
             "source_title_s": ("records.title_on_source", None),
             "variant_title_s": ("records.variant_source_title", None),
             "standard_titles_json": ("records.standardized_title", title_json_value_translator),
