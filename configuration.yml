@@ -158,8 +158,6 @@ search:
       field: "material_group_types_sm"
       default_sort: "count"
 
-
-
   # Configure the filters to show when a specific type of search is being performed.
   filters:
     sources:
