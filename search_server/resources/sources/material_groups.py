@@ -41,6 +41,7 @@ class MaterialGroup(JSONLDContextDictSerializer):
         value="rism:MaterialGroup"
     )
     summary = serpy.MethodField()
+    notes = serpy.MethodField()
     relationships = serpy.MethodField()
 
     def get_label(self, obj: Dict) -> Dict:
@@ -67,6 +68,15 @@ class MaterialGroup(JSONLDContextDictSerializer):
             "book_formats": ("records.book_format", None),
             "plate_numbers": ("records.plate_number", None),
             "publisher_numbers": ("records.publisher_number", None),
+        }
+
+        return get_display_fields(obj, transl, field_config=field_config)
+
+    def get_notes(self, obj: Dict) -> Optional[list]:
+        req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
+
+        field_config: LabelConfig = {
             "general_notes": ("records.general_note", None),
             "binding_notes": ("records.binding_note", None),
             "watermark_notes": ("records.watermark_description", None),
