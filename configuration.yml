@@ -62,6 +62,10 @@ search:
     #  Select facets also have a facet sort ('fs') parameter that can control how the facet values are sorted. This
     #  is either 'count' (count desc, most to least) or 'alpha' (alphabetical asc, A-Z).
     #
+    #  Select facets can take a 'values' dictionary to provide translations of the values. This
+    #  is in the form of 'solr_value: "translation.key"'. If a values field is not provided, then
+    #  the facet will display the values as indexed in Solr.
+    #
     DATE_RANGE: &DATE_RANGE
       label: "records.dates"
       alias: "date-range"
@@ -119,8 +123,12 @@ search:
       label: "records.source_type"
       alias: "source-type"
       type: "select"
-      field: "source_type_sm"
+      field: "source_type_s"
       default_sort: "count"
+      values:
+        manuscript: "records.manuscript"
+        printed: "records.printed"
+        composite: "records.composite"
     INSTIUTION_CITY: &INSTITUTION_CITY
       label: "records.city"
       alias: "city"
@@ -133,6 +141,23 @@ search:
       type: "select"
       field: "holding_institutions_sm"
       default_sort: "count"
+    CONTENT_TYPES: &CONTENT_TYPES
+      label: "Content types"
+      alias: "content-types"
+      type: "select"
+      field: "content_types_sm"
+      default_sort: "count"
+      values:
+        musical_source: "records.musical_source"
+        libretto: "records.libretto"
+        treatise: "records.treatise"
+    MATERIAL_GROUP_TYPES: &MATERIAL_GROUP_TYPES
+      label: "Material group types"
+      alias: "material-group-types"
+      type: "select"
+      field: "material_group_types_sm"
+      default_sort: "count"
+
 
 
   # Configure the filters to show when a specific type of search is being performed.
@@ -145,6 +170,8 @@ search:
       - *DATE_RANGE
       - *NUM_HOLDINGS
       - *SOURCE_TYPE
+      - *CONTENT_TYPES
+      - *MATERIAL_GROUP_TYPES
       - *SHOW_SOURCE_INCIPITS
       - *SHOW_SOURCE_ARRANGEMENT
       - *SOURCE_HOLDING_INSTITUTION

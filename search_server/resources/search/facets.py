@@ -4,11 +4,11 @@ import urllib.parse
 from re import Pattern
 from typing import Optional, List, Dict
 
-from search_server.helpers.search_request import (
-    filters_for_mode, filter_type_map, filter_label_map,
-)
-
 from small_asc.client import Results
+
+from search_server.helpers.search_request import (
+    filters_for_mode, alias_config_map,
+)
 
 log = logging.getLogger(__name__)
 RANGE_PARSING_REGEX: Pattern = re.compile(r'\[(?P<start>-?\d{,4})\s?TO\s?(?P<end>-?\d{,4})\]')
@@ -24,8 +24,7 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
 
     current_mode: str = req.args.get("mode", cfg["search"]["default_mode"])
     filters = filters_for_mode(cfg, current_mode)
-    facet_type_map: Dict = filter_type_map(filters)
-    facet_label_map: Dict = filter_label_map(filters)
+    facet_config_map: Dict = alias_config_map(filters)
 
     facets: dict = {}
 
@@ -38,13 +37,21 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
         # Uses set logic to check whether the keys in the result
         # are equal to just the set of 'count'. This indicates that
         # there is not enough information coming from solr to construct
-        # a facet response.
+        # a facet response. This happens, for example, when Solr
+        # does not respond with a value for the facet because all
+        # values have been filtered out.
         if res.keys() == {"count"}:
             continue
 
-        facet_type = facet_type_map[alias]
-        translation_key: str = facet_label_map[alias]
+        facet_type: str = facet_config_map[alias]['type']
+
+        # Translate the label of the facet. If we don't find a translation
+        # available, simply wrap the supplied label up in a language
+        # map. This lets us supply a label for a facet (in english) that doesn't
+        # yet have a translation available.
+        translation_key: str = facet_config_map[alias]['label']
         translation: Optional[dict] = transl.get(translation_key)
+
         label: dict
         if translation:
             label = translation
@@ -65,7 +72,8 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
             if 'buckets' not in res:
                 continue
 
-            cfg.update(_create_select_facet(res))
+            value_translations: dict = facet_config_map[alias].get("values", {})
+            cfg.update(_create_select_facet(res, value_translations, transl))
 
         facets[alias] = cfg
 
@@ -132,20 +140,32 @@ def _create_toggle_facet(res) -> Dict:
     return toggle_fields
 
 
-def _create_select_facet(res) -> Dict:
+def _create_select_facet(res: dict, translations: dict, all_translations: dict) -> Dict:
     value_buckets = res["buckets"]
 
     items: List = []
     for bucket in value_buckets:
+        solr_value = bucket['val']
         value: str
-        if isinstance(bucket['val'], bool):
-            value = str(bucket['val']).lower()
+
+        if isinstance(solr_value, bool):
+            value = str(solr_value).lower()
         else:
-            value = urllib.parse.quote_plus(str(bucket['val']))
+            value = urllib.parse.quote_plus(str(solr_value))
+
+        label: dict
+        default_label: dict = {"none": [str(solr_value)]}
+
+        if solr_value in translations:
+            # Get the entry for 'solr_value' from the translations
+            # dictionary; if it doesn't exist, return the default label.
+            label = all_translations.get(solr_value, default_label)
+        else:
+            label = default_label
 
         items.append({
             "value": value,
-            "label": {"none": [str(bucket["val"])]},
+            "label": label,
             "count": bucket['count']
         })
 
