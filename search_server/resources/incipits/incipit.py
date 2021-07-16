@@ -35,7 +35,7 @@ vrv_tk.setOptions(ujson.dumps({
     "pageMarginLeft": 0,
     "pageMarginRight": 0,
     # "adjustPageWidth": "true",
-    "pageWidth": 1200,
+    "pageWidth": 2200,
     "spacingStaff": 1,
     "scale": 40,
     "adjustPageHeight": "true",
