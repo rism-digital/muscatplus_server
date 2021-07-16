@@ -174,10 +174,10 @@ def _create_select_facet(res: dict, translations: dict, all_translations: dict) 
         "behaviours": {
             "label": {"none": ["Behaviour"]},  # TODO: Translate these fields!
             "items": [{
-                    "label": {"none": ["Intersection"]},
+                    "label": {"none": ["And"]},
                     "value": "intersection"
                 }, {
-                    "label": {"none": ["Union"]},
+                    "label": {"none": ["Or"]},
                     "value": "union"
             }]
         }
