@@ -1,7 +1,10 @@
+import difflib
 import logging
 import re
 from typing import Dict, Optional, List
 
+import ujson
+import verovio
 from small_asc.client import Results
 import serpy
 
@@ -13,6 +16,7 @@ from search_server.helpers.identifiers import (
 )
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
+from search_server.helpers.vrv import RenderedPAE, render_pae
 from search_server.resources.search.base_search import BaseSearchResults
 
 
@@ -83,7 +87,8 @@ class SearchResults(BaseSearchResults):
             elif d['type'] == "liturgical_festival":
                 results.append(LiturgicalFestivalSearchResult(d, context={"request": req}).data)
             elif d['type'] == "incipit":
-                results.append(IncipitSearchResult(d, context={"request": req}).data)
+                results.append(IncipitSearchResult(d, context={"request": req,
+                                                               "query_pae_features": self.context.get("query_pae_features")}).data)
             else:
                 return None
 
@@ -378,6 +383,7 @@ class IncipitSearchResult(ContextDictSerializer):
     part_of = serpy.MethodField(
         label="partOf"
     )
+    flags = serpy.MethodField()
 
     def get_srid(self, obj: Dict) -> str:
         req = self.context.get('request')
@@ -420,6 +426,32 @@ class IncipitSearchResult(ContextDictSerializer):
             }
         }
 
+    def get_flags(self, obj: SolrResult) -> Optional[dict]:
+        if not obj.get("music_incipit_s"):
+            log.debug("No music incipit")
+            return None
+
+        req = self.context.get("request")
+
+        # Grab the PAE features we computed from the incoming query request. These will
+        # be used to perform the highlighting
+        query_pae_features: Optional[dict] = self.context.get("query_pae_features")
+        if not query_pae_features:
+            log.debug("No PAE features")
+            return None
+
+        svg, midi = _render_with_highlighting(req, obj, query_pae_features)
+
+        return {
+            "highlightedResult": [{
+                    "format": "image/svg+xml",
+                    "data": svg
+                }, {
+                    "format": "audio/midi",
+                    "data": midi
+                }]
+        }
+
 
 def _format_institution_label(obj: Dict) -> str:
     city = siglum = ""
@@ -458,3 +490,51 @@ def _format_incipit_label(obj: Dict) -> str:
 
     return f"{source_title}: {work_num}{title}"
 
+
+def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional[dict]) -> Optional[tuple]:
+    pae_code: Optional[str] = obj.get("original_pae_sni")
+    if not pae_code:
+        log.debug("no PAE code")
+        return None
+
+    rendered_pae: Optional[RenderedPAE] = render_pae(pae_code)
+
+    if not rendered_pae:
+        log.error("Could not load music incipit for %s", obj.get("id"))
+        return None
+
+    svg, b64midi = rendered_pae
+
+    # For now, we only highlight interval successions.
+    document_interval_features: list = [str(s) for s in obj["intervals_im"]]
+    document_interval_ids: list = obj["interval_ids_json"]
+
+    query_interval_feature: list = query_pae_features["intervals"]
+
+    log.debug("Document features: %s", document_interval_features)
+    log.debug("Query features: %s", query_interval_feature)
+
+    smtch = difflib.SequenceMatcher(a=query_interval_feature, b=document_interval_features)
+    all_blks: list = smtch.get_matching_blocks()
+
+    # The last block is always a 'dummy' so we skip this.
+    used_blks: list = all_blks[:-1]
+
+    ids_to_highlight = []
+    for blk in used_blks:
+        seq = document_interval_ids[blk.b:blk.b + blk.size]
+        ids_to_highlight.extend(seq)
+
+    log.debug("IDs to highlight: %s", ids_to_highlight)
+    highlight_stmts = []
+    for noteids in ids_to_highlight:
+        highlight_stmts.append(
+            f"g[data-id=\"{noteids[0]}\"] {{ fill: red; }} g[data-id=\"{noteids[1]}\"] {{ fill: red; }}"
+        )
+    highlight_css_stmt = " ".join(highlight_stmts)
+
+    # Use Regex to insert the highlighting. The other option is to read the SVG in as XML and
+    # manipulate the DOM, which would be more correct, but probably slower for such a simple replacement.
+    highlighted_svg: str = re.sub(r'<style type="text\/css">(?P<existing_style>.*)</style>', rf'<style type="text/css">\1 {highlight_css_stmt}</style>', svg)
+
+    return highlighted_svg, b64midi
