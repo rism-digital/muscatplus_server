@@ -28,6 +28,8 @@ async def handle_search_request(req) -> response.HTTPResponse:
         log.exception(error_message)
         return response.text(f"Search error", status=500)
 
-    search_results: Dict = SearchResults(solr_res, context={"request": req}).data
+    search_results: Dict = SearchResults(solr_res,
+                                         context={"request": req,
+                                                  "query_pae_features": request_compiler.pae_features}).data
 
     return response.json(search_results)

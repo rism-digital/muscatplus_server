@@ -3,8 +3,6 @@ import re
 from typing import Dict, Optional, List
 
 import serpy
-import ujson
-import verovio
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.display_fields import (
@@ -19,31 +17,9 @@ from search_server.helpers.identifiers import (
 )
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
+from search_server.helpers.vrv import render_pae, RenderedPAE
 
 log = logging.getLogger(__name__)
-
-# Disable chatty logging for Verovio.
-verovio.enableLog(False)
-vrv_tk = verovio.toolkit()
-vrv_tk.setInputFrom(verovio.PAE)
-vrv_tk.setOptions(ujson.dumps({
-    "footer": 'none',
-    "header": 'none',
-    "breaks": 'auto',
-    "pageMarginTop": 0,
-    "pageMarginBottom": 25,  # Artificially inflate the bottom margin until rism-digital/verovio#1960 is fixed.
-    "pageMarginLeft": 0,
-    "pageMarginRight": 0,
-    # "adjustPageWidth": "true",
-    "pageWidth": 2200,
-    "spacingStaff": 1,
-    "scale": 40,
-    "adjustPageHeight": "true",
-    "svgHtml5": "true",
-    "svgFormatRaw": "true",
-    "svgRemoveXlink": "true",
-    "svgViewBox": "true"
-}))
 
 
 def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
@@ -146,23 +122,18 @@ class Incipit(JSONLDContextDictSerializer):
         return get_display_fields(obj, transl, field_config)
 
     def get_rendered(self, obj: SolrResult) -> Optional[List]:
-        if not obj.get("music_incipit_s"):
-            return None
-
         # Use the pre-cached version.
         pae_code: Optional[str] = obj.get("original_pae_sni")
         if not pae_code:
             return None
 
-        load_status: bool = vrv_tk.loadData(pae_code)
+        rendered_pae: Optional[RenderedPAE] = render_pae(pae_code)
 
-        if not load_status:
+        if not rendered_pae:
             log.error("Could not load music incipit for %s", obj.get("id"))
             return None
 
-        svg: str = vrv_tk.renderToSVG()
-        mid: str = vrv_tk.renderToMIDI()
-        b64midi = f"data:audio/midi;base64,{mid}"
+        svg, b64midi = rendered_pae
 
         return [{
             "format": "image/svg+xml",

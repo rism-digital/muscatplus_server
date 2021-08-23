@@ -24,12 +24,13 @@ search:
     institutions:
       label: "records.institutions"
       record_type: "institution"
-#    festivals:
-#      label: "records.liturgical_festivals"
-#      record_type: "liturgical_festival"
-#    incipits:
-#      label: "records.incipits"
-#      record_type: "incipit"
+    incipits:
+      label: "records.incipits"
+      record_type: "incipit"
+    #    festivals:
+    #      label: "records.liturgical_festivals"
+    #      record_type: "liturgical_festival"
+
   facet_definitions:
     # Allowed values for 'type' are:
     #  - range: Creates a range facet over a set of scalar values (e.g., years).
