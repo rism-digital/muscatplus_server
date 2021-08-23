@@ -4,10 +4,12 @@ from collections import defaultdict
 from typing import Dict, Optional, List
 
 from search_server.exceptions import InvalidQueryException, PaginationParseException
+from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import parse_page_number, parse_row_number
 
 log = logging.getLogger(__name__)
 
+DEFAULT_QUERY_STRING: str = "*:*"
 # Some of the facets and filters need to have a solr `{!tag}` prepended. We'll
 # define them up-front.
 RANGE_FILTER_TAG: str = "RANGE_FILTER"
@@ -26,8 +28,10 @@ def filters_for_mode(cfg: Dict, mode: str) -> List:
         are configured.
     """
     filter_configuration: Dict = cfg["search"]["filters"]
-    filts: List = filter_configuration.get(mode, [])
-    return filts
+    filts: Optional[list] = filter_configuration.get(mode, [])
+    # If there is no value defined but the key exists, the value will be None. The `.get()` doesn't handle this
+    # gracefully, so we still have to check to see if it's None and ensure we really do return a list.
+    return filts if filts else []
 
 
 def filter_type_map(filters_config: List) -> Dict:
@@ -98,6 +102,24 @@ class SearchRequest:
 
     In other words: Values from FACETS are then used by the client to compose requests for FILTERS.
 
+    For the input API, the following query parameters are recognized:
+
+     - `q`: The main query parameter. Required, Non-repeatable! "*:*" if not explicitly passed in.
+     - `fq`: The main filter queries. Repeatable. Takes parameters like "name:Smith, John" and uses them as facet queries.
+     - `fb`: The filter behaviours. Repeatable. Adjusts the named facet behaviour from 'intersection' and 'union'. For example,
+             if we have `fq=name:Smith, John&fq=name:Smythe, Jane`, then we might also have `&fb=name:union` to adjust the
+             behaviour of the facet. Acceptable values are `intersection` (default) and `union`.
+     - `fs`: Similar in form to `fb`, but adjusts the sorting of the facet list
+     - `mode`: Sets the mode of the search to return records of only that type.
+     - `page`: Controls the return of the result page. Pages can be of multiple size, but this should always skip to the
+               correct page.
+     - `rows`: Number of results per page.
+     - `sort`: Controls the sorting of returned results
+
+    Some parameters are specific to only incipit searches
+     - `im`: Incipit search mode. Controls the type of mode used for matching incipits. Currently only supports
+             a value of 'intervals' (also the default)
+
     """
     default_sort = "id asc"
 
@@ -112,15 +134,24 @@ class SearchRequest:
         # Set up some public properties
         self.filters: List = []
         self.sorts: List = []
+        self.fields: str = ""
+        # Initialize a dictionary for caching the query PAE features so that we only have to do this once
+        # Is null if this request is not for incipits, or if PAE features could not be extracted from an incipit.
+        self.pae_features: Optional[dict] = None
 
         # If there is no q parameter it will return all results
-        self._requested_query: str = req.args.get("q", "*:*")
+        self._requested_query: str = req.args.get("q", DEFAULT_QUERY_STRING)
         self._requested_filters: List = req.args.getlist("fq", [])
         self._requested_facet_behaviours: List = req.args.getlist("fb", [])
         self._requested_facet_sorts: List = req.args.getlist("fs", [])
         self._requested_mode: str = req.args.get("mode", self._app_config["search"]["default_mode"])
         self._page: Optional[str] = req.args.get("page", None)
         self._return_rows: Optional[str] = req.args.get("rows", None)
+        self._result_sorting: Optional[str] = req.args.get("sort", None)
+
+        # parameters that are only valid with incipit searches, and are otherwise ignored.
+        # It is always initialized with the default value.
+        self._incipit_mode: str = req.args.get("im", "intervals")
 
         # Configure the facets to show for the selected mode.
         self._facets_for_mode: List = filters_for_mode(self._app_config, self._requested_mode)
@@ -295,6 +326,47 @@ class SearchRequest:
         :return: A dictionary containing keys and values that is suitable for
             use as a Solr query.
         """
+        if self._requested_mode == "incipits" and self._requested_query != DEFAULT_QUERY_STRING:
+            # process intervals and modify the Solr search request accordingly.
+            #
+            # 1. Pass the incoming query to Verovio to render to PAE features
+            # 2. Somehow check what sort of query requested (e.g., interval-only search) using the `im` param
+            # 3. Adjust the query being passed to Solr to accommodate this query. This will probably encompass
+            #   3a. Interpreting the incoming "q" parameter as one (or more) Solr "filter" parameters
+            #   3b. Figuring out the statements to be used for the Solr 'sort' parameter
+            #   3c. Doing all this while also supporting 'traditional' facet searches.
+
+            # If we have an incipit mode, assume the incoming request is a PAE string. Use the defaults for
+            # all the other parameters, unless they've been overridden in the query string.
+            self.pae_features = get_pae_features(self._req, self._requested_query)
+
+            # If verovio returns empty features, then something went wrong. Assume the problem is with the input
+            # query string, and flag an error to the user.
+            if len(self.pae_features.get("intervals")) == 0:
+                raise InvalidQueryException("The requested mode was 'incipits', but the query could not be interpreted as music notation.")
+
+            intervals: Optional[list] = self.pae_features.get("intervals")
+            pitches: Optional[list] = self.pae_features.get("pitches")
+
+            # This will be refactored to take into account the other accepted values for the interval search modes,
+            # once we know what they are.
+            incipit_query: str = " ".join((str(s) for s in intervals))
+            self.filters.insert(0, f'{{!min_hash field="intervals_mh" sim="0.9"}}:\"{incipit_query}\"')
+
+            # Create the sort query
+            first_half = []
+            second_half = []
+            for intn, intv in enumerate(intervals[:12], 1):
+                first_half.append(f"interval{intn}_i")
+                second_half.append(f"{intv}")
+
+            first_half_q = ", ".join(first_half)
+            second_half_q = ", ".join(second_half)
+
+            self.sorts.insert(0, f"sqedist({first_half_q}, {second_half_q}) asc, id desc")
+            # Once the interval query has been moved to a `filter` query, reset the query string to the default query.
+            self._requested_query = DEFAULT_QUERY_STRING
+
         mode_filter: str = self._modes_to_filter()
         # The tag allows us to reference this in the facets so that we can return all the types of results.
         # See https://solr.apache.org/guide/8_8/faceting.html#tagging-and-excluding-filters
@@ -313,7 +385,7 @@ class SearchRequest:
         #  start: page:3 = ((3 - 1) * 20) = start:40
         start_row: int = 0 if page_num == 1 else ((page_num - 1) * return_rows)
 
-        return {
+        solr_query = {
             "query": self._requested_query,
             "filter": self.filters,
             "offset": start_row,
@@ -321,6 +393,8 @@ class SearchRequest:
             "sort": self._compile_sorts(),
             "facet": self._get_facets()
         }
+
+        return solr_query
 
 
 def _create_range_facet(facet_cfg: Dict) -> Dict:
