@@ -512,11 +512,6 @@ def _render_without_highlighting(req, obj: SolrResult) -> Optional[tuple]:
     return rendered_incipit
 
 
-HIGHLIGHT_COLORS = [
-    "red", "blue", "orange"
-]
-
-
 def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional[dict]) -> Optional[tuple]:
     if not query_pae_features:
         log.error("Could not highlight a search result without query features!")
@@ -547,13 +542,10 @@ def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional
 
     log.debug("IDs to highlight: %s", ids_to_highlight)
 
-    highlight_stmts = [
-        ".definition-scale { color: grey; fill: grey; }"
-    ]
-    for coloridx, noteids in enumerate(ids_to_highlight, 1):
-        fillcolor: str = HIGHLIGHT_COLORS[coloridx % 3]
+    highlight_stmts = []
+    for noteids in ids_to_highlight:
         highlight_stmts.append(
-            f"g[data-id=\"{noteids[0]}\"] {{ fill: red; }} g[data-id=\"{noteids[1]}\"] {{ fill: {fillcolor}; }}"
+            f"g[data-id=\"{noteids[0]}\"] {{ fill: red; }} g[data-id=\"{noteids[1]}\"] {{ fill: red; }}"
         )
     highlight_css_stmt = " ".join(highlight_stmts)
 
