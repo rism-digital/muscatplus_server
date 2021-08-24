@@ -15,7 +15,7 @@ sanic = "^21.3.4"
 PyLD = "^2.0.3"
 rdflib = "^5.0.0"
 small-asc = {git = "https://github.com/rism-digital/small-asc.git", rev = "main"}
-verovio = {git = "https://github.com/rism-digital/verovio.git", rev = "develop-features"}
+verovio = {version = "^3.5.1", allow-prereleases = true}
 
 [tool.poetry.dev-dependencies]
 ipython = "^7.19.0"

@@ -767,18 +767,16 @@ test = ["aiohttp", "flake8 (>=3.9.2,<3.10.0)", "psutil", "pycodestyle (>=2.7.0,<
 
 [[package]]
 name = "verovio"
-version = "3.6.0.dev104"
+version = "3.6.0.dev208"
 description = "A library and toolkit for engraving MEI music notation into SVG"
 category = "main"
 optional = false
 python-versions = ">=3.5"
-develop = false
 
 [package.source]
-type = "git"
-url = "https://github.com/rism-digital/verovio.git"
-reference = "develop-features"
-resolved_reference = "9281e5a63219e06af042cae9d6638ed4d50a6e1a"
+type = "legacy"
+url = "https://test.pypi.org/simple"
+reference = "testpypi"
 
 [[package]]
 name = "wcwidth"
@@ -811,7 +809,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "80930f4a8d288677709b836c39052df6f46b6c8abb188185f858f9e1242ac01c"
+content-hash = "3d85be99ed188034fcbc68df74b61885f8897dff0ce976639995e983dacb2c4a"
 
 [metadata.files]
 aiodns = [
@@ -1430,7 +1428,25 @@ uvloop = [
     {file = "uvloop-0.16.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1e5f2e2ff51aefe6c19ee98af12b4ae61f5be456cd24396953244a30880ad861"},
     {file = "uvloop-0.16.0.tar.gz", hash = "sha256:f74bc20c7b67d1c27c72601c78cf95be99d5c2cdd4514502b4f3eb0933ff1228"},
 ]
-verovio = []
+verovio = [
+    {file = "verovio-3.6.0.dev208-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:38e344e6b2445b3513fcc6a6257ad96a7756207060167e040b27711f111362e6"},
+    {file = "verovio-3.6.0.dev208-cp36-cp36m-manylinux2014_x86_64.whl", hash = "sha256:e9e7f21241b4ae51fce1a182dda72b8f33542d26ac0cb68cd266810de3762d15"},
+    {file = "verovio-3.6.0.dev208-cp36-cp36m-win32.whl", hash = "sha256:526a1f15267f8744f73dba168851a8b846201df355ce3a6a5d50a5244124acb5"},
+    {file = "verovio-3.6.0.dev208-cp36-cp36m-win_amd64.whl", hash = "sha256:885ad21504c48ab754e0e3cceb4fe9ca4ee5d416e7ab11a855646191a64a2f9e"},
+    {file = "verovio-3.6.0.dev208-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:76cfbf2931ddad8d8a8f01d43c1aed3d7f670bf5b88904e9332bdc76f868b162"},
+    {file = "verovio-3.6.0.dev208-cp37-cp37m-manylinux2014_x86_64.whl", hash = "sha256:8c8c9e0c0dab6be2ad0c2bc046c9eca5da90d6cbfea85a33ae7e9f99e2fb65af"},
+    {file = "verovio-3.6.0.dev208-cp37-cp37m-win32.whl", hash = "sha256:bd4b5d897352d7e417c7fa0c4a058b1965d4c1695b3af73d577783adedbf28e7"},
+    {file = "verovio-3.6.0.dev208-cp37-cp37m-win_amd64.whl", hash = "sha256:dd0ad70d23b52be28c7e2bb9f6e693703ffe6b592fcee14dafa57e63ad7bc3ef"},
+    {file = "verovio-3.6.0.dev208-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:f6f61b9db67fed38fad4ddc95093ed42874e05539c085c15610b8d3412488b82"},
+    {file = "verovio-3.6.0.dev208-cp38-cp38-manylinux2014_x86_64.whl", hash = "sha256:603c429fc054a27745b1992dc55209d975a5c7896f8776fbd846f80c41a97c1e"},
+    {file = "verovio-3.6.0.dev208-cp38-cp38-win32.whl", hash = "sha256:591a8f925cedbfb158d59c78f6664c3d694a2143449d3b3f5e21e4780c2eb283"},
+    {file = "verovio-3.6.0.dev208-cp38-cp38-win_amd64.whl", hash = "sha256:73d5d6421b11ffbed8dd8a972f747ce75d93658a8238a778fcfbcc12690ac0cf"},
+    {file = "verovio-3.6.0.dev208-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:b213b4ea62ef9cb2ed104a7d66db7da816c32dd58e6fc0aed419833b16a1605d"},
+    {file = "verovio-3.6.0.dev208-cp39-cp39-manylinux2014_x86_64.whl", hash = "sha256:b151dfabeb5c4b5771f08270b35f5dcd7cf6f1cf8a04a1d397685c90a965e149"},
+    {file = "verovio-3.6.0.dev208-cp39-cp39-win32.whl", hash = "sha256:5e8495f4e51d50f22569d77733b56c914ae16bcbe9855790cc228920488d08a1"},
+    {file = "verovio-3.6.0.dev208-cp39-cp39-win_amd64.whl", hash = "sha256:33213ef1a579b67eeab118ad7da2a4dab961a7d5ec970fdf86226b95a9282c5d"},
+    {file = "verovio-3.6.0.dev208.tar.gz", hash = "sha256:97bcdb4021fac2086c9b78f1eeeb2b8902f0025524a20ec3843bd4af7d073fef"},
+]
 wcwidth = [
     {file = "wcwidth-0.2.5-py2.py3-none-any.whl", hash = "sha256:beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784"},
     {file = "wcwidth-0.2.5.tar.gz", hash = "sha256:c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83"},
