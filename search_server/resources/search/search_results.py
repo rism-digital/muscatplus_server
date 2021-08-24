@@ -1,15 +1,10 @@
 import difflib
-import hashlib
 import logging
 import re
-import struct
 from typing import Dict, Optional, List
 
-import ujson
-import verovio
-import zlib
-from small_asc.client import Results
 import serpy
+from small_asc.client import Results
 
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
@@ -19,9 +14,8 @@ from search_server.helpers.identifiers import (
 )
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
-from search_server.helpers.vrv import RenderedPAE, render_pae
+from search_server.helpers.vrv import render_pae
 from search_server.resources.search.base_search import BaseSearchResults
-
 
 log = logging.getLogger(__name__)
 
@@ -440,10 +434,9 @@ class IncipitSearchResult(ContextDictSerializer):
         # be used to perform the highlighting
         query_pae_features: Optional[dict] = self.context.get("query_pae_features")
         if not query_pae_features:
-            log.debug("No PAE features")
-            return None
-
-        svg, midi = _render_with_highlighting(req, obj, query_pae_features)
+            svg, midi = _render_without_highlighting(req, obj)
+        else:
+            svg, midi = _render_with_highlighting(req, obj, query_pae_features)
 
         return {
             "highlightedResult": [{
@@ -494,19 +487,42 @@ def _format_incipit_label(obj: Dict) -> str:
     return f"{source_title}: {work_num}{title}"
 
 
-def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional[dict]) -> Optional[tuple]:
+def _render_incipit_pae(obj: SolrResult) -> Optional[tuple]:
     pae_code: Optional[str] = obj.get("original_pae_sni")
+
     if not pae_code:
         log.debug("no PAE code")
         return None
 
-    rendered_pae: Optional[RenderedPAE] = render_pae(pae_code, use_crc=True)
+    rendered_pae: Optional[tuple] = render_pae(pae_code, use_crc=True)
 
     if not rendered_pae:
         log.error("Could not load music incipit for %s", obj.get("id"))
         return None
 
-    svg, b64midi = rendered_pae
+    return rendered_pae
+
+
+def _render_without_highlighting(req, obj: SolrResult) -> Optional[tuple]:
+    rendered_incipit: Optional[tuple] = _render_incipit_pae(obj)
+
+    if not rendered_incipit:
+        return None
+
+    return rendered_incipit
+
+
+HIGHLIGHT_COLORS = [
+    "red", "blue", "orange"
+]
+
+
+def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional[dict]) -> Optional[tuple]:
+    if not query_pae_features:
+        log.error("Could not highlight a search result without query features!")
+        return None
+
+    svg, b64midi = _render_incipit_pae(obj)
 
     # For now, we only highlight interval successions.
     document_interval_features: list = [str(s) for s in obj["intervals_im"]]
@@ -517,10 +533,11 @@ def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional
     log.debug("Document features: %s", document_interval_features)
     log.debug("Query features: %s", query_interval_feature)
 
+    # Run the query features and the document features through a longest contiguous matching subsequence matcher.
     smtch = difflib.SequenceMatcher(a=query_interval_feature, b=document_interval_features)
     all_blks: list = smtch.get_matching_blocks()
 
-    # The last block is always a 'dummy' so we skip this.
+    # The last block is always a 'dummy' so we throw it away.
     used_blks: list = all_blks[:-1]
 
     ids_to_highlight = []
@@ -529,10 +546,14 @@ def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional
         ids_to_highlight.extend(seq)
 
     log.debug("IDs to highlight: %s", ids_to_highlight)
-    highlight_stmts = []
-    for noteids in ids_to_highlight:
+
+    highlight_stmts = [
+        ".definition-scale { color: grey; fill: grey; }"
+    ]
+    for coloridx, noteids in enumerate(ids_to_highlight, 1):
+        fillcolor: str = HIGHLIGHT_COLORS[coloridx % 3]
         highlight_stmts.append(
-            f"g[data-id=\"{noteids[0]}\"] {{ fill: red; }} g[data-id=\"{noteids[1]}\"] {{ fill: red; }}"
+            f"g[data-id=\"{noteids[0]}\"] {{ fill: red; }} g[data-id=\"{noteids[1]}\"] {{ fill: {fillcolor}; }}"
         )
     highlight_css_stmt = " ".join(highlight_stmts)
 

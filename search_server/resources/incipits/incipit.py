@@ -17,7 +17,7 @@ from search_server.helpers.identifiers import (
 )
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
-from search_server.helpers.vrv import render_pae, RenderedPAE
+from search_server.helpers.vrv import render_pae
 
 log = logging.getLogger(__name__)
 

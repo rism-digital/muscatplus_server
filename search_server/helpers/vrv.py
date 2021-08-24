@@ -7,8 +7,6 @@ import ujson
 log = logging.getLogger(__name__)
 verovio.enableLog(False)
 
-RenderedPAE = namedtuple("RenderedPAE", ['svg', 'mid'])
-
 
 log.info("Instantiating Verovio")
 vrv_tk = verovio.toolkit()
@@ -36,7 +34,7 @@ vrv_tk.setOptions(ujson.dumps({
 }))
 
 
-def render_pae(pae: str, use_crc: bool = False) -> Optional[RenderedPAE]:
+def render_pae(pae: str, use_crc: bool = False) -> Optional[tuple]:
     """
     Renders Plaine and Easie to SVG and MIDI. Returns None if there was a problem loading the data.
 
@@ -65,7 +63,7 @@ def render_pae(pae: str, use_crc: bool = False) -> Optional[RenderedPAE]:
     # The toolkit has `paeFeatures=True` so this will output the PAE features
     b64midi = f"data:audio/midi;base64,{mid}"
 
-    return RenderedPAE(svg, b64midi)
+    return svg, b64midi
 
 
 def create_pae_from_request(req, notedata: str) -> str:
