@@ -11,7 +11,6 @@ RenderedPAE = namedtuple("RenderedPAE", ['svg', 'mid'])
 
 
 log.info("Instantiating Verovio")
-print("Instantiating Verovio")
 vrv_tk = verovio.toolkit()
 
 vrv_tk.setInputFrom(verovio.PAE)
@@ -37,14 +36,23 @@ vrv_tk.setOptions(ujson.dumps({
 }))
 
 
-def render_pae(pae: str) -> Optional[RenderedPAE]:
+def render_pae(pae: str, use_crc: bool = False) -> Optional[RenderedPAE]:
     """
     Renders Plaine and Easie to SVG and MIDI. Returns None if there was a problem loading the data.
 
+    If use_crc is True, then the IDs will be generated using a CRC32 checksum of the input data. If not,
+    then the IDs will be randomly generated.
+
     :param pae: A plaine and easie-formatted input string
+    :param use_crc: The ID seed to use for Verovio's ID generator
     :return: A named tuple containing SVG and MIDI.
     """
-    vrv_tk.resetXmlIdSeed()
+    if use_crc:
+        vrv_tk.setOptions(ujson.dumps({
+            "xmlIdChecksum": True
+        }))
+    else:
+        vrv_tk.resetXmlIdSeed(0)
 
     load_status: bool = vrv_tk.loadData(pae)
 
@@ -94,9 +102,11 @@ def get_pae_features(req, notes: str) -> dict:
         Note that if Verovio cannot parse the notation it will still return a dictionary
         with the expected keys, but the list of features will be empty.
     """
+    vrv_tk.resetXmlIdSeed(0)
     pae: str = create_pae_from_request(req, notes)
     vrv_tk.loadData(pae)
-    features: str = vrv_tk.renderToPAE()
+    features: str = vrv_tk.getDescriptiveFeatures("{}")
+
     feat_output: dict = ujson.loads(features)
 
     return feat_output
