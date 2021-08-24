@@ -1,10 +1,13 @@
 import difflib
+import hashlib
 import logging
 import re
+import struct
 from typing import Dict, Optional, List
 
 import ujson
 import verovio
+import zlib
 from small_asc.client import Results
 import serpy
 
@@ -497,7 +500,7 @@ def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional
         log.debug("no PAE code")
         return None
 
-    rendered_pae: Optional[RenderedPAE] = render_pae(pae_code)
+    rendered_pae: Optional[RenderedPAE] = render_pae(pae_code, use_crc=True)
 
     if not rendered_pae:
         log.error("Could not load music incipit for %s", obj.get("id"))
