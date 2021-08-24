@@ -50,6 +50,9 @@ def render_pae(pae: str, use_crc: bool = False) -> Optional[tuple]:
             "xmlIdChecksum": True
         }))
     else:
+        vrv_tk.setOptions(ujson.dumps({
+            "xmlIdChecksum": False
+        }))
         vrv_tk.resetXmlIdSeed(0)
 
     load_status: bool = vrv_tk.loadData(pae)
