@@ -18,15 +18,15 @@ async def handle_incipit_render(req) -> response.HTTPResponse:
 
         Returns SVG in the body of the response
     """
-    requested_notation: Optional[str] = req.args.get("n")
+    # requested_notation: str = req.args.get("n", "")
 
-    if not requested_notation:
-        return response.text(
-            "No notation input supplied",
-            status=400
-        )
-
-    pae: str = create_pae_from_request(req, requested_notation)
+    # if not requested_notation:
+    #     return response.text(
+    #         "No notation input supplied",
+    #         status=400
+    #     )
+    #
+    pae: str = create_pae_from_request(req)
 
     # Generate random IDs to avoid ID collisions on the page.
     rendered_pae: Optional[tuple] = render_pae(pae, use_crc=False)

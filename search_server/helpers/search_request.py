@@ -7,7 +7,7 @@ from search_server.exceptions import InvalidQueryException, PaginationParseExcep
 from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import parse_page_number, parse_row_number
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 DEFAULT_QUERY_STRING: str = "*:*"
 # Some of the facets and filters need to have a solr `{!tag}` prepended. We'll
@@ -326,19 +326,20 @@ class SearchRequest:
         :return: A dictionary containing keys and values that is suitable for
             use as a Solr query.
         """
-        if self._requested_mode == "incipits" and self._requested_query != DEFAULT_QUERY_STRING:
+        notedata: Optional[str] = self._req.args.get("n")
+
+        if self._requested_mode == "incipits" and notedata:
             # process intervals and modify the Solr search request accordingly.
             #
             # 1. Pass the incoming query to Verovio to render to PAE features
             # 2. Somehow check what sort of query requested (e.g., interval-only search) using the `im` param
             # 3. Adjust the query being passed to Solr to accommodate this query. This will probably encompass
-            #   3a. Interpreting the incoming "q" parameter as one (or more) Solr "filter" parameters
+            #   3a. Interpreting the incoming query parameters as one (or more) Solr "filter" parameters
             #   3b. Figuring out the statements to be used for the Solr 'sort' parameter
             #   3c. Doing all this while also supporting 'traditional' facet searches.
 
-            # If we have an incipit mode, assume the incoming request is a PAE string. Use the defaults for
-            # all the other parameters, unless they've been overridden in the query string.
-            self.pae_features = get_pae_features(self._req, self._requested_query)
+            # If we have an incipit mode, assume the incoming request is a PAE string.
+            self.pae_features = get_pae_features(self._req)
 
             # If verovio returns empty features, then something went wrong. Assume the problem is with the input
             # query string, and flag an error to the user.
@@ -363,9 +364,10 @@ class SearchRequest:
             first_half_q = ", ".join(first_half)
             second_half_q = ", ".join(second_half)
 
+            # Ask Solr to do a squared euclidean distance on the intervals for the sort, to try and approximate
+            # a relevancy calculation (that is, the distance between the intervals in the query to the distance of the
+            # intervals in any given document.
             self.sorts.insert(0, f"sqedist({first_half_q}, {second_half_q}) asc, id desc")
-            # Once the interval query has been moved to a `filter` query, reset the query string to the default query.
-            self._requested_query = DEFAULT_QUERY_STRING
 
         mode_filter: str = self._modes_to_filter()
         # The tag allows us to reference this in the facets so that we can return all the types of results.

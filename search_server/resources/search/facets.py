@@ -10,7 +10,7 @@ from search_server.helpers.search_request import (
     filters_for_mode, alias_config_map,
 )
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 RANGE_PARSING_REGEX: Pattern = re.compile(r'\[(?P<start>-?\d{,4})\s?TO\s?(?P<end>-?\d{,4})\]')
 
 
@@ -28,12 +28,24 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
 
     facets: dict = {}
 
+    # The notation search is treated slightly differently than the other facets
+    # The purpose of the facet is to activate the keyboard interface in the search UI.
+    if current_mode == "incipits" and facet_config_map.get("notation"):
+        facet_cfg: dict = {
+            "type": _get_facet_type("notation")
+        }
+        facet_cfg.update(_create_notation_facet())
+        facets["notation"] = facet_cfg
+
+    # Facets contain values that are returned from a Solr search
     for alias, res in facet_result.items():
         # Skip these sections of the facet results since
         # we handle them separately.
         if alias in ('count', 'mode'):
             continue
 
+        facet_type: str = facet_config_map[alias]['type']
+        log.debug(facet_type)
         # Uses set logic to check whether the keys in the result
         # are equal to just the set of 'count'. This indicates that
         # there is not enough information coming from solr to construct
@@ -42,8 +54,6 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
         # values have been filtered out.
         if res.keys() == {"count"}:
             continue
-
-        facet_type: str = facet_config_map[alias]['type']
 
         # Translate the label of the facet. If we don't find a translation
         # available, simply wrap the supplied label up in a language
@@ -87,8 +97,18 @@ def _get_facet_type(val) -> str:
         return "rism:ToggleFacet"
     elif val == "select":
         return "rism:SelectFacet"
+    elif val == "notation":
+        return "rism:NotationFacet"
     else:
         return "rism:Facet"
+
+
+def _create_notation_facet() -> Dict:
+    return {
+        "clef": "ic",
+        "keysig": "ik",
+        "timesig": "it"
+    }
 
 
 def _create_range_facet(alias, res, req) -> Dict:

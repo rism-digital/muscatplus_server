@@ -1,8 +1,8 @@
-from collections import namedtuple
-from typing import Optional
 import logging
-import verovio
+from typing import Optional
+
 import ujson
+import verovio
 
 log = logging.getLogger(__name__)
 verovio.enableLog(False)
@@ -16,7 +16,7 @@ vrv_tk.setOptions(ujson.dumps({
     "footer": 'none',
     "header": 'none',
     "breaks": 'auto',
-    "pageMarginTop": 0,
+    "pageMarginTop": 25,
     "pageMarginBottom": 25,  # Artificially inflate the bottom margin until rism-digital/verovio#1960 is fixed.
     "pageMarginLeft": 0,
     "pageMarginRight": 0,
@@ -69,7 +69,7 @@ def render_pae(pae: str, use_crc: bool = False) -> Optional[tuple]:
     return svg, b64midi
 
 
-def create_pae_from_request(req, notedata: str) -> str:
+def create_pae_from_request(req) -> str:
     """
     Takes an incoming incipit request and extracts the parameters (if present)
     for adjusting the PAE output.
@@ -79,6 +79,7 @@ def create_pae_from_request(req, notedata: str) -> str:
 
     :return: A string containing PAE for handing off to Verovio to render.
     """
+    notedata: str = req.args.get("n", "")
     clef: str = req.args.get("ic", "G-2")
     timesig: str = req.args.get("it", "4/4")
     keysig: str = req.args.get("ik", "")
@@ -95,7 +96,7 @@ def create_pae_from_request(req, notedata: str) -> str:
     return "\n".join(pae_elements)
 
 
-def get_pae_features(req, notes: str) -> dict:
+def get_pae_features(req) -> dict:
     """
         Parses an incoming search request containing some note data and some
         optional parameters, and returns a dictionary containing the PAE features.
@@ -104,7 +105,7 @@ def get_pae_features(req, notes: str) -> dict:
         with the expected keys, but the list of features will be empty.
     """
     vrv_tk.resetXmlIdSeed(0)
-    pae: str = create_pae_from_request(req, notes)
+    pae: str = create_pae_from_request(req)
     vrv_tk.loadData(pae)
     features: str = vrv_tk.getDescriptiveFeatures("{}")
 

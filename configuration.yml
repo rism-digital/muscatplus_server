@@ -38,6 +38,7 @@ search:
     #  - toggle: Creates a simple on / off facet with a true or false value. Used only on boolean fields.
     #  - select: Creates a facet of values. For these facets, a 'behaviour' query parameter ('fb') sets
     #       the behaviour of 'intersection' or 'union' at query-time More below.
+    #  - notation: Creates a notation search facet, which will be rendered as a keyboard in the user interface
     #
     # Toggle facets have a field, 'active_value', which gives the value of the field when the toggle is switched 'on'.
     #  This is not always intuitive -- if we want to filter out records who have a 'true' value for a given field,
@@ -164,6 +165,11 @@ search:
       type: "select"
       field: "subjects_sm"
       default_sort: "count"
+    NOTATION: &NOTATION
+      label: "Notation"
+      alias: "notation"
+      type: "notation"
+
 
   # Configure the filters to show when a specific type of search is being performed.
   filters:
@@ -187,4 +193,5 @@ search:
     institutions:
       - *INSTITUTION_CITY
     incipits:
+      - *NOTATION
     festivals:
