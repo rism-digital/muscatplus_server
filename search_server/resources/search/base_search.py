@@ -45,8 +45,7 @@ class BaseSearchResults(JSONLDContextSerializer):
         return obj.hits
 
     def get_view(self, obj: Results) -> Dict:
-        p = Pagination(obj, context={"request": self.context.get('request')})
-        return p.data
+        return Pagination(obj, context={"request": self.context.get('request')}).data
 
     def get_facets(self, obj: Results) -> Optional[Dict]:
         return get_facets(self.context.get('request'), obj)

@@ -1,6 +1,4 @@
 import logging
-from typing import Dict
-
 
 from sanic import response
 from small_asc.client import Results, SolrError
@@ -15,11 +13,11 @@ log = logging.getLogger(__name__)
 
 async def handle_search_request(req) -> response.HTTPResponse:
     try:
-        request_compiler = SearchRequest(req)
+        request_compiler: SearchRequest = SearchRequest(req)
     except InvalidQueryException as e:
         return response.text(f"Invalid search query. {e}", status=400)
 
-    solr_params: Dict = request_compiler.compile()
+    solr_params: dict = request_compiler.compile()
 
     try:
         solr_res: Results = SolrConnection.search(solr_params)
@@ -28,7 +26,7 @@ async def handle_search_request(req) -> response.HTTPResponse:
         log.exception(error_message)
         return response.text(f"Search error", status=500)
 
-    search_results: Dict = SearchResults(solr_res,
+    search_results: dict = SearchResults(solr_res,
                                          context={"request": req,
                                                   "query_pae_features": request_compiler.pae_features}).data
 

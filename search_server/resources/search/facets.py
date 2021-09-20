@@ -32,7 +32,10 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
     # The purpose of the facet is to activate the keyboard interface in the search UI.
     if current_mode == "incipits" and facet_config_map.get("notation"):
         facet_cfg: dict = {
+            "label": {"none": ["Notation"]},
+            "alias": "notation",
             "type": _get_facet_type("notation")
+
         }
         facet_cfg.update(_create_notation_facet())
         facets["notation"] = facet_cfg
@@ -45,7 +48,7 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
             continue
 
         facet_type: str = facet_config_map[alias]['type']
-        log.debug(facet_type)
+
         # Uses set logic to check whether the keys in the result
         # are equal to just the set of 'count'. This indicates that
         # there is not enough information coming from solr to construct
