@@ -14,24 +14,10 @@ search:
     - 40
     - 100
   default_mode: "sources"
-  modes:
-    sources:
-      label: "records.sources"
-      record_type: "source"
-    people:
-      label: "records.people"
-      record_type: "person"
-    institutions:
-      label: "records.institutions"
-      record_type: "institution"
-    incipits:
-      label: "records.incipits"
-      record_type: "incipit"
-    #    festivals:
-    #      label: "records.liturgical_festivals"
-    #      record_type: "liturgical_festival"
-
   facet_definitions:
+    # Defines facets for use in specific modes. Facets are pre-defined here and used below so that they
+    # only need to be defined once and then can be used as appropriate in the 'filters' section below.
+    #
     # Allowed values for 'type' are:
     #  - range: Creates a range facet over a set of scalar values (e.g., years).
     #  - stats: Creates a read-only facet with some interesting pre-defined stats.
@@ -170,28 +156,100 @@ search:
       alias: "notation"
       type: "notation"
 
+  sorting_definitions:
+    # label: The human-readable label for the sorting. This can either be a complete string, or it can be a key
+    #        into a translation in the locales files. If the key is found in the translation, that will be used;
+    #        otherwise the literal value given here will be used.
+    # alias: The value of the 'sort' field, e.g., sort=relevance. This ties the incoming sort request to the actual
+    #        sort statements given in the solr_sort field
+    # solr_sort: Provides a list of sort statements that will be passed to Solr. This can be multivalued to allow
+    #        for complex sorts to be aliased to a single `sort` parameter.
+    RELEVANCE: &RELEVANCE
+      label: "Relevance"
+      alias: "relevance"
+      solr_sort:
+        - "score desc"
+    INCIPIT_RELEVANCE: &INCIPIT_RELEVANCE
+      label: "Relevance"
+      alias: "relevance"
+      solr_sort:
 
-  # Configure the filters to show when a specific type of search is being performed.
-  filters:
+    ALPHABETICAL_SOURCE: &ALPHABETICAL_SOURCE
+      label: "Alphabetical (Title, A-Z)"
+      alias: "alphabetical"
+      solr_sort:
+        - "main_title_ans asc"
+    ALPHABETICAL_PERSON: &ALPHABETICAL_PERSON
+      label: "Alphabetical (Name, A-Z)"
+      alias: "alphabetical"
+      solr_sort:
+        - "name_ans asc"
+    ALPHABETICAL_INSTITUTION: &ALPHABETICAL_INSTITUTION
+      label: "Alphabetical (Name, A-Z)"
+      alias: "alphabetical"
+      solr_sort:
+        - "name_ans asc"
+    ALPHABETICAL_CREATOR: &ALPHABETICAL_CREATOR
+      label: "Alphabetical (Creator, A-Z)"
+      alias: "alphabetical"
+      solr_sort:
+        - "creator_name_s asc"
+    DATE_ADDED: &DATE_ADDED
+      label: "Date Added (Newest first)"
+      alias: "date-added"
+      solr_sort:
+        - "created desc"
+  modes:
+    # Defines the specific configuration for each mode. Search modes can have specific filters and sorts
+    # and these can use pre-defined blocks.
     sources:
-      - *HIDE_SOURCE_CONTENTS
-      - *HIDE_SOURCE_COLLECTION_RECORDS
-      - *HIDE_SOURCE_COMPOSITE_VOLUMES
-      - *HAS_DIGITIZATION
-      - *DATE_RANGE
-      - *NUM_HOLDINGS
-      - *SOURCE_TYPE
-      - *CONTENT_TYPES
-      - *MATERIAL_GROUP_TYPES
-      - *SHOW_SOURCE_INCIPITS
-      - *SHOW_SOURCE_ARRANGEMENT
-      - *SOURCE_HOLDING_INSTITUTION
-      - *SOURCE_SUBJECTS
+      label: "records.sources"
+      record_type: "source"
+      filters:
+        - *HIDE_SOURCE_CONTENTS
+        - *HIDE_SOURCE_COLLECTION_RECORDS
+        - *HIDE_SOURCE_COMPOSITE_VOLUMES
+        - *HAS_DIGITIZATION
+        - *DATE_RANGE
+        - *NUM_HOLDINGS
+        - *SOURCE_TYPE
+        - *CONTENT_TYPES
+        - *MATERIAL_GROUP_TYPES
+        - *SHOW_SOURCE_INCIPITS
+        - *SHOW_SOURCE_ARRANGEMENT
+        - *SOURCE_HOLDING_INSTITUTION
+        - *SOURCE_SUBJECTS
+      sorting:
+        - *RELEVANCE
+        - *ALPHABETICAL_SOURCE
+        - *DATE_ADDED
     people:
-      - *DATE_RANGE
-      - *PERSON_ROLE
+      label: "records.people"
+      record_type: "person"
+      filters:
+        - *DATE_RANGE
+        - *PERSON_ROLE
+      sorting:
+        - *RELEVANCE
+        - *ALPHABETICAL_PERSON
+        - *DATE_ADDED
     institutions:
-      - *INSTITUTION_CITY
+      label: "records.institutions"
+      record_type: "institution"
+      filters:
+        - *INSTITUTION_CITY
+      sorting:
+        - *RELEVANCE
+        - *ALPHABETICAL_INSTITUTION
+        - *DATE_ADDED
     incipits:
-      - *NOTATION
-    festivals:
+      label: "records.incipits"
+      record_type: "incipit"
+      filters:
+        - *NOTATION
+      sorting:
+        - *RELEVANCE
+        - *ALPHABETICAL_CREATOR
+    #    festivals:
+    #      label: "records.liturgical_festivals"
+    #      record_type: "liturgical_festival"

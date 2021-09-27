@@ -4,6 +4,7 @@ from typing import Dict, Optional, List
 from small_asc.client import Results
 import serpy
 
+from search_server.resources.search.sorting import get_sorting
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextSerializer
 from search_server.resources.search.facets import get_facets
@@ -33,6 +34,7 @@ class BaseSearchResults(JSONLDContextSerializer):
     items = serpy.MethodField()
     facets = serpy.MethodField()
     modes = serpy.MethodField()
+    sorts = serpy.MethodField()
 
     def get_sid(self, obj: Results) -> str:
         """
@@ -49,6 +51,9 @@ class BaseSearchResults(JSONLDContextSerializer):
 
     def get_facets(self, obj: Results) -> Optional[Dict]:
         return get_facets(self.context.get('request'), obj)
+
+    def get_sorts(self, obj: Results) -> Optional[list]:
+        return get_sorting(self.context.get("request"), obj)
 
     @abstractmethod
     def get_modes(self, obj: Results) -> Optional[Dict]:

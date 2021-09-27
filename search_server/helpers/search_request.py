@@ -18,6 +18,10 @@ MODE_FILTER_TAG: str = "MODE_FILTER"
 TERM_FACET_LIMIT: int = 200   # The maximum number of results to return with a select facet ('term' facet in solr).
 
 
+def sorting_for_mode(cfg: dict, mode: str) -> list:
+    return cfg["search"]["modes"][mode].get("sorting", [])
+
+
 # Some helper functions to work with the field and filter configurations.
 def filters_for_mode(cfg: Dict, mode: str) -> List:
     """
@@ -27,11 +31,7 @@ def filters_for_mode(cfg: Dict, mode: str) -> List:
     :return: The list of filter fields from the configuration for a given mode, or an empty dictionary if no filters
         are configured.
     """
-    filter_configuration: Dict = cfg["search"]["filters"]
-    filts: Optional[list] = filter_configuration.get(mode, [])
-    # If there is no value defined but the key exists, the value will be None. The `.get()` doesn't handle this
-    # gracefully, so we still have to check to see if it's None and ensure we really do return a list.
-    return filts if filts else []
+    return cfg["search"]["modes"][mode].get('filters', [])
 
 
 def filter_type_map(filters_config: List) -> Dict:
@@ -159,6 +159,9 @@ class SearchRequest:
         self._behaviour_for_facet: dict = facet_modifier_map(self._requested_facet_behaviours)
         self._sort_for_facet: dict = facet_modifier_map(self._requested_facet_sorts)
 
+        # Configure the sorting
+        self._sorts_for_mode: list = sorting_for_mode(self._app_config, self._requested_mode)
+
     def _validate_incoming_request(self) -> None:
         """
         Raises an InvalidQueryException with specific responses for different error conditions.
@@ -174,6 +177,10 @@ class SearchRequest:
         requested_modes: List = self._req.args.getlist("mode", [])
         if len(requested_modes) > 1:
             raise InvalidQueryException("Only one mode parameter can be supplied.")
+
+        requested_sorts: List = self._req.args.getlist("sort", [])
+        if len(requested_sorts) > 1:
+            raise InvalidQueryException("Only one sort parameter can be supplied.")
 
         modes: Dict = self._app_config["search"]["modes"]
         if len(requested_modes) == 1:
@@ -317,7 +324,17 @@ class SearchRequest:
         return json_facets
 
     def _compile_sorts(self) -> str:
-        return ",".join(self.sorts)
+        # if a sort parameter has been supplied, supply the solr sort parameters. Remember that this can be a list
+        # of parameters; we iterate through all the possible sorts, and only select the one where the alias matches
+        # the requested sort; then we construct a Solr sort statement from the list of statements for that block.
+        # If no sort statement can be found, we return "score desc", which is the default for relevancy search.
+        configuration_sorts: list = []
+
+        if self._result_sorting:
+            configuration_sorts = [", ".join(s['solr_sort']) for s in self._sorts_for_mode if s['alias'] == self._result_sorting]
+
+        sort_parameters: list = self.sorts + configuration_sorts
+        return ", ".join(sort_parameters)
 
     def compile(self) -> Dict:
         """
@@ -326,9 +343,10 @@ class SearchRequest:
         :return: A dictionary containing keys and values that is suitable for
             use as a Solr query.
         """
-        notedata: Optional[str] = self._req.args.get("n")
+        # Check if a query has incoming note data; if so, and we are in incipit mode, we will perform an incipit search
+        has_notedata: bool = self._req.args.get("n", None) is not None
 
-        if self._requested_mode == "incipits" and notedata:
+        if self._requested_mode == "incipits" and has_notedata:
             # process intervals and modify the Solr search request accordingly.
             #
             # 1. Pass the incoming query to Verovio to render to PAE features

@@ -16,6 +16,7 @@ RANGE_PARSING_REGEX: Pattern = re.compile(r'\[(?P<start>-?\d{,4})\s?TO\s?(?P<end
 
 def get_facets(req, obj: Results) -> Optional[Dict]:
     facet_result: Optional[Dict] = obj.raw_response.get('facets')
+
     if not facet_result:
         return None
 

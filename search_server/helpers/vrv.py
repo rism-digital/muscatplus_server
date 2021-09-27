@@ -1,4 +1,6 @@
 import logging
+import re
+import urllib.parse
 from typing import Optional
 
 import ujson
@@ -21,7 +23,7 @@ vrv_tk.setOptions(ujson.dumps({
     "pageMarginLeft": 0,
     "pageMarginRight": 0,
     # "adjustPageWidth": "true",
-    "pageWidth": 2200,
+    "pageWidth": 2000,
     "spacingStaff": 1,
     "scale": 40,
     "adjustPageHeight": "true",
@@ -34,7 +36,7 @@ vrv_tk.setOptions(ujson.dumps({
 }))
 
 
-def render_pae(pae: str, use_crc: bool = False) -> Optional[tuple]:
+def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False) -> Optional[tuple]:
     """
     Renders Plaine and Easie to SVG and MIDI. Returns None if there was a problem loading the data.
 
@@ -45,15 +47,20 @@ def render_pae(pae: str, use_crc: bool = False) -> Optional[tuple]:
     :param use_crc: The ID seed to use for Verovio's ID generator
     :return: A named tuple containing SVG and MIDI.
     """
+    custom_options: dict = {}
+
     if use_crc:
-        vrv_tk.setOptions(ujson.dumps({
-            "xmlIdChecksum": True
-        }))
+        custom_options["xmlIdChecksum"] = True
     else:
-        vrv_tk.setOptions(ujson.dumps({
-            "xmlIdChecksum": False
-        }))
+        custom_options["xmlIdChecksum"] = False
         vrv_tk.resetXmlIdSeed(0)
+
+    if enlarged:
+        custom_options["pageWidth"] = 1200
+    else:
+        custom_options["pageWidth"] = 2000
+
+    vrv_tk.setOptions(ujson.dumps(custom_options))
 
     load_status: bool = vrv_tk.loadData(pae)
 
@@ -79,9 +86,19 @@ def create_pae_from_request(req) -> str:
 
     :return: A string containing PAE for handing off to Verovio to render.
     """
-    notedata: str = req.args.get("n", "")
-    clef: str = req.args.get("ic", "G-2")
-    timesig: str = req.args.get("it", "4/4")
+    raw_notedata: str = req.args.get("n", "")
+    # Unencode spaces, etc.
+    unquoted_notedata: str = urllib.parse.unquote_plus(raw_notedata)
+    # Since "+" is a meaningful character in URLs, ties should be encoded with an underscore (_) when
+    # passed along in the URL. This regex will insert the "+" back into the PAE string until the PAE spec is
+    # updated to allow "_" for ties.
+    notedata: str = re.sub("_", "+", unquoted_notedata)
+
+    # Clefs can also contain plus symbols indicating mensural notation
+    raw_clef: str = req.args.get("ic", "G-2")
+    clef: str = urllib.parse.unquote_plus(raw_clef)
+
+    timesig: str = req.args.get("it", "")
     keysig: str = req.args.get("ik", "")
     music_data = notedata if notedata.endswith("/") else f"{notedata}/"
 
@@ -92,6 +109,8 @@ def create_pae_from_request(req) -> str:
         f"@timesig:{timesig}",
         f"@data:{music_data}"
     ]
+
+    log.debug(pae_elements)
 
     return "\n".join(pae_elements)
 
