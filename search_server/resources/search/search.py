@@ -14,10 +14,9 @@ log = logging.getLogger(__name__)
 async def handle_search_request(req) -> response.HTTPResponse:
     try:
         request_compiler: SearchRequest = SearchRequest(req)
+        solr_params: dict = request_compiler.compile()
     except InvalidQueryException as e:
         return response.text(f"Invalid search query. {e}", status=400)
-
-    solr_params: dict = request_compiler.compile()
 
     try:
         solr_res: Results = SolrConnection.search(solr_params)
