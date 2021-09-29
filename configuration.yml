@@ -155,6 +155,12 @@ search:
       label: "Notation"
       alias: "notation"
       type: "notation"
+    CREATOR_NAME: &CREATOR_NAME
+      label: "records.composer_author"
+      alias: "composer"
+      type: "select"
+      field: "creator_name_s"
+      default_sort: "count"
 
   sorting_definitions:
     # label: The human-readable label for the sorting. This can either be a complete string, or it can be a key
@@ -247,6 +253,7 @@ search:
       record_type: "incipit"
       filters:
         - *NOTATION
+        - *CREATOR_NAME
       sorting:
         - *RELEVANCE
         - *ALPHABETICAL_CREATOR
