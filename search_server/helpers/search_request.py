@@ -134,7 +134,7 @@ class SearchRequest:
         # Set up some public properties
         self.filters: List = []
         self.sorts: List = []
-        self.fields: str = ""
+        self.fields: list = ["*"]
         # Initialize a dictionary for caching the query PAE features so that we only have to do this once
         # Is null if this request is not for incipits, or if PAE features could not be extracted from an incipit.
         self.pae_features: Optional[dict] = None
@@ -280,7 +280,7 @@ class SearchRequest:
 
         return filter_statements
 
-    def _get_facets(self) -> dict:
+    def _compile_facets(self) -> dict:
         json_facets: dict = {}
 
         if self._facets_for_mode:
@@ -336,6 +336,9 @@ class SearchRequest:
         sort_parameters: list = self.sorts + configuration_sorts
         return ", ".join(sort_parameters)
 
+    def _compile_fields(self) -> str:
+        return ",".join(self.fields)
+
     def compile(self) -> Dict:
         """
         Assembles the incoming data into a form that is appropriate for
@@ -381,11 +384,12 @@ class SearchRequest:
 
             first_half_q = ", ".join(first_half)
             second_half_q = ", ".join(second_half)
-
+            score_stmt: str = f"sqedist({first_half_q}, {second_half_q})"
             # Ask Solr to do a squared euclidean distance on the intervals for the sort, to try and approximate
             # a relevancy calculation (that is, the distance between the intervals in the query to the distance of the
             # intervals in any given document.
-            self.sorts.insert(0, f"sqedist({first_half_q}, {second_half_q}) asc, id desc")
+            self.sorts.insert(0, f"{score_stmt} asc, id desc")
+            self.fields.append(f"incipit_score:scale({score_stmt},0, 100)")
 
         mode_filter: str = self._modes_to_filter()
         # The tag allows us to reference this in the facets so that we can return all the types of results.
@@ -411,7 +415,8 @@ class SearchRequest:
             "offset": start_row,
             "limit": return_rows,
             "sort": self._compile_sorts(),
-            "facet": self._get_facets()
+            "facet": self._compile_facets(),
+            "fields": self._compile_fields()
         }
 
         return solr_query

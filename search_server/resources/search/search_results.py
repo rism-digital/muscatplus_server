@@ -438,15 +438,20 @@ class IncipitSearchResult(ContextDictSerializer):
         else:
             svg, midi = _render_with_highlighting(req, obj, query_pae_features)
 
-        return {
+        flags: dict = {
             "highlightedResult": [{
                     "format": "image/svg+xml",
                     "data": svg
                 }, {
                     "format": "audio/midi",
                     "data": midi
-                }]
+                }],
         }
+
+        if 'incipit_score' in obj:
+            flags["score"] = obj['incipit_score']
+
+        return flags
 
 
 def _format_institution_label(obj: Dict) -> str:
