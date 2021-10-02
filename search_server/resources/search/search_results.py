@@ -380,6 +380,7 @@ class IncipitSearchResult(ContextDictSerializer):
     part_of = serpy.MethodField(
         label="partOf"
     )
+    summary = serpy.MethodField()
     flags = serpy.MethodField()
 
     def get_srid(self, obj: Dict) -> str:
@@ -399,6 +400,16 @@ class IncipitSearchResult(ContextDictSerializer):
         transl = req.app.ctx.translations
 
         return transl.get("records.incipit")
+
+    def get_summary(self, obj: Dict) -> Optional[List[Dict]]:
+        field_config: LabelConfig = {
+            "creator_name_s": ("records.composer_author", None),
+        }
+
+        req = self.context.get("request")
+        transl: Dict = req.app.ctx.translations
+
+        return get_display_fields(obj, transl, field_config=field_config)
 
     def get_part_of(self, obj: SolrResult) -> Optional[Dict]:
         """
