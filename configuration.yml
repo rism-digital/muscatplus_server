@@ -254,6 +254,7 @@ search:
       filters:
         - *NOTATION
         - *CREATOR_NAME
+        - *DATE_RANGE
       sorting:
         - *RELEVANCE
         - *ALPHABETICAL_CREATOR
