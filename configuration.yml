@@ -167,6 +167,12 @@ search:
       type: "toggle"
       field: "is_mensural_b"
       active_value: true
+    HAS_NOTATION: &HAS_NOTATION
+      label: "Has notation"
+      alias: "has-notation"
+      type: "toggle"
+      field: "has_notation_b"
+      active_value: true
     CREATOR_NAME: &CREATOR_NAME
       label: "records.composer_author"
       alias: "composer"
@@ -263,6 +269,7 @@ search:
         - *DATE_RANGE
         - *CLEF
         - *IS_MENSURAL
+        - *HAS_NOTATION
       sorting:
         - *RELEVANCE
         - *ALPHABETICAL_CREATOR
