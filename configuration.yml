@@ -155,13 +155,24 @@ search:
       label: "Notation"
       alias: "notation"
       type: "notation"
+    CLEF: &CLEF
+      label: "Clef"
+      alias: "clef"
+      type: "select"
+      field: "clef_s"
+      default_sort: "count"
+    IS_MENSURAL: &IS_MENSURAL
+      label: "Mensural encoding"
+      alias: "is-mensural"
+      type: "toggle"
+      field: "is_mensural_b"
+      active_value: true
     CREATOR_NAME: &CREATOR_NAME
       label: "records.composer_author"
       alias: "composer"
       type: "select"
       field: "creator_name_s"
       default_sort: "count"
-
   sorting_definitions:
     # label: The human-readable label for the sorting. This can either be a complete string, or it can be a key
     #        into a translation in the locales files. If the key is found in the translation, that will be used;
@@ -175,11 +186,6 @@ search:
       alias: "relevance"
       solr_sort:
         - "score desc"
-    INCIPIT_RELEVANCE: &INCIPIT_RELEVANCE
-      label: "Relevance"
-      alias: "relevance"
-      solr_sort:
-
     ALPHABETICAL_SOURCE: &ALPHABETICAL_SOURCE
       label: "Alphabetical (Title, A-Z)"
       alias: "alphabetical"
@@ -255,6 +261,8 @@ search:
         - *NOTATION
         - *CREATOR_NAME
         - *DATE_RANGE
+        - *CLEF
+        - *IS_MENSURAL
       sorting:
         - *RELEVANCE
         - *ALPHABETICAL_CREATOR
