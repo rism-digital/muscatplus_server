@@ -669,7 +669,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "small-asc"
-version = "0.7.0"
+version = "0.7.5"
 description = "A small Solr client"
 category = "main"
 optional = false
@@ -684,7 +684,7 @@ ujson = "^4.0.2"
 type = "git"
 url = "https://github.com/rism-digital/small-asc.git"
 reference = "main"
-resolved_reference = "3366fdbd060991cdb15b223b195d1e0edaf83616"
+resolved_reference = "3f33a8945caeba063cd0dde398c709f397b703c7"
 
 [[package]]
 name = "sniffio"
