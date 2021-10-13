@@ -27,10 +27,8 @@ class IncipitsSection(JSONLDContextDictSerializer):
         fq: List = [f"source_id:{obj.get('id')}",
                     "type:incipit"]
         sort: str = "work_num_ans asc"
-        rows: int = 100
 
-        results: Results = SolrConnection.search({"params": {"q": "*:*", "fq": fq, "sort": sort, "rows": rows}},
-                                                 cursor=True)
+        results: Results = SolrConnection.search({"query": "*:*", "filter": fq, "sort": sort}, cursor=True)
 
         # It will be strange for this to happen, since we only
         # call this code if the record has said there are incipits
@@ -39,7 +37,6 @@ class IncipitsSection(JSONLDContextDictSerializer):
         if results.hits == 0:
             return None
 
-        # TODO: Change to serializing all, not just the first page!
         return Incipit(results,
                        many=True,
                        context={"request": self.context.get("request")}).data

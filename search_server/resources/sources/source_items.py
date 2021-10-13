@@ -34,10 +34,12 @@ class SourceItemsSection(JSONLDContextDictSerializer):
                     f"!id:{this_id}"]
         sort: str = "source_id asc"
 
-        if not has_results(fq=fq):
-            return None
+        # if not has_results(fq=fq):
+        #     return None
 
-        results: Results = SolrConnection.search({"query": "*:*", "filter": fq, "sort": sort, "limit": 100})
+        results: Results = SolrConnection.search({"query": "*:*", "filter": fq, "sort": sort}, cursor=True)
+        if results.hits == 0:
+            return None
 
         return BaseSource(results,
                           many=True,

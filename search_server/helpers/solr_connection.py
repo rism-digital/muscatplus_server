@@ -34,7 +34,7 @@ def has_results(**kwargs) -> bool:
 
         It doesn't retrieve any results rows, so latency due to data transfer is minimized.
     """
-    res = SolrConnection.search({"params": {"q": "*:*", "rows": 0, **kwargs}})
+    res = SolrConnection.search({"query": "*:*", "limit": 0, "params": {**kwargs}})
     if res.hits > 0:
         return True
     return False
@@ -47,5 +47,5 @@ def result_count(**kwargs) -> int:
     :param kwargs: Keyword arguments to pass to the Solr query
     :return: The number of hits
     """
-    res = SolrConnection.search({"params": {"q": "*:*", "rows": 0, **kwargs}})
+    res = SolrConnection.search({"query": "*:*", "limit": 0, "params": {**kwargs}})
     return res.hits
