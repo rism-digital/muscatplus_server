@@ -151,6 +151,12 @@ search:
       type: "select"
       field: "subjects_sm"
       default_sort: "count"
+    TEXT_LANGUAGE: &TEXT_LANGUAGE
+      label: "Language of text"
+      alias: "text-language"
+      type: "select"
+      field: "language_text_sm"
+      default_sort: "count"
     NOTATION: &NOTATION
       label: "Notation"
       alias: "notation"
@@ -234,6 +240,7 @@ search:
         - *CONTENT_TYPES
         - *MATERIAL_GROUP_TYPES
         - *SHOW_SOURCE_INCIPITS
+        - *TEXT_LANGUAGE
         - *SHOW_SOURCE_ARRANGEMENT
         - *SOURCE_HOLDING_INSTITUTION
         - *SOURCE_SUBJECTS
