@@ -5,7 +5,7 @@ from small_asc.client import Results
 
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult, has_results, SolrConnection
+from search_server.helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.sources.base_source import BaseSource
 
 
@@ -34,10 +34,8 @@ class SourceItemsSection(JSONLDContextDictSerializer):
                     f"!id:{this_id}"]
         sort: str = "source_id asc"
 
-        # if not has_results(fq=fq):
-        #     return None
-
         results: Results = SolrConnection.search({"query": "*:*", "filter": fq, "sort": sort}, cursor=True)
+
         if results.hits == 0:
             return None
 

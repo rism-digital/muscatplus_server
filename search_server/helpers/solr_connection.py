@@ -28,18 +28,6 @@ log.debug('Solr connection set to %s', solr_url)
 SolrResult = NewType('SolrResult', Dict)
 
 
-def has_results(**kwargs) -> bool:
-    """ Takes a Solr query and checks whether there are any results to be retrieved.
-        Useful for doing a very quick lookup to see whether more processing needs to be done.
-
-        It doesn't retrieve any results rows, so latency due to data transfer is minimized.
-    """
-    res = SolrConnection.search({"query": "*:*", "limit": 0, "params": {**kwargs}})
-    if res.hits > 0:
-        return True
-    return False
-
-
 def result_count(**kwargs) -> int:
     """
     Takes a Solr query and returns the number of results, but does not actually retrieve them.
