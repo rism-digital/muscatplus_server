@@ -139,6 +139,12 @@ search:
         musical_source: "records.musical_source"
         libretto: "records.libretto"
         treatise: "records.treatise"
+    FORMAT_EXTENT: &FORMAT_EXTENT
+      label: "Format and extent"
+      alias: "format-extent"
+      type: "select"
+      field: "format_extent_sm"
+      default_sort: "count"
     MATERIAL_GROUP_TYPES: &MATERIAL_GROUP_TYPES
       label: "Material group types"
       alias: "material-group-types"
@@ -244,6 +250,7 @@ search:
         - *SHOW_SOURCE_ARRANGEMENT
         - *SOURCE_HOLDING_INSTITUTION
         - *SOURCE_SUBJECTS
+        - *FORMAT_EXTENT
       sorting:
         - *RELEVANCE
         - *ALPHABETICAL_SOURCE
