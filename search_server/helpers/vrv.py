@@ -26,11 +26,11 @@ vrv_tk.setOptions(ujson.dumps({
     "pageWidth": 2000,
     "spacingStaff": 1,
     "scale": 40,
-    "adjustPageHeight": "true",
-    "svgHtml5": "true",
-    "svgFormatRaw": "true",
-    "svgRemoveXlink": "true",
-    "svgViewBox": "true",
+    "adjustPageHeight": True,
+    "svgHtml5": True,
+    "svgFormatRaw": True,
+    "svgRemoveXlink": True,
+    "svgViewBox": True,
     "paeFeatures": True,
     "xmlIdSeed": 1
 }))
