@@ -7,15 +7,43 @@ from search_server.exceptions import InvalidQueryException, PaginationParseExcep
 from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import parse_page_number, parse_row_number
 
-log = logging.getLogger("mp_server")
+log = logging.getLogger(__name__)
 
 DEFAULT_QUERY_STRING: str = "*:*"
+TERM_FACET_LIMIT: int = 200   # The maximum number of results to return with a select facet ('term' facet in solr).
+
 # Some of the facets and filters need to have a solr `{!tag}` prepended. We'll
 # define them up-front.
-RANGE_FILTER_TAG: str = "RANGE_FILTER"
-SELECT_FILTER_TAG: str = "SELECT_FILTER"
-MODE_FILTER_TAG: str = "MODE_FILTER"
-TERM_FACET_LIMIT: int = 200   # The maximum number of results to return with a select facet ('term' facet in solr).
+class SolrQueryTags:
+    RANGE_FILTER_TAG = "RANGE_FILTER"
+    SELECT_FILTER_TAG = "SELECT_FILTER"
+    MODE_FILTER_TAG = "MODE_FILTER"
+
+
+class FacetModeValues:
+    TEXT = "text"
+    CHECK = "check"
+
+
+class FacetBehaviourValues:
+    INTERSECTION = "intersection"
+    UNION = "union"
+
+
+class FacetTypeValues:
+    RANGE = "range"
+    TOGGLE = "toggle"
+    SELECT = "select"
+    NOTATION = "notation"
+
+
+class FacetSortValues:
+    ALPHA = "alpha"
+    COUNT = "count"
+
+
+class IncipitModeValues:
+    INTERVALS = "intervals"
 
 
 def sorting_for_mode(cfg: dict, mode: str) -> list:
@@ -141,9 +169,10 @@ class SearchRequest:
 
         # If there is no q parameter it will return all results
         self._requested_query: str = req.args.get("q", DEFAULT_QUERY_STRING)
-        self._requested_filters: List = req.args.getlist("fq", [])
-        self._requested_facet_behaviours: List = req.args.getlist("fb", [])
-        self._requested_facet_sorts: List = req.args.getlist("fs", [])
+        self._requested_filters: list = req.args.getlist("fq", [])
+        self._requested_facet_behaviours: list = req.args.getlist("fb", [])
+        self._requested_facet_sorts: list = req.args.getlist("fs", [])
+        self._requested_facet_mode: list = req.args.getlist("fm", [])
         self._requested_mode: str = req.args.get("mode", self._app_config["search"]["default_mode"])
         self._page: Optional[str] = req.args.get("page", None)
         self._return_rows: Optional[str] = req.args.get("rows", None)
@@ -151,15 +180,16 @@ class SearchRequest:
 
         # parameters that are only valid with incipit searches, and are otherwise ignored.
         # It is always initialized with the default value.
-        self._incipit_mode: str = req.args.get("im", "intervals")
+        self._incipit_mode: str = req.args.get("im", IncipitModeValues.INTERVALS)
 
         # Configure the facets to show for the selected mode.
-        self._facets_for_mode: List = filters_for_mode(self._app_config, self._requested_mode)
+        self._facets_for_mode: list = filters_for_mode(self._app_config, self._requested_mode)
         self._alias_config_map: Dict = alias_config_map(self._facets_for_mode)
         self._behaviour_for_facet: dict = facet_modifier_map(self._requested_facet_behaviours)
         self._sort_for_facet: dict = facet_modifier_map(self._requested_facet_sorts)
+        self._mode_for_facet: dict = facet_modifier_map(self._requested_facet_mode)
 
-        # Configure the sorting
+        # Configure the sorting for the different result modes (source, people, institutions, etc.)
         self._sorts_for_mode: list = sorting_for_mode(self._app_config, self._requested_mode)
 
     def _validate_incoming_request(self) -> None:
@@ -230,11 +260,14 @@ class SearchRequest:
 
         for field, values in raw_statements.items():
             # if no behaviour is found, the default is 'intersection'
-            behaviour: str = self._behaviour_for_facet.get(field, "intersection")
+            behaviour: str = self._behaviour_for_facet.get(field, FacetBehaviourValues.INTERSECTION)
+            # if no mode is found, the default is 'check'
+            facetmode: str = self._mode_for_facet.get(field, FacetModeValues.CHECK)
 
             filter_config: dict = self._alias_config_map[field]
             filter_type: str = filter_config['type']
             solr_field_name: str = filter_config['field']
+            solr_alt_field_name: Optional[str] = filter_config.get('alt_field', None)
 
             # do some processing and normalization on the value. First ensure we have a non-entity string.
             # This should convert the URL-encoded parameters back to 'normal' characters
@@ -251,10 +284,11 @@ class SearchRequest:
             tag: str
 
             field_has_values: bool = len(quoted_values) > 0
-            if filter_type == 'range':
+
+            if filter_type == FacetTypeValues.RANGE:
                 value = quoted_values[0] if field_has_values else ""
-                tag = f"{{!tag={RANGE_FILTER_TAG}}}"
-            elif filter_type == "toggle":
+                tag = f"{{!tag={SolrQueryTags.RANGE_FILTER_TAG}}}"
+            elif filter_type == FacetTypeValues.TOGGLE:
                 # We only accept 'true' as a value for toggles; anything else will
                 # cause us to ignore this filter request. We do, however, try it against
                 # all possible case variants.
@@ -270,11 +304,18 @@ class SearchRequest:
                 value = filter_config['active_value']
                 tag = ""
             else:
-                join_op = " OR " if behaviour == "union" else " AND "
+                join_op = " OR " if behaviour == FacetBehaviourValues.UNION else " AND "
                 value = join_op.join([f"\"{val}\"" for val in quoted_values])
-                tag = f"{{!tag={SELECT_FILTER_TAG}}}" if behaviour == "union" else ""
+                tag = f"{{!tag={SolrQueryTags.SELECT_FILTER_TAG}}}" if behaviour == FacetBehaviourValues.UNION else ""
 
-            query_string: str = f"{tag}{solr_field_name}:({value})"
+            query_string: str
+
+            if facetmode == FacetModeValues.TEXT:
+                query_string = f"{tag}{solr_alt_field_name}:({value})"
+            else:
+                query_string = f"{tag}{solr_field_name}:({value})"
+
+            log.debug(query_string)
 
             filter_statements.append(query_string)
 
@@ -288,12 +329,12 @@ class SearchRequest:
                 solr_facet_def: dict
                 facet_alias = facet_cfg["alias"]
 
-                if facet_cfg['type'] == "range":
+                if facet_cfg['type'] == FacetTypeValues.RANGE:
                     solr_facet_def = _create_range_facet(facet_cfg)
-                elif facet_cfg['type'] == "toggle":
+                elif facet_cfg['type'] == FacetTypeValues.TOGGLE:
                     solr_facet_def = _create_toggle_facet(facet_cfg)
-                elif facet_cfg['type'] == "select":
-                    behaviour: str = self._behaviour_for_facet.get(facet_alias, "intersection")
+                elif facet_cfg['type'] == FacetTypeValues.SELECT:
+                    behaviour: str = self._behaviour_for_facet.get(facet_alias, FacetBehaviourValues.INTERSECTION)
 
                     # Get the default sort from the config, and use that as the default sort value
                     # unless something different is specified.
@@ -316,7 +357,7 @@ class SearchRequest:
             "type": "terms",
             "field": "type",
             "domain": {
-                "excludeTags": MODE_FILTER_TAG,
+                "excludeTags": SolrQueryTags.MODE_FILTER_TAG,
                 "filter": mode_query
             }
         }
@@ -397,7 +438,7 @@ class SearchRequest:
         mode_filter: str = self._modes_to_filter()
         # The tag allows us to reference this in the facets so that we can return all the types of results.
         # See https://solr.apache.org/guide/8_8/faceting.html#tagging-and-excluding-filters
-        self.filters.append(f"{{!tag={MODE_FILTER_TAG}}}{mode_filter}")
+        self.filters.append(f"{{!tag={SolrQueryTags.MODE_FILTER_TAG}}}{mode_filter}")
 
         requested_filters: List = self._compile_filters()
         self.filters += requested_filters
@@ -455,7 +496,7 @@ def _create_range_facet(facet_cfg: Dict) -> Dict:
             "max": f"max({field_name})"
         },
         "domain": {
-            "excludeTags": [RANGE_FILTER_TAG]
+            "excludeTags": [SolrQueryTags.RANGE_FILTER_TAG]
         }
     }
     return cfg
@@ -492,13 +533,13 @@ def _create_select_facet(facet_cfg: Dict, behaviour: str, sort: str) -> Dict:
     if behaviour == "union":
         cfg.update({
             "domain": {
-                "excludeTags": [SELECT_FILTER_TAG]
+                "excludeTags": [SolrQueryTags.SELECT_FILTER_TAG]
             }
         })
 
     # Unless 'alpha' is explicitly set, either as a requested sort or as a default in the configuration,
     # default to 'count'.
-    if sort == "alpha":
+    if sort == FacetSortValues.ALPHA:
         cfg.update({"sort": {"index": "asc"}})
     else:
         cfg.update({"sort": {"count": "desc"}})

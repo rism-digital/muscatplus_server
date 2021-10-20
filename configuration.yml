@@ -35,8 +35,13 @@ search:
     #     ?fq=hide-source-contents:true  --> is_contents_record_b:false
     #     ?fq=hide-source-contents:false -> (no filter on is_contents_record_b, which is the same as is_contents_record_b:true OR false)
     #
-    # Select facets take an optional query parameter to control their behaviour. By default,
-    #  select facets operate as 'intersection', which is the expected behaviour from a facet;
+    # Select facets take a number of optional query parameters to control their behaviour.
+    #
+    #  Select facet configurations can take a 'values' dictionary to provide translations of the values. This
+    #  is in the form of 'solr_value: "translation.key"'. If a values field is not provided, then
+    #  the facet will display the values as indexed in Solr.
+    #
+    # By default, select facets operate as 'intersection', which is the expected behaviour from a facet;
     #  'union' turns the facet into a multi-value select.
     #
     # Some examples:
@@ -50,9 +55,22 @@ search:
     #  Select facets also have a facet sort ('fs') parameter that can control how the facet values are sorted. This
     #  is either 'count' (count desc, most to least) or 'alpha' (alphabetical asc, A-Z).
     #
-    #  Select facets can take a 'values' dictionary to provide translations of the values. This
-    #  is in the form of 'solr_value: "translation.key"'. If a values field is not provided, then
-    #  the facet will display the values as indexed in Solr.
+    # For example:
+    #  ?fq=source-type:foo&fs=source-type:count  <-- Will set the 'source type' to sort the facets by count
+    #
+    #  Select facets also have two modes: Checkbox and Text Input, controlled by the 'fm' parameter.
+    #
+    #  In 'check' mode the facet will behave like a regular facet, showing a list of checkboxes drawn from the
+    #  Solr facet field specified in the 'field' value.
+    #
+    #  In 'text' mode the facet will behave like an 'advanced search' field, showing a plain text input field. Queries
+    #  in text mode use the 'alt_field' specified.
+    #
+    # For example:
+    #   ?fq=source-type:foo&fm=source-type:check  <-- Will set the source type field to query against the configured
+    #    'field' (e.g., 'source_type_s') and show a list of checkboxes to the user
+    #   ?fq=source-type:bar&fm=source-type:text  <-- Will set the source type field to query against the configured
+    #    'alt_field' (e.g., 'source_type_ft') and will present the user with a text input box for queries
     #
     DATE_RANGE: &DATE_RANGE
       label: "records.dates"
@@ -106,7 +124,10 @@ search:
       alias: "person-role"
       type: "select"
       field: "roles_sm"
+      alt_field: "roles_ft"
       default_sort: "count"
+      default_behaviour: "intersection"
+      default_mode: "check"
     SOURCE_TYPE: &SOURCE_TYPE
       label: "records.source_type"
       alias: "source-type"
@@ -229,6 +250,12 @@ search:
       alias: "date-added"
       solr_sort:
         - "created desc"
+    NUM_SOURCES: &NUM_SOURCES
+      label: "Number of sources"
+      alias: "num-sources"
+      solr_sort:
+        - "source_count_i desc"
+
   modes:
     # Defines the specific configuration for each mode. Search modes can have specific filters and sorts
     # and these can use pre-defined blocks.
@@ -265,6 +292,7 @@ search:
         - *RELEVANCE
         - *ALPHABETICAL_PERSON
         - *DATE_ADDED
+        - *NUM_SOURCES
     institutions:
       label: "records.institutions"
       record_type: "institution"
@@ -274,6 +302,7 @@ search:
         - *RELEVANCE
         - *ALPHABETICAL_INSTITUTION
         - *DATE_ADDED
+        - *NUM_SOURCES
     incipits:
       label: "records.incipits"
       record_type: "incipit"

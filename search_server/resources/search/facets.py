@@ -7,7 +7,7 @@ from typing import Optional, List, Dict
 from small_asc.client import Results
 
 from search_server.helpers.search_request import (
-    filters_for_mode, alias_config_map,
+    filters_for_mode, alias_config_map, FacetTypeValues, FacetBehaviourValues, FacetSortValues, FacetModeValues
 )
 
 log = logging.getLogger("mp_server")
@@ -86,8 +86,8 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
             if 'buckets' not in res:
                 continue
 
-            value_translations: dict = facet_config_map[alias].get("values", {})
-            cfg.update(_create_select_facet(res, value_translations, transl))
+            fcfg: dict = facet_config_map[alias]
+            cfg.update(_create_select_facet(alias, res, req, fcfg, transl))
 
         facets[alias] = cfg
 
@@ -95,13 +95,13 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
 
 
 def _get_facet_type(val) -> str:
-    if val == "range":
+    if val == FacetTypeValues.RANGE:
         return "rism:RangeFacet"
-    elif val == "toggle":
+    elif val == FacetTypeValues.TOGGLE:
         return "rism:ToggleFacet"
-    elif val == "select":
+    elif val == FacetTypeValues.SELECT:
         return "rism:SelectFacet"
-    elif val == "notation":
+    elif val == FacetTypeValues.NOTATION:
         return "rism:NotationFacet"
     else:
         return "rism:Facet"
@@ -164,8 +164,33 @@ def _create_toggle_facet(res) -> Dict:
     return toggle_fields
 
 
-def _create_select_facet(res: dict, translations: dict, all_translations: dict) -> Dict:
+def _create_select_facet(alias, res: dict, req, cfg: dict, all_translations: dict) -> Dict:
     value_buckets = res["buckets"]
+    translations: dict = cfg.get("values", {})
+
+    default_behaviour: str = cfg.get("default_behaviour", FacetBehaviourValues.INTERSECTION)
+    current_behaviour: str = default_behaviour
+    incoming_facet_behaviour: list = req.args.getlist("fb", [])
+    for arg in incoming_facet_behaviour:
+        arg_name, arg_value = arg.split(":")
+        if arg_name == alias:
+            current_behaviour = arg_value
+
+    default_sort: str = cfg.get("default_sort", FacetSortValues.COUNT)
+    current_sort: str = default_sort
+    incoming_facet_sort: list = req.args.getlist("fs", [])
+    for arg in incoming_facet_sort:
+        arg_name, arg_value = arg.split(":")
+        if arg_name == alias:
+            current_sort = arg_value
+
+    default_mode: str = cfg.get("default_mode", FacetModeValues.CHECK)
+    current_mode: str = default_mode
+    incoming_facet_mode: list = req.args.getlist("fm", [])
+    for arg in incoming_facet_mode:
+        arg_name, arg_value = arg.split(":")
+        if arg_name == alias:
+            current_mode = arg_value
 
     items: List = []
     for bucket in value_buckets:
@@ -193,17 +218,44 @@ def _create_select_facet(res: dict, translations: dict, all_translations: dict) 
             "count": bucket['count']
         })
 
+    # TODO: Translate these fields!
     selector_fields = {
         "items": items,
+        "sorts": {
+            "label": {"none": ["Facet Sort"]},
+            "items": [{
+                "label": {"none": ["Count"]},
+                "value": FacetSortValues.COUNT
+            }, {
+                "label": {"none": ["Alphabetical"]},
+                "value": FacetSortValues.ALPHA
+            }],
+            "default": default_sort,
+            "current": current_sort
+        },
+        "modes": {
+            "label": {"none": ["Facet Mode"]},
+            "items": [{
+                "label": {"none": ["Select"]},
+                "value": FacetModeValues.CHECK
+            }, {
+                "label": {"none": ["Text"]},
+                "value": FacetModeValues.TEXT
+            }],
+            "default": default_mode,
+            "current": current_mode
+        },
         "behaviours": {
-            "label": {"none": ["Behaviour"]},  # TODO: Translate these fields!
+            "label": {"none": ["Behaviour"]},
             "items": [{
                     "label": {"none": ["And"]},
-                    "value": "intersection"
+                    "value": FacetBehaviourValues.INTERSECTION
                 }, {
                     "label": {"none": ["Or"]},
-                    "value": "union"
-            }]
+                    "value": FacetBehaviourValues.UNION
+            }],
+            "default": default_behaviour,
+            "current": current_behaviour
         }
     }
 
