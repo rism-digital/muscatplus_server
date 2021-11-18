@@ -10,6 +10,13 @@ from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.shared.record_history import get_record_history
 
+SOURCE_TYPE_MAP: dict = {
+    "printed": "rism:PrintedSource",
+    "manuscript": "rism:ManuscriptSource",
+    "composite": "rism:CompositeSource",
+    "unspecified": "rism:UnspecifiedSource"
+}
+
 
 class BaseSource(JSONLDContextDictSerializer):
     """
@@ -32,6 +39,7 @@ class BaseSource(JSONLDContextDictSerializer):
         label="partOf"
     )
     summary = serpy.MethodField()
+    record = serpy.MethodField()
     record_history = serpy.MethodField(
         label="recordHistory"
     )
@@ -102,6 +110,17 @@ class BaseSource(JSONLDContextDictSerializer):
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
+
+    def get_record(self, obj: SolrResult) -> dict:
+        source_type: str = obj.get("source_type_s", "unspecified")
+        type_identifier: str = SOURCE_TYPE_MAP.get(source_type)
+
+        return {
+            "sourceType": {
+                "label": {"none": [type_identifier]},
+                "type": type_identifier
+            },
+        }
 
     def get_record_history(self, obj: SolrResult) -> dict:
         req = self.context.get("request")

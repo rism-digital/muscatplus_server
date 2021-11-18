@@ -4,6 +4,36 @@ from typing import Dict, List, Optional
 from search_server.helpers.identifiers import ID_SUB
 from search_server.helpers.languages import SUPPORTED_LANGUAGES
 
+_SOURCE_TYPE_MAP: dict = {
+    "printed": "",
+    "manuscript": "",
+    "composite": "",
+    "unspecified": ""
+}
+
+_CONTENT_TYPE_MAP: dict = {
+    "libretto": "",
+    "treatise": "",
+    "musical_source": "",
+    "composite_content": ""
+}
+
+_MATERIAL_GROUP_TYPES_MAP: dict = {
+    "Print": "",
+    "Autograph manuscript": "",
+    "Libretto, handwritten": "",
+    "Libretto, printed": "",
+    "Manuscript copy": "",
+    "Manuscript copy with autograph annotations": "",
+    "Other": "",
+    "Partial autograph": "",
+    "Possible autograph manuscript": "",
+    "Print with autograph annotations": "",
+    "Print with non-autograph annotations": "",
+    "Treatise, handwritten": "",
+    "Treatise, printed": ""
+}
+
 _KEY_MODE_MAP: Dict = {
     "A": "records.a_major",
     "a": "records.a_minor",
