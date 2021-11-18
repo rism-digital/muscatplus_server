@@ -1,8 +1,10 @@
-from typing import Dict, List
+import re
+from typing import Dict, List, Optional
 
 import serpy
 from small_asc.client import Results
 
+from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult, SolrConnection
@@ -34,11 +36,27 @@ class SourceItemsSection(JSONLDContextDictSerializer):
                     f"!id:{this_id}"]
         sort: str = "source_id asc"
 
-        results: Results = SolrConnection.search({"query": "*:*", "filter": fq, "sort": sort}, cursor=True)
+        source_results: Results = SolrConnection.search({"query": "*:*", "filter": fq, "sort": sort}, cursor=True)
+        items: list = []
 
-        if results.hits == 0:
-            return None
+        items += BaseSource(source_results,
+                            many=True,
+                            context={"request": self.context.get("request")}).data
 
-        return BaseSource(results,
-                          many=True,
-                          context={"request": self.context.get("request")}).data
+        # Check to see if we have any sources related to this through the holdings records
+        # We will only do this if we are loading a 'composite' record.
+        if obj.get("source_type_s") == "composite":
+            composite_filters: list = ["type:holding",
+                                       f"composite_parent_id:{this_id}"]
+            composite_results: Results = SolrConnection.search({"query": "*:*",
+                                                                "filter": composite_filters,
+                                                                "sort": sort}, cursor=True)
+            # Conveniently, we can pass holding records to the Base Source serializer!
+            # They contain just enough of the same information to produce a basic source
+            # record.
+            items += BaseSource(composite_results,
+                                many=True,
+                                context={"request": self.context.get("request")}).data
+
+        return items
+
