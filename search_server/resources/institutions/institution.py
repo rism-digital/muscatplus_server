@@ -74,6 +74,8 @@ class Institution(JSONLDContextDictSerializer):
         transl: Dict = req.app.ctx.translations
 
         field_config: Dict = {
+            "city_s": ("records.city", None),
+            "countries_sm": ("records.country", None),
             "siglum_s": ("records.siglum", None),
             "alternate_names_sm": ("records.other_form_of_name", None),
             "institution_types_sm": ("records.type_institution", None)
