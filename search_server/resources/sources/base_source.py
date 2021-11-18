@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Optional, List
+from typing import Optional
 
 import serpy
 
@@ -36,19 +36,18 @@ class BaseSource(JSONLDContextDictSerializer):
         label="recordHistory"
     )
 
-    def get_sid(self, obj: Dict) -> str:
+    def get_sid(self, obj: SolrResult) -> str:
         req = self.context.get('request')
         source_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "sources.source", source_id=source_id)
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         title: str = obj.get("main_title_s", "[No title]")
         #  TODO: Translate source types
-        source_types: Optional[List] = obj.get("material_group_types_sm")
+        source_types: Optional[list] = obj.get("material_group_types_sm")
         shelfmark: Optional[str] = obj.get("shelfmark_s")
         siglum: Optional[str] = obj.get("siglum_s")
-        num_holdings: Optional[int] = obj.get("num_holdings_i")
 
         label: str = title
         if source_types:
@@ -58,18 +57,18 @@ class BaseSource(JSONLDContextDictSerializer):
 
         return {"none": [label]}
 
-    def get_type_label(self, obj: Dict) -> Dict:
+    def get_type_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl = req.app.ctx.translations
 
         return transl.get("records.source")
 
-    def get_part_of(self, obj: Dict) -> Optional[Dict]:
+    def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         # This source is not part of another source; return None
         if 'source_membership_json' not in obj:
             return None
 
-        source_membership: Dict = obj.get('source_membership_json', {})
+        source_membership: dict = obj.get('source_membership_json', {})
 
         req = self.context.get('request')
         parent_source_id: str = re.sub(ID_SUB, "", source_membership.get("source_id"))
@@ -92,9 +91,10 @@ class BaseSource(JSONLDContextDictSerializer):
     # This method will get overridden in the 'full source' class, and will be returned as 'None' since
     # the summary is part of the 'contents' section. But in the base source view it will deliver some basic
     # identification fields.
-    def get_summary(self, obj: Dict) -> Optional[List[Dict]]:
+    def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
+        print(obj)
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "creator_name_s": ("records.composer_author", None),
@@ -103,8 +103,8 @@ class BaseSource(JSONLDContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_record_history(self, obj: Dict) -> Dict:
+    def get_record_history(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return get_record_history(obj, transl)
