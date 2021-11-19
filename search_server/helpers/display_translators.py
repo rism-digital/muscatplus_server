@@ -4,14 +4,20 @@ from typing import Dict, List, Optional
 from search_server.helpers.identifiers import ID_SUB
 from search_server.helpers.languages import SUPPORTED_LANGUAGES
 
-_SOURCE_TYPE_MAP: dict = {
+_SOURCE_TYPE_LABEL_MAP: dict = {
     "printed": "",
     "manuscript": "",
     "composite": "",
     "unspecified": ""
 }
 
-_CONTENT_TYPE_MAP: dict = {
+_RECORD_TYPE_LABEL_MAP: dict = {
+    "contents": "",
+    "collection": "",
+    "composite": ""
+}
+
+_CONTENT_TYPE_LABEL_MAP: dict = {
     "libretto": "",
     "treatise": "",
     "musical_source": "",
