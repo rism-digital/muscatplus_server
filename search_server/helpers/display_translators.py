@@ -12,7 +12,7 @@ _SOURCE_TYPE_LABEL_MAP: dict = {
 }
 
 _RECORD_TYPE_LABEL_MAP: dict = {
-    "contents": "",
+    "item": "",
     "collection": "",
     "composite": ""
 }
@@ -20,7 +20,7 @@ _RECORD_TYPE_LABEL_MAP: dict = {
 _CONTENT_TYPE_LABEL_MAP: dict = {
     "libretto": "",
     "treatise": "",
-    "musical_source": "",
+    "musical": "",
     "composite_content": ""
 }
 

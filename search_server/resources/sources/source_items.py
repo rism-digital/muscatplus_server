@@ -19,13 +19,13 @@ class SourceItemsSection(JSONLDContextDictSerializer):
     label = serpy.MethodField()
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult):
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: Dict = req.app.ctx.translations
 
         return transl.get("records.items_in_source")
 
-    def get_items(self, obj: SolrResult):
+    def get_items(self, obj: SolrResult) -> Optional[list]:
         this_id: str = obj.get("id")
 
         # Remember to filter out the current source from the list of
@@ -58,5 +58,5 @@ class SourceItemsSection(JSONLDContextDictSerializer):
                                 many=True,
                                 context={"request": self.context.get("request")}).data
 
-        return items
+        return items or None
 

@@ -18,7 +18,7 @@ SOURCE_TYPE_MAP: dict = {
 }
 
 RECORD_TYPE_MAP: dict = {
-    "contents": "rism:ContentsRecord",
+    "item": "rism:ItemRecord",
     "collection": "rism:CollectionRecord",
     "composite": "rism:CompositeRecord"
 }
@@ -26,8 +26,8 @@ RECORD_TYPE_MAP: dict = {
 CONTENT_TYPE_MAP: dict = {
     "libretto": "rism:LibrettoContent",
     "treatise": "rism:TreatiseContent",
-    "musical_source": "rism:MusicalSourceContent",
-    "composite_content": "rism:CompositeContent "
+    "musical": "rism:MusicalContent",
+    "composite_content": "rism:CompositeContent"
 }
 
 
@@ -134,22 +134,22 @@ class BaseSource(JSONLDContextDictSerializer):
         for c in content_identifiers:
             content_type_block.append({
                 "label": {"none": [c]},  # TODO translate!
-                "type": CONTENT_TYPE_MAP.get(c)
+                "type": CONTENT_TYPE_MAP.get(c, "rism:MusicalSource")
             })
 
         record_type: str = obj.get("record_type_s", "contents")
         record_type_identifier: str = RECORD_TYPE_MAP.get(record_type)
 
         return {
-            "recordType": [{
+            "recordType": {
                 "label": {"none": [record_type]},  # TODO: Translate!
                 "type": record_type_identifier
-            }],
-            "sourceType": [{
+            },
+            "sourceType": {
                 "label": {"none": [source_type]},  # TODO: Translate!
                 "type": type_identifier
-            }],
-            "contentType": content_type_block
+            },
+            "contentTypes": content_type_block
         }
 
     def get_record_history(self, obj: SolrResult) -> dict:
