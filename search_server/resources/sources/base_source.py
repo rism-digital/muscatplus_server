@@ -59,7 +59,8 @@ class BaseSource(JSONLDContextDictSerializer):
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context.get('request')
-        source_id: str = re.sub(ID_SUB, "", obj.get("id"))
+        source_id_val = obj.get("id") if obj.get('type') == "source" else obj.get("source_id")
+        source_id: str = re.sub(ID_SUB, "", source_id_val)
 
         return get_identifier(req, "sources.source", source_id=source_id)
 
