@@ -20,10 +20,12 @@ search:
     #
     # Allowed values for 'type' are:
     #  - range: Creates a range facet over a set of scalar values (e.g., years).
-    #  - stats: Creates a read-only facet with some interesting pre-defined stats.
+    #  - stats: Creates a read-only facet with some interesting pre-defined stats. (Not yet implemented)
     #  - toggle: Creates a simple on / off facet with a true or false value. Used only on boolean fields.
     #  - select: Creates a facet of values. For these facets, a 'behaviour' query parameter ('fb') sets
     #       the behaviour of 'intersection' or 'union' at query-time More below.
+    #  - query: Creates a text input box for querying values. Multiple values can be entered, and the behaviour
+    #       query parameter can choose between how these values are interepreted, like the select box.
     #  - notation: Creates a notation search facet, which will be rendered as a keyboard in the user interface
     #
     # Toggle facets have a field, 'active_value', which gives the value of the field when the toggle is switched 'on'.
@@ -124,7 +126,6 @@ search:
       alias: "person-role"
       type: "select"
       field: "roles_sm"
-      alt_field: "roles_ft"
       default_sort: "count"
       default_behaviour: "intersection"
       default_mode: "check"

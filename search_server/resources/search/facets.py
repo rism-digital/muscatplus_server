@@ -233,18 +233,6 @@ def _create_select_facet(alias, res: dict, req, cfg: dict, all_translations: dic
             "default": default_sort,
             "current": current_sort
         },
-        "modes": {
-            "label": {"none": ["Facet Mode"]},
-            "items": [{
-                "label": {"none": ["Select"]},
-                "value": FacetModeValues.CHECK
-            }, {
-                "label": {"none": ["Text"]},
-                "value": FacetModeValues.TEXT
-            }],
-            "default": default_mode,
-            "current": current_mode
-        },
         "behaviours": {
             "label": {"none": ["Behaviour"]},
             "items": [{
