@@ -54,25 +54,25 @@ search:
     #  ?fq=source-type:foo&fq=source-type:bar&bh=source-type:intersection  <-- same as the default method,
     #    but the behaviour is explicitly defined.
     #
+    #  You can set the default behaviour of a facet using the 'default_behaviour' option on the config. Acceptable
+    #    values are 'intersection' and 'union'.
+    #
     #  Select facets also have a facet sort ('fs') parameter that can control how the facet values are sorted. This
-    #  is either 'count' (count desc, most to least) or 'alpha' (alphabetical asc, A-Z).
+    #  is either 'count' (count desc, most to least) or 'alpha' (alphabetical asc, A-Z). You can set the default using
+    #  the 'default_sort' configuration.
     #
-    # For example:
-    #  ?fq=source-type:foo&fs=source-type:count  <-- Will set the 'source type' to sort the facets by count
+    #  For example:
+    #    ?fq=source-type:foo&fs=source-type:count  <-- Will set the 'source type' to sort the facets by count
     #
-    #  Select facets also have two modes: Checkbox and Text Input, controlled by the 'fm' parameter.
+    #  For facets that can have translations, you can set the `translation_prefix` configuration. This gives the
+    #  section of the 'locale' file to look in and will append the Solr value on the end -- for example, if the
+    #  stored value of a language is `lat` (for Latin) in Solr, then the translation prefix is `langcodes`. This
+    #  will then look up the value for `langcodes.lat` in the locales file, and provide a translated facet value.
     #
-    #  In 'check' mode the facet will behave like a regular facet, showing a list of checkboxes drawn from the
-    #  Solr facet field specified in the 'field' value.
-    #
-    #  In 'text' mode the facet will behave like an 'advanced search' field, showing a plain text input field. Queries
-    #  in text mode use the 'alt_field' specified.
-    #
-    # For example:
-    #   ?fq=source-type:foo&fm=source-type:check  <-- Will set the source type field to query against the configured
-    #    'field' (e.g., 'source_type_s') and show a list of checkboxes to the user
-    #   ?fq=source-type:bar&fm=source-type:text  <-- Will set the source type field to query against the configured
-    #    'alt_field' (e.g., 'source_type_ft') and will present the user with a text input box for queries
+    # Query facets will show a text box on the page, allowing a user to query a specific solr field. The field that
+    #  will be queried is given in the 'field' configuration. Query fields can have multiple values, so they can also
+    #  take the 'behaviour' option which will allow them to set whether the queried values are "anded" or "ored" when
+    #  queried.
     #
     DATE_RANGE: &DATE_RANGE
       label: "records.dates"
@@ -128,23 +128,19 @@ search:
       field: "roles_sm"
       default_sort: "count"
       default_behaviour: "intersection"
-      default_mode: "check"
     SOURCE_TYPE: &SOURCE_TYPE
       label: "records.source_type"
       alias: "source-type"
       type: "select"
       field: "source_type_s"
       default_sort: "count"
-      values:
-        manuscript: "records.manuscript"
-        printed: "records.printed"
-        composite: "records.composite"
+      translation_prefix: "records"
     INSTIUTION_CITY: &INSTITUTION_CITY
       label: "records.city"
       alias: "city"
       type: "select"
       field: "city_s"
-      default_sort: "alpha"
+      default_sort: "count"
     SOURCE_HOLDING_INSTITUTION: &SOURCE_HOLDING_INSTITUTION
       label: "Source holding institution"
       alias: "holding-institution"
@@ -157,10 +153,7 @@ search:
       type: "select"
       field: "content_types_sm"
       default_sort: "count"
-      values:
-        musical_source: "records.musical_source"
-        libretto: "records.libretto"
-        treatise: "records.treatise"
+      translation_prefix: "records"
     FORMAT_EXTENT: &FORMAT_EXTENT
       label: "Format and extent"
       alias: "format-extent"
@@ -185,6 +178,7 @@ search:
       type: "select"
       field: "language_text_sm"
       default_sort: "count"
+      translation_prefix: "langcodes"
     NOTATION: &NOTATION
       label: "Notation"
       alias: "notation"
@@ -210,9 +204,13 @@ search:
     CREATOR_NAME: &CREATOR_NAME
       label: "records.composer_author"
       alias: "composer"
-      type: "select"
-      field: "creator_name_s"
-      default_sort: "count"
+      type: "query"
+      field: "creator_name_ft"
+    ALL_PEOPLE: &ALL_PEOPLE
+      label: "records.related_personal_name"
+      alias: "people"
+      type: "query"
+      field: "people_names_ft"
   sorting_definitions:
     # label: The human-readable label for the sorting. This can either be a complete string, or it can be a key
     #        into a translation in the locales files. If the key is found in the translation, that will be used;
@@ -279,6 +277,8 @@ search:
         - *SOURCE_HOLDING_INSTITUTION
         - *SOURCE_SUBJECTS
         - *FORMAT_EXTENT
+        - *CREATOR_NAME
+        - *ALL_PEOPLE
       sorting:
         - *RELEVANCE
         - *ALPHABETICAL_SOURCE
