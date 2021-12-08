@@ -173,9 +173,13 @@ def languages_translator(value: Union[str, List], translations: Dict) -> Dict:
     # merge the language values. Uses a set to merge duplicate keys, and a defaultdict so we can gather
     # the keys without checking if they're in lang_dict already and create an empty set.
     lang_dict = collections.defaultdict(set)
+
     for trans in all_values:
         for k, v in trans.items():
-            lang_dict[k].update(v)
+            if isinstance(v, list):
+                lang_dict[k].update(*v)
+            else:
+                lang_dict[k].update(v)
 
     # Unwrap the set into a list for the final result.
     return {k: list(v) for k, v in lang_dict.items()}
