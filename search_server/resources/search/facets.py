@@ -7,7 +7,7 @@ from typing import Optional, List, Dict
 from small_asc.client import Results
 
 from search_server.helpers.search_request import (
-    filters_for_mode, alias_config_map, FacetTypeValues, FacetBehaviourValues, FacetSortValues, FacetModeValues
+    filters_for_mode, alias_config_map, FacetTypeValues, FacetBehaviourValues, FacetSortValues, types_alias_map
 )
 
 log = logging.getLogger("mp_server")
@@ -26,22 +26,55 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
     current_mode: str = req.args.get("mode", cfg["search"]["default_mode"])
     filters = filters_for_mode(cfg, current_mode)
     facet_config_map: Dict = alias_config_map(filters)
+    type_config_map: dict = types_alias_map(filters)
 
     facets: dict = {}
+    log.debug(facet_config_map)
 
-    # The notation search is treated slightly differently than the other facets
-    # The purpose of the facet is to activate the keyboard interface in the search UI.
-    if current_mode == "incipits" and facet_config_map.get("notation"):
+    # The notation and query search facets are treated slightly differently than the other facets
+    # The purpose of the notation facet is to activate the keyboard interface in the search UI.
+    notation_aliases: list = type_config_map.get(FacetTypeValues.NOTATION, [])
+    for alias in notation_aliases:
+        translation_key: str = facet_config_map[alias]['label']
+        translation: Optional[dict] = transl.get(translation_key)
+
+        label: dict
+        if translation:
+            label = translation
+        else:
+            label = {"none": [translation_key]}
+
         facet_cfg: dict = {
-            "label": {"none": ["Notation"]},
-            "alias": "notation",
-            "type": _get_facet_type("notation")
+            "label": label,
+            "alias": alias,
+            "type": _get_facet_type(FacetTypeValues.NOTATION)
 
         }
         facet_cfg.update(_create_notation_facet())
-        facets["notation"] = facet_cfg
+        facets[alias] = facet_cfg
 
-    # Facets contain values that are returned from a Solr search
+    # the purpose of the query facet is to announce that there is a means of sending a full-text query
+    # on a specific field to the server through a filter.
+    query_aliases: list = type_config_map.get(FacetTypeValues.QUERY, [])
+    for alias in query_aliases:
+        translation_key: str = facet_config_map[alias]['label']
+        translation: Optional[dict] = transl.get(translation_key)
+
+        label: dict
+        if translation:
+            label = translation
+        else:
+            label = {"none": [translation_key]}
+
+        facet_cfg: dict = {
+            "label": label,
+            "alias": alias,
+            "type": _get_facet_type(FacetTypeValues.QUERY)
+        }
+        facet_cfg.update(_create_query_facet(alias, req, facet_config_map[alias]))
+        facets[alias] = facet_cfg
+
+    # Facets that contain values that are returned from a Solr search
     for alias, res in facet_result.items():
         # Skip these sections of the facet results since
         # we handle them separately.
@@ -49,7 +82,6 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
             continue
 
         facet_type: str = facet_config_map[alias]['type']
-
         # Uses set logic to check whether the keys in the result
         # are equal to just the set of 'count'. This indicates that
         # there is not enough information coming from solr to construct
@@ -57,6 +89,7 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
         # does not respond with a value for the facet because all
         # values have been filtered out.
         if res.keys() == {"count"}:
+            log.debug(f"Bailing with facet type of {facet_type}")
             continue
 
         # Translate the label of the facet. If we don't find a translation
@@ -103,11 +136,13 @@ def _get_facet_type(val) -> str:
         return "rism:SelectFacet"
     elif val == FacetTypeValues.NOTATION:
         return "rism:NotationFacet"
+    elif val == FacetTypeValues.QUERY:
+        return "rism:QueryFacet"
     else:
         return "rism:Facet"
 
 
-def _create_notation_facet() -> Dict:
+def _create_notation_facet() -> dict:
     return {
         "clef": "ic",
         "keysig": "ik",
@@ -115,7 +150,7 @@ def _create_notation_facet() -> Dict:
     }
 
 
-def _create_range_facet(alias, res, req) -> Dict:
+def _create_range_facet(alias: str, res, req) -> dict:
     min_val = res["min"]
     max_val = res["max"]
     incoming_args: list = req.args.getlist("fq", [])
@@ -157,16 +192,16 @@ def _create_range_facet(alias, res, req) -> Dict:
     return range_fields
 
 
-def _create_toggle_facet(res) -> Dict:
+def _create_toggle_facet(res) -> dict:
     toggle_fields: dict = {
         "value": "true"
     }
     return toggle_fields
 
 
-def _create_select_facet(alias, res: dict, req, cfg: dict, all_translations: dict) -> Dict:
+def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations: dict) -> dict:
     value_buckets = res["buckets"]
-    translations: dict = cfg.get("values", {})
+    translation_prefix: Optional[str] = cfg.get("translation_prefix")
 
     default_behaviour: str = cfg.get("default_behaviour", FacetBehaviourValues.INTERSECTION)
     current_behaviour: str = default_behaviour
@@ -184,14 +219,6 @@ def _create_select_facet(alias, res: dict, req, cfg: dict, all_translations: dic
         if arg_name == alias:
             current_sort = arg_value
 
-    default_mode: str = cfg.get("default_mode", FacetModeValues.CHECK)
-    current_mode: str = default_mode
-    incoming_facet_mode: list = req.args.getlist("fm", [])
-    for arg in incoming_facet_mode:
-        arg_name, arg_value = arg.split(":")
-        if arg_name == alias:
-            current_mode = arg_value
-
     items: List = []
     for bucket in value_buckets:
         solr_value = bucket['val']
@@ -205,10 +232,8 @@ def _create_select_facet(alias, res: dict, req, cfg: dict, all_translations: dic
         label: dict
         default_label: dict = {"none": [str(solr_value)]}
 
-        if solr_value in translations:
-            # Get the entry for 'solr_value' from the translations
-            # dictionary; if it doesn't exist, return the default label.
-            label = all_translations.get(solr_value, default_label)
+        if translation_prefix:
+            label = all_translations.get(f"{translation_prefix}.{solr_value}", default_label)
         else:
             label = default_label
 
@@ -248,3 +273,28 @@ def _create_select_facet(alias, res: dict, req, cfg: dict, all_translations: dic
     }
 
     return selector_fields
+
+
+def _create_query_facet(alias: str, req, cfg: dict) -> dict:
+    default_behaviour: str = cfg.get("default_behaviour", FacetBehaviourValues.INTERSECTION)
+    current_behaviour: str = default_behaviour
+    incoming_facet_behaviour: list = req.args.getlist("fb", [])
+    for arg in incoming_facet_behaviour:
+        arg_name, arg_value = arg.split(":")
+        if arg_name == alias:
+            current_behaviour = arg_value
+
+    return {
+        "behaviours": {
+            "label": {"none": ["Behaviour"]},
+            "items": [{
+                "label": {"none": ["And"]},
+                "value": FacetBehaviourValues.INTERSECTION
+            }, {
+                "label": {"none": ["Or"]},
+                "value": FacetBehaviourValues.UNION
+            }],
+            "default": default_behaviour,
+            "current": current_behaviour
+        }
+    }

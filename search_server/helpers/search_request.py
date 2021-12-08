@@ -12,17 +12,14 @@ log = logging.getLogger(__name__)
 DEFAULT_QUERY_STRING: str = "*:*"
 TERM_FACET_LIMIT: int = 200   # The maximum number of results to return with a select facet ('term' facet in solr).
 
+
 # Some of the facets and filters need to have a solr `{!tag}` prepended. We'll
 # define them up-front.
 class SolrQueryTags:
     RANGE_FILTER_TAG = "RANGE_FILTER"
     SELECT_FILTER_TAG = "SELECT_FILTER"
     MODE_FILTER_TAG = "MODE_FILTER"
-
-
-class FacetModeValues:
-    TEXT = "text"
-    CHECK = "check"
+    QUERY_FILTER_TAG = "QUERY_FILTER"
 
 
 class FacetBehaviourValues:
@@ -35,6 +32,7 @@ class FacetTypeValues:
     TOGGLE = "toggle"
     SELECT = "select"
     NOTATION = "notation"
+    QUERY = "query"
 
 
 class FacetSortValues:
@@ -69,6 +67,21 @@ def filter_type_map(filters_config: List) -> Dict:
     :return:
     """
     return {f"{cnf['alias']}": f"{cnf['type']}" for cnf in filters_config}
+
+
+def types_alias_map(filters_config: list) -> dict:
+    """
+    Maps a given filter type to a list of aliases that use this type.
+    Produces a dictionary of form {'select': ['aliasA', 'aliasB', ... ]}
+
+    :param filters_config:
+    :return:
+    """
+    filtmap = defaultdict(list)
+    for f in filters_config:
+        filtmap[f['type']].append(f['alias'])
+
+    return dict(filtmap)
 
 
 def filter_label_map(filters_config: List) -> Dict:
@@ -261,8 +274,6 @@ class SearchRequest:
         for field, values in raw_statements.items():
             # if no behaviour is found, the default is 'intersection'
             behaviour: str = self._behaviour_for_facet.get(field, FacetBehaviourValues.INTERSECTION)
-            # if no mode is found, the default is 'check'
-            facetmode: str = self._mode_for_facet.get(field, FacetModeValues.CHECK)
 
             filter_config: dict = self._alias_config_map[field]
             filter_type: str = filter_config['type']
@@ -303,19 +314,16 @@ class SearchRequest:
                 # in solr. This means we can say 'foo=true' maps to 'foo_s:false'.
                 value = filter_config['active_value']
                 tag = ""
+            elif filter_type == FacetTypeValues.QUERY:
+                log.debug("Found query filter type!!")
+                tag = ""
+                value = ""
             else:
                 join_op = " OR " if behaviour == FacetBehaviourValues.UNION else " AND "
                 value = join_op.join([f"\"{val}\"" for val in quoted_values])
                 tag = f"{{!tag={SolrQueryTags.SELECT_FILTER_TAG}}}" if behaviour == FacetBehaviourValues.UNION else ""
 
-            query_string: str
-
-            if facetmode == FacetModeValues.TEXT:
-                query_string = f"{tag}{solr_alt_field_name}:({value})"
-            else:
-                query_string = f"{tag}{solr_field_name}:({value})"
-
-            log.debug(query_string)
+            query_string: str = f"{tag}{solr_field_name}:({value})"
 
             filter_statements.append(query_string)
 
