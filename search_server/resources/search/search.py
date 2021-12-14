@@ -27,6 +27,16 @@ async def handle_search_request(req) -> response.HTTPResponse:
 
     search_results: dict = SearchResults(solr_res,
                                          context={"request": req,
-                                                  "query_pae_features": request_compiler.pae_features}).data
+                                                  "query_pae_features": request_compiler.pae_features,
+                                                  "direct_request": True}).data
 
-    return response.json(search_results)
+    response_headers: dict = {
+        "Content-Type": "application/ld+json; charset=utf-8"
+    }
+
+    return response.json(
+        search_results,
+        headers=response_headers,
+        escape_forward_slashes=False,
+        indent=(4 if req.app.ctx.config['common']['debug'] else 0)
+    )
