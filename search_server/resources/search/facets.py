@@ -6,6 +6,7 @@ from typing import Optional, List, Dict
 
 from small_asc.client import Results
 
+from search_server.helpers.identifiers import get_identifier
 from search_server.helpers.search_request import (
     filters_for_mode, alias_config_map, FacetTypeValues, FacetBehaviourValues, FacetSortValues, types_alias_map
 )
@@ -29,7 +30,6 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
     type_config_map: dict = types_alias_map(filters)
 
     facets: dict = {}
-    log.debug(facet_config_map)
 
     # The notation and query search facets are treated slightly differently than the other facets
     # The purpose of the notation facet is to activate the keyboard interface in the search UI.
@@ -284,7 +284,10 @@ def _create_query_facet(alias: str, req, cfg: dict) -> dict:
         if arg_name == alias:
             current_behaviour = arg_value
 
+    suggestion_uri = get_identifier(req, "suggest")
+
     return {
+        "suggestions": f"{suggestion_uri}?alias={alias}&q=",
         "behaviours": {
             "label": {"none": ["Behaviour"]},
             "items": [{

@@ -126,6 +126,10 @@ def facet_modifier_map(requested_values: List) -> dict:
     return ret
 
 
+def suggest_fields_for_alias(facet_definitions: dict) -> dict:
+    return {f"{cnf['alias']}": cnf['suggest_fields'] for _, cnf in facet_definitions.items() if cnf["type"] == "query"}
+
+
 class SearchRequest:
     """
     Takes a number of parameters passed in from a search request and compiles them to produce a set of
@@ -181,7 +185,7 @@ class SearchRequest:
         self.pae_features: Optional[dict] = None
 
         # If there is no q parameter it will return all results
-        self._requested_query: str = req.args.get("q", DEFAULT_QUERY_STRING)
+        self._requested_query: list = req.args.getlist("q", [])
         self._requested_filters: list = req.args.getlist("fq", [])
         self._requested_facet_behaviours: list = req.args.getlist("fb", [])
         self._requested_facet_sorts: list = req.args.getlist("fs", [])
@@ -278,7 +282,6 @@ class SearchRequest:
             filter_config: dict = self._alias_config_map[field]
             filter_type: str = filter_config['type']
             solr_field_name: str = filter_config['field']
-            solr_alt_field_name: Optional[str] = filter_config.get('alt_field', None)
 
             # do some processing and normalization on the value. First ensure we have a non-entity string.
             # This should convert the URL-encoded parameters back to 'normal' characters
@@ -293,6 +296,7 @@ class SearchRequest:
             # https://solr.apache.org/guide/8_8/faceting.html#tagging-and-excluding-filters
             value: str
             tag: str
+            join_op: str = " OR " if behaviour == FacetBehaviourValues.UNION else " AND "
 
             field_has_values: bool = len(quoted_values) > 0
 
@@ -315,11 +319,13 @@ class SearchRequest:
                 value = filter_config['active_value']
                 tag = ""
             elif filter_type == FacetTypeValues.QUERY:
-                log.debug("Found query filter type!!")
-                tag = ""
-                value = ""
+                # This is treated slightly differently, as we need to add this to the `q`
+                # parameter so that it affects the ranking, rather than the `fq` which simply
+                # filters the results.
+                value = join_op.join([f"\"{val}\"" for val in quoted_values])
+                # tag: str = f"{{!tag={SolrQueryTags.QUERY_FILTER_TAG}}}" if behaviour == FacetBehaviourValues.UNION else ""
+                tag: str = f"{{!complexphrase inOrder=true}}"
             else:
-                join_op = " OR " if behaviour == FacetBehaviourValues.UNION else " AND "
                 value = join_op.join([f"\"{val}\"" for val in quoted_values])
                 tag = f"{{!tag={SolrQueryTags.SELECT_FILTER_TAG}}}" if behaviour == FacetBehaviourValues.UNION else ""
 
@@ -390,6 +396,11 @@ class SearchRequest:
 
     def _compile_fields(self) -> str:
         return ",".join(self.fields)
+
+    def _compile_query(self) -> str:
+        if len(self._requested_query) == 0:
+            return DEFAULT_QUERY_STRING
+        return " AND ".join(self._requested_query)
 
     def compile(self) -> Dict:
         """
@@ -462,7 +473,7 @@ class SearchRequest:
         start_row: int = 0 if page_num == 1 else ((page_num - 1) * return_rows)
 
         solr_query = {
-            "query": self._requested_query,
+            "query": self._compile_query(),
             "filter": self.filters,
             "offset": start_row,
             "limit": return_rows,

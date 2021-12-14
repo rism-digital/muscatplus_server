@@ -13,6 +13,7 @@ search:
     - 20
     - 40
     - 100
+  suggestions: 10
   default_mode: "sources"
   facet_definitions:
     # Defines facets for use in specific modes. Facets are pre-defined here and used below so that they
@@ -73,6 +74,9 @@ search:
     #  will be queried is given in the 'field' configuration. Query fields can have multiple values, so they can also
     #  take the 'behaviour' option which will allow them to set whether the queried values are "anded" or "ored" when
     #  queried.
+    #
+    # Query facets also have a 'suggest_fields' parameter, which allows you to configure a solr suggestion.
+    #  This is implemented using the TermsComponent, which takes terms from one or more fields.
     #
     DATE_RANGE: &DATE_RANGE
       label: "records.dates"
@@ -206,11 +210,17 @@ search:
       alias: "composer"
       type: "query"
       field: "creator_name_ft"
+      suggest_fields:
+        - "creator_name_s"
+
     ALL_PEOPLE: &ALL_PEOPLE
       label: "records.related_personal_name"
       alias: "people"
       type: "query"
       field: "people_names_ft"
+      suggest_fields:
+        - "people_names_sm"
+
   sorting_definitions:
     # label: The human-readable label for the sorting. This can either be a complete string, or it can be a key
     #        into a translation in the locales files. If the key is found in the translation, that will be used;
