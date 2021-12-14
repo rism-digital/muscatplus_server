@@ -1,6 +1,6 @@
 from sanic import Blueprint
 
-from search_server.request_handlers import handle_search_request, handle_request
+from search_server.request_handlers import handle_search, handle_request
 from search_server.resources.people.person import handle_person_request
 from search_server.resources.people.person_search import handle_person_search_request
 
@@ -21,9 +21,9 @@ async def person(req, person_id: str):
 
 @people_blueprint.route("/<person_id:string>/sources/")
 async def person_sources(req, person_id: str):
-    return await handle_search_request(req,
-                                       handle_person_search_request,
-                                       person_id=person_id)
+    return await handle_search(req,
+                               handle_person_search_request,
+                               person_id=person_id)
 
 
 @people_blueprint.route("/<person_id:string>/people/")

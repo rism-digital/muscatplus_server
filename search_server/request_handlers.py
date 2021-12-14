@@ -1,8 +1,9 @@
 import logging
-from typing import Callable, Optional, Dict
+from typing import Callable, Optional
 
 from sanic import request, response
 from small_asc.client import SolrError
+from search_server.helpers.solr_connection import SolrConnection
 
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.semantic_web import to_turtle, to_rdf
@@ -26,7 +27,7 @@ async def handle_request(req: request.Request, handler: Callable, **kwargs) -> r
     """
     accept: Optional[str] = req.headers.get("Accept")
 
-    data_obj: Optional[Dict] = await handler(req, **kwargs)
+    data_obj: Optional[dict] = await handler(req, **kwargs)
 
     if not data_obj:
         return response.text(
@@ -34,7 +35,7 @@ async def handle_request(req: request.Request, handler: Callable, **kwargs) -> r
             status=404
         )
 
-    response_headers: Dict = {}
+    response_headers: dict = {}
 
     if accept and "text/turtle" in accept:
         log.debug("Sending Turtle")
@@ -68,18 +69,18 @@ async def handle_request(req: request.Request, handler: Callable, **kwargs) -> r
         )
 
 
-async def handle_search_request(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
+async def handle_search(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
     accept: Optional[str] = req.headers.get("Accept")
 
     # Check whether we can respond with the correct content type. Note that
     # this server does not handle HTML responses; these are handled before
     # the request reaches this server.
     # if accept and (("application/ld+json" not in accept) or ("application/json" not in accept)):
-    #     return response.text("Supported content types for search interfaces are 'application/json' and application/ld+json'",
-    #                          status=406)
+    #     return response.text("Supported content types for search interfaces are 'application/json' and
+    #     application/ld+json'", status=406)
 
     try:
-        data_obj: Dict = await handler(req, **kwargs)
+        data_obj: dict = await handler(req, **kwargs)
     except InvalidQueryException as e:
         return response.text(f"Invalid search query. {e}", status=400)
     except SolrError as e:
@@ -91,7 +92,7 @@ async def handle_search_request(req: request.Request, handler: Callable, **kwarg
         return response.text("The requested resource was not found",
                              status=404)
 
-    response_headers: Dict = {
+    response_headers: dict = {
         "Content-Type": "application/ld+json; charset=utf-8"
     }
 

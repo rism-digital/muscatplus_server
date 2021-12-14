@@ -1,6 +1,6 @@
 from sanic import Blueprint
 
-from search_server.request_handlers import handle_request, handle_search_request
+from search_server.request_handlers import handle_request, handle_search
 from search_server.resources.subjects.subject import handle_subject_request
 from search_server.resources.subjects.subject_source import handle_subject_source_request
 
@@ -21,6 +21,6 @@ async def subject(req, subject_id: str):
 
 @subjects_blueprint.route("/<subject_id:string>/sources/")
 async def subject_sources(req, subject_id: str):
-    return await handle_search_request(req,
-                                       handle_subject_source_request,
-                                       subject_id=subject_id)
+    return await handle_search(req,
+                               handle_subject_source_request,
+                               subject_id=subject_id)

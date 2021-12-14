@@ -8,11 +8,11 @@ from sanic import Sanic, response
 
 from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.helpers.languages import load_translations
-from search_server.request_handlers import handle_search_request, handle_request
-from search_server.resources.countries.country import handle_country_request
+from search_server.request_handlers import handle_request
 from search_server.resources.front.front import handle_front_request
 from search_server.resources.search.search import handle_search_request
-from search_server.resources.siglum.sigla import handle_sigla_request
+from search_server.resources.suggest.suggest import handle_suggest_request
+from search_server.routes.countries import countries_blueprint
 from search_server.routes.festivals import festivals_blueprint
 from search_server.routes.incipits import incipits_blueprint
 from search_server.routes.institutions import institutions_blueprint
@@ -32,6 +32,7 @@ app.blueprint(institutions_blueprint)
 app.blueprint(subjects_blueprint)
 app.blueprint(incipits_blueprint)
 app.blueprint(festivals_blueprint)
+app.blueprint(countries_blueprint)
 
 app.config.FORWARDED_SECRET = config['common']['secret']
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
@@ -78,18 +79,11 @@ async def context(req) -> response.HTTPResponse:
     return response.json(RISM_JSONLD_CONTEXT)
 
 
-@app.route("/sigla/")
-async def sigla(req):
-    return await handle_search_request(req, handle_sigla_request)
-
-
 @app.route("/search/")
 async def search(req):
     return await handle_search_request(req)
 
 
-@app.route("/countries/<country_id:string>/")
-async def countries(req, country_id: str):
-    return await handle_request(req,
-                                handle_country_request,
-                                country_id=country_id)
+@app.route("/suggest/")
+async def suggest(req):
+    return await handle_suggest_request(req)
