@@ -284,7 +284,7 @@ def _create_query_facet(alias: str, req, cfg: dict) -> dict:
         if arg_name == alias:
             current_behaviour = arg_value
 
-    suggestion_uri = get_identifier(req, "suggest")
+    suggestion_uri = get_identifier(req, "query.suggest")
 
     return {
         "suggestions": f"{suggestion_uri}?alias={alias}&q=",

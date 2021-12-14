@@ -66,7 +66,10 @@ class SearchResults(BaseSearchResults):
         }
 
     def get_items(self, obj: Results) -> Optional[List]:
-        if obj.hits == 0:
+        is_probe: bool = self.context.get("probe_request", False)
+        # If we have no hits, or we have a 'probe' request, then don't
+        # return any items.
+        if obj.hits == 0 or is_probe:
             return None
 
         results: List[Dict] = []

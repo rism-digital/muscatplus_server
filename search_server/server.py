@@ -10,14 +10,13 @@ from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.helpers.languages import load_translations
 from search_server.request_handlers import handle_request
 from search_server.resources.front.front import handle_front_request
-from search_server.resources.search.search import handle_search_request
-from search_server.resources.suggest.suggest import handle_suggest_request
 from search_server.routes.countries import countries_blueprint
 from search_server.routes.festivals import festivals_blueprint
 from search_server.routes.incipits import incipits_blueprint
 from search_server.routes.institutions import institutions_blueprint
 from search_server.routes.people import people_blueprint
 from search_server.routes.places import places_blueprint
+from search_server.routes.query import query_blueprint
 from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
 
@@ -33,6 +32,7 @@ app.blueprint(subjects_blueprint)
 app.blueprint(incipits_blueprint)
 app.blueprint(festivals_blueprint)
 app.blueprint(countries_blueprint)
+app.blueprint(query_blueprint)
 
 app.config.FORWARDED_SECRET = config['common']['secret']
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
@@ -77,13 +77,3 @@ async def root(req):
 @app.route("/api/v1/context.json")
 async def context(req) -> response.HTTPResponse:
     return response.json(RISM_JSONLD_CONTEXT)
-
-
-@app.route("/search/")
-async def search(req):
-    return await handle_search_request(req)
-
-
-@app.route("/suggest/")
-async def suggest(req):
-    return await handle_suggest_request(req)

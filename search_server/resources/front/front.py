@@ -60,5 +60,5 @@ class Front(JSONLDContextDictSerializer):
     def get_endpoints(self, obj: Dict) -> List:
         req = self.context.get("request")
         return [
-            get_identifier(req, "search")
+            get_identifier(req, "query.search")
         ]
