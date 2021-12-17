@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 async def handle_probe_request(req) -> response.HTTPResponse:
     try:
-        request_compiler: SearchRequest = SearchRequest(req)
+        request_compiler: SearchRequest = SearchRequest(req, probe=True)
         solr_params: dict = request_compiler.compile()
     except InvalidQueryException as e:
         return response.text(f"Invalid search query. {e}", status=400)

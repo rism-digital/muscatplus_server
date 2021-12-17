@@ -168,7 +168,7 @@ class SearchRequest:
     """
     default_sort = "id asc"
 
-    def __init__(self, req, sort: Optional[str] = None):
+    def __init__(self, req, sort: Optional[str] = None, probe: Optional[bool] = False):
         self._req = req
         self._app_config = req.app.ctx.config
 
@@ -180,6 +180,10 @@ class SearchRequest:
         self.filters: List = []
         self.sorts: List = []
         self.fields: list = ["*"]
+
+        # A probe request will do all the reqular things EXCEPT it will hard-code the number of responses to 0
+        # so that the actual results are not returned.
+        self.probe: bool = probe
         # Initialize a dictionary for caching the query PAE features so that we only have to do this once
         # Is null if this request is not for incipits, or if PAE features could not be extracted from an incipit.
         self.pae_features: Optional[dict] = None
@@ -476,7 +480,7 @@ class SearchRequest:
             "query": self._compile_query(),
             "filter": self.filters,
             "offset": start_row,
-            "limit": return_rows,
+            "limit": return_rows if self.probe is False else 0,
             "sort": self._compile_sorts(),
             "facet": self._compile_facets(),
             "fields": self._compile_fields()
