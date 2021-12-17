@@ -210,6 +210,7 @@ search:
       alias: "composer"
       type: "query"
       field: "creator_name_ft"
+      default_behaviour: "union"
       suggest_fields:
         - "creator_name_s"
 
