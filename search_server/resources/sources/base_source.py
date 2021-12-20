@@ -1,5 +1,6 @@
 import re
 from typing import Optional
+import logging
 
 import serpy
 
@@ -29,6 +30,8 @@ CONTENT_TYPE_MAP: dict = {
     "musical": "rism:MusicalContent",
     "composite_content": "rism:CompositeContent"
 }
+
+log = logging.getLogger(__name__)
 
 
 class BaseSource(JSONLDContextDictSerializer):
@@ -91,6 +94,7 @@ class BaseSource(JSONLDContextDictSerializer):
             return None
 
         source_membership: dict = obj.get('source_membership_json', {})
+        log.debug(source_membership)
 
         req = self.context.get('request')
         parent_source_id: str = re.sub(ID_SUB, "", source_membership.get("source_id"))
@@ -99,6 +103,14 @@ class BaseSource(JSONLDContextDictSerializer):
 
         parent_title: Optional[str] = source_membership.get("main_title")
 
+        record_type: str = source_membership.get("record_type", "item")
+        source_type: str = source_membership.get("source_type", "unspecified")
+        content_types: list[str] = source_membership.get("content_types", [])
+
+        record_block: dict = _create_record_block(record_type, source_type, content_types)
+
+        log.debug(record_block)
+
         return {
             "label": transl.get("records.item_part_of"),
             "type": "rism:PartOfSection",
@@ -106,6 +118,7 @@ class BaseSource(JSONLDContextDictSerializer):
                 "id": ident,
                 "type": "rism:Source",
                 "typeLabel": transl.get("records.source"),
+                "record": record_block,
                 "label": {"none": [parent_title]}
             }
         }
@@ -127,34 +140,38 @@ class BaseSource(JSONLDContextDictSerializer):
 
     def get_record(self, obj: SolrResult) -> dict:
         source_type: str = obj.get("source_type_s", "unspecified")
-        type_identifier: str = SOURCE_TYPE_MAP.get(source_type)
+        content_identifiers: list[str] = obj.get("content_types_sm", [])
+        record_type: str = obj.get("record_type_s", "item")
 
-        content_identifiers: list = obj.get("content_types_sm", [])
-        content_type_block: list = []
-
-        for c in content_identifiers:
-            content_type_block.append({
-                "label": {"none": [c]},  # TODO translate!
-                "type": CONTENT_TYPE_MAP.get(c, "rism:MusicalSource")
-            })
-
-        record_type: str = obj.get("record_type_s", "contents")
-        record_type_identifier: str = RECORD_TYPE_MAP.get(record_type)
-
-        return {
-            "recordType": {
-                "label": {"none": [record_type]},  # TODO: Translate!
-                "type": record_type_identifier
-            },
-            "sourceType": {
-                "label": {"none": [source_type]},  # TODO: Translate!
-                "type": type_identifier
-            },
-            "contentTypes": content_type_block
-        }
+        return _create_record_block(record_type, source_type, content_identifiers)
 
     def get_record_history(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
         return get_record_history(obj, transl)
+
+
+def _create_record_block(record_type: str, source_type: str, content_types: list[str]) -> dict:
+    type_identifier: str = SOURCE_TYPE_MAP.get(source_type)
+    content_type_block: list = []
+
+    for c in content_types:
+        content_type_block.append({
+            "label": {"none": [c]},  # TODO translate!
+            "type": CONTENT_TYPE_MAP.get(c, "rism:MusicalSource")
+        })
+
+    record_type_identifier: str = RECORD_TYPE_MAP.get(record_type)
+
+    return {
+        "recordType": {
+            "label": {"none": [record_type]},  # TODO: Translate!
+            "type": record_type_identifier
+        },
+        "sourceType": {
+            "label": {"none": [source_type]},  # TODO: Translate!
+            "type": type_identifier
+        },
+        "contentTypes": content_type_block
+    }
