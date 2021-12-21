@@ -212,12 +212,6 @@ def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations
             current_behaviour = arg_value
 
     default_sort: str = cfg.get("default_sort", FacetSortValues.COUNT)
-    current_sort: str = default_sort
-    incoming_facet_sort: list = req.args.getlist("fs", [])
-    for arg in incoming_facet_sort:
-        arg_name, arg_value = arg.split(":")
-        if arg_name == alias:
-            current_sort = arg_value
 
     items: List = []
     for bucket in value_buckets:
@@ -246,18 +240,7 @@ def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations
     # TODO: Translate these fields!
     selector_fields = {
         "items": items,
-        "sorts": {
-            "label": {"none": ["Facet Sort"]},
-            "items": [{
-                "label": {"none": ["Count"]},
-                "value": FacetSortValues.COUNT
-            }, {
-                "label": {"none": ["Alphabetical"]},
-                "value": FacetSortValues.ALPHA
-            }],
-            "default": default_sort,
-            "current": current_sort
-        },
+        "defaultSort": default_sort,
         "behaviours": {
             "label": {"none": ["Behaviour"]},
             "items": [{

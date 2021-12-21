@@ -207,7 +207,6 @@ class SearchRequest:
         self._facets_for_mode: list = filters_for_mode(self._app_config, self._requested_mode)
         self._alias_config_map: Dict = alias_config_map(self._facets_for_mode)
         self._behaviour_for_facet: dict = facet_modifier_map(self._requested_facet_behaviours)
-        self._sort_for_facet: dict = facet_modifier_map(self._requested_facet_sorts)
         self._mode_for_facet: dict = facet_modifier_map(self._requested_facet_mode)
 
         # Configure the sorting for the different result modes (source, people, institutions, etc.)
@@ -353,12 +352,7 @@ class SearchRequest:
                     solr_facet_def = _create_toggle_facet(facet_cfg)
                 elif facet_cfg['type'] == FacetTypeValues.SELECT:
                     behaviour: str = self._behaviour_for_facet.get(facet_alias, FacetBehaviourValues.INTERSECTION)
-
-                    # Get the default sort from the config, and use that as the default sort value
-                    # unless something different is specified.
-                    default_sort: str = facet_cfg['default_sort']
-                    sort: str = self._sort_for_facet.get(facet_alias, default_sort)
-                    solr_facet_def = _create_select_facet(facet_cfg, behaviour, sort)
+                    solr_facet_def = _create_select_facet(facet_cfg, behaviour)
                 else:
                     continue
 
@@ -537,12 +531,11 @@ def _create_toggle_facet(facet_cfg: Dict) -> Dict:
     return cfg
 
 
-def _create_select_facet(facet_cfg: Dict, behaviour: str, sort: str) -> Dict:
+def _create_select_facet(facet_cfg: Dict, behaviour: str) -> Dict:
     """
     Creates a Solr JSON Facet API definition for terms. This can be
     :param facet_cfg: The configuration block for Solr facets.
     :param behaviour:
-    :param sort:
     :return:
     """
     field_name: str = facet_cfg["field"]
@@ -559,13 +552,6 @@ def _create_select_facet(facet_cfg: Dict, behaviour: str, sort: str) -> Dict:
                 "excludeTags": [SolrQueryTags.SELECT_FILTER_TAG]
             }
         })
-
-    # Unless 'alpha' is explicitly set, either as a requested sort or as a default in the configuration,
-    # default to 'count'.
-    if sort == FacetSortValues.ALPHA:
-        cfg.update({"sort": {"index": "asc"}})
-    else:
-        cfg.update({"sort": {"count": "desc"}})
 
     return cfg
 
