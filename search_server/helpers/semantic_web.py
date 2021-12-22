@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Optional
 import logging
 from pyld import jsonld
 import rdflib
@@ -8,7 +8,7 @@ from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
 log = logging.getLogger(__name__)
 
 
-def to_turtle(data: Dict) -> str:
+def to_turtle(data: dict) -> str:
     rdf: str = to_rdf(data)
     g = rdflib.Graph()
     for pfx in ["rdf", "rdfs", "rism", "rismdata", "relators", "dcterms", "as", "hydra", "geojson"]:
@@ -23,7 +23,7 @@ def to_turtle(data: Dict) -> str:
     return turtle
 
 
-def to_rdf(data: Dict) -> str:
+def to_rdf(data: dict) -> str:
     log.debug("Creating RDF!")
     del data["@context"]
     rdf: str = jsonld.to_rdf(data, options={"format": "application/n-quads",

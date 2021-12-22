@@ -8,16 +8,15 @@
       >>> res = SolrConnection.search("Some Query")
 
 """
-from typing import Dict, Iterator, NewType, Optional
-import yaml
 import logging
+from typing import NewType
 
-
-from small_asc.client import Solr, Results
+import yaml
+from small_asc.client import Solr
 
 log = logging.getLogger(__name__)
 
-config: Dict = yaml.safe_load(open('configuration.yml', 'r'))
+config: dict = yaml.safe_load(open('configuration.yml', 'r'))
 
 solr_url = config['solr']['server']
 
@@ -25,7 +24,7 @@ SolrConnection: Solr = Solr(solr_url)
 
 log.debug('Solr connection set to %s', solr_url)
 
-SolrResult = NewType('SolrResult', Dict)
+SolrResult = NewType('SolrResult', dict)
 
 
 def result_count(**kwargs) -> int:

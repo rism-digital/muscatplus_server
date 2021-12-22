@@ -1,7 +1,7 @@
 import difflib
 import logging
 import re
-from typing import Dict, Optional, List
+from typing import Optional
 
 import serpy
 from small_asc.client import Results
@@ -21,27 +21,27 @@ log = logging.getLogger(__name__)
 
 
 class SearchResults(BaseSearchResults):
-    def get_modes(self, obj: Results) -> Optional[Dict]:
+    def get_modes(self, obj: Results) -> Optional[dict]:
         req = self.context.get("request")
-        cfg: Dict = req.app.ctx.config
-        transl: Dict = req.app.ctx.translations
+        cfg: dict = req.app.ctx.config
+        transl: dict = req.app.ctx.translations
 
-        facet_results: Optional[Dict] = obj.raw_response.get('facets')
+        facet_results: Optional[dict] = obj.raw_response.get('facets')
         if not facet_results:
             return None
 
-        mode_facet: Optional[Dict] = facet_results.get("mode")
+        mode_facet: Optional[dict] = facet_results.get("mode")
         # if, for some reason, we don't have a mode facet we return gracefully.
         if not mode_facet:
             return None
 
-        mode_buckets: List = mode_facet.get("buckets", [])
-        mode_items: List = []
-        mode_config: Dict = cfg['search']['modes']
+        mode_buckets: list = mode_facet.get("buckets", [])
+        mode_items: list = []
+        mode_config: dict = cfg['search']['modes']
         # Put the returned modes into a dictionary so we can look up the buckets by the key. The format is
         # {type: count}, where 'type' is the value from the Solr type field, and 'count' is the number of
         # records returned.
-        mode_results: Dict = {f"{mode['val']}": mode['count'] for mode in mode_buckets}
+        mode_results: dict = {f"{mode['val']}": mode['count'] for mode in mode_buckets}
 
         # This will ensure the modes are returned in the order they're listed in the configuration file. Otherwise
         #  they are returned by the order of results.
@@ -65,14 +65,14 @@ class SearchResults(BaseSearchResults):
             "items": mode_items
         }
 
-    def get_items(self, obj: Results) -> Optional[List]:
+    def get_items(self, obj: Results) -> Optional[list]:
         is_probe: bool = self.context.get("probe_request", False)
         # If we have no hits, or we have a 'probe' request, then don't
         # return any items.
         if obj.hits == 0 or is_probe:
             return None
 
-        results: List[Dict] = []
+        results: list[dict] = []
         req = self.context.get('request')
 
         for d in obj.docs:
@@ -113,16 +113,16 @@ class SourceSearchResult(ContextDictSerializer):
     )
     flags = serpy.MethodField()
 
-    def get_srid(self, obj: Dict) -> str:
+    def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
         id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "sources.source", source_id=id_value)
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: dict) -> dict:
         title: str = obj.get("main_title_s", "[No title]")
         #  TODO: Translate source types
-        source_types: Optional[List] = obj.get("material_group_types_sm")
+        source_types: Optional[list] = obj.get("material_group_types_sm")
         shelfmark: Optional[str] = obj.get("shelfmark_s")
         siglum: Optional[str] = obj.get("siglum_s")
         num_holdings: Optional[int] = obj.get("num_holdings_i")
@@ -135,22 +135,22 @@ class SourceSearchResult(ContextDictSerializer):
 
         return {"none": [label]}
 
-    def get_type_label(self, obj: Dict) -> Dict:
+    def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl = req.app.ctx.translations
         return transl.get("records.source")
 
-    def get_summary(self, obj: Dict) -> Optional[List[Dict]]:
+    def get_summary(self, obj: dict) -> Optional[list[dict]]:
         field_config: LabelConfig = {
             "creator_name_s": ("records.composer_author", None),
         }
 
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_part_of(self, obj: SolrResult) -> Optional[Dict]:
+    def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         """
             Provides a pointer back to a parent. Used for Items in Sources and Incipits.
         """
@@ -167,7 +167,7 @@ class SourceSearchResult(ContextDictSerializer):
         parent_title = obj.get("source_membership_title_s")
         parent_source_id = re.sub(ID_SUB, "", obj.get("source_membership_id"))
 
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return {
             "label": transl.get("records.item_part_of"),
@@ -180,7 +180,7 @@ class SourceSearchResult(ContextDictSerializer):
             }
         }
 
-    def get_flags(self, obj: Dict) -> Optional[Dict]:
+    def get_flags(self, obj: dict) -> Optional[dict]:
         has_digitization: bool = obj.get("has_digitization_b", False)
         is_contents_record: bool = obj.get("is_contents_record_b", False)
         # A record is collection record if it has the 'source_members_sm' key. If
@@ -189,7 +189,7 @@ class SourceSearchResult(ContextDictSerializer):
         has_incipits: bool = obj.get("has_incipits_b", False)
         has_iiif: bool = obj.get("has_iiif_manifest_b", False)
         number_of_exemplars: int = obj.get("num_holdings_i", 0)
-        flags: Dict = {}
+        flags: dict = {}
 
         if has_digitization:
             flags.update({"hasDigitization": has_digitization})
@@ -228,35 +228,35 @@ class PersonSearchResult(ContextDictSerializer):
     summary = serpy.MethodField()
     flags = serpy.MethodField()
 
-    def get_srid(self, obj: Dict) -> str:
+    def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
         id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "people.person", person_id=id_value)
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: dict) -> dict:
         label: str = _format_person_label(obj)
 
         return {"none": [label]}
 
-    def get_type_label(self, obj: Dict) -> Dict:
+    def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl = req.app.ctx.translations
 
         return transl.get("records.person")
 
-    def get_summary(self, obj: Dict) -> Optional[List[Dict]]:
+    def get_summary(self, obj: dict) -> Optional[list[dict]]:
         field_config = {
             "roles_sm": ("records.profession_or_function", None)
         }
 
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_flags(self, obj: Dict) -> Optional[Dict]:
-        flags: Dict = {}
+    def get_flags(self, obj: dict) -> Optional[dict]:
+        flags: dict = {}
         number_of_sources: int = obj.get("source_count_i", 0)
 
         if number_of_sources > 0:
@@ -279,25 +279,25 @@ class InstitutionSearchResult(ContextDictSerializer):
     )
     flags = serpy.MethodField()
 
-    def get_srid(self, obj: Dict) -> str:
+    def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
         id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "institutions.institution", institution_id=id_value)
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: dict) -> dict:
         label = _format_institution_label(obj)
 
         return {"none": [label]}
 
-    def get_type_label(self, obj: Dict) -> Dict:
+    def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl = req.app.ctx.translations
 
         return transl.get("records.institution")
 
-    def get_flags(self, obj: Dict) -> Optional[Dict]:
-        flags: Dict = {}
+    def get_flags(self, obj: dict) -> Optional[dict]:
+        flags: dict = {}
         number_of_sources: int = obj.get("source_count_i", 0)
 
         if number_of_sources > 0:
@@ -319,18 +319,18 @@ class PlaceSearchResult(ContextDictSerializer):
         label="typeLabel"
     )
 
-    def get_srid(self, obj: Dict) -> str:
+    def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
         id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "places.place", place_id=id_value)
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: dict) -> dict:
         label: str = obj.get("FIXME")
 
         return {"none": [label]}
 
-    def get_type_label(self, obj: Dict) -> Dict:
+    def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl = req.app.ctx.translations
 
@@ -350,18 +350,18 @@ class LiturgicalFestivalSearchResult(ContextDictSerializer):
         label="typeLabel"
     )
 
-    def get_srid(self, obj: Dict) -> str:
+    def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
         id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "festivals.festival", festival_id=id_value)
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: dict) -> dict:
         label: str = obj.get("name_s")
 
         return {"none": [label]}
 
-    def get_type_label(self, obj: Dict) -> Dict:
+    def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl = req.app.ctx.translations
 
@@ -386,35 +386,35 @@ class IncipitSearchResult(ContextDictSerializer):
     summary = serpy.MethodField()
     flags = serpy.MethodField()
 
-    def get_srid(self, obj: Dict) -> str:
+    def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
         work_num: str = re.sub(ID_SUB, "", obj.get("work_num_s"))
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
         return get_identifier(req, "sources.incipit", source_id=source_id, work_num=work_num)
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: dict) -> dict:
         label: str = _format_incipit_label(obj)
 
         return {"none": [label]}
 
-    def get_type_label(self, obj: Dict) -> Dict:
+    def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl = req.app.ctx.translations
 
         return transl.get("records.incipit")
 
-    def get_summary(self, obj: Dict) -> Optional[List[Dict]]:
+    def get_summary(self, obj: dict) -> Optional[list[dict]]:
         field_config: LabelConfig = {
             "creator_name_s": ("records.composer_author", None),
         }
 
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_part_of(self, obj: SolrResult) -> Optional[Dict]:
+    def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         """
             Provides a pointer back to the parent for this incipit
         """
@@ -424,7 +424,7 @@ class IncipitSearchResult(ContextDictSerializer):
 
         parent_title: str = obj.get("source_title_s")
         parent_source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return {
             "label": transl.get("records.item_part_of"),
@@ -468,7 +468,7 @@ class IncipitSearchResult(ContextDictSerializer):
         return flags
 
 
-def _format_institution_label(obj: Dict) -> str:
+def _format_institution_label(obj: dict) -> str:
     city = siglum = ""
 
     if 'city_s' in obj:
@@ -479,14 +479,14 @@ def _format_institution_label(obj: Dict) -> str:
     return f"{obj['name_s']}{city}{siglum}"
 
 
-def _format_person_label(obj: Dict) -> str:
+def _format_person_label(obj: dict) -> str:
     name: str = obj.get("name_s")
     dates: str = f" ({d})" if (d := obj.get("date_statement_s")) else ""
 
     return f"{name}{dates}"
 
 
-def _format_incipit_label(obj: Dict) -> str:
+def _format_incipit_label(obj: dict) -> str:
     """
     The format for incipit titles is:
 

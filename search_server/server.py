@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import Dict, Optional
+from typing import Optional
 
 import uvloop
 import yaml
@@ -20,7 +20,7 @@ from search_server.routes.query import query_blueprint
 from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
 
-config: Dict = yaml.safe_load(open('configuration.yml', 'r'))
+config: dict = yaml.safe_load(open('configuration.yml', 'r'))
 app = Sanic("mp_server")
 
 # register routes with their blueprints
@@ -50,7 +50,7 @@ logging.basicConfig(format="[%(asctime)s] [%(levelname)8s] %(message)s (%(filena
 
 log = logging.getLogger(__name__)
 
-translations: Optional[Dict] = load_translations("locales/")
+translations: Optional[dict] = load_translations("locales/")
 if not translations:
     log.critical("No translations can be loaded.")
 

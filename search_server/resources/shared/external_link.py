@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Optional
 
 import serpy
 
@@ -22,13 +22,13 @@ class ExternalResourcesSection(JSONLDContextDictSerializer):
     label = serpy.MethodField()
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.related_resources")
 
-    def get_items(self, obj: SolrResult) -> List[Dict]:
+    def get_items(self, obj: SolrResult) -> list[dict]:
         return ExternalResource(obj["external_resources_json"], many=True,
                                 context={"request": self.context.get("request")}).data
 
@@ -44,13 +44,13 @@ class ExternalResource(JSONLDContextDictSerializer):
         label="resourceType"
     )
 
-    def get_url(self, obj: Dict) -> Optional[str]:
+    def get_url(self, obj: dict) -> Optional[str]:
         return obj.get("url")
 
-    def get_label(self, obj: Dict) -> Optional[Dict]:
+    def get_label(self, obj: dict) -> Optional[dict]:
         return {"none": [n]} if (n := obj.get("note")) else None
 
-    def get_resource_type(self, obj: Dict) -> Optional[str]:
+    def get_resource_type(self, obj: dict) -> Optional[str]:
         rtype: str = ""
         link_type: Optional[str] = obj.get("link_type")
 

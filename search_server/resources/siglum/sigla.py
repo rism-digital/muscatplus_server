@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Optional
 
 from small_asc.client import Results
 
@@ -8,7 +8,7 @@ from search_server.resources.institutions.institution import Institution
 from search_server.resources.search.base_search import BaseSearchResults
 
 
-def handle_sigla_request(req) -> Dict:
+def handle_sigla_request(req) -> dict:
     request_compiler = SearchRequest(req)
     request_compiler.filters += ["type:institution",
                                  "siglum_s:[* TO *]"]
@@ -21,7 +21,7 @@ def handle_sigla_request(req) -> Dict:
 
 
 class SiglaResults(BaseSearchResults):
-    def get_items(self, obj: Results) -> Optional[List]:
+    def get_items(self, obj: Results) -> Optional[list]:
         if obj.hits == 0:
             return None
 

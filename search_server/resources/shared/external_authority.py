@@ -1,5 +1,3 @@
-from typing import List, Dict
-
 import serpy
 
 from search_server.helpers.fields import StaticField
@@ -15,14 +13,14 @@ class ExternalAuthoritiesSection(ContextDictSerializer):
     )
     items = serpy.MethodField()
 
-    def get_label(self, obj: List) -> Dict:
+    def get_label(self, obj: list) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.other_standard_identifier")
 
-    def get_items(self, obj: List) -> List[Dict]:
-        externals: List = []
+    def get_items(self, obj: list) -> list[dict]:
+        externals: list = []
         for ext in obj:
             source, ident = ext.split(":")
             base = EXTERNAL_IDS.get(source)

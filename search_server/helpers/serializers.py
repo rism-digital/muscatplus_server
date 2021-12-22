@@ -1,16 +1,16 @@
 import operator
-from typing import Dict, List, Union, Optional
+from typing import Union, Optional
 import serpy
 
 from search_server.helpers.identifiers import get_identifier, RISM_JSONLD_CONTEXT
 
 
-def _remove_none(d: Dict) -> Dict:
+def _remove_none(d: dict) -> dict:
     return {k: v for k, v in d.items() if v is not None}
 
 
 # A type that represents the fact that the JSON-LD context can be given either by URI or an embedded context object.
-JSONLDContext = Union[str, Dict]
+JSONLDContext = Union[str, dict]
 
 
 def get_jsonld_context(request) -> JSONLDContext:
@@ -42,7 +42,7 @@ class ContextSerializer(serpy.Serializer):
         if 'context' in kwargs:
             self.context = kwargs['context']
 
-    def to_value(self, instance: Dict) -> Union[Dict, List]:
+    def to_value(self, instance: dict) -> Union[dict, list]:
         """
         Filters out values that have been serialized to 'None' to prevent
         them from being sent to the browser.
@@ -74,7 +74,7 @@ class JSONLDContextDictSerializer(ContextDictSerializer):
         label="@context"
     )
 
-    def get_ctx(self, obj) -> Optional[Dict]:
+    def get_ctx(self, obj) -> Optional[dict]:
         direct_request: bool = self.context.get("direct_request", False)
         return get_jsonld_context(self.context.get("request")) if direct_request else None
 
@@ -84,6 +84,6 @@ class JSONLDContextSerializer(ContextSerializer):
         label="@context"
     )
 
-    def get_ctx(self, obj) -> Optional[Dict]:
+    def get_ctx(self, obj) -> Optional[dict]:
         direct_request: bool = self.context.get("direct_request", False)
         return get_jsonld_context(self.context.get("request")) if direct_request else None

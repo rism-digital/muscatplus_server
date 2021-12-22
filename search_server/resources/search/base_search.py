@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Dict, Optional, List
+from typing import Optional
 
 from small_asc.client import Results
 import serpy
@@ -46,19 +46,19 @@ class BaseSearchResults(JSONLDContextSerializer):
     def get_total_items(self, obj: Results) -> int:
         return obj.hits
 
-    def get_view(self, obj: Results) -> Dict:
+    def get_view(self, obj: Results) -> dict:
         return Pagination(obj, context={"request": self.context.get('request')}).data
 
-    def get_facets(self, obj: Results) -> Optional[Dict]:
+    def get_facets(self, obj: Results) -> Optional[dict]:
         return get_facets(self.context.get('request'), obj)
 
     def get_sorts(self, obj: Results) -> Optional[list]:
         return get_sorting(self.context.get("request"), obj)
 
     @abstractmethod
-    def get_modes(self, obj: Results) -> Optional[Dict]:
+    def get_modes(self, obj: Results) -> Optional[dict]:
         return None
 
     @abstractmethod
-    def get_items(self, obj: Results) -> Optional[List]:
+    def get_items(self, obj: Results) -> Optional[list]:
         pass

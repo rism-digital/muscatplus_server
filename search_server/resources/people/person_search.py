@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict
+from typing import Optional
 
 from small_asc.client import Results
 from search_server.helpers.search_request import SearchRequest
@@ -9,7 +9,7 @@ from search_server.resources.search.search_results import BaseSearchResults, Sou
 log = logging.getLogger(__name__)
 
 
-async def handle_person_search_request(req, person_id: str) -> Dict:
+async def handle_person_search_request(req, person_id: str) -> dict:
     request_compiler = SearchRequest(req)
     request_compiler.filters += ["type:source",
                                  f"creator_id:person_{person_id} OR related_people_ids:person_{person_id}"]
@@ -21,10 +21,10 @@ async def handle_person_search_request(req, person_id: str) -> Dict:
 
 
 class PersonResults(BaseSearchResults):
-    def get_modes(self, obj: Results) -> Optional[Dict]:
+    def get_modes(self, obj: Results) -> Optional[dict]:
         return None
 
-    def get_items(self, obj: Results) -> Optional[List]:
+    def get_items(self, obj: Results) -> Optional[list]:
         if obj.hits == 0:
             return None
 

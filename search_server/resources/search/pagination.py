@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Optional, Dict
+from typing import Optional
 
 from small_asc.client import Results
 import serpy
@@ -196,7 +196,7 @@ def parse_row_number(req, row_query_string: Optional[str]) -> int:
     :return: the number of rows (i.e. the page size)
     """
     rows: int
-    search_config: Dict = req.app.ctx.config["search"]
+    search_config: dict = req.app.ctx.config["search"]
 
     if not row_query_string:
         return search_config['rows']

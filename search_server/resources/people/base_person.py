@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Dict
+from typing import Optional
 
 import serpy
 
@@ -32,19 +32,19 @@ class BasePerson(JSONLDContextDictSerializer):
 
         return get_identifier(req, "people.person", person_id=person_id)
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         name: str = obj.get("name_s")
         dates: Optional[str] = f" ({d})" if (d := obj.get("date_statement_s")) else ""
 
         return {"none": [f"{name}{dates}"]}
 
-    def get_type_label(self, obj: SolrResult) -> Optional[Dict]:
+    def get_type_label(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
         transl = req.app.ctx.translations
         return transl.get("records.person")
 
-    def get_record_history(self, obj: Dict) -> Dict:
+    def get_record_history(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return get_record_history(obj, transl)

@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict, Optional, List
+from typing import Optional
 
 import serpy
 from small_asc.client import JsonAPIRequest, Results
@@ -39,11 +39,11 @@ def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
     return record.docs[0]
 
 
-def handle_incipits_list_request(req, source_id: str) -> Optional[Dict]:
+def handle_incipits_list_request(req, source_id: str) -> Optional[dict]:
     pass
 
 
-async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[Dict]:
+async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[dict]:
     incipit_record: Optional[SolrResult] = _fetch_incipit(source_id, work_num)
 
     if not incipit_record:
@@ -68,26 +68,26 @@ class Incipit(JSONLDContextDictSerializer):
     summary = serpy.MethodField()
     rendered = serpy.MethodField()
 
-    def get_incip_id(self, obj: Dict) -> str:
+    def get_incip_id(self, obj: dict) -> str:
         req = self.context.get("request")
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
         work_num: str = f"{obj.get('work_num_s')}"
 
         return get_identifier(req, "sources.incipit", source_id=source_id, work_num=work_num)
 
-    def get_label(self, obj: SolrResult) -> Optional[Dict]:
+    def get_label(self, obj: SolrResult) -> Optional[dict]:
         work_num: str = obj['work_num_s']
         source_title: str = obj["source_title_s"]
         title: str = f" ({d})" if (d := obj.get("title_s")) else ""
 
         return {"none": [f"{source_title}: {work_num}{title}"]}
 
-    def get_part_of(self, obj: SolrResult) -> Optional[Dict]:
+    def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         if not self.context.get("direct_request"):
             return None
 
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
         return {
@@ -101,9 +101,9 @@ class Incipit(JSONLDContextDictSerializer):
             }
         }
 
-    def get_summary(self, obj: SolrResult) -> Optional[List[Dict]]:
+    def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "title_s": ("records.title_movement_tempo", None),
@@ -121,7 +121,7 @@ class Incipit(JSONLDContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config)
 
-    def get_rendered(self, obj: SolrResult) -> Optional[List]:
+    def get_rendered(self, obj: SolrResult) -> Optional[list]:
         # Use the pre-cached version.
         pae_code: Optional[str] = obj.get("original_pae_sni")
         if not pae_code:

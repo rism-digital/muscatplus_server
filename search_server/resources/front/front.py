@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import serpy
 from small_asc.client import Results
 
@@ -10,7 +8,7 @@ from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection
 
 
-async def handle_front_request(req) -> Dict:
+async def handle_front_request(req) -> dict:
     return Front({}, context={"request": req, "direct_request": True}).data
 
 
@@ -25,14 +23,14 @@ class Front(JSONLDContextDictSerializer):
     stats = serpy.MethodField()
     endpoints = serpy.MethodField()
 
-    def get_fid(self, obj: Dict) -> str:
+    def get_fid(self, obj: dict) -> str:
         req = self.context.get("request")
 
         return get_identifier(req, "root")
 
-    def get_stats(self, obj: Dict) -> List[Dict]:
+    def get_stats(self, obj: dict) -> list[dict]:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         rq = {
             "facet.field": "{!terms='source,person,institution,incipit'}type",
@@ -57,7 +55,7 @@ class Front(JSONLDContextDictSerializer):
 
         return get_display_fields(dict(zipped_list), transl, field_config)
 
-    def get_endpoints(self, obj: Dict) -> List:
+    def get_endpoints(self, obj: dict) -> list:
         req = self.context.get("request")
         return [
             get_identifier(req, "query.search")

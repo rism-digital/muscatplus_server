@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict, Optional
+from typing import Optional
 
 import serpy
 
@@ -32,9 +32,9 @@ class SourceItemList(JSONLDContextDictSerializer):
 
         return get_identifier(req, "sources.sourceitem_list", source_id=source_id)
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.items_in_source")
 
@@ -55,21 +55,21 @@ class FullSource(BaseSource):
 
     # In the full class view we don't want to display the summary as a top-level field
     # so we'll always return None.
-    def get_summary(self, obj: Dict) -> None:
+    def get_summary(self, obj: dict) -> None:
         return None
 
-    def get_contents(self, obj: SolrResult) -> Dict:
+    def get_contents(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         return ContentsSection(obj, context={"request": req}).data
 
-    def get_material_groups(self, obj: SolrResult) -> Optional[Dict]:
+    def get_material_groups(self, obj: SolrResult) -> Optional[dict]:
         if 'material_groups_json' not in obj:
             return None
 
         req = self.context.get("request")
         return MaterialGroupsSection(obj, context={"request": req}).data
 
-    def get_relationships(self, obj: SolrResult) -> Optional[Dict]:
+    def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         # sets are cool; two sets are disjoint if they have no keys in common. We
         # can use this to check whether these keys are in the solr result; if not,
         # we have no relationships to render, so we can return.
@@ -79,16 +79,16 @@ class FullSource(BaseSource):
         req = self.context.get("request")
         return RelationshipsSection(obj, context={"request": req}).data
 
-    def get_incipits(self, obj: SolrResult) -> Optional[Dict]:
+    def get_incipits(self, obj: SolrResult) -> Optional[dict]:
         if not obj.get("has_incipits_b"):
             return None
 
         req = self.context.get("request")
         return IncipitsSection(obj, context={"request": req}).data
 
-    def get_references_notes(self, obj: SolrResult) -> Optional[Dict]:
+    def get_references_notes(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        refnotes: Dict = ReferencesNotesSection(obj, context={"request": req}).data
+        refnotes: dict = ReferencesNotesSection(obj, context={"request": req}).data
 
         # if the only two keys in the references and notes section is 'label' and 'type'
         # then there is no content and we can hide this section.
@@ -97,25 +97,25 @@ class FullSource(BaseSource):
 
         return refnotes
 
-    def get_works(self, obj: SolrResult) -> Optional[Dict]:
+    def get_works(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        wks: Dict = WorksSection(obj, context={"request": req}).data
+        wks: dict = WorksSection(obj, context={"request": req}).data
         if 'items' not in wks:
             return None
 
         return wks
 
-    def get_exemplars(self, obj: SolrResult) -> Optional[Dict]:
+    def get_exemplars(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        exmplrs: Dict = ExemplarsSection(obj, context={"request": req}).data
+        exmplrs: dict = ExemplarsSection(obj, context={"request": req}).data
         if 'items' not in exmplrs:
             return None
 
         return exmplrs
 
-    def get_items(self, obj: SolrResult) -> Optional[Dict]:
+    def get_items(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        itms: Dict = SourceItemsSection(obj, context={"request": req}).data
+        itms: dict = SourceItemsSection(obj, context={"request": req}).data
         if 'items' not in itms:
             return None
 

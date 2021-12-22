@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Optional, List
+from typing import Optional
 
 import serpy
 
@@ -15,7 +15,7 @@ from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import RelationshipsSection
 
 
-async def handle_institution_request(req, institution_id: str) -> Optional[Dict]:
+async def handle_institution_request(req, institution_id: str) -> Optional[dict]:
     institution_record: Optional[dict] = SolrConnection.get(f"institution_{institution_id}")
 
     if not institution_record:
@@ -58,22 +58,22 @@ class Institution(JSONLDContextDictSerializer):
 
         return get_identifier(req, "institutions.institution", institution_id=institution_id)
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         name: str = obj['name_s']
 
         return {"none": [name]}
 
-    def get_type_label(self, obj: SolrResult) -> Dict:
+    def get_type_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl = req.app.ctx.translations
 
         return transl.get("records.institution")
 
-    def get_summary(self, obj: SolrResult) -> Optional[Dict]:
+    def get_summary(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
-        field_config: Dict = {
+        field_config: dict = {
             "city_s": ("records.city", None),
             "countries_sm": ("records.country", None),
             "siglum_s": ("records.siglum", None),
@@ -84,7 +84,7 @@ class Institution(JSONLDContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config)
 
-    def get_sources(self, obj: SolrResult) -> Optional[Dict]:
+    def get_sources(self, obj: SolrResult) -> Optional[dict]:
         source_count: int = obj.get("source_count_i", 0)
         if source_count == 0:
             return None
@@ -97,9 +97,9 @@ class Institution(JSONLDContextDictSerializer):
             "totalItems": source_count
         }
 
-    def get_location(self, obj: SolrResult) -> Optional[Dict]:
+    def get_location(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         loc: str = obj.get("location_loc")
         if not loc:
@@ -111,13 +111,13 @@ class Institution(JSONLDContextDictSerializer):
             "coordinates": loc.split(",")
         }
 
-    def get_external_authorities(self, obj: SolrResult) -> Optional[List[Dict]]:
+    def get_external_authorities(self, obj: SolrResult) -> Optional[list[dict]]:
         if 'external_ids' not in obj:
             return None
 
         return ExternalAuthoritiesSection(obj['external_ids'], context={"request": self.context.get("request")}).data
 
-    def get_relationships(self, obj: SolrResult) -> Optional[Dict]:
+    def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         if not self.context.get("direct_request"):
             return None
 
@@ -128,21 +128,21 @@ class Institution(JSONLDContextDictSerializer):
 
         return RelationshipsSection(obj, context={"request": req}).data
 
-    def get_notes(self, obj: SolrResult) -> Optional[Dict]:
-        notes: Dict = NotesSection(obj, context={"request": self.context.get("request")}).data
+    def get_notes(self, obj: SolrResult) -> Optional[dict]:
+        notes: dict = NotesSection(obj, context={"request": self.context.get("request")}).data
         if 'notes' in notes:
             return notes
 
         return None
 
-    def get_external_resources(self, obj: SolrResult) -> Optional[Dict]:
+    def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:
             return None
 
         return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
 
-    def get_record_history(self, obj: Dict) -> Dict:
+    def get_record_history(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return get_record_history(obj, transl)

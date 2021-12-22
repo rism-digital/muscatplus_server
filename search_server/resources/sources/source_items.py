@@ -1,10 +1,8 @@
-import re
-from typing import Dict, List, Optional
+from typing import Optional
 
 import serpy
 from small_asc.client import Results
 
-from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult, SolrConnection
@@ -21,7 +19,7 @@ class SourceItemsSection(JSONLDContextDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.items_in_source")
 
@@ -30,7 +28,7 @@ class SourceItemsSection(JSONLDContextDictSerializer):
 
         # Remember to filter out the current source from the list of
         # all sources in this membership group.
-        fq: List = ["type:source",
+        fq: list = ["type:source",
                     "is_contents_record_b:true",
                     f"source_membership_id:{this_id}",
                     f"!id:{this_id}"]

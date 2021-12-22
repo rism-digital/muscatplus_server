@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Optional
 
 import serpy
 from small_asc.client import Results
@@ -19,12 +19,12 @@ class IncipitsSection(JSONLDContextDictSerializer):
 
     def get_label(self, obj: SolrResult):
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.incipits")
 
-    def get_items(self, obj: SolrResult) -> Optional[List]:
-        fq: List = [f"source_id:{obj.get('id')}",
+    def get_items(self, obj: SolrResult) -> Optional[list]:
+        fq: list = [f"source_id:{obj.get('id')}",
                     "type:incipit"]
         sort: str = "work_num_ans asc"
 

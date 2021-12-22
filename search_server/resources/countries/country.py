@@ -1,7 +1,7 @@
-from typing import Dict, Optional, List
+from typing import Optional
 
 
-async def handle_country_request(req, country_id: str) -> Optional[Dict]:
+async def handle_country_request(req, country_id: str) -> Optional[dict]:
     # Placeholder
-    fq: List = ["type:place"]
+    fq: list = ["type:place"]
     return None

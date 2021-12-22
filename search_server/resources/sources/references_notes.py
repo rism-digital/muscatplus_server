@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Optional
 
 import serpy
 
@@ -27,13 +27,13 @@ class ReferencesNotesSection(JSONLDContextDictSerializer):
         label="liturgicalFestivals"
     )
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.references_and_notes")
 
-    def get_notes(self, obj: SolrResult) -> Optional[Dict]:
+    def get_notes(self, obj: SolrResult) -> Optional[dict]:
         # 500, 505, 518, 525
         req = self.context.get("request")
         transl = req.app.ctx.translations
@@ -48,7 +48,7 @@ class ReferencesNotesSection(JSONLDContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_performance_locations(self, obj: SolrResult) -> Optional[Dict]:
+    def get_performance_locations(self, obj: SolrResult) -> Optional[dict]:
         # 651
         if 'location_of_performance_json' not in obj:
             return None
@@ -56,7 +56,7 @@ class ReferencesNotesSection(JSONLDContextDictSerializer):
         return PerformanceLocationsSection(obj,
                                            context={"request": self.context.get('request')}).data
 
-    def get_liturgical_festivals(self, obj: SolrResult) -> Optional[Dict]:
+    def get_liturgical_festivals(self, obj: SolrResult) -> Optional[dict]:
         # 657
         if 'liturgical_festivals_json' not in obj:
             return None
@@ -73,13 +73,13 @@ class PerformanceLocationsSection(JSONLDContextDictSerializer):
     )
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.location_performance")
 
-    def get_items(self, obj: Dict) -> List[Dict]:
+    def get_items(self, obj: dict) -> list[dict]:
         performance_locations = obj.get("location_of_performance_json", [])
 
         return Relationship(performance_locations,
@@ -95,13 +95,13 @@ class LiturgicalFestivalsSection(JSONLDContextDictSerializer):
     )
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.liturgical_festivals")
 
-    def get_items(self, obj: SolrResult) -> Optional[List]:
+    def get_items(self, obj: SolrResult) -> Optional[list]:
         liturgical_festivals = obj.get("liturgical_festivals_json", [])
 
         return LiturgicalFestival(liturgical_festivals,

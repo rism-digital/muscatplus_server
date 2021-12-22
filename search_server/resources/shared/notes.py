@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List
+from typing import Optional
 
 import serpy
 
@@ -16,14 +16,14 @@ class NotesSection(JSONLDContextDictSerializer):
     )
     notes = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         # TODO: Change this to just 'notes' when the translation is available.
         return transl.get("records.references_and_notes")
 
-    def get_notes(self, obj: SolrResult) -> Optional[List]:
+    def get_notes(self, obj: SolrResult) -> Optional[list]:
         req = self.context.get("request")
         transl = req.app.ctx.translations
 

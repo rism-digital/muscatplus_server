@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
 from small_asc.client import Results
 
@@ -11,7 +11,7 @@ from search_server.resources.search.search_results import SourceSearchResult
 log = logging.getLogger(__name__)
 
 
-async def handle_institution_search_request(req, institution_id: str) -> Dict:
+async def handle_institution_search_request(req, institution_id: str) -> dict:
     request_compiler = SearchRequest(req)
     request_compiler.filters += ["type:source",
                                  f"holding_institutions_ids:institution_{institution_id} OR related_institutions_ids:institution_{institution_id}"]
@@ -23,10 +23,10 @@ async def handle_institution_search_request(req, institution_id: str) -> Dict:
 
 
 class InstitutionResults(BaseSearchResults):
-    def get_modes(self, obj: Results) -> Optional[Dict]:
+    def get_modes(self, obj: Results) -> Optional[dict]:
         return None
 
-    def get_items(self, obj: Results) -> Optional[List]:
+    def get_items(self, obj: Results) -> Optional[list]:
         if obj.hits == 0:
             return None
 

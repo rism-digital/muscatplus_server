@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
 import serpy
 
@@ -23,12 +23,12 @@ class MaterialGroupsSection(JSONLDContextDictSerializer):
 
     def get_label(self, obj: SolrResult):
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.material_description")
 
-    def get_items(self, obj: SolrResult) -> List[Dict]:
-        mgdata: List = obj.get("material_groups_json")
+    def get_items(self, obj: SolrResult) -> list[dict]:
+        mgdata: list = obj.get("material_groups_json")
         return MaterialGroup(mgdata,
                              many=True,
                              context={"request": self.context.get("request")}).data
@@ -44,14 +44,14 @@ class MaterialGroup(JSONLDContextDictSerializer):
     notes = serpy.MethodField()
     relationships = serpy.MethodField()
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: dict) -> dict:
         # TODO: Translate this header into the languages
         group_num: str = obj.get("group_num")
         return {"none": [f"Group {group_num}"]}
 
-    def get_summary(self, obj: Dict) -> Optional[List]:
+    def get_summary(self, obj: dict) -> Optional[list]:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "material_group_types": ("records.type", None),
@@ -72,9 +72,9 @@ class MaterialGroup(JSONLDContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_notes(self, obj: Dict) -> Optional[list]:
+    def get_notes(self, obj: dict) -> Optional[list]:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "general_notes": ("records.general_note", None),
@@ -84,7 +84,7 @@ class MaterialGroup(JSONLDContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_relationships(self, obj: Dict) -> Optional[Dict]:
+    def get_relationships(self, obj: dict) -> Optional[dict]:
         # a set is disjoint if there are no keys in common.
         if {'related_people_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
             return None

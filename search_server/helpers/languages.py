@@ -4,7 +4,7 @@ import glob
 import logging
 import os
 import re
-from typing import Dict, Optional, List, Pattern, Union
+from typing import Optional, Pattern, Union
 
 import yaml
 
@@ -13,10 +13,10 @@ log = logging.getLogger(__name__)
 # Removes ruby crud in the YML files.
 REMOVE_ACTIVESUPPORT: Pattern = re.compile(r"!map:ActiveSupport::HashWithIndifferentAccess")
 # A list of the languages we support
-SUPPORTED_LANGUAGES: List = ["de", "en", "es", "fr", "it", "pl", "pt"]
+SUPPORTED_LANGUAGES: list = ["de", "en", "es", "fr", "it", "pl", "pt"]
 
 
-def language_labels(translations: Dict) -> Dict:
+def language_labels(translations: dict) -> dict:
     """
     Loads in the language configuration file and correlates it with the available translations to produce a
     dictionary with the general shape of:
@@ -47,14 +47,14 @@ def language_labels(translations: Dict) -> Dict:
         cleaned_yml: str = re.sub(REMOVE_ACTIVESUPPORT, "", yml)
 
         try:
-            lang_contents: Dict = yaml.safe_load(
+            lang_contents: dict = yaml.safe_load(
                 cleaned_yml
             )
         except yaml.YAMLError:
             log.error("Problem loading language labels %s; It was skipped.", fn)
             raise
 
-    res: Dict = {}
+    res: dict = {}
     for abbrev, label in lang_contents.items():
         transl_key: str = label["label"]
         res[abbrev] = translations[transl_key]
@@ -62,8 +62,8 @@ def language_labels(translations: Dict) -> Dict:
     return res
 
 
-def __flatten(d: Dict) -> Dict:
-    out: Dict = {}
+def __flatten(d: dict) -> dict:
+    out: dict = {}
     for key, val in d.items():
         if isinstance(val, dict):
             val = [val]
@@ -77,7 +77,7 @@ def __flatten(d: Dict) -> Dict:
     return out
 
 
-def load_translations(path: str) -> Optional[Dict]:
+def load_translations(path: str) -> Optional[list]:
     """Takes a path to a set of locale yml files, and returns a dictionary of translations, with each unique key
         pointing to all available translations of that key. For example:
 
@@ -95,8 +95,8 @@ def load_translations(path: str) -> Optional[Dict]:
         log.error("The path for loading the language files does not exist: %s", path)
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
 
-    locale_files: List = glob.glob(f"{path}/*.yml")
-    output: Dict = collections.defaultdict(dict)
+    locale_files: list = glob.glob(f"{path}/*.yml")
+    output: dict = collections.defaultdict(dict)
 
     for locale_file in locale_files:
         log.debug("Opening %s", locale_file)
@@ -107,7 +107,7 @@ def load_translations(path: str) -> Optional[Dict]:
             continue
 
         try:
-            locale_contents: Dict = yaml.safe_load(
+            locale_contents: dict = yaml.safe_load(
                 open(locale_file, "r")
             )
         except yaml.YAMLError:
@@ -115,30 +115,30 @@ def load_translations(path: str) -> Optional[Dict]:
             continue
 
         try:
-            translations: Dict = locale_contents[lang]
+            translations: dict = locale_contents[lang]
         except KeyError:
             log.error("The locale in the filename does not match the contents of the file: %s", locale_file)
             continue
 
-        flattened_translations: Dict = __flatten(translations)
+        flattened_translations: dict = __flatten(translations)
 
         for translation_key, translation_value in flattened_translations.items():
             if translation_value:
                 output[translation_key].update({lang: [translation_value]})
 
-    translations: Dict = dict(output)
+    translations: dict = dict(output)
 
     # combine the translations with the values of the language codes, to keep everything in the same spot.
     # namespace the language codes with 'langcodes' (similar to 'general' or 'records'). Language labels
     # can then be looked up with "langcodes.ger".
-    labels: Dict = language_labels(translations)
-    namespaced_labels: Dict = {f"langcodes.{k}": v for k, v in labels.items()}
+    labels: dict = language_labels(translations)
+    namespaced_labels: dict = {f"langcodes.{k}": v for k, v in labels.items()}
     translations.update(namespaced_labels)
 
     return translations
 
 
-def languages_translator(value: Union[str, List], translations: Dict) -> Dict:
+def languages_translator(value: Union[str, list], translations: dict) -> dict:
     """
         A value translator that takes a language code and returns
         the translated value for that language, e.g., "ger" -> "German" for
@@ -162,7 +162,7 @@ def languages_translator(value: Union[str, List], translations: Dict) -> Dict:
     else:
         trans_value = value
 
-    all_values: List = []
+    all_values: list = []
     for v in trans_value:
         trans_key: str = f"langcodes.{v}"
         if trans_key not in translations:

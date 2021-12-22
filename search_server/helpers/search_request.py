@@ -1,7 +1,7 @@
 import logging
 import urllib.parse
 from collections import defaultdict
-from typing import Dict, Optional, List
+from typing import Optional
 
 from search_server.exceptions import InvalidQueryException, PaginationParseException
 from search_server.helpers.vrv import get_pae_features
@@ -49,7 +49,7 @@ def sorting_for_mode(cfg: dict, mode: str) -> list:
 
 
 # Some helper functions to work with the field and filter configurations.
-def filters_for_mode(cfg: Dict, mode: str) -> List:
+def filters_for_mode(cfg: dict, mode: str) -> list:
     """
     Returns a set of facets to apply when a particular result mode is chosen.
     :param cfg: The application configuration
@@ -60,7 +60,7 @@ def filters_for_mode(cfg: Dict, mode: str) -> List:
     return cfg["search"]["modes"][mode].get('filters', [])
 
 
-def filter_type_map(filters_config: List) -> Dict:
+def filter_type_map(filters_config: list) -> dict:
     """
     A dictionary that maps the type of filter (toggle, selector, etc.) to the alias.
     :param filters_config:
@@ -84,11 +84,11 @@ def types_alias_map(filters_config: list) -> dict:
     return dict(filtmap)
 
 
-def filter_label_map(filters_config: List) -> Dict:
+def filter_label_map(filters_config: list) -> dict:
     return {f"{cnf['alias']}": f"{cnf['label']}" for cnf in filters_config}
 
 
-def alias_config_map(filters_config: List) -> Dict:
+def alias_config_map(filters_config: list) -> dict:
     """
     A dictionary that maps the incoming API request 'alias' to the config block for that facet config.
     :param filters_config: A list of all the filters for the map
@@ -98,7 +98,7 @@ def alias_config_map(filters_config: List) -> Dict:
     return {f"{cnf['alias']}": cnf for cnf in filters_config}
 
 
-def field_alias_map(filters_config: List) -> Dict:
+def field_alias_map(filters_config: list) -> dict:
     """
     A dictionary mapping the configured alias to the Solr field. Used for referencing the solr field using the
     alias.
@@ -108,10 +108,10 @@ def field_alias_map(filters_config: List) -> Dict:
     return {f"{cnf['alias']}": f"{cnf['field']}" for cnf in filters_config}
 
 
-def facet_modifier_map(requested_values: List) -> dict:
+def facet_modifier_map(requested_values: list) -> dict:
     """
     Used to combine other fields with facet modifiers. For example, a facet alias of 'source-type' might
-    have a facet sort of 'fs=source-type:alpha' and a behaviour of 'fb=source-type:union'. This function is
+    have a facet behaviour of 'fb=source-type:union'. This function is
     a generic one that creates a map of modifiers for specific parameters so that it can be looked up later.
 
     :param requested_values: A list of 'alias:modifier' values.
@@ -177,8 +177,8 @@ class SearchRequest:
         self._validate_incoming_request()
 
         # Set up some public properties
-        self.filters: List = []
-        self.sorts: List = []
+        self.filters: list = []
+        self.sorts: list = []
         self.fields: list = ["*"]
 
         # A probe request will do all the reqular things EXCEPT it will hard-code the number of responses to 0
@@ -205,7 +205,7 @@ class SearchRequest:
 
         # Configure the facets to show for the selected mode.
         self._facets_for_mode: list = filters_for_mode(self._app_config, self._requested_mode)
-        self._alias_config_map: Dict = alias_config_map(self._facets_for_mode)
+        self._alias_config_map: dict = alias_config_map(self._facets_for_mode)
         self._behaviour_for_facet: dict = facet_modifier_map(self._requested_facet_behaviours)
         self._mode_for_facet: dict = facet_modifier_map(self._requested_facet_mode)
 
@@ -220,21 +220,21 @@ class SearchRequest:
 
         :return: None
         """
-        valid_q_param: List = self._req.args.getlist("q", [])
+        valid_q_param: list = self._req.args.getlist("q", [])
         if len(valid_q_param) > 1:
             raise InvalidQueryException("Only one query parameter can be supplied.")
 
-        requested_modes: List = self._req.args.getlist("mode", [])
+        requested_modes: list = self._req.args.getlist("mode", [])
         if len(requested_modes) > 1:
             raise InvalidQueryException("Only one mode parameter can be supplied.")
 
-        requested_sorts: List = self._req.args.getlist("sort", [])
+        requested_sorts: list = self._req.args.getlist("sort", [])
         if len(requested_sorts) > 1:
             raise InvalidQueryException("Only one sort parameter can be supplied.")
 
-        modes: Dict = self._app_config["search"]["modes"]
+        modes: dict = self._app_config["search"]["modes"]
         if len(requested_modes) == 1:
-            requested_mode_config: Optional[Dict] = modes.get(requested_modes[0])
+            requested_mode_config: Optional[dict] = modes.get(requested_modes[0])
 
             # if the requested mode does not match anything configured, raise an exception
             if not requested_mode_config:
@@ -256,13 +256,13 @@ class SearchRequest:
 
         :return: The alias mapping e.g., 'mode=people' to "type:person"
         """
-        modes: Dict = self._app_config["search"]["modes"]
-        mode_cfg: Dict = modes[self._requested_mode]
+        modes: dict = self._app_config["search"]["modes"]
+        mode_cfg: dict = modes[self._requested_mode]
         record_type: str = mode_cfg["record_type"]
 
         return f"type:{record_type}"
 
-    def _compile_filters(self) -> List:
+    def _compile_filters(self) -> list:
         raw_statements: defaultdict = defaultdict(list)
         filter_statements: list = []
 
@@ -400,7 +400,7 @@ class SearchRequest:
             return DEFAULT_QUERY_STRING
         return " AND ".join(self._requested_query)
 
-    def compile(self) -> Dict:
+    def compile(self) -> dict:
         """
         Assembles the incoming data into a form that is appropriate for
         Solr.
@@ -457,7 +457,7 @@ class SearchRequest:
         # See https://solr.apache.org/guide/8_8/faceting.html#tagging-and-excluding-filters
         self.filters.append(f"{{!tag={SolrQueryTags.MODE_FILTER_TAG}}}{mode_filter}")
 
-        requested_filters: List = self._compile_filters()
+        requested_filters: list = self._compile_filters()
         self.filters += requested_filters
 
         # These have already been checked in the validation, so they shouldn't raise an exception here.
@@ -483,7 +483,7 @@ class SearchRequest:
         return solr_query
 
 
-def _create_range_facet(facet_cfg: Dict) -> Dict:
+def _create_range_facet(facet_cfg: dict) -> dict:
     """
     Creates a JSON facet API configuration that will return the min
     and max values of a scalar field (e.g., integers, dates, etc.)
@@ -505,7 +505,7 @@ def _create_range_facet(facet_cfg: Dict) -> Dict:
     """
     field_name: str = facet_cfg["field"]
 
-    cfg: Dict = {
+    cfg: dict = {
         "type": "query",
         "q": "*:*",
         "facet": {
@@ -519,10 +519,10 @@ def _create_range_facet(facet_cfg: Dict) -> Dict:
     return cfg
 
 
-def _create_toggle_facet(facet_cfg: Dict) -> Dict:
+def _create_toggle_facet(facet_cfg: dict) -> dict:
     field_name: str = facet_cfg["field"]
 
-    cfg: Dict = {
+    cfg: dict = {
         "type": "terms",
         "field": f"{field_name}",
         "limit": 2
@@ -531,7 +531,7 @@ def _create_toggle_facet(facet_cfg: Dict) -> Dict:
     return cfg
 
 
-def _create_select_facet(facet_cfg: Dict, behaviour: str) -> Dict:
+def _create_select_facet(facet_cfg: dict, behaviour: str) -> dict:
     """
     Creates a Solr JSON Facet API definition for terms. This can be
     :param facet_cfg: The configuration block for Solr facets.
@@ -540,7 +540,7 @@ def _create_select_facet(facet_cfg: Dict, behaviour: str) -> Dict:
     """
     field_name: str = facet_cfg["field"]
 
-    cfg: Dict = {
+    cfg: dict = {
         "type": "terms",
         "field": f"{field_name}",
         "limit": TERM_FACET_LIMIT

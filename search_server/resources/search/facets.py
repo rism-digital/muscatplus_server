@@ -2,7 +2,7 @@ import logging
 import re
 import urllib.parse
 from re import Pattern
-from typing import Optional, List, Dict
+from typing import Optional
 
 from small_asc.client import Results
 
@@ -15,18 +15,18 @@ log = logging.getLogger("mp_server")
 RANGE_PARSING_REGEX: Pattern = re.compile(r'\[(?P<start>-?\d{,4})\s?TO\s?(?P<end>-?\d{,4})\]')
 
 
-def get_facets(req, obj: Results) -> Optional[Dict]:
-    facet_result: Optional[Dict] = obj.raw_response.get('facets')
+def get_facets(req, obj: Results) -> Optional[dict]:
+    facet_result: Optional[dict] = obj.raw_response.get('facets')
 
     if not facet_result:
         return None
 
-    cfg: Dict = req.app.ctx.config
-    transl: Dict = req.app.ctx.translations
+    cfg: dict = req.app.ctx.config
+    transl: dict = req.app.ctx.translations
 
     current_mode: str = req.args.get("mode", cfg["search"]["default_mode"])
     filters = filters_for_mode(cfg, current_mode)
-    facet_config_map: Dict = alias_config_map(filters)
+    facet_config_map: dict = alias_config_map(filters)
     type_config_map: dict = types_alias_map(filters)
 
     facets: dict = {}
@@ -105,7 +105,7 @@ def get_facets(req, obj: Results) -> Optional[Dict]:
         else:
             label = {"none": [translation_key]}
 
-        cfg: Dict = {
+        cfg: dict = {
             "alias": alias,
             "label": label,
             "type": _get_facet_type(facet_type)
@@ -213,7 +213,7 @@ def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations
 
     default_sort: str = cfg.get("default_sort", FacetSortValues.COUNT)
 
-    items: List = []
+    items: list = []
     for bucket in value_buckets:
         solr_value = bucket['val']
         value: str

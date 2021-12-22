@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Optional, List
+from typing import Optional
 
 import serpy
 from small_asc.client import Results
@@ -23,12 +23,12 @@ class ExemplarsSection(JSONLDContextDictSerializer):
 
     def get_label(self, obj: SolrResult):
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.exemplars")
 
-    def get_items(self, obj: SolrResult) -> Optional[Dict]:
-        fq: List = [f"source_id:{obj.get('id')}",
+    def get_items(self, obj: SolrResult) -> Optional[dict]:
+        fq: list = [f"source_id:{obj.get('id')}",
                     "type:holding"]
 
         sort: str = "siglum_s asc, shelfmark_ans asc"
@@ -64,16 +64,16 @@ class Exemplar(JSONLDContextDictSerializer):
     )
     relationships = serpy.MethodField()
 
-    def get_sid(self, obj: Dict) -> str:
+    def get_sid(self, obj: dict) -> str:
         req = self.context.get('request')
         # find the holding id
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
         return get_identifier(req, "sources.exemplar", source_id=source_id, exemplar_id=obj.get("holding_id_sni"))
 
-    def get_summary(self, obj: SolrResult) -> Optional[List[Dict]]:
+    def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "shelfmark_s": ("records.shelfmark", None),
@@ -92,7 +92,7 @@ class Exemplar(JSONLDContextDictSerializer):
 
     def get_notes(self, obj: SolrResult) -> Optional[list]:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "general_notes_sm": ("records.general_note", None),
@@ -104,7 +104,7 @@ class Exemplar(JSONLDContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_held_by(self, obj: Dict) -> Dict:
+    def get_held_by(self, obj: dict) -> dict:
         req = self.context.get('request')
         institution_id: str = re.sub(ID_SUB, "", obj.get("institution_id"))
 
@@ -123,14 +123,14 @@ class Exemplar(JSONLDContextDictSerializer):
             },
         }
 
-    def get_relationships(self, obj: SolrResult) -> Optional[Dict]:
+    def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         if {'related_people_json', 'related_places_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
             return None
 
         req = self.context.get("request")
         return RelationshipsSection(obj, context={"request": req}).data
 
-    def get_external_resources(self, obj: SolrResult) -> Optional[Dict]:
+    def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:
             return None
 

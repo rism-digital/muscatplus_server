@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict
+from typing import Optional
 
 from small_asc.client import Results
 from search_server.helpers.search_request import SearchRequest
@@ -10,11 +10,11 @@ from search_server.resources.sources.base_source import BaseSource
 log = logging.getLogger(__name__)
 
 
-def handle_subject_source_request(req, subject_id: str) -> Dict:
+def handle_subject_source_request(req, subject_id: str) -> dict:
     request_compiler = SearchRequest(req)
     request_compiler.filters += ["type:source", f"subject_ids:subject_{subject_id}"]
 
-    solr_params: Dict = request_compiler.compile()
+    solr_params: dict = request_compiler.compile()
     solr_res: Results = SolrConnection.search({**solr_params})
 
     subject_source_results = SubjectResults(solr_res, context={"request": req})
@@ -23,7 +23,7 @@ def handle_subject_source_request(req, subject_id: str) -> Dict:
 
 
 class SubjectResults(BaseSearchResults):
-    def get_items(self, obj: Results) -> Optional[List]:
+    def get_items(self, obj: Results) -> Optional[list]:
         if obj.hits == 0:
             return None
 

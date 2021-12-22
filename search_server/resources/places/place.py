@@ -1,5 +1,5 @@
 import re
-from typing import List, Optional, Dict
+from typing import Optional
 
 import serpy
 
@@ -10,7 +10,7 @@ from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult, SolrConnection
 
 
-async def handle_place_request(req, place_id: str) -> Optional[Dict]:
+async def handle_place_request(req, place_id: str) -> Optional[dict]:
     record: Optional[dict] = SolrConnection.get(f"place_{place_id}")
 
     if not record:
@@ -37,12 +37,12 @@ class Place(JSONLDContextDictSerializer):
 
         return get_identifier(req, "places.place", place_id=place_id)
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         return {"none": [obj.get("name_s")]}
 
-    def get_summary(self, obj: SolrResult) -> Optional[List]:
+    def get_summary(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "country_s": ("records.country", None),

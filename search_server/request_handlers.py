@@ -3,7 +3,6 @@ from typing import Callable, Optional
 
 from sanic import request, response
 from small_asc.client import SolrError
-from search_server.helpers.solr_connection import SolrConnection
 
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.semantic_web import to_turtle, to_rdf

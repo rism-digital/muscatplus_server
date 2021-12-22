@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Dict, List
+from typing import Optional
 
 import serpy
 
@@ -10,7 +10,7 @@ from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection
 
 
-async def handle_festival_request(req, festival_id: str) -> Optional[Dict]:
+async def handle_festival_request(req, festival_id: str) -> Optional[dict]:
     record: Optional[dict] = SolrConnection.get(f"id:festival_{festival_id}")
 
     if not record:
@@ -31,13 +31,13 @@ class LiturgicalFestival(JSONLDContextDictSerializer):
     label = serpy.MethodField()
     summary = serpy.MethodField()
 
-    def get_fid(self, obj: Dict) -> str:
+    def get_fid(self, obj: dict) -> str:
         req = self.context.get("request")
         festival_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "festivals.festival", festival_id=festival_id)
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: dict) -> dict:
         # This serializer can also be used by the 'liturgical festival' section
         # on a source, which has a different name field.
         if 'name' in obj:
@@ -45,12 +45,12 @@ class LiturgicalFestival(JSONLDContextDictSerializer):
         else:
             return {"none": [f"{obj.get('name_s')}"]}
 
-    def get_summary(self, obj: Dict) -> Optional[List]:
+    def get_summary(self, obj: dict) -> Optional[list]:
         if not self.context.get("direct_request"):
             return None
 
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             # should be "Alternate terms" but this is not available in the translations currently...

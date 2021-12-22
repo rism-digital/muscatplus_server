@@ -1,9 +1,9 @@
-from typing import Dict, List, Optional, Callable, Tuple, Union
+from typing import Optional, Callable, Union
 import logging
 
 from search_server.helpers.solr_connection import SolrResult
 
-LabelConfig = Dict[str, Tuple[str, Optional[Union[Callable, Dict]]]]
+LabelConfig = dict[str, tuple[str, Optional[Union[Callable, dict]]]]
 
 log = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ FIELD_CONFIG: LabelConfig = {
 }
 
 
-def _default_translator(value: Union[str, List], translations: Dict) -> Dict:
+def _default_translator(value: Union[str, list], translations: dict) -> dict:
     """
     If the parameter given for a value translator in the field configuration is None,
     then use this function as the default translator. It will return the value wrapped
@@ -43,7 +43,7 @@ def _default_translator(value: Union[str, List], translations: Dict) -> Dict:
 # This field config will be the default used if one is not provided.
 
 
-def get_display_fields(record: Union[SolrResult, Dict], translations: Dict, field_config: Optional[LabelConfig] = None) -> Optional[List]:
+def get_display_fields(record: Union[SolrResult, dict], translations: dict, field_config: Optional[LabelConfig] = None) -> Optional[list]:
     """
     Returns a list of translated display fields for a given record. Uses the metadata fields to configure
     the label, based on the Solr field. Supports direct value output, or a function for translating the values.
@@ -56,7 +56,7 @@ def get_display_fields(record: Union[SolrResult, Dict], translations: Dict, fiel
     if not field_config:
         field_config = FIELD_CONFIG
 
-    display: List = []
+    display: list = []
 
     for field, translation_map in field_config.items():
         if field not in record:
@@ -73,7 +73,7 @@ def get_display_fields(record: Union[SolrResult, Dict], translations: Dict, fiel
 
         record_value = record.get(field)
 
-        label_value_map: Dict = {
+        label_value_map: dict = {
             "label": translations.get(label_translation),
             "value": value_translator(record_value, translations)
         }

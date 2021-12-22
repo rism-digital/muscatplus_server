@@ -1,7 +1,7 @@
 import itertools
 import logging
 import re
-from typing import Dict, Optional, List, Callable
+from typing import Optional, Callable
 
 import serpy
 
@@ -22,16 +22,16 @@ class RelationshipsSection(JSONLDContextDictSerializer):
     )
     items = serpy.MethodField()
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.relations")
 
-    def get_items(self, obj: Dict) -> List[Dict]:
-        people: List = obj.get("related_people_json", [])
-        institutions: List = obj.get("related_institutions_json", [])
-        places: List = obj.get("related_places_json", [])
+    def get_items(self, obj: dict) -> list[dict]:
+        people: list = obj.get("related_people_json", [])
+        institutions: list = obj.get("related_institutions_json", [])
+        places: list = obj.get("related_places_json", [])
 
         all_relationships = itertools.chain(people, institutions, places)
 
@@ -56,7 +56,7 @@ class Relationship(JSONLDContextDictSerializer):
     )
     name = serpy.MethodField()
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl = req.app.ctx.translations
         relationship_translator: Optional[Callable] = _relationship_translator(obj)
@@ -65,19 +65,19 @@ class Relationship(JSONLDContextDictSerializer):
 
         return relationship_translator(obj.get("relationship"), transl)
 
-    def get_role(self, obj: Dict) -> Optional[str]:
+    def get_role(self, obj: dict) -> Optional[str]:
         if 'relationship' not in obj:
             return None
 
         return f"rism:{obj.get('relationship').replace(' ', '_')}"
 
-    def get_qualifier(self, obj: Dict) -> Optional[str]:
+    def get_qualifier(self, obj: dict) -> Optional[str]:
         if 'qualifier' not in obj:
             return None
 
         return f"rism:{obj.get('qualifier')}"
 
-    def get_qualifier_label(self, obj: Dict) -> Optional[Dict]:
+    def get_qualifier_label(self, obj: dict) -> Optional[dict]:
         if 'qualifier' not in obj:
             return None
 
@@ -86,7 +86,7 @@ class Relationship(JSONLDContextDictSerializer):
 
         return qualifier_labels_translator(obj['qualifier'], transl)
 
-    def get_related_to(self, obj: Dict) -> Optional[Dict]:
+    def get_related_to(self, obj: dict) -> Optional[dict]:
         req = self.context.get("request")
         if 'person_id' in obj:
             return _related_to_person(req, obj)
@@ -98,7 +98,7 @@ class Relationship(JSONLDContextDictSerializer):
             # Something is wrong, but we can't find out what to display.
             return None
 
-    def get_name(self, obj: Dict) -> Optional[Dict]:
+    def get_name(self, obj: dict) -> Optional[dict]:
         # This is displayed if all we have for the related-to is a string, not a linked
         # object.
         # if any of these keys are in the object, then we have a relationship and it should be handled
@@ -117,7 +117,7 @@ class Relationship(JSONLDContextDictSerializer):
             return None
 
 
-def _related_to_person(req, obj: Dict) -> Dict:
+def _related_to_person(req, obj: dict) -> dict:
     name: str
     if 'date_statement' in obj:
         name = f"{obj.get('name')} ({obj.get('date_statement')})"
@@ -133,7 +133,7 @@ def _related_to_person(req, obj: Dict) -> Dict:
     }
 
 
-def _related_to_institution(req, obj: Dict) -> Dict:
+def _related_to_institution(req, obj: dict) -> dict:
     name: str
     if 'department' in obj:
         name = f"{obj.get('name')}, {obj.get('department')}"
@@ -149,7 +149,7 @@ def _related_to_institution(req, obj: Dict) -> Dict:
     }
 
 
-def _related_to_place(req, obj: Dict) -> Dict:
+def _related_to_place(req, obj: dict) -> dict:
     place_id = re.sub(ID_SUB, "", obj.get("place_id"))
 
     return {
@@ -159,7 +159,7 @@ def _related_to_place(req, obj: Dict) -> Dict:
     }
 
 
-def _relationship_translator(obj: Dict) -> Optional[Callable]:
+def _relationship_translator(obj: dict) -> Optional[Callable]:
     """
     We need different role translator functions for different types
     of relationships. This returns a function that is a suitable translator

@@ -1,5 +1,5 @@
 import re
-from typing import Dict, Optional, List
+from typing import Optional
 
 import serpy
 
@@ -27,22 +27,22 @@ class ContentsSection(JSONLDContextDictSerializer):
     summary = serpy.MethodField()
     subjects = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.title_content_description")
 
-    def get_creator(self, obj: SolrResult) -> Optional[Dict]:
+    def get_creator(self, obj: SolrResult) -> Optional[dict]:
         if 'creator_json' not in obj:
             return None
 
         return Relationship(obj["creator_json"][0],
                             context={"request": self.context.get('request')}).data
 
-    def get_summary(self, obj: SolrResult) -> Optional[List[Dict]]:
+    def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
             "material_group_types_sm": ("records.type", None),
@@ -66,7 +66,7 @@ class ContentsSection(JSONLDContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_subjects(self, obj: SolrResult) -> Optional[Dict]:
+    def get_subjects(self, obj: SolrResult) -> Optional[dict]:
         if 'subjects_json' not in obj:
             return None
 
@@ -81,13 +81,13 @@ class SourceSubjectsSection(JSONLDContextDictSerializer):
     label = serpy.MethodField()
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.subject_headings")
 
-    def get_items(self, obj: SolrResult) -> List:
+    def get_items(self, obj: SolrResult) -> list:
         return SourceSubject(obj['subjects_json'],
                              many=True,
                              context={"request": self.context.get("request")}).data
@@ -106,11 +106,11 @@ class SourceSubject(JSONLDContextDictSerializer):
     )
     term = serpy.MethodField()
 
-    def get_sid(self, obj: Dict) -> str:
+    def get_sid(self, obj: dict) -> str:
         req = self.context.get("request")
         subject_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "subjects.subject", subject_id=subject_id)
 
-    def get_term(self, obj: Dict) -> Dict:
+    def get_term(self, obj: dict) -> dict:
         return {"none": [obj.get("subject")]}

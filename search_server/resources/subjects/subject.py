@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Dict, List
+from typing import Optional
 
 import serpy
 
@@ -9,7 +9,7 @@ from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
 
 
-async def handle_subject_request(req, subject_id: str) -> Optional[Dict]:
+async def handle_subject_request(req, subject_id: str) -> Optional[dict]:
     subject_record: Optional[dict] = SolrConnection.get(f"subject_{subject_id}")
 
     return Subject(subject_record, context={"request": req,
@@ -38,30 +38,30 @@ class Subject(JSONLDContextDictSerializer):
 
         return get_identifier(req, "subjects.subject", subject_id=subject_id)
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.subject_heading")
 
-    def get_term(self, obj: SolrResult) -> Dict:
+    def get_term(self, obj: SolrResult) -> dict:
         return {"none": [obj.get('term_s')]}
 
-    def get_notes(self, obj: SolrResult) -> Optional[Dict]:
+    def get_notes(self, obj: SolrResult) -> Optional[dict]:
         # If we're not retrieving the full record with a direct request, do not show the notes
         if not self.context.get("direct_request"):
             return None
 
         return {"none": [obj.get("notes_sm")]}
 
-    def get_alternate_terms(self, obj: SolrResult) -> Optional[Dict]:
+    def get_alternate_terms(self, obj: SolrResult) -> Optional[dict]:
         # If we're not retrieving the full record with a direct request, do not show the alternate terms
         if not self.context.get("direct_request"):
             return None
 
         return {"none": [obj.get("alternate_terms_sm")]}
 
-    async def get_sources(self, obj: SolrResult) -> Optional[Dict]:
+    async def get_sources(self, obj: SolrResult) -> Optional[dict]:
         # Only give a list of sources for this term if we are looking at a dedicated page for this subject heading, and
         # it is not embedded in another type of record.
         if not self.context.get("direct_request"):
@@ -69,7 +69,7 @@ class Subject(JSONLDContextDictSerializer):
 
         subject_id: str = obj.get("id")
 
-        fq: List = ["type:source",
+        fq: list = ["type:source",
                     f"subject_ids:{subject_id}"]
         num_results: int = result_count(fq=fq)
 

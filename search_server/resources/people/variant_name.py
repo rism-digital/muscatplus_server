@@ -1,5 +1,3 @@
-from typing import Dict, List
-
 import serpy
 
 from search_server.helpers.display_translators import person_name_variant_labels_translator
@@ -16,13 +14,13 @@ class VariantNamesSection(JSONLDContextDictSerializer):
     label = serpy.MethodField()
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> Dict:
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return transl.get("records.name_variants")
 
-    def get_items(self, obj: SolrResult) -> List[Dict]:
+    def get_items(self, obj: SolrResult) -> list[dict]:
         return NameVariant(obj['variant_names_json'],
                            many=True,
                            context={"request": self.context.get("request")}).data
@@ -36,11 +34,11 @@ class NameVariant(JSONLDContextDictSerializer):
     label = serpy.MethodField()
     value = serpy.MethodField()
 
-    def get_label(self, obj: Dict) -> Dict:
+    def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
         return person_name_variant_labels_translator(obj['type'], transl)
 
-    def get_value(self, obj: Dict) -> Dict:
+    def get_value(self, obj: dict) -> dict:
         return {"none": obj['variants']}

@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict, Optional, List
+from typing import Optional
 
 import serpy
 
@@ -17,7 +17,7 @@ from search_server.resources.shared.relationship import RelationshipsSection
 log = logging.getLogger()
 
 
-async def handle_person_request(req, person_id: str) -> Optional[Dict]:
+async def handle_person_request(req, person_id: str) -> Optional[dict]:
     person_record = SolrConnection.get(f"person_{person_id}")
 
     if not person_record:
@@ -44,19 +44,19 @@ class Person(BasePerson):
         label="externalResources"
     )
 
-    def get_external_authorities(self, obj: SolrResult) -> Optional[List[Dict]]:
+    def get_external_authorities(self, obj: SolrResult) -> Optional[list[dict]]:
         if 'external_ids' not in obj:
             return None
 
         return ExternalAuthoritiesSection(obj['external_ids'], context={"request": self.context.get("request")}).data
 
-    def get_name_variants(self, obj: SolrResult) -> Optional[List]:
+    def get_name_variants(self, obj: SolrResult) -> Optional[list]:
         if 'variant_names_json' not in obj:
             return None
 
         return VariantNamesSection(obj, context={"request": self.context.get("request")}).data
 
-    def get_sources(self, obj: SolrResult) -> Optional[Dict]:
+    def get_sources(self, obj: SolrResult) -> Optional[dict]:
         # Do not show a link to sources if this serializer is used for embedded results
         if not self.context.get("direct_request"):
             return None
@@ -79,11 +79,11 @@ class Person(BasePerson):
             "totalItems": obj.get("source_count_i", 0)
         }
 
-    def get_summary(self, obj: SolrResult) -> List[Dict]:
+    def get_summary(self, obj: SolrResult) -> list[dict]:
         req = self.context.get("request")
-        transl: Dict = req.app.ctx.translations
+        transl: dict = req.app.ctx.translations
 
-        field_config: Dict = {
+        field_config: dict = {
             "date_statement_s": ("records.years_birth_death", None),
             "other_dates_s": ("records.other_life_dates", None),
             "gender_s": ("records.gender", None),
@@ -92,7 +92,7 @@ class Person(BasePerson):
 
         return get_display_fields(obj, transl, field_config)
 
-    def get_relationships(self, obj: SolrResult) -> Optional[Dict]:
+    def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         if not self.context.get("direct_request"):
             return None
 
@@ -105,8 +105,8 @@ class Person(BasePerson):
         req = self.context.get("request")
         return RelationshipsSection(obj, context={"request": req}).data
 
-    def get_notes(self, obj: SolrResult) -> Optional[Dict]:
-        notelist: Dict = NotesSection(obj, context={"request": self.context.get("request")}).data
+    def get_notes(self, obj: SolrResult) -> Optional[dict]:
+        notelist: dict = NotesSection(obj, context={"request": self.context.get("request")}).data
 
         # Check that the items is not empty; if not, return the note list object.
         if "notes" in notelist:
@@ -114,7 +114,7 @@ class Person(BasePerson):
 
         return None
 
-    def get_external_resources(self, obj: SolrResult) -> Optional[Dict]:
+    def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:
             return None
 

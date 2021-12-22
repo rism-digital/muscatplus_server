@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Optional
+from typing import Optional
 
 from search_server.helpers.identifiers import ID_SUB
 from search_server.helpers.languages import SUPPORTED_LANGUAGES
@@ -40,7 +40,7 @@ _MATERIAL_GROUP_TYPES_MAP: dict = {
     "Treatise, printed": ""
 }
 
-_KEY_MODE_MAP: Dict = {
+_KEY_MODE_MAP: dict = {
     "A": "records.a_major",
     "a": "records.a_minor",
     "A|b": "records.af_major",
@@ -110,23 +110,23 @@ _KEY_MODE_MAP: Dict = {
     "7byz": "records.octoechos7",
     "8byz": "records.octoechos8",
 }
-_CLEF_MAP: Dict = {
+_CLEF_MAP: dict = {
     "G-2": "records.g_minus_2_treble",
     "C-1": "records.c_minus_1"
 }
-_SUBHEADING_MAP: Dict = {
+_SUBHEADING_MAP: dict = {
     "Excerpts": "records.excerpts",
     "Sketches": "records.sketches",
     "Fragments": "records.fragments",
     "Inserts": "records.inserts"
 }
-_ARRANGEMENT_MAP: Dict = {
+_ARRANGEMENT_MAP: dict = {
     "Arr": "records.arrangement",
     "arr": "records.arrangement",
     "Arrangement": "records.arrangement"
 }
 
-_PRINTING_TECHNIQUE_MAP: Dict = {
+_PRINTING_TECHNIQUE_MAP: dict = {
     "Autography": "records.autography",
     "Computer printout": "records.computer_printout",
     "Engraving": "records.engraving",
@@ -220,7 +220,7 @@ _PERSON_NAME_VARIANT_TYPES_MAP = {
 }
 
 
-def __lookup_translations(value, available_translations: Dict, translations_map: Dict) -> Dict:
+def __lookup_translations(value, available_translations: dict, translations_map: dict) -> dict:
     """
     Returns a translated value from the Solr records. The available translations are
     all the translated keys in their respective languages; the translations map
@@ -241,23 +241,23 @@ def __lookup_translations(value, available_translations: Dict, translations_map:
     return available_translations.get(trans_key)
 
 
-def person_name_variant_labels_translator(value: str, translations: Dict) -> Dict:
+def person_name_variant_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _PERSON_NAME_VARIANT_TYPES_MAP)
 
 
-def place_relationship_labels_translator(value: str, translations: Dict) -> Dict:
+def place_relationship_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _PLACE_RELATIONSHIP_LABELS_MAP)
 
 
-def qualifier_labels_translator(value: str, translations: Dict) -> Dict:
+def qualifier_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _QUALIFIER_LABELS_MAP)
 
 
-def person_institution_relationship_labels_translator(value: str, translations: Dict) -> Dict:
+def person_institution_relationship_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP)
 
 
-def printing_techniques_translator(values: List, translations: Dict) -> Dict:
+def printing_techniques_translator(values: list, translations: dict) -> dict:
     """
     Translates the printing techniques values. Since the values can be a list of
     printing techniques, we need to gather all possible printing techniques and return
@@ -267,13 +267,13 @@ def printing_techniques_translator(values: List, translations: Dict) -> Dict:
     :param translations: The source of all translations
     :return: A dictionary of translated terms.
     """
-    result: Dict = {k: [] for k in SUPPORTED_LANGUAGES}
+    result: dict = {k: [] for k in SUPPORTED_LANGUAGES}
     for technique in values:
         transl_key: Optional[str] = _PRINTING_TECHNIQUE_MAP.get(technique)
 
         for lcode in SUPPORTED_LANGUAGES:
             if transl_key:
-                trans: Dict = translations.get(transl_key, {})
+                trans: dict = translations.get(transl_key, {})
                 result[lcode].extend(trans[lcode] if lcode in trans else [technique])
             else:
                 result[lcode].extend([technique])
@@ -281,8 +281,8 @@ def printing_techniques_translator(values: List, translations: Dict) -> Dict:
     return result
 
 
-def secondary_literature_json_value_translator(values: List, translations: Dict) -> Dict:
-    works: List = []
+def secondary_literature_json_value_translator(values: list, translations: dict) -> dict:
+    works: list = []
     for work in values:
         reference: Optional[str] = work.get("reference")
         number_page: Optional[str] = f"{n}" if (n := work.get("number_page")) else None
@@ -292,11 +292,11 @@ def secondary_literature_json_value_translator(values: List, translations: Dict)
     return {"none": works}
 
 
-def scoring_json_value_translator(values: List, translations: Dict) -> Dict:
+def scoring_json_value_translator(values: list, translations: dict) -> dict:
     # Simply coalesces the instrumentation into a single list from a JSON
     # list taken from Solr. Does not do any translations of the instrumentation
     # (yet).
-    instruments: List = []
+    instruments: list = []
     for inst in values:
         voice: Optional[str] = inst.get("voice_instrument")
         num: Optional[str] = f'({n})' if (n := inst.get("number")) else None
@@ -306,7 +306,7 @@ def scoring_json_value_translator(values: List, translations: Dict) -> Dict:
     return {"none": instruments}
 
 
-def dramatic_roles_json_value_translator(values: List, translations: Dict) -> Dict:
+def dramatic_roles_json_value_translator(values: list, translations: dict) -> dict:
     """
     Doesn't actually do any translation, but will consume a list of JSON values and
     produce a single string from them.
@@ -314,7 +314,7 @@ def dramatic_roles_json_value_translator(values: List, translations: Dict) -> Di
     :param translations: A translations dictionary. Unused.
     :return: A language map containing all the named dramatic roles.
     """
-    roles: List = []
+    roles: list = []
     for r in values:
         standard: str = f"{r.get('standard_spelling', '')}"
         source: Optional[str] = f"[{s}]" if (s := r.get('source_spelling')) else None
@@ -323,7 +323,7 @@ def dramatic_roles_json_value_translator(values: List, translations: Dict) -> Di
     return {"none": roles}
 
 
-def title_json_value_translator(values: List, translations: Dict) -> Dict:
+def title_json_value_translator(values: list, translations: dict) -> dict:
     """
     Provides translations for a JSON field value. Inspects all the values and then
     returns all the different variants of the title.
@@ -342,7 +342,7 @@ def title_json_value_translator(values: List, translations: Dict) -> Dict:
     :param translations: A dictionary of available field label translations
     :return: A set of translated titles.
     """
-    result: Dict = {k: [] for k in SUPPORTED_LANGUAGES}
+    result: dict = {k: [] for k in SUPPORTED_LANGUAGES}
 
     # Get the individual fields for each entry in the title field, if any.
     for v in values:
@@ -367,30 +367,30 @@ def title_json_value_translator(values: List, translations: Dict) -> Dict:
             subh = ", ".join(subheading_trans.get(lang, []))
             arrh = ", ".join(arrangement_trans.get(lang, []))
             keyh = ", ".join(key_mode_trans.get(lang, []))
-            full_title_components: List = [title, keyh, subh, arrh, scoring, catalogue_numbers]
+            full_title_components: list = [title, keyh, subh, arrh, scoring, catalogue_numbers]
             full_title = "; ".join([f.strip() for f in full_title_components if f])
             result[lang].append(full_title)
 
     return result
 
 
-def key_mode_value_translator(value: str, translations: Dict) -> Dict:
+def key_mode_value_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _KEY_MODE_MAP)
 
 
-def subheading_value_translator(value: str, translations: Dict) -> Dict:
+def subheading_value_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _SUBHEADING_MAP)
 
 
-def arrangement_statement_value_translator(value: str, translations: Dict) -> Dict:
+def arrangement_statement_value_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _ARRANGEMENT_MAP)
 
 
-def clef_translator(value: str, translations: Dict) -> Dict:
+def clef_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _CLEF_MAP)
 
 
-def id_translator(value: str, translations: Dict) -> Dict:
+def id_translator(value: str, translations: dict) -> dict:
     """
     Strips an ID prefix off a Solr index so that we can return the bare ID
     as part of a record display. Uses ID_SUB regex to strip the prefix

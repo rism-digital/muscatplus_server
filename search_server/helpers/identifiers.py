@@ -1,9 +1,9 @@
 import re
-from typing import Pattern, Dict
+from typing import Pattern
 
 ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_|festival_")
 
-EXTERNAL_IDS: Dict = {
+EXTERNAL_IDS: dict = {
     "viaf": {"label": "Virtual Internet Authority File (VIAF)", "ident": "https://viaf.org/viaf/{ident}"},
     "dnb": {"label": "Deutsche Nationalbibliothek (GND)", "ident": "http://d-nb.info/gnd/{ident}"},
     "wkp": {"label": "Wikidata", "ident": "https://www.wikidata.org/wiki/{ident}"},
@@ -41,7 +41,7 @@ def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) ->
     return request.app.url_for(viewname, _external=True, _scheme=scheme, _server=server, **kwargs)
 
 
-RISM_JSONLD_CONTEXT: Dict = {
+RISM_JSONLD_CONTEXT: dict = {
     "@context": {
         "@version": 1.1,
         "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
