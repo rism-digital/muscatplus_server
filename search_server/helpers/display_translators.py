@@ -219,6 +219,63 @@ _PERSON_NAME_VARIANT_TYPES_MAP = {
     "z": "records.alternate_spelling"
 }
 
+SIGLA_COUNTRY_MAP = {
+    "A": "places.austria",
+    "AND": "places.andorra",
+    "AUS": "places.australia",
+    "B": "places.belgium",
+    "BOL": "places.bolivia",
+    "BR": "places.brazil",
+    "BY": "places.belarus",
+    "CDN": "places.canada",
+    "CH": "places.switzerland",
+    "CN": "places.china",
+    "CO": "places.colombia",
+    "CZ": "places.czech_republic",
+    "D": "places.german",
+    "DK": "places.denmark",
+    "E": "places.spain",
+    "EV": "places.estonia",
+    "F": "places.france",
+    "FIN": "places.finland",
+    "GB": "places.uk",
+    "GCA": "places.guatemala",
+    "GR": "places.greece",
+    "H": "places.hungary",
+    "HK": "places.hong_kong",
+    "HR": "places.croatia",
+    "I": "places.italy",
+    "IL": "places.israel",
+    "IRL": "places.ireland",
+    "J": "places.japan",
+    "LT": "places.lithuania",
+    "LV": "places.latvia",
+    "M": "places.malta",
+    "MEX": "places.mexico",
+    "N": "places.norway",
+    "NL": "places.netherlands",
+    "NZ": "places.new_zealand",
+    "P": "places.portugal",
+    "PE": "places.peru",
+    "PL": "places.poland",
+    "RA": "places.argentina",
+    "RC": "places.taiwan",
+    "RCH": "places.chile",
+    "RO": "places.romania",
+    "ROK": "places.korea",
+    "ROU": "places.uruguay",
+    "RP": "places.philippines",
+    "RUS": "places.russian_federation",
+    "S": "places.sweden",
+    "SI": "places.slovenia",
+    "SK": "places.slovakia",
+    "UA": "places.ukraine",
+    "US": "places.usa",
+    "V": "places.holy_see",
+    "VE": "places.venezuela",
+    "XX": "records.unknown",
+}
+
 
 def __lookup_translations(value, available_translations: dict, translations_map: dict) -> dict:
     """
@@ -239,6 +296,10 @@ def __lookup_translations(value, available_translations: dict, translations_map:
     if not trans_key:
         return {"none": [value]}
     return available_translations.get(trans_key)
+
+
+def country_code_labels_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, SIGLA_COUNTRY_MAP)
 
 
 def person_name_variant_labels_translator(value: str, translations: dict) -> dict:
