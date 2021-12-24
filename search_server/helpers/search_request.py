@@ -3,6 +3,7 @@ import urllib.parse
 from collections import defaultdict
 from typing import Optional
 
+from search_server.helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
 from search_server.exceptions import InvalidQueryException, PaginationParseException
 from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import parse_page_number, parse_row_number
@@ -189,11 +190,10 @@ class SearchRequest:
         self.pae_features: Optional[dict] = None
 
         # If there is no q parameter it will return all results
+        self._requested_national_collection: list = req.args.getlist("nc", [])
         self._requested_query: list = req.args.getlist("q", [])
         self._requested_filters: list = req.args.getlist("fq", [])
         self._requested_facet_behaviours: list = req.args.getlist("fb", [])
-        self._requested_facet_sorts: list = req.args.getlist("fs", [])
-        self._requested_facet_mode: list = req.args.getlist("fm", [])
         self._requested_mode: str = req.args.get("mode", self._app_config["search"]["default_mode"])
         self._page: Optional[str] = req.args.get("page", None)
         self._return_rows: Optional[str] = req.args.get("rows", None)
@@ -207,7 +207,6 @@ class SearchRequest:
         self._facets_for_mode: list = filters_for_mode(self._app_config, self._requested_mode)
         self._alias_config_map: dict = alias_config_map(self._facets_for_mode)
         self._behaviour_for_facet: dict = facet_modifier_map(self._requested_facet_behaviours)
-        self._mode_for_facet: dict = facet_modifier_map(self._requested_facet_mode)
 
         # Configure the sorting for the different result modes (source, people, institutions, etc.)
         self._sorts_for_mode: list = sorting_for_mode(self._app_config, self._requested_mode)
@@ -223,6 +222,16 @@ class SearchRequest:
         valid_q_param: list = self._req.args.getlist("q", [])
         if len(valid_q_param) > 1:
             raise InvalidQueryException("Only one query parameter can be supplied.")
+
+        national_collection_param: list = self._req.args.getlist("nc", [])
+        if len(national_collection_param) > 1:
+            raise InvalidQueryException("Only one national collection parameter can be supplied.")
+
+        if len(national_collection_param) == 1:
+            nc_valid_params = SOURCE_SIGLA_COUNTRY_MAP.keys()
+            nc_incoming = set(national_collection_param)
+            if nc_valid_params.isdisjoint(nc_incoming):
+                raise InvalidQueryException("A valid country code must be used for the national collection parameter.")
 
         requested_modes: list = self._req.args.getlist("mode", [])
         if len(requested_modes) > 1:
@@ -459,6 +468,10 @@ class SearchRequest:
 
         requested_filters: list = self._compile_filters()
         self.filters += requested_filters
+
+        if self._requested_national_collection:
+            nc_value: str = self._requested_national_collection[0]
+            self.filters += [f"country_codes_sm:{nc_value}"]
 
         # These have already been checked in the validation, so they shouldn't raise an exception here.
         page_num: int = parse_page_number(self._page)
