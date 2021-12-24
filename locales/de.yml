@@ -122,6 +122,7 @@ de:
     west_frisian: Westfriesisch
     yiddish: Jiddisch
   places:
+    afghanistan: Afghanistan
     algeria: Algerien
     andorra: Andorra
     argentina: Argentinien
@@ -135,9 +136,13 @@ de:
     austria_tyrol: 'Österreich: Tirol'
     austria_upper_austria: 'Österreich: Oberösterreich'
     austria_vienna: 'Österreich: Wien'
+    azerbiajan: Aserbaidschan
+    bangladesh: Bangladesch
     belarus: Weißrussland
     belgium: Belgien
     benin: Benin
+    bolivia: Bolivien
+    bosnia_herzegovina: Bosnien und Herzegowina
     brazil: Brasilien
     bulgaria: Bulgarien
     cambodia: Kambodscha
@@ -145,6 +150,7 @@ de:
     chile: Chile
     china: China
     colombia: Kolombien
+    costa_rica: Costa Rica
     croatia: Kroatien
     cuba: Kuba
     czech_republic: Tschechische Republik
@@ -178,6 +184,7 @@ de:
     korea: Korea, Republik
     latvia: Lettland
     lithuania: Litauen
+    lebanon: Libanon
     luxembourg: Luxemburg
     malta: Malta
     mexico: Mexiko
@@ -186,8 +193,11 @@ de:
     montenegro: Montenegro
     netherlands: Niederlande
     new_zealand: Neuseeland
+    nicaragua: Nicaragua
+    north_macedonia: Nordmazedonien
     northern_ireland: Nordirland
     norway: Norwegen
+    pakistan: Pakistan
     papua_new_guinea: Papua Neu-Guinea
     paraguay: Paraguay
     peru: Peru
@@ -208,12 +218,14 @@ de:
     switzerland_vaud: 'Schweiz: Vaud'
     syrian_arab_republic: Syrien, Arabische Republik
     taiwan: Taiwan (Provinz von China)
+    tajikistan: Tadschikistan
     trinidad_tobego: Trinidad und Tobago
     turkey: Türkei
     uk: Vereinigtes Königreich
     ukraine: Ukraine
     uruguay: Uruguay
     usa: Vereinigte Staaten von Amerika (USA)
+    uzbekistan: Usbekistan
     venezuela: Venezuela, Bolivarische Republik
     vietnam: Vietnam
   records:
