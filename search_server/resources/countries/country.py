@@ -2,7 +2,7 @@ from typing import Optional
 
 import serpy
 
-from search_server.helpers.display_translators import SIGLA_COUNTRY_MAP, country_code_labels_translator
+from search_server.helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP, country_code_labels_translator
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 
@@ -14,8 +14,8 @@ async def handle_country_request(req, country_id: str) -> Optional[dict]:
 
 
 async def handle_country_list_request(req) -> Optional[dict]:
-    return CountryList(SIGLA_COUNTRY_MAP, context={"request": req,
-                                                   "direct_request": True}).data
+    return CountryList(SOURCE_SIGLA_COUNTRY_MAP, context={"request": req,
+                                                          "direct_request": True}).data
 
 
 class CountryList(JSONLDContextDictSerializer):
@@ -40,6 +40,10 @@ class CountryList(JSONLDContextDictSerializer):
         res: list = []
 
         for country_code in obj.keys():
+            # Skip the 'None' entry
+            if not country_code:
+                continue
+
             res.append({
                 "label": country_code_labels_translator(country_code, transl),
                 "value": country_code
