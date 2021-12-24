@@ -171,7 +171,8 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     "cmp": "records.composer",
     "cns": "records.censor",
     "cph": "records.copyright_holder",
-    "cre": "records.composer_author",  # A special case, where the cre relator code is used to label the 100 main entry field.
+    "cre": "records.composer_author",
+    # A special case, where the cre relator code is used to label the 100 main entry field.
     "ctb": "records.contributor",
     "dpt": "records.depositor",
     "dst": "records.distributor",
@@ -219,7 +220,14 @@ _PERSON_NAME_VARIANT_TYPES_MAP = {
     "z": "records.alternate_spelling"
 }
 
-SIGLA_COUNTRY_MAP = {
+
+# These are the countries that currently have sources attached to them. They are separated from
+# the full list of countries so that we can expose this publicly as a filter for the UI.
+# When a country has sources it should be moved from the full sigla map to this one. If we want to
+# remove the ability to filter sources by the country, the country should be removed from this list
+# and added to the list below.
+SOURCE_SIGLA_COUNTRY_MAP = {
+    None: "records.unknown",  # So that we can translate the 'unknown' value as well.
     "A": "places.austria",
     "AND": "places.andorra",
     "AUS": "places.australia",
@@ -232,7 +240,7 @@ SIGLA_COUNTRY_MAP = {
     "CN": "places.china",
     "CO": "places.colombia",
     "CZ": "places.czech_republic",
-    "D": "places.german",
+    "D": "places.germany",
     "DK": "places.denmark",
     "E": "places.spain",
     "EV": "places.estonia",
@@ -273,7 +281,136 @@ SIGLA_COUNTRY_MAP = {
     "US": "places.usa",
     "V": "places.holy_see",
     "VE": "places.venezuela",
-    "XX": "records.unknown",
+}
+
+# These are the countries that have institutions in them, but no sources -- that is, we have a RISM
+# siglum for something in them, but there are no sources catalogued that are held in these countries.
+# This list is merged with the source list to create a full listing of all countries.
+_FULL_COUNTRY_SIGLA_MAP: dict = {
+     "AFG": "places.afghanistan",
+     "ARM": "places.armenia",
+     "AS": "record.saudi_arabia",
+     "AZ": "places.azerbaijan",
+     "BD": "places.bangladesh",
+     "BG": "places.bulgaria",
+     "BIH": "places.bosnia_herzegovina",
+     "C": "places.cuba",
+     "CR": "places.costa_rica",
+     "EC": "places.ecuador",
+     "ET": "places.egypt",
+     "GE": "places.georgia",
+     "IND": "places.india",
+     "IR": "places.iran",
+     "IRLN": "places.northern_ireland",
+     "IS": "places.iceland",
+     "L": "places.luxembourg",
+     "MC": "places.monaco",
+     "MD": "places.moldavia",
+     "MNE": "places.montenegro",
+     "NIC": "places.nicaragua",
+     "NMK": "places.north_macedonia",
+     "PK": "places.pakistan",
+     "PNG": "places.papua_new_guinea",
+     "PRI": "places.puerto_rico",
+     "RI": "places.indonesia",
+     "RL": "places.lebanon",
+     "SRB": "places.serbia",
+     "TA": "places.tajikistan",
+     "TR": "places.turkey",
+     "USB": "places.uzbekistan",
+     "XX": "records.unknown",
+     "ZA": "places.south_africa"
+} | SOURCE_SIGLA_COUNTRY_MAP
+
+# No immediate use for this, but handy to have for possible future uses.
+_GND_COUNTRY_CODE_MAP: dict = {
+    "XA-AT": "places.austria",
+    "XA-AT-2": "places.austria_carinthia",
+    "XA-AT-3": "places.austria_lower_austria",
+    "XA-AT-4": "places.austria_upper_austria",
+    "XA-AT-5": "places.austria_salzburg",
+    "XA-AT-6": "places.austria_styria",
+    "XA-AT-7": "places.austria_tyrol",
+    "XA-AT-9": "places.austria_vienna",
+    "XA-BE": "places.belgium",
+    "XA-BG": "places.bulgaria",
+    "XA-CH": "places.switzerland",
+    "XA-CH-VD": "places.switzerland_vaud",
+    "XA-CZ": "places.czech_republic",
+    "XA-DE": "places.germany",
+    "XA-DE-BY": "places.germany_bavaria",
+    "XA-DE-SN": "places.germany_saxony",
+    "XA-DK": "places.denmark",
+    "XA-EE": "places.estonia",
+    "XA-ES": "places.spain",
+    "XA-FI": "places.finland",
+    "XA-FR": "places.france",
+    "XA-GB": "places.uk",
+    "XA-GB-NIR": "places.northern_ireland",
+    "XA-GR": "places.greece",
+    "XA-HR": "places.croatia",
+    "XA-HU": "places.hungary",
+    "XA-IE": "places.ireland",
+    "XA-IS": "places.iceland",
+    "XA-IT": "places.italy",
+    "XA-IT-32": "places.italy_trentino_alto_adige",
+    "XA-LT": "places.lithuania",
+    "XA-LU": "places.luxembourg",
+    "XA-LV": "places.latvia",
+    "XA-MC": "places.monaco",
+    "XA-ME": "places.montenegro",
+    "XA-MT": "places.malta",
+    "XA-NL": "places.netherlands",
+    "XA-NO": "places.norway",
+    "XA-PL": "places.poland",
+    "XA-PT": "places.portugal",
+    "XA-RO": "places.romania",
+    "XA-RS": "places.serbia",
+    "XA-RU": "places.russian_federation",
+    "XA-SE": "places.sweden",
+    "XA-SI": "places.slovenia",
+    "XA-SK": "places.slovakia",
+    "XA-UA": "places.ukraine",
+    "XA-VA": "places.holy_see",
+    "XB-AM": "places.armenia",
+    "XB-CN": "places.china",
+    "XB-HK": "places.hong_kong",
+    "XB-ID": "places.indonesia",
+    "XB-IL": "places.israel",
+    "XB-IN": "places.india",
+    "XB-IR": "places.iran",
+    "XB-JP": "places.japan",
+    "XB-KH": "places.cambodia",
+    "XB-KR": "places.korea",
+    "XB-PH": "places.philippines",
+    "XB-SA": "places.saudi_arabia",
+    "XB-SY": "places.syrian_arab_republic",
+    "XB-TR": "places.turkey",
+    "XB-TW": "places.taiwan",
+    "XB-VN": "places.vietnam",
+    "XC-BJ": "places.benin",
+    "XC-DZ": "places.algeria",
+    "XC-EG": "places.egypt",
+    "XC-ZA": "places.south_africa",
+    "XD-AR": "places.argentina",
+    "XD-BR": "places.brazil",
+    "XD-CA": "places.canada",
+    "XD-CL": "places.chile",
+    "XD-CO": "places.colombia",
+    "XD-CU": "places.cuba",
+    "XD-EC": "places.ecuador",
+    "XD-GT": "places.guatemala",
+    "XD-HN": "places.honduras",
+    "XD-MX": "places.mexico",
+    "XD-PR": "places.puerto_rico",
+    "XD-PY": "places.paraguay",
+    "XD-TT": "places.trinidad_tobego",
+    "XD-US": "places.usa",
+    "XD-UY": "places.uruguay",
+    "XD-VE": "places.venezuela",
+    "XE-AU": "places.australia",
+    "XE-NZ": "places.new_zealand",
+    "XE-PG": "places.papua_new_guinea",
 }
 
 
@@ -288,9 +425,9 @@ def __lookup_translations(value, available_translations: dict, translations_map:
     and not a translated value.
 
     :param value: A key or mode value from the Solr index
-    :param available_translations: A dictionary of available translations
+    :param available_translations: A dictionary of all available translations
     :param translations_map: A dictionary mapping Solr values to the key in the available translations.
-    :return: A dictionary corresponding to a language map for that value.
+    :return: A dictionary corresponding to a language map for that value, selected from the available translations.
     """
     trans_key: Optional[str] = translations_map.get(value)
     if not trans_key:
@@ -298,8 +435,12 @@ def __lookup_translations(value, available_translations: dict, translations_map:
     return available_translations.get(trans_key)
 
 
+def gnd_country_code_labels_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, _GND_COUNTRY_CODE_MAP)
+
+
 def country_code_labels_translator(value: str, translations: dict) -> dict:
-    return __lookup_translations(value, translations, SIGLA_COUNTRY_MAP)
+    return __lookup_translations(value, translations, _FULL_COUNTRY_SIGLA_MAP)
 
 
 def person_name_variant_labels_translator(value: str, translations: dict) -> dict:
