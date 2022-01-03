@@ -151,11 +151,13 @@ class SearchRequest:
     For the input API, the following query parameters are recognized:
 
      - `q`: The main query parameter. Required, Non-repeatable! "*:*" if not explicitly passed in.
+     - `nc`: The requested national collection filter. This applies to anything that is limited nationally, such
+             as sources and institutions. When a `nc` filter is applied, things *not* limited nationally, such as
+             people or incipits, are omitted from the response.
      - `fq`: The main filter queries. Repeatable. Takes parameters like "name:Smith, John" and uses them as facet queries.
      - `fb`: The filter behaviours. Repeatable. Adjusts the named facet behaviour from 'intersection' and 'union'. For example,
              if we have `fq=name:Smith, John&fq=name:Smythe, Jane`, then we might also have `&fb=name:union` to adjust the
              behaviour of the facet. Acceptable values are `intersection` (default) and `union`.
-     - `fs`: Similar in form to `fb`, but adjusts the sorting of the facet list
      - `mode`: Sets the mode of the search to return records of only that type.
      - `page`: Controls the return of the result page. Pages can be of multiple size, but this should always skip to the
                correct page.
