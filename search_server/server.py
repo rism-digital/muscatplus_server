@@ -21,6 +21,9 @@ from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
 
 config: dict = yaml.safe_load(open('configuration.yml', 'r'))
+debug_mode: bool = config['common']['debug']
+
+# When debug mode is False, also disable the access log, and vice-versa (Debug mode also enables access_logs)
 app = Sanic("mp_server")
 
 # register routes with their blueprints
@@ -37,13 +40,10 @@ app.blueprint(query_blueprint)
 app.config.FORWARDED_SECRET = config['common']['secret']
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
 
-debug_mode: bool = config['common']['debug']
-
 if debug_mode:
     LOGLEVEL = logging.DEBUG
 else:
     LOGLEVEL = logging.WARNING
-    asyncio.set_event_loop(uvloop.new_event_loop())
 
 logging.basicConfig(format="[%(asctime)s] [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
                     level=LOGLEVEL)

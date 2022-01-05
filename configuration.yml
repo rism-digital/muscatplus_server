@@ -1,6 +1,6 @@
 ---
 common:
-  debug: yes
+  debug: no
   context_uri: yes  # if false, displays the full JSON-LD context inline
   secret: EvGw3ND0zB47Sp6Lk8R5M4Bh7PXmwB6x9WJVyYQx8TD72P5kM3ap39bNyEkSWFq1
 

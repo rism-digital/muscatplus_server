@@ -11,7 +11,7 @@ async def place_list(req):
     pass
 
 
-@places_blueprint.route("/<place_id:string>/")
+@places_blueprint.route("/<place_id:str>/")
 async def place(req, place_id: str):
     return await handle_request(req,
                                 handle_place_request,

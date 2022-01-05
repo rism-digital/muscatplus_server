@@ -10,21 +10,21 @@ from search_server.resources.sources.handlers import (
 sources_blueprint: Blueprint = Blueprint("sources", url_prefix="/sources")
 
 
-@sources_blueprint.route("/<source_id:string>/")
+@sources_blueprint.route("/<source_id:str>/")
 async def source(req, source_id: str):
     return await handle_request(req,
                                 handle_source_request,
                                 source_id=source_id)
 
 
-@sources_blueprint.route("/<source_id:string>/incipits/")
+@sources_blueprint.route("/<source_id:str>/incipits/")
 async def incipits_list(req, source_id: str):
     return await handle_request(req,
                                 handle_incipits_list_request,
                                 source_id=source_id)
 
 
-@sources_blueprint.route("/<source_id:string>/incipits/<work_num:string>/")
+@sources_blueprint.route("/<source_id:str>/incipits/<work_num:str>/")
 async def incipit(req, source_id: str, work_num: str):
     return await handle_request(req,
                                 handle_incipit_request,

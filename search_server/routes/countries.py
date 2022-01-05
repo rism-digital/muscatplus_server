@@ -6,7 +6,7 @@ from search_server.resources.countries.country import handle_country_request, ha
 countries_blueprint: Blueprint = Blueprint("countries", url_prefix="/countries")
 
 
-@countries_blueprint.route("/<country_id:string>/")
+@countries_blueprint.route("/<country_id:str>/")
 async def country(req, country_id: str):
     return await handle_request(req,
                                 handle_country_request,

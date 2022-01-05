@@ -5,7 +5,7 @@ from search_server.resources.incipits.render import handle_incipit_render
 incipits_blueprint: Blueprint = Blueprint("incipits", url_prefix="/incipits")
 
 
-@incipits_blueprint.route("/<incipit_id:string>")
+@incipits_blueprint.route("/<incipit_id:str>")
 async def incipit(req, incipit_id: str):
     pass
 
