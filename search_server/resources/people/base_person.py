@@ -10,6 +10,11 @@ from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.shared.record_history import get_record_history
 
 
+SOLR_FIELDS_FOR_BASE_PERSON: list = [
+    "id", "type", "created", "updated", "name_s", "name_ans", "date_statement_s"
+]
+
+
 class BasePerson(JSONLDContextDictSerializer):
     pid = serpy.MethodField(
         label="id"
@@ -28,7 +33,7 @@ class BasePerson(JSONLDContextDictSerializer):
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
-        person_id: str = re.sub(ID_SUB, "", obj.get('person_id'))
+        person_id: str = re.sub(ID_SUB, "", obj.get('id'))
 
         return get_identifier(req, "people.person", person_id=person_id)
 
