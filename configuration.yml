@@ -199,6 +199,12 @@ search:
       type: "toggle"
       field: "is_mensural_b"
       active_value: true
+    IS_ARRANGEMENT: &IS_ARRANGEMENT
+      label: "Is Arrangement"
+      alias: "is-arrangement"
+      type: "toggle"
+      field: "is_arrangement_b"
+      active_value: true
     HAS_NOTATION: &HAS_NOTATION
       label: "Has notation"
       alias: "has-notation"
@@ -290,6 +296,7 @@ search:
         - *FORMAT_EXTENT
         - *CREATOR_NAME
         - *ALL_PEOPLE
+        - *IS_ARRANGEMENT
       sorting:
         - *RELEVANCE
         - *ALPHABETICAL_SOURCE
