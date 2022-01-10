@@ -3,15 +3,12 @@ from typing import Optional
 
 import serpy
 
-from search_server.helpers.display_fields import get_display_fields
-from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier, ID_SUB
-from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult, SolrConnection
+from search_server.resources.institutions.base_institution import BaseInstitution
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
-from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import RelationshipsSection
 
 
@@ -25,19 +22,7 @@ async def handle_institution_request(req, institution_id: str) -> Optional[dict]
                                                     "direct_request": True}).data
 
 
-class Institution(JSONLDContextDictSerializer):
-    iid = serpy.MethodField(
-        label="id"
-    )
-    itype = StaticField(
-        label="type",
-        value="rism:Institution"
-    )
-    type_label = serpy.MethodField(
-        label="typeLabel"
-    )
-    label = serpy.MethodField()
-    summary = serpy.MethodField()
+class Institution(BaseInstitution):
     location = serpy.MethodField()
     sources = serpy.MethodField()
     external_authorities = serpy.MethodField(
@@ -48,41 +33,6 @@ class Institution(JSONLDContextDictSerializer):
     external_resources = serpy.MethodField(
         label="externalResources"
     )
-    record_history = serpy.MethodField(
-        label="recordHistory"
-    )
-
-    def get_iid(self, obj: SolrResult) -> str:
-        req = self.context.get("request")
-        institution_id: str = re.sub(ID_SUB, "", obj.get("id"))
-
-        return get_identifier(req, "institutions.institution", institution_id=institution_id)
-
-    def get_label(self, obj: SolrResult) -> dict:
-        name: str = obj['name_s']
-
-        return {"none": [name]}
-
-    def get_type_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
-        transl = req.app.ctx.translations
-
-        return transl.get("records.institution")
-
-    def get_summary(self, obj: SolrResult) -> Optional[dict]:
-        req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
-
-        field_config: dict = {
-            "city_s": ("records.city", None),
-            "countries_sm": ("records.country", None),
-            "siglum_s": ("records.siglum", None),
-            "alternate_names_sm": ("records.other_form_of_name", None),
-            "parallel_names_sm": ("records.parallel_form", None),
-            "institution_types_sm": ("records.type_institution", None)
-        }
-
-        return get_display_fields(obj, transl, field_config)
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
         source_count: int = obj.get("source_count_i", 0)
@@ -140,9 +90,3 @@ class Institution(JSONLDContextDictSerializer):
             return None
 
         return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
-
-    def get_record_history(self, obj: dict) -> dict:
-        req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
-
-        return get_record_history(obj, transl)
