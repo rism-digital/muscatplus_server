@@ -31,6 +31,14 @@ CONTENT_TYPE_MAP: dict = {
     "composite_content": "rism:CompositeContent"
 }
 
+# The Solr fields necessary to construct a base source record. Helps cut down on internal Solr
+# communication by limiting the fields to only those that are necessary.
+SOLR_FIELDS_FOR_BASE_SOURCE: list = [
+    "id", "type", "main_title_s", "material_group_types_sm", "shelfmark_s", "siglum_s",
+    "source_membership_json", "source_id", "creator_name_s", "source_type_s", "content_types_sm", "record_type_s",
+    "created", "updated", "main_title_ans"
+]
+
 log = logging.getLogger(__name__)
 
 
@@ -127,7 +135,6 @@ class BaseSource(JSONLDContextDictSerializer):
     # the summary is part of the 'contents' section. But in the base source view it will deliver some basic
     # identification fields.
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
-        print(obj)
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
