@@ -3,6 +3,21 @@ import logging
 
 from search_server.helpers.solr_connection import SolrResult
 
+
+# LabelConfig takes a Solr field, and maps it to a tuple containing the translation value for the label, and an
+# optional Callable that can be used to provide the value translations. For example, if we have:
+#
+#  {"foo_s": ("records.foo", foo_value_translator)}
+#
+#  This means that:
+#   - The value comes from the `foo_s` Solr field
+#   - The label for this field is the value in the `records.foo` translation
+#   - Whatever is in this field will be passed through the `foo_value_translator` function before being sent to the
+#     client.
+#
+#  A value of `None` for the value translator means to simply take the value verbatim. (Technically, a value of None
+#  passes it through the _default_translator function, but this is largely transparent to the user).
+#
 LabelConfig = dict[str, tuple[str, Optional[Union[Callable, dict]]]]
 
 log = logging.getLogger(__name__)
