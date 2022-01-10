@@ -3,7 +3,10 @@ from typing import Optional
 import serpy
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
-from search_server.helpers.display_translators import secondary_literature_json_value_translator
+from search_server.helpers.display_translators import (
+    secondary_literature_json_value_translator,
+    url_detecting_translator
+)
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
@@ -39,7 +42,7 @@ class ReferencesNotesSection(JSONLDContextDictSerializer):
         transl = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "source_general_notes_smni": ("records.general_note", None),
+            "source_general_notes_smni": ("records.general_note", url_detecting_translator),
             "contents_notes_sm": ("records.contents_note", None),
             "performance_notes_sm": ("records.note_on_performance", None),
             "supplementary_material_sm": ("records.supplementary_material", None),

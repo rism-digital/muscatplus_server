@@ -1,5 +1,5 @@
 import re
-from typing import Optional
+from typing import Optional, Pattern, Match
 
 from search_server.helpers.identifiers import ID_SUB
 from search_server.helpers.languages import SUPPORTED_LANGUAGES
@@ -604,3 +604,36 @@ def id_translator(value: str, translations: dict) -> dict:
     """
     idval: str = re.sub(ID_SUB, "", value)
     return {"none": [idval]}
+
+
+URL_DETECTOR: Pattern = re.compile(
+    r'(<a href[^>]+>|<a href="")?'
+    r'(https?:(?://|\\\\)+'
+    r"(?:[\w\d:#@%/;$()~_?+\-=\\.&](?:#!)?)*)",
+    flags=re.IGNORECASE)
+
+
+def _repl_fn(match_obj: Match) -> str:
+    href_tag, url = match_obj.groups()
+    if href_tag:
+        # Since it has an href tag, this isn't what we want to change,
+        # so return the whole match.
+        return match_obj.group(0)
+    else:
+        return f"<a href='{url}' target='_blank'>{url}</a>"
+
+
+def _wrap_addresses(inp: str) -> str:
+    return re.sub(URL_DETECTOR, _repl_fn, inp)
+
+
+def url_detecting_translator(values: list, translations: dict) -> dict:
+    """
+    Detects `http://` and `https://` in a block of text and wraps them in `<a href>` tags
+    so that they can be parsed and displayed without a lot of fuss on the front-end.
+
+    The basic methodology of this is taken from https://stackoverflow.com/a/33399083
+    """
+    wrapped_blocks: list[str] = [_wrap_addresses(s) for s in values]
+    return {"none": wrapped_blocks}
+

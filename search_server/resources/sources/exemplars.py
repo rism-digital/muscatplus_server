@@ -4,6 +4,7 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
+from search_server.helpers.display_translators import url_detecting_translator
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier, ID_SUB
@@ -95,7 +96,7 @@ class Exemplar(JSONLDContextDictSerializer):
         transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "general_notes_sm": ("records.general_note", None),
+            "general_notes_sm": ("records.general_note", url_detecting_translator),
             "binding_notes_sm": ("records.binding_note", None),
             "bound_with_sm": ("records.bound_with", None),
             "watermark_notes_sm": ("records.watermark_description", None),
