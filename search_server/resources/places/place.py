@@ -36,6 +36,9 @@ class Place(JSONLDContextDictSerializer):
         label="type",
         value="rism:Place"
     )
+    type_label = serpy.MethodField(
+        label="typeLabel"
+    )
     label = serpy.MethodField()
     summary = serpy.MethodField()
     sources = serpy.MethodField()
@@ -50,6 +53,11 @@ class Place(JSONLDContextDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         return {"none": [obj.get("name_s")]}
+
+    def get_type_label(self, obj: SolrResult) -> dict:
+        req = self.context.get("request")
+        transl = req.app.ctx.translations
+        return transl.get("records.place")
 
     def get_summary(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
