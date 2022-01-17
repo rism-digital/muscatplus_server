@@ -18,7 +18,7 @@ class Front(JSONLDContextDictSerializer):
     )
     ftype = StaticField(
         label="type",
-        value="rism:Root"
+        value="rism:Front"
     )
     stats = serpy.MethodField()
     endpoints = serpy.MethodField()
@@ -26,9 +26,9 @@ class Front(JSONLDContextDictSerializer):
     def get_fid(self, obj: dict) -> str:
         req = self.context.get("request")
 
-        return get_identifier(req, "root")
+        return get_identifier(req, "front")
 
-    def get_stats(self, obj: dict) -> list[dict]:
+    def get_stats(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
@@ -46,14 +46,26 @@ class Front(JSONLDContextDictSerializer):
         v_iter = iter(fields.get("type", []))
         zipped_list = zip(v_iter, v_iter)
 
-        field_config: LabelConfig = {
-            "source": ("records.sources", None),
-            "institution": ("records.institutions", None),
-            "person": ("records.people", None),
-            "incipit": ("records.incipits", None),
-        }
+        facet_numbers: dict = dict(zipped_list)
 
-        return get_display_fields(dict(zipped_list), transl, field_config)
+        return {
+            "sources": {
+                "label": transl.get("records.sources"),
+                "value": facet_numbers.get("source", 0)
+            },
+            "institutions": {
+                "label": transl.get("records.institutions"),
+                "value": facet_numbers.get("institution", 0)
+            },
+            "people": {
+                "label": transl.get("records.people"),
+                "value": facet_numbers.get("person", 0)
+            },
+            "incipits": {
+                "label": transl.get("records.incipits"),
+                "value": facet_numbers.get("incipit", 0)
+            }
+        }
 
     def get_endpoints(self, obj: dict) -> list:
         req = self.context.get("request")
