@@ -1,10 +1,10 @@
-import asyncio
 import logging
 from typing import Optional
 
-import uvloop
+import sentry_sdk
 import yaml
 from sanic import Sanic, response
+from sentry_sdk.integrations.sanic import SanicIntegration
 
 from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.helpers.languages import load_translations
@@ -22,6 +22,12 @@ from search_server.routes.subjects import subjects_blueprint
 
 config: dict = yaml.safe_load(open('configuration.yml', 'r'))
 debug_mode: bool = config['common']['debug']
+
+sentry_sdk.init(
+    dsn=config["sentry"]["dsn"],
+    integrations=[SanicIntegration()],
+    environment=config["sentry"]["environment"]
+)
 
 # When debug mode is False, also disable the access log, and vice-versa (Debug mode also enables access_logs)
 app = Sanic("mp_server")
@@ -69,7 +75,7 @@ async def add_cors(req, resp):
 
 
 @app.route("/")
-async def root(req):
+async def front(req):
     return await handle_request(req,
                                 handle_front_request)
 

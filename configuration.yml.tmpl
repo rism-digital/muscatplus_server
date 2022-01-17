@@ -1,7 +1,12 @@
 ---
 common:
-  debug: yes
+  debug: no
   context_uri: yes  # if false, displays the full JSON-LD context inline
+  secret: app-secret
+
+sentry:
+  dsn: sentry-dsn-value
+  environment: "develop"
 
 solr:
   server: "http://localhost:8983/solr/muscatplus_live"
@@ -12,127 +17,328 @@ search:
     - 20
     - 40
     - 100
-  modes:
-    everything:
-      display_name: "Everything"
-      record_types:  # these get converted to Solr lookups: [type:source OR type:person OR ...]
-        - source
-        - person
-        - institution
-        - incipit
-    sources:
-      display_name: "Sources"
-      record_types:
-        - source
-    people:
-      display_name: "People"
-      record_types:
-        - person
-    institutions:
-      display_name: "Institutions"
-      record_types:
-        - institution
-    incipits:
-      display_name: "Incipits"
-      record_types:
-        - incipit
-  facets:
-    source_type_sm: &SOURCE_TYPE
-      display_name: "Source type"
+  suggestions: 10
+  default_mode: "sources"
+  facet_definitions:
+    # Defines facets for use in specific modes. Facets are pre-defined here and used below so that they
+    # only need to be defined once and then can be used as appropriate in the 'filters' section below.
+    #
+    # Allowed values for 'type' are:
+    #  - range: Creates a range facet over a set of scalar values (e.g., years).
+    #  - stats: Creates a read-only facet with some interesting pre-defined stats. (Not yet implemented)
+    #  - toggle: Creates a simple on / off facet with a true or false value. Used only on boolean fields.
+    #  - select: Creates a facet of values. For these facets, a 'behaviour' query parameter ('fb') sets
+    #       the behaviour of 'intersection' or 'union' at query-time More below.
+    #  - query: Creates a text input box for querying values. Multiple values can be entered, and the behaviour
+    #       query parameter can choose between how these values are interepreted, like the select box.
+    #  - notation: Creates a notation search facet, which will be rendered as a keyboard in the user interface
+    #
+    # Toggle facets have a field, 'active_value', which gives the value of the field when the toggle is switched 'on'.
+    #  This is not always intuitive -- if we want to filter out records who have a 'true' value for a given field,
+    #  then the 'active_value' must be 'false'. This is made even more confusing by the fact that toggle facets will
+    #  only be active when they are given as a query parameter. So to give an example of how a query parameter might:
+    #  translate to a Solr query:
+    #
+    #     ?fq=hide-source-contents:true  --> is_contents_record_b:false
+    #     ?fq=hide-source-contents:false -> (no filter on is_contents_record_b, which is the same as is_contents_record_b:true OR false)
+    #
+    # Select facets take a number of optional query parameters to control their behaviour.
+    #
+    #  Select facet configurations can take a 'values' dictionary to provide translations of the values. This
+    #  is in the form of 'solr_value: "translation.key"'. If a values field is not provided, then
+    #  the facet will display the values as indexed in Solr.
+    #
+    # By default, select facets operate as 'intersection', which is the expected behaviour from a facet;
+    #  'union' turns the facet into a multi-value select.
+    #
+    # Some examples:
+    #  ?fq=source-type:foo&fq=source-type:bar  <-- default method, 'intersection'. Only sources of
+    #    both type 'foo' and 'bar' are kept.
+    #  ?fq=source-type:foo&fq=source-type:bar&bh=source-type:union  <-- 'union'. Shows *all* sources who
+    #    have either type 'foo' or type 'bar'.
+    #  ?fq=source-type:foo&fq=source-type:bar&bh=source-type:intersection  <-- same as the default method,
+    #    but the behaviour is explicitly defined.
+    #
+    #  You can set the default behaviour of a facet using the 'default_behaviour' option on the config. Acceptable
+    #    values are 'intersection' and 'union'.
+    #
+    #  Select facets also have a facet sort ('fs') parameter that can control how the facet values are sorted. This
+    #  is either 'count' (count desc, most to least) or 'alpha' (alphabetical asc, A-Z). You can set the default using
+    #  the 'default_sort' configuration.
+    #
+    #  For example:
+    #    ?fq=source-type:foo&fs=source-type:count  <-- Will set the 'source type' to sort the facets by count
+    #
+    #  For facets that can have translations, you can set the `translation_prefix` configuration. This gives the
+    #  section of the 'locale' file to look in and will append the Solr value on the end -- for example, if the
+    #  stored value of a language is `lat` (for Latin) in Solr, then the translation prefix is `langcodes`. This
+    #  will then look up the value for `langcodes.lat` in the locales file, and provide a translated facet value.
+    #
+    # Query facets will show a text box on the page, allowing a user to query a specific solr field. The field that
+    #  will be queried is given in the 'field' configuration. Query fields can have multiple values, so they can also
+    #  take the 'behaviour' option which will allow them to set whether the queried values are "anded" or "ored" when
+    #  queried.
+    #
+    # Query facets also have a 'suggest_fields' parameter, which allows you to configure a solr suggestion.
+    #  This is implemented using the TermsComponent, which takes terms from one or more fields.
+    #
+    DATE_RANGE: &DATE_RANGE
+      label: "records.dates"
+      alias: "date-range"
+      type: "range"
+      field: "date_ranges_im"
+    NUM_HOLDINGS: &NUM_HOLDINGS
+      label: "Number of holdings"
+      alias: "num-holdings"
+      type: "range"
+      field: "num_holdings_i"
+    HIDE_SOURCE_CONTENTS: &HIDE_SOURCE_CONTENTS
+      # Configures whether to show or hide Source Contents records.
+      label: "Hide source contents"
+      alias: "hide-source-contents"
+      type: "toggle"
+      field: "is_contents_record_b"
+      active_value: false
+    HIDE_SOURCE_COLLECTION_RECORDS: &HIDE_SOURCE_COLLECTION_RECORDS
+      label: "Hide collection records"
+      alias: "hide-source-collections"
+      type: "toggle"
+      field: "is_collection_record_b"
+      active_value: false
+    HIDE_SOURCE_COMPOSITE_VOLUMES: &HIDE_SOURCE_COMPOSITE_VOLUMES
+      label: "Hide composite volumes"
+      alias: "hide-composite-volumes"
+      type: "toggle"
+      field: "is_composite_volume_b"
+      active_value: false
+    HAS_DIGITIZATION: &HAS_DIGITIZATION
+      label: "Digital images available"
+      alias: "has-digitization"
+      type: "toggle"
+      field: "has_digitization_b"
+      active_value: true
+    SHOW_SOURCE_INCIPITS: &SHOW_SOURCE_INCIPITS
+      label: "Has incipits"
+      alias: "has-incipits"
+      type: "toggle"
+      field: "has_incipits_b"
+      active_value: true
+    SHOW_SOURCE_ARRANGEMENT: &SHOW_SOURCE_ARRANGEMENT
+      label: "records.arrangement"
+      alias: "is-arrangement"
+      type: "toggle"
+      field: "is_arrangement_b"
+      active_value: true
+    PERSON_ROLE: &PERSON_ROLE
+      label: "records.role"
+      alias: "person-role"
+      type: "select"
+      field: "roles_sm"
+      default_sort: "count"
+      default_behaviour: "intersection"
+    SOURCE_TYPE: &SOURCE_TYPE
+      label: "records.source_type"
       alias: "source-type"
-      sort: "count desc"
-    is_item_record_b: &IS_ITEM_RECORD
-      display_name: "Filter item records"
-      alias: "item-filter"
-      sort: "count desc"
-      display_value_map:
-        "True": "Item records only"
-        "False": "Collection records only"
-    key_mode_s: &KEY_MODE
-      display_name: "Key or mode"
-      alias: "key-mode"
-      sort: "index asc"
-    rism_series_sm: &RISM_SERIES
-      display_name: "RISM series"
-      alias: "rism-series"
-      sort: "index asc"
-    creator_name_s: &CREATOR_NAME
-      display_name: "Composer / Author"
-      alias: "creator"
-      sort: "count asc"
-    institutions_sm: &INSTITUTIONS
-      display_name: "Related institutions"
-      alias: "related-institutions"
-      sort: "count desc"
-    holding_institutions_sm: &HOLDING_INSTITUTIONS
-      display_name: "Holding institution"
+      type: "select"
+      field: "source_type_s"
+      default_sort: "count"
+      translation_prefix: "records"
+    INSTIUTION_CITY: &INSTITUTION_CITY
+      label: "records.city"
+      alias: "city"
+      type: "select"
+      field: "city_s"
+      default_sort: "count"
+    SOURCE_HOLDING_INSTITUTION: &SOURCE_HOLDING_INSTITUTION
+      label: "Source holding institution"
       alias: "holding-institution"
-      sort: "index asc"
-    related_people_sm: &RELATED_PEOPLE
-      display_name: "Related people"
-      alias: "related-people"
-      sort: "count desc"
-    roles_sm: &ROLES
-      display_name: "Roles"
-      alias: "roles"
-      sort: "count desc"
-    qualifier_s: &QUALIFIER
-      display_name: "Relationship qualifier"
-      alias: "qualifier"
-      sort: "count desc"
-    relationship_s: &RELATIONSHIP
-      display_name: "Relationship"
-      alias: "relationship"
-      sort: "index asc"
-    has_digitization_b: &HAS_DIGITIZATION
-      display_name: "Links to digitizations"
-      alias: "digitization"
-      sort: "count desc"
-      display_value_map:
-        "True": "Only digitized sources"
-        "False": "Non-digitized sources"
-    liturgical_festivals_sm: &LITURGICAL_FESTIVALS
-      display_name: "Liturgical festivals"
-      alias: "festival"
-      sort: "count desc"
-    gender_s: &GENDER
-      display_name: "Gender"
-      alias: "gender"
-      sort: "count desc"
-    institution_types_sm: &INSTITUTION_TYPES
-      display_name: "Institution type"
-      alias: "institution-type"
-      sort: "count desc"
-  # Configure the filters to show when a specific type of search is being performed.
-  filters:
-    everything:
-      source_type_sm:
-        <<: *SOURCE_TYPE
+      type: "select"
+      field: "holding_institutions_sm"
+      default_sort: "count"
+    CONTENT_TYPES: &CONTENT_TYPES
+      label: "Content types"
+      alias: "content-types"
+      type: "select"
+      field: "content_types_sm"
+      default_sort: "count"
+      translation_prefix: "records"
+    FORMAT_EXTENT: &FORMAT_EXTENT
+      label: "Format and extent"
+      alias: "format-extent"
+      type: "select"
+      field: "format_extent_sm"
+      default_sort: "count"
+    MATERIAL_GROUP_TYPES: &MATERIAL_GROUP_TYPES
+      label: "Material group types"
+      alias: "material-group-types"
+      type: "select"
+      field: "material_group_types_sm"
+      default_sort: "count"
+    SOURCE_SUBJECTS: &SOURCE_SUBJECTS
+      label: "Subjects"
+      alias: "subjects"
+      type: "select"
+      field: "subjects_sm"
+      default_sort: "count"
+    TEXT_LANGUAGE: &TEXT_LANGUAGE
+      label: "Language of text"
+      alias: "text-language"
+      type: "select"
+      field: "language_text_sm"
+      default_sort: "count"
+      translation_prefix: "langcodes"
+    NOTATION: &NOTATION
+      label: "Notation"
+      alias: "notation"
+      type: "notation"
+    CLEF: &CLEF
+      label: "Clef"
+      alias: "clef"
+      type: "select"
+      field: "clef_s"
+      default_sort: "count"
+    IS_MENSURAL: &IS_MENSURAL
+      label: "Mensural encoding"
+      alias: "is-mensural"
+      type: "toggle"
+      field: "is_mensural_b"
+      active_value: true
+    IS_ARRANGEMENT: &IS_ARRANGEMENT
+      label: "Is Arrangement"
+      alias: "is-arrangement"
+      type: "toggle"
+      field: "is_arrangement_b"
+      active_value: true
+    HAS_NOTATION: &HAS_NOTATION
+      label: "Has notation"
+      alias: "has-notation"
+      type: "toggle"
+      field: "has_notation_b"
+      active_value: true
+    CREATOR_NAME: &CREATOR_NAME
+      label: "records.composer_author"
+      alias: "composer"
+      type: "query"
+      field: "creator_name_ft"
+      default_behaviour: "union"
+      suggest_fields:
+        - "creator_name_s"
+
+    ALL_PEOPLE: &ALL_PEOPLE
+      label: "records.related_personal_name"
+      alias: "people"
+      type: "query"
+      field: "people_names_ft"
+      suggest_fields:
+        - "people_names_sm"
+
+  sorting_definitions:
+    # label: The human-readable label for the sorting. This can either be a complete string, or it can be a key
+    #        into a translation in the locales files. If the key is found in the translation, that will be used;
+    #        otherwise the literal value given here will be used.
+    # alias: The value of the 'sort' field, e.g., sort=relevance. This ties the incoming sort request to the actual
+    #        sort statements given in the solr_sort field
+    # solr_sort: Provides a list of sort statements that will be passed to Solr. This can be multivalued to allow
+    #        for complex sorts to be aliased to a single `sort` parameter.
+    RELEVANCE: &RELEVANCE
+      label: "Relevance"
+      alias: "relevance"
+      solr_sort:
+        - "score desc"
+    ALPHABETICAL_SOURCE: &ALPHABETICAL_SOURCE
+      label: "Alphabetical (Title, A-Z)"
+      alias: "alphabetical"
+      solr_sort:
+        - "main_title_ans asc"
+    ALPHABETICAL_PERSON: &ALPHABETICAL_PERSON
+      label: "Alphabetical (Name, A-Z)"
+      alias: "alphabetical"
+      solr_sort:
+        - "name_ans asc"
+    ALPHABETICAL_INSTITUTION: &ALPHABETICAL_INSTITUTION
+      label: "Alphabetical (Name, A-Z)"
+      alias: "alphabetical"
+      solr_sort:
+        - "name_ans asc"
+    ALPHABETICAL_CREATOR: &ALPHABETICAL_CREATOR
+      label: "Alphabetical (Creator, A-Z)"
+      alias: "alphabetical"
+      solr_sort:
+        - "creator_name_s asc"
+    DATE_ADDED: &DATE_ADDED
+      label: "Date Added (Newest first)"
+      alias: "date-added"
+      solr_sort:
+        - "created desc"
+    NUM_SOURCES: &NUM_SOURCES
+      label: "Number of sources"
+      alias: "num-sources"
+      solr_sort:
+        - "source_count_i desc"
+
+  modes:
+    # Defines the specific configuration for each mode. Search modes can have specific filters and sorts
+    # and these can use pre-defined blocks.
     sources:
-      source_type_sm:
-        <<: *SOURCE_TYPE
-      is_item_record_b:
-        <<: *IS_ITEM_RECORD
-      key_mode_s:
-        <<: *KEY_MODE
-      rism_series_sm:
-        <<: *RISM_SERIES
-      creator_name_s:
-        <<: *CREATOR_NAME
-      holding_institutions_sm:
-        <<: *HOLDING_INSTITUTIONS
-      has_digitization_b:
-        <<: *HAS_DIGITIZATION
-      liturgical_festivals_sm:
-        <<: *LITURGICAL_FESTIVALS
+      label: "records.sources"
+      record_type: "source"
+      filters:
+        - *HIDE_SOURCE_CONTENTS
+        - *HIDE_SOURCE_COLLECTION_RECORDS
+        - *HIDE_SOURCE_COMPOSITE_VOLUMES
+        - *HAS_DIGITIZATION
+        - *DATE_RANGE
+        - *NUM_HOLDINGS
+        - *SOURCE_TYPE
+        - *CONTENT_TYPES
+        - *MATERIAL_GROUP_TYPES
+        - *SHOW_SOURCE_INCIPITS
+        - *TEXT_LANGUAGE
+        - *SHOW_SOURCE_ARRANGEMENT
+        - *SOURCE_HOLDING_INSTITUTION
+        - *SOURCE_SUBJECTS
+        - *FORMAT_EXTENT
+        - *CREATOR_NAME
+        - *ALL_PEOPLE
+        - *IS_ARRANGEMENT
+      sorting:
+        - *RELEVANCE
+        - *ALPHABETICAL_SOURCE
+        - *DATE_ADDED
     people:
-      roles_sm:
-        <<: *ROLES
-      gender_s:
-        <<: *GENDER
+      label: "records.people"
+      record_type: "person"
+      filters:
+        - *DATE_RANGE
+        - *PERSON_ROLE
+      sorting:
+        - *RELEVANCE
+        - *ALPHABETICAL_PERSON
+        - *DATE_ADDED
+        - *NUM_SOURCES
     institutions:
-      roles_sm:
-        <<: *ROLES
-      institution_types_sm:
-        <<: *INSTITUTION_TYPES
+      label: "records.institutions"
+      record_type: "institution"
+      filters:
+        - *INSTITUTION_CITY
+      sorting:
+        - *RELEVANCE
+        - *ALPHABETICAL_INSTITUTION
+        - *DATE_ADDED
+        - *NUM_SOURCES
     incipits:
+      label: "records.incipits"
+      record_type: "incipit"
+      filters:
+        - *NOTATION
+        - *CREATOR_NAME
+        - *DATE_RANGE
+        - *CLEF
+        - *IS_MENSURAL
+        - *HAS_NOTATION
+      sorting:
+        - *RELEVANCE
+        - *ALPHABETICAL_CREATOR
+    #    festivals:
+    #      label: "records.liturgical_festivals"
+    #      record_type: "liturgical_festival"
