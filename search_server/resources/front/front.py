@@ -1,15 +1,22 @@
 import serpy
 from small_asc.client import Results
 
-from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier
+from search_server.helpers.search_request import SearchRequest
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection
+from search_server.resources.search.facets import get_facets
 
 
 async def handle_front_request(req) -> dict:
-    return Front({}, context={"request": req, "direct_request": True}).data
+    request_compiler: SearchRequest = SearchRequest(req, probe=True)
+    solr_params: dict = request_compiler.compile()
+
+    solr_res: Results = SolrConnection.search(solr_params)
+
+    return Front(solr_res,
+                 context={"request": req, "direct_request": True}).data
 
 
 class Front(JSONLDContextDictSerializer):
@@ -22,6 +29,7 @@ class Front(JSONLDContextDictSerializer):
     )
     stats = serpy.MethodField()
     endpoints = serpy.MethodField()
+    facets = serpy.MethodField()
 
     def get_fid(self, obj: dict) -> str:
         req = self.context.get("request")
@@ -72,3 +80,7 @@ class Front(JSONLDContextDictSerializer):
         return [
             get_identifier(req, "query.search")
         ]
+
+    def get_facets(self, obj: Results) -> dict:
+        req = self.context.get("request")
+        return get_facets(req, obj)
