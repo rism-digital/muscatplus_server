@@ -69,7 +69,7 @@ async def handle_request(req: request.Request, handler: Callable, **kwargs) -> r
 
 
 async def handle_search(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
-    accept: Optional[str] = req.headers.get("Accept")
+    # accept: Optional[str] = req.headers.get("Accept")
 
     # Check whether we can respond with the correct content type. Note that
     # this server does not handle HTML responses; these are handled before

@@ -11,7 +11,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 
-log = logging.getLogger("mp_server")
+log = logging.getLogger(__name__)
 
 
 class RelationshipsSection(JSONLDContextDictSerializer):

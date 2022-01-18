@@ -8,10 +8,15 @@ from small_asc.client import Results
 
 from search_server.helpers.identifiers import get_identifier
 from search_server.helpers.search_request import (
-    filters_for_mode, alias_config_map, FacetTypeValues, FacetBehaviourValues, FacetSortValues, types_alias_map
+    filters_for_mode,
+    alias_config_map,
+    FacetTypeValues,
+    FacetBehaviourValues,
+    FacetSortValues,
+    types_alias_map
 )
 
-log = logging.getLogger("mp_server")
+log = logging.getLogger(__name__)
 RANGE_PARSING_REGEX: Pattern = re.compile(r'\[(?P<start>-?\d{,4})\s?TO\s?(?P<end>-?\d{,4})\]')
 
 
