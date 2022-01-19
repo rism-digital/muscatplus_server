@@ -473,7 +473,7 @@ class SearchRequest:
 
         if self._requested_national_collection:
             nc_value: str = self._requested_national_collection[0]
-            self.filters += [f"country_codes_sm:{nc_value}"]
+            self.filters += [f"country_codes_sm:\"{nc_value}\""]
 
         # These have already been checked in the validation, so they shouldn't raise an exception here.
         page_num: int = parse_page_number(self._page)
