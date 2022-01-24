@@ -336,9 +336,12 @@ class SearchRequest:
                 # This is treated slightly differently, as we need to add this to the `q`
                 # parameter so that it affects the ranking, rather than the `fq` which simply
                 # filters the results.
-                value = join_op.join([f"\"{val}\"" for val in quoted_values])
-                # tag: str = f"{{!tag={SolrQueryTags.QUERY_FILTER_TAG}}}" if behaviour == FacetBehaviourValues.UNION else ""
-                tag: str = f"{{!complexphrase inOrder=true}}"
+                #
+                # The complexphrase query parser is also very sensitive to character escaping, so
+                # we do some custom escaping here to make sure things are sent to Solr correctly.
+                translation_table: dict = str.maketrans({"/": "\\\\/"})
+                value = join_op.join([f"\"{val.translate(translation_table)}\"" for val in quoted_values])
+                tag = f"{{!complexphrase inOrder=true}}"
             else:
                 value = join_op.join([f"\"{val}\"" for val in quoted_values])
                 tag = f"{{!tag={SolrQueryTags.SELECT_FILTER_TAG}}}" if behaviour == FacetBehaviourValues.UNION else ""
