@@ -32,6 +32,20 @@ sentry_sdk.init(
 # When debug mode is False, also disable the access log, and vice-versa (Debug mode also enables access_logs)
 app = Sanic("mp_server")
 
+
+# a workaround for Sanic path handling; can be removed if the handling is changed.
+def nonempty_str(value: str) -> str:
+    if not value:
+        raise ValueError
+    return value
+
+
+app.router.register_pattern(
+    "nestr",
+    nonempty_str,
+    r"^[^/]+$"  # noqa
+)
+
 # register routes with their blueprints
 app.blueprint(sources_blueprint)
 app.blueprint(people_blueprint)

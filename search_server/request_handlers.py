@@ -28,6 +28,8 @@ async def handle_request(req: request.Request, handler: Callable, **kwargs) -> r
 
     data_obj: Optional[dict] = await handler(req, **kwargs)
 
+    # This will return a 404 for both the cases where the response is None, and where
+    # it is an empty dictionary.
     if not data_obj:
         return response.text(
             "The requested resource was not found",

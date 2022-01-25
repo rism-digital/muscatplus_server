@@ -24,7 +24,7 @@ async def incipits_list(req, source_id: str):
                                 source_id=source_id)
 
 
-@sources_blueprint.route("/<source_id:str>/incipits/<work_num:str>/")
+@sources_blueprint.route("/<source_id:str>/incipits/<work_num:nestr>/")
 async def incipit(req, source_id: str, work_num: str):
     return await handle_request(req,
                                 handle_incipit_request,

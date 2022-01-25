@@ -39,8 +39,8 @@ def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
     return record.docs[0]
 
 
-def handle_incipits_list_request(req, source_id: str) -> Optional[dict]:
-    pass
+async def handle_incipits_list_request(req, source_id: str) -> Optional[dict]:
+    return {"incipits": "not implemented"}
 
 
 async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[dict]:
