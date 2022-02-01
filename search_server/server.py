@@ -40,6 +40,7 @@ def nonempty_str(value: str) -> str:
     return value
 
 
+# Registers a string route handler that will *not* match on an empty string.
 app.router.register_pattern(
     "nestr",
     nonempty_str,
