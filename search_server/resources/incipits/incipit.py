@@ -126,10 +126,11 @@ class Incipit(JSONLDContextDictSerializer):
         pae_code: Optional[str] = obj.get("original_pae_sni")
         if not pae_code:
             return None
+        is_mensural: bool = obj.get("is_mensural_b", False)
 
         # Set Verovio to render random IDs for this so that we don't have any ID collisions with
         # search result highlighting
-        rendered_pae: Optional[tuple] = render_pae(pae_code, use_crc=False)
+        rendered_pae: Optional[tuple] = render_pae(pae_code, use_crc=False, is_mensural=is_mensural)
 
         if not rendered_pae:
             log.error("Could not load music incipit for %s", obj.get("id"))
