@@ -36,7 +36,7 @@ vrv_tk.setOptions(ujson.dumps({
 }))
 
 
-def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False) -> Optional[tuple]:
+def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensural: bool = False) -> Optional[tuple]:
     """
     Renders Plaine and Easie to SVG and MIDI. Returns None if there was a problem loading the data.
 
@@ -59,6 +59,14 @@ def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False) -> Optio
         custom_options["pageWidth"] = 1200
     else:
         custom_options["pageWidth"] = 2000
+
+    if is_mensural:
+        custom_options["spacingLinear"] = 0.4
+        custom_options["spacingNonLinear"] = 0.4
+    else:
+        # Default Verovio values (for CWMN)
+        custom_options["spacingLinear"] = 0.25
+        custom_options["spacingNonLinear"] = 0.6
 
     vrv_tk.setOptions(ujson.dumps(custom_options))
 
