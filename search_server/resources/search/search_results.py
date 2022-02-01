@@ -508,12 +508,13 @@ def _format_incipit_label(obj: dict) -> str:
 
 def _render_incipit_pae(obj: SolrResult) -> Optional[tuple]:
     pae_code: Optional[str] = obj.get("original_pae_sni")
+    is_mensural: bool = obj.get("is_mensural_b", False)
 
     if not pae_code:
         log.debug("no PAE code")
         return None
 
-    rendered_pae: Optional[tuple] = render_pae(pae_code, use_crc=True)
+    rendered_pae: Optional[tuple] = render_pae(pae_code, use_crc=True, is_mensural=is_mensural)
 
     if not rendered_pae:
         log.error("Could not load music incipit for %s", obj.get("id"))
