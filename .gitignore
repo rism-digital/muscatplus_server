@@ -2,3 +2,4 @@
 __pycache__
 search_server.egg-info
 .DS_Store
+configuration.yml
