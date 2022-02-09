@@ -1,6 +1,8 @@
 import serpy
+from sanic import response
 from small_asc.client import Results
 
+from search_server.exceptions import InvalidQueryException
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import get_identifier
 from search_server.helpers.search_request import SearchRequest
@@ -9,14 +11,28 @@ from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.search.facets import get_facets
 
 
-async def handle_front_request(req) -> dict:
-    request_compiler: SearchRequest = SearchRequest(req, probe=True)
-    solr_params: dict = request_compiler.compile()
+async def handle_front_request(req) -> response.HTTPResponse:
+    try:
+        request_compiler: SearchRequest = SearchRequest(req, probe=True)
+        solr_params: dict = request_compiler.compile()
+    except InvalidQueryException as e:
+        return response.text(f"Invalid search query. {e}", status=400)
 
     solr_res: Results = SolrConnection.search(solr_params)
 
-    return Front(solr_res,
-                 context={"request": req, "direct_request": True}).data
+    results: dict = Front(solr_res,
+                          context={"request": req, "direct_request": True}).data
+
+    response_headers: dict = {
+        "Content-Type": "application/ld+json; charset=utf-8"
+    }
+
+    return response.json(
+        results,
+        headers=response_headers,
+        escape_forward_slashes=False,
+        indent=(4 if req.app.ctx.config['common']['debug'] else 0)
+    )
 
 
 class Front(JSONLDContextDictSerializer):
