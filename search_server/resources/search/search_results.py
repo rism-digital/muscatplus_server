@@ -422,7 +422,7 @@ class IncipitSearchResult(ContextDictSerializer):
         parent_title: str
         parent_source_id: str
 
-        parent_title: str = obj.get("source_title_s")
+        parent_title: str = obj.get("main_title_s")
         parent_source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
         transl: dict = req.app.ctx.translations
 
@@ -500,7 +500,7 @@ def _format_incipit_label(obj: dict) -> str:
     :return: A string of the composite title
     """
     work_num: str = obj['work_num_s']
-    source_title: str = obj["source_title_s"]
+    source_title: str = obj["main_title_s"]
     title: str = f" ({d})" if (d := obj.get("title_s")) else ""
 
     return f"{source_title}: {work_num}{title}"

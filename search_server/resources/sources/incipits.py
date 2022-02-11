@@ -28,7 +28,9 @@ class IncipitsSection(JSONLDContextDictSerializer):
                     "type:incipit"]
         sort: str = "work_num_ans asc"
 
-        results: Results = SolrConnection.search({"query": "*:*", "filter": fq, "sort": sort}, cursor=True)
+        results: Results = SolrConnection.search({"query": "*:*",
+                                                  "filter": fq,
+                                                  "sort": sort}, cursor=True)
 
         # It will be strange for this to happen, since we only
         # call this code if the record has said there are incipits

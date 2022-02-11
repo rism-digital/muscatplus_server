@@ -18,6 +18,7 @@ from search_server.helpers.identifiers import (
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import render_pae
+from search_server.resources.sources.base_source import BaseSource
 
 log = logging.getLogger(__name__)
 
@@ -77,28 +78,19 @@ class Incipit(JSONLDContextDictSerializer):
 
     def get_label(self, obj: SolrResult) -> Optional[dict]:
         work_num: str = obj['work_num_s']
-        source_title: str = obj["source_title_s"]
+        source_title: str = obj["main_title_s"]
         title: str = f" ({d})" if (d := obj.get("title_s")) else ""
 
         return {"none": [f"{source_title}: {work_num}{title}"]}
 
     def get_part_of(self, obj: SolrResult) -> Optional[dict]:
-        if not self.context.get("direct_request"):
-            return None
-
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
         return {
             "label": transl.get("records.item_part_of"),  # TODO: This should probably be changed to 'incipit part of'
             "type": "rism:PartOfSection",
-            "source": {
-                "id": get_identifier(req, "sources.source", source_id=source_id),
-                "type": "rism:Source",
-                "typeLabel": transl.get("records.source"),
-                "label": {"none": [f"{obj.get('source_title_s')}"]}
-            }
+            "source": BaseSource(obj, context={"request": req}).data
         }
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
