@@ -339,7 +339,7 @@ class SearchRequest:
                 #
                 # The complexphrase query parser is also very sensitive to character escaping, so
                 # we do some custom escaping here to make sure things are sent to Solr correctly.
-                translation_table: dict = str.maketrans({"/": "\\\\/"})
+                translation_table: dict = str.maketrans({"/": "\\\\/", "~": "\\\\~"})
                 value = join_op.join([f"\"{val.translate(translation_table)}\"" for val in quoted_values])
                 tag = f"{{!complexphrase inOrder=true}}"
             else:
