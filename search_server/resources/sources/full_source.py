@@ -40,7 +40,6 @@ class SourceItemList(JSONLDContextDictSerializer):
 
 
 class FullSource(BaseSource):
-    contents = serpy.MethodField()
     material_groups = serpy.MethodField(
         label="materialGroups"
     )
@@ -57,10 +56,6 @@ class FullSource(BaseSource):
     # so we'll always return None.
     def get_summary(self, obj: dict) -> None:
         return None
-
-    def get_contents(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
-        return ContentsSection(obj, context={"request": req}).data
 
     def get_material_groups(self, obj: SolrResult) -> Optional[dict]:
         if 'material_groups_json' not in obj:
