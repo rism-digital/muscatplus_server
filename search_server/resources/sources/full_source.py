@@ -7,6 +7,7 @@ import serpy
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
+from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.contents import ContentsSection
 from search_server.resources.sources.exemplars import ExemplarsSection
@@ -51,8 +52,11 @@ class FullSource(BaseSource):
     works = serpy.MethodField()
     exemplars = serpy.MethodField()
     items = serpy.MethodField()
+    external_resources = serpy.MethodField(
+        label="externalResources"
+    )
 
-    # In the full class view we don't want to display the summary as a top-level field
+# In the full class view we don't want to display the summary as a top-level field
     # so we'll always return None.
     def get_summary(self, obj: dict) -> None:
         return None
@@ -107,6 +111,12 @@ class FullSource(BaseSource):
             return None
 
         return exmplrs
+
+    def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
+        if 'external_resources_json' not in obj:
+            return None
+
+        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
 
     def get_items(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")

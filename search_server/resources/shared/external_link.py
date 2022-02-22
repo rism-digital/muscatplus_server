@@ -47,8 +47,16 @@ class ExternalResource(JSONLDContextDictSerializer):
     def get_url(self, obj: dict) -> Optional[str]:
         return obj.get("url")
 
-    def get_label(self, obj: dict) -> Optional[dict]:
-        return {"none": [n]} if (n := obj.get("note")) else None
+    def get_label(self, obj: dict) -> dict:
+        label: str
+
+        if "note" in obj:
+            label = obj.get("note")
+        elif "link_type" in obj:
+            label = obj.get("link_type")
+        else:
+            label = "[External Resource]"
+        return {"none": [label]}
 
     def get_resource_type(self, obj: dict) -> Optional[str]:
         rtype: str = ""
