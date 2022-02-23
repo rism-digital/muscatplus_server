@@ -62,9 +62,9 @@ class ExternalResource(JSONLDContextDictSerializer):
         rtype: str = ""
         link_type: Optional[str] = obj.get("link_type")
 
-        if link_type == "IIIF":
+        if link_type in ("IIIF", "IIIF manifest (digitized source)", "IIIF manifest (other)"):
             rtype = "IIIFManifestLink"
-        elif link_type == "Digitalization":
+        elif link_type in ("Digitalization", "Digitized"):
             rtype = "DigitizationLink"
         else:
             rtype = "OtherLink"
