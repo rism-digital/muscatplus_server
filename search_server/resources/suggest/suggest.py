@@ -1,5 +1,6 @@
 import logging
 import operator
+import re
 from collections import defaultdict
 from typing import Optional
 
@@ -100,8 +101,12 @@ async def handle_suggest_request(req: request.Request, **kwargs) -> response.HTT
     field_map: dict = suggest_fields_for_alias(facet_definitions)
     fields: list = field_map.get(alias, [])
 
+    # Since we will be using a regex, ensure any special characters are escaped before handing the
+    # query off to Solr.
+    escaped_query: str = re.escape(query)
+
     try:
-        solr_res: dict = SolrConnection.term_suggest({"query": query, "fields": fields})
+        solr_res: dict = SolrConnection.term_suggest({"query": escaped_query, "fields": fields})
     except SolrError:
         msg: str = "Error sending suggest request"
         log.exception(msg)
