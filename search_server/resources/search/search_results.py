@@ -6,7 +6,7 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
-from search_server.helpers.display_fields import get_display_fields, LabelConfig
+from search_server.helpers.display_fields import get_search_result_summary
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import (
     get_identifier,
@@ -68,7 +68,7 @@ class SearchResults(BaseSearchResults):
     def get_items(self, obj: Results) -> Optional[list]:
         is_probe: bool = self.context.get("probe_request", False)
         # If we have no hits, or we have a 'probe' request, then don't
-        # return any items.
+        # return an empty items block.
         if obj.hits == 0 or is_probe:
             return None
 
@@ -140,15 +140,21 @@ class SourceSearchResult(ContextDictSerializer):
         transl = req.app.ctx.translations
         return transl.get("records.source")
 
-    def get_summary(self, obj: dict) -> Optional[list[dict]]:
-        field_config: LabelConfig = {
-            "creator_name_s": ("records.composer_author", None),
-        }
-
+    def get_summary(self, obj: dict) -> Optional[dict]:
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
-        return get_display_fields(obj, transl, field_config=field_config)
+        field_config: dict = {
+            "source_member_composers_sm": ("sourceComposers", "records.composer"),
+            "date_statements_sm": ("dateStatements", "records.dates"),
+            "num_source_members_i": ("numItems", "records.item_in_collection"),
+            "num_holdings_i": ("numHoldings", "records.multiple_copies"),
+            "material_group_types_sm": ("materialGroupTypes", "records.material_description"),
+            "num_holdings_i": ("numExemplars", "records.exemplars")
+        }
+        summary: Optional[dict] = get_search_result_summary(field_config, transl, obj)
+
+        return summary or None
 
     def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         """
@@ -245,15 +251,15 @@ class PersonSearchResult(ContextDictSerializer):
 
         return transl.get("records.person")
 
-    def get_summary(self, obj: dict) -> Optional[list[dict]]:
+    def get_summary(self, obj: dict) -> Optional[dict]:
         field_config = {
-            "roles_sm": ("records.profession_or_function", None)
+            "roles_sm": ("roles", "records.profession_or_function")
         }
 
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
-        return get_display_fields(obj, transl, field_config=field_config)
+        return get_search_result_summary(field_config, transl, obj)
 
     def get_flags(self, obj: dict) -> Optional[dict]:
         flags: dict = {}
@@ -404,15 +410,15 @@ class IncipitSearchResult(ContextDictSerializer):
 
         return transl.get("records.incipit")
 
-    def get_summary(self, obj: dict) -> Optional[list[dict]]:
-        field_config: LabelConfig = {
-            "creator_name_s": ("records.composer_author", None),
+    def get_summary(self, obj: dict) -> Optional[dict]:
+        field_config: dict = {
+            "creator_name_s": ("composer", "records.composer_author"),
         }
 
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
-        return get_display_fields(obj, transl, field_config=field_config)
+        return get_search_result_summary(field_config, transl, obj)
 
     def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         """

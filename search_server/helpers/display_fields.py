@@ -56,6 +56,24 @@ def _default_translator(value: Union[str, list], translations: dict) -> dict:
 # value will use the default translator function, returning a language key of "none".
 # The function for translating takes two arguments: The string to translate, and a dictionary of available translations.
 # This field config will be the default used if one is not provided.
+def _assemble_label_value(record: Union[SolrResult, dict], field_name: str, translation_map: tuple[str, Optional[Callable]], translations: dict) -> dict:
+    # deconstruct the translation map tuple into the translation
+    # key and the translator function
+    label_translation, value_translator = translation_map
+
+    # If the second key is None, set the translator function
+    # to the default translator.
+    if value_translator is None:
+        value_translator = _default_translator
+
+    record_value = record.get(field_name)
+
+    label_value_map: dict = {
+        "label": translations.get(label_translation),
+        "value": value_translator(record_value, translations)
+    }
+
+    return label_value_map
 
 
 def get_display_fields(record: Union[SolrResult, dict], translations: dict, field_config: Optional[LabelConfig] = None) -> Optional[list]:
@@ -77,22 +95,23 @@ def get_display_fields(record: Union[SolrResult, dict], translations: dict, fiel
         if field not in record:
             continue
 
-        # deconstruct the translation map tuple into the translation
-        # key and the translator function
-        label_translation, value_translator = translation_map
+        label_value: dict = _assemble_label_value(record, field, translation_map, translations)
 
-        # If the second key is None, set the translator function
-        # to the default translator.
-        if value_translator is None:
-            value_translator = _default_translator
-
-        record_value = record.get(field)
-
-        label_value_map: dict = {
-            "label": translations.get(label_translation),
-            "value": value_translator(record_value, translations)
-        }
-
-        display.append(label_value_map)
+        display.append(label_value)
 
     return display or None
+
+
+def get_search_result_summary(field_config: dict, translations: dict, result: dict) -> Optional[dict]:
+    summary: dict = {}
+
+    for solr_fieldname, cfg in field_config.items():
+        if solr_fieldname not in result:
+            continue
+
+        output_fieldname: str = cfg[0]
+        translation_key: str = cfg[1]
+        field_res: dict = _assemble_label_value(result, solr_fieldname, (translation_key, None), translations)
+        summary.update({output_fieldname: field_res})
+
+    return summary or None
