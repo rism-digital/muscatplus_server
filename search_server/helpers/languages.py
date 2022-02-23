@@ -77,7 +77,7 @@ def __flatten(d: dict) -> dict:
     return out
 
 
-def load_translations(path: str) -> Optional[list]:
+def load_translations(path: str) -> Optional[dict]:
     """Takes a path to a set of locale yml files, and returns a dictionary of translations, with each unique key
         pointing to all available translations of that key. For example:
 
@@ -162,7 +162,7 @@ def languages_translator(value: Union[str, list], translations: dict) -> dict:
     else:
         trans_value = value
 
-    all_values: list = []
+    all_values: list[dict] = []
     for v in trans_value:
         trans_key: str = f"langcodes.{v}"
         if trans_key not in translations:
@@ -176,10 +176,7 @@ def languages_translator(value: Union[str, list], translations: dict) -> dict:
 
     for trans in all_values:
         for k, v in trans.items():
-            if isinstance(v, list):
-                lang_dict[k].update(*v)
-            else:
-                lang_dict[k].update(v)
+            lang_dict[k].update(v)
 
     # Unwrap the set into a list for the final result.
     return {k: list(v) for k, v in lang_dict.items()}
