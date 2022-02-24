@@ -32,7 +32,9 @@ class SourceItemsSection(JSONLDContextDictSerializer):
                     "is_contents_record_b:true",
                     f"source_membership_id:{this_id}",
                     f"!id:{this_id}"]
-        sort: str = "source_id asc"
+        # Sort first by the sort order of the record in the parent, but fall back to the
+        # sort order of the source_id if that isn't present.
+        sort: str = "source_membership_order_i asc, source_id asc"
 
         source_results: Results = SolrConnection.search({"query": "*:*", "filter": fq, "sort": sort}, cursor=True)
         items: list = []
