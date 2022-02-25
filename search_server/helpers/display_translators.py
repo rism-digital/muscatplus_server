@@ -221,6 +221,12 @@ _PERSON_NAME_VARIANT_TYPES_MAP = {
 }
 
 
+_PERSON_GENDER_MAP = {
+    None: "general.unknown",
+    "male": "general.male",
+    "female": "general.female"
+}
+
 # These are the countries that currently have sources attached to them. They are separated from
 # the full list of countries so that we can expose this publicly as a filter for the UI.
 # When a country has sources it should be moved from the full sigla map to this one. If we want to
@@ -445,6 +451,10 @@ def country_code_labels_translator(value: str, translations: dict) -> dict:
 
 def person_name_variant_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _PERSON_NAME_VARIANT_TYPES_MAP)
+
+
+def person_gender_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, _PERSON_GENDER_MAP)
 
 
 def place_relationship_labels_translator(value: str, translations: dict) -> dict:

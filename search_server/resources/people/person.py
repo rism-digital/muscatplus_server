@@ -7,6 +7,7 @@ import serpy
 from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.solr_connection import SolrResult, SolrConnection
+from search_server.helpers.display_translators import person_gender_translator
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.people.variant_name import VariantNamesSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
@@ -86,7 +87,7 @@ class Person(BasePerson):
         field_config: dict = {
             "date_statement_s": ("records.years_birth_death", None),
             "other_dates_s": ("records.other_life_dates", None),
-            "gender_s": ("records.gender", None),
+            "gender_s": ("records.gender", person_gender_translator),
             "roles_sm": ("records.profession_or_function", None)
         }
 
