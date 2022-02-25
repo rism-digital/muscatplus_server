@@ -390,7 +390,7 @@ class IncipitSearchResult(ContextDictSerializer):
         label="partOf"
     )
     summary = serpy.MethodField()
-    flags = serpy.MethodField()
+    rendered = serpy.MethodField()
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
@@ -412,7 +412,8 @@ class IncipitSearchResult(ContextDictSerializer):
 
     def get_summary(self, obj: dict) -> Optional[dict]:
         field_config: dict = {
-            "creator_name_s": ("composer", "records.composer_author"),
+            "creator_name_s": ("incipitComposer", "records.composer_author"),
+            "text_incipit_s": ("textIncipit", "records.text_incipit")
         }
 
         req = self.context.get("request")
@@ -443,7 +444,7 @@ class IncipitSearchResult(ContextDictSerializer):
             }
         }
 
-    def get_flags(self, obj: SolrResult) -> Optional[dict]:
+    def get_rendered(self, obj: SolrResult) -> Optional[list]:
         if not obj.get("music_incipit_s"):
             log.debug("No music incipit")
             return None
@@ -458,20 +459,13 @@ class IncipitSearchResult(ContextDictSerializer):
         else:
             svg, midi = _render_with_highlighting(req, obj, query_pae_features)
 
-        flags: dict = {
-            "highlightedResult": [{
-                    "format": "image/svg+xml",
-                    "data": svg
-                }, {
-                    "format": "audio/midi",
-                    "data": midi
-                }],
-        }
-
-        if 'incipit_score' in obj:
-            flags["score"] = obj['incipit_score']
-
-        return flags
+        return [{
+            "format": "image/svg+xml",
+            "data": svg
+        }, {
+            "format": "audio/midi",
+            "data": midi
+        }]
 
 
 def _format_institution_label(obj: dict) -> str:
