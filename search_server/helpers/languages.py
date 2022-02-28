@@ -166,7 +166,7 @@ def languages_translator(value: Union[str, list], translations: dict) -> dict:
     for v in trans_value:
         trans_key: str = f"langcodes.{v}"
         if trans_key not in translations:
-            all_values.append({"none": [value]})
+            all_values.append({"none": [v]})
         else:
             all_values.append(translations[trans_key])
 
