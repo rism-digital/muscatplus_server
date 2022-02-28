@@ -149,7 +149,6 @@ class SourceSearchResult(ContextDictSerializer):
             "source_member_composers_sm": ("sourceComposers", "records.composer"),
             "date_statements_sm": ("dateStatements", "records.dates"),
             "num_source_members_i": ("numItems", "records.item_in_collection"),
-            "num_holdings_i": ("numHoldings", "records.multiple_copies"),
             "material_group_types_sm": ("materialGroupTypes", "records.material_description"),
             "num_holdings_i": ("numExemplars", "records.exemplars")
         }
