@@ -4,6 +4,7 @@ import logging
 
 import serpy
 
+from search_server.helpers.record_types import create_record_block
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
@@ -12,25 +13,6 @@ from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.sources.contents import ContentsSection
 
-SOURCE_TYPE_MAP: dict = {
-    "printed": "rism:PrintedSource",
-    "manuscript": "rism:ManuscriptSource",
-    "composite": "rism:CompositeSource",
-    "unspecified": "rism:UnspecifiedSource"
-}
-
-RECORD_TYPE_MAP: dict = {
-    "item": "rism:ItemRecord",
-    "collection": "rism:CollectionRecord",
-    "composite": "rism:CompositeRecord"
-}
-
-CONTENT_TYPE_MAP: dict = {
-    "libretto": "rism:LibrettoContent",
-    "treatise": "rism:TreatiseContent",
-    "musical": "rism:MusicalContent",
-    "composite_content": "rism:CompositeContent"
-}
 
 # The Solr fields necessary to construct a base source record. Helps cut down on internal Solr
 # communication by limiting the fields to only those that are necessary.
@@ -117,7 +99,7 @@ class BaseSource(JSONLDContextDictSerializer):
         source_type: str = source_membership.get("source_type", "unspecified")
         content_types: list[str] = source_membership.get("content_types", [])
 
-        record_block: dict = _create_record_block(record_type, source_type, content_types)
+        record_block: dict = create_record_block(record_type, source_type, content_types)
 
         log.debug(record_block)
 
@@ -141,7 +123,6 @@ class BaseSource(JSONLDContextDictSerializer):
         transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "creator_name_s": ("records.composer_author", None),
             "material_group_types_sm": ("records.type", None),
         }
 
@@ -156,7 +137,7 @@ class BaseSource(JSONLDContextDictSerializer):
         content_identifiers: list[str] = obj.get("content_types_sm", [])
         record_type: str = obj.get("record_type_s", "item")
 
-        return _create_record_block(record_type, source_type, content_identifiers)
+        return create_record_block(record_type, source_type, content_identifiers)
 
     def get_record_history(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -164,27 +145,3 @@ class BaseSource(JSONLDContextDictSerializer):
 
         return get_record_history(obj, transl)
 
-
-def _create_record_block(record_type: str, source_type: str, content_types: list[str]) -> dict:
-    type_identifier: str = SOURCE_TYPE_MAP.get(source_type)
-    content_type_block: list = []
-
-    for c in content_types:
-        content_type_block.append({
-            "label": {"none": [c]},  # TODO translate!
-            "type": CONTENT_TYPE_MAP.get(c, "rism:MusicalSource")
-        })
-
-    record_type_identifier: str = RECORD_TYPE_MAP.get(record_type)
-
-    return {
-        "recordType": {
-            "label": {"none": [record_type]},  # TODO: Translate!
-            "type": record_type_identifier
-        },
-        "sourceType": {
-            "label": {"none": [source_type]},  # TODO: Translate!
-            "type": type_identifier
-        },
-        "contentTypes": content_type_block
-    }

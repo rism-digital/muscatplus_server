@@ -6,6 +6,7 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
+from search_server.helpers.record_types import create_record_block
 from search_server.helpers.display_fields import get_search_result_summary
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import (
@@ -173,6 +174,12 @@ class SourceSearchResult(ContextDictSerializer):
         parent_title = obj.get("source_membership_title_s")
         parent_source_id = re.sub(ID_SUB, "", obj.get("source_membership_id"))
 
+        source_membership: dict = obj.get('source_membership_json', {})
+        record_type: str = source_membership.get("record_type", "item")
+        source_type: str = source_membership.get("source_type", "unspecified")
+        content_types: list[str] = source_membership.get("content_types", [])
+
+        record_block: dict = create_record_block(record_type, source_type, content_types)
         transl: dict = req.app.ctx.translations
 
         return {
@@ -182,6 +189,7 @@ class SourceSearchResult(ContextDictSerializer):
                 "id": get_identifier(req, "sources.source", source_id=parent_source_id),
                 "type": "rism:Source",
                 "typeLabel": transl.get("records.source"),
+                "record": record_block,
                 "label": {"none": [parent_title]}
             }
         }
