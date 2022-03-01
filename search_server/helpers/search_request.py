@@ -333,14 +333,10 @@ class SearchRequest:
                 value = filter_config['active_value']
                 tag = ""
             elif filter_type == FacetTypeValues.QUERY:
-                # This is treated slightly differently, as we need to add this to the `q`
-                # parameter so that it affects the ranking, rather than the `fq` which simply
-                # filters the results.
-                #
                 # The complexphrase query parser is also very sensitive to character escaping, so
                 # we do some custom escaping here to make sure things are sent to Solr correctly.
                 translation_table: dict = str.maketrans({"/": "\\\\/", "~": "\\\\~"})
-                value = join_op.join([f"\"{val.translate(translation_table)}\"" for val in quoted_values])
+                value = join_op.join([f"{val.translate(translation_table)}" for val in quoted_values])
                 tag = f"{{!complexphrase inOrder=true}}"
             else:
                 value = join_op.join([f"\"{val}\"" for val in quoted_values])
