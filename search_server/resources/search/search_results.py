@@ -37,6 +37,11 @@ class SearchResults(BaseSearchResults):
             return None
 
         mode_buckets: list = mode_facet.get("buckets", [])
+        # if there are no buckets for this mode, then we shouldn't return the
+        # mode facet block at all.
+        if len(mode_buckets) == 0:
+            return None
+
         mode_items: list = []
         mode_config: dict = cfg['search']['modes']
         # Put the returned modes into a dictionary so we can look up the buckets by the key. The format is
