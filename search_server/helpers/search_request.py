@@ -303,7 +303,7 @@ class SearchRequest:
 
             # Then remove any quotes (single or double) to ensure we control how the values actually get
             # to Solr.
-            quoted_values: list[str] = [s.replace("\"", "").replace("'", "") for s in unencoded_values]
+            quoted_values: list[str] = [s.replace("\"", "") for s in unencoded_values]
 
             # Some field types need to be tagged to help modify their behaviour and interactions with
             # facets for multi-select faceting. See:
