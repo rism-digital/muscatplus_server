@@ -88,7 +88,7 @@ class Person(BasePerson):
             "date_statement_s": ("records.years_birth_death", None),
             "other_dates_s": ("records.other_life_dates", None),
             "gender_s": ("records.gender", person_gender_translator),
-            "roles_sm": ("records.profession_or_function", None)
+            "profession_function_sm": ("records.profession_or_function", None)
         }
 
         return get_display_fields(obj, transl, field_config)

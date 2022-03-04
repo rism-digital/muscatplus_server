@@ -265,7 +265,7 @@ class PersonSearchResult(ContextDictSerializer):
 
     def get_summary(self, obj: dict) -> Optional[dict]:
         field_config = {
-            "roles_sm": ("roles", "records.profession_or_function")
+            "profession_function_sm": ("roles", "records.profession_or_function")
         }
 
         req = self.context.get("request")
