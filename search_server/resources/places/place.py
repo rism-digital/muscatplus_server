@@ -3,7 +3,7 @@ from typing import Optional
 import logging
 
 import serpy
-from small_asc.client import Results
+from small_asc.client import Results, JsonAPIRequest
 
 from search_server.resources.shared.relationship import Relationship
 from search_server.resources.institutions.base_institution import BaseInstitution, SOLR_FIELDS_FOR_BASE_INSTITUTION
@@ -78,15 +78,16 @@ class Place(JSONLDContextDictSerializer):
 
         req = self.context.get("request")
         place_id: str = obj["id"]
-        q: dict = {
+        q: JsonAPIRequest = {
             "query": "*:*",
             "filter": ["type:source", f"location_of_performance_ids:{place_id}"],
-            "params": {"fl": SOLR_FIELDS_FOR_BASE_SOURCE, "sort": "main_title_ans asc"},
-            # "sort": "main_title_ans asc"
+            "fields": SOLR_FIELDS_FOR_BASE_SOURCE,
+            "sort": "main_title_ans asc"
         }
         source_results: Results = SolrConnection.search(q, cursor=True)
 
-        source_list: list = BaseSource(source_results, context={"request": req}, many=True).data
+        source_list: list = BaseSource(source_results,
+                                       context={"request": req}, many=True).data
 
         return {
             "type": "rism:PlaceSourceList",
@@ -100,11 +101,11 @@ class Place(JSONLDContextDictSerializer):
 
         req = self.context.get("request")
         place_id: str = obj["id"]
-        q: dict = {
+        q: JsonAPIRequest = {
             "query": "*:*",
             "filter": ["type:person", f"place_ids:{place_id}"],
-            "params": {"fl": SOLR_FIELDS_FOR_BASE_PERSON},
-            "sort": ["name_ans desc"]
+            "fields": SOLR_FIELDS_FOR_BASE_PERSON,
+            "sort": "name_ans desc"
         }
         person_results: Results = SolrConnection.search(q, cursor=True)
         person_list: list = Relationship(person_results, context={"request": req}, many=True).data
@@ -121,10 +122,11 @@ class Place(JSONLDContextDictSerializer):
 
         req = self.context.get("request")
         place_id: str = obj["id"]
-        q: dict = {
+        q: JsonAPIRequest = {
             "query": "*:*",
             "filter": ["type:institution", f"place_ids:{place_id}"],
-            "params": {"fl": SOLR_FIELDS_FOR_BASE_INSTITUTION, "sort": "name_ans asc"},
+            "fields": SOLR_FIELDS_FOR_BASE_INSTITUTION,
+            "sort": "name_ans asc"
         }
         institution_results: Results = SolrConnection.search(q, cursor=True)
         institution_list: list = BaseInstitution(institution_results,
