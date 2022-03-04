@@ -207,6 +207,7 @@ def _create_toggle_facet(res) -> dict:
 def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations: dict) -> dict:
     value_buckets = res["buckets"]
     translation_prefix: Optional[str] = cfg.get("translation_prefix")
+    translation_values: Optional[dict] = cfg.get("translation_values")
 
     default_behaviour: str = cfg.get("default_behaviour", FacetBehaviourValues.INTERSECTION)
     current_behaviour: str = default_behaviour
@@ -233,6 +234,13 @@ def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations
 
         if translation_prefix:
             label = all_translations.get(f"{translation_prefix}.{solr_value}", default_label)
+        elif translation_values:
+            # look up the Solr value in the translation values in the configuration
+            trans_key: Optional[str] = translation_values.get(solr_value)
+            if not trans_key:
+                label = default_label
+            else:
+                label = all_translations.get(f"{trans_key}", default_label)
         else:
             label = default_label
 

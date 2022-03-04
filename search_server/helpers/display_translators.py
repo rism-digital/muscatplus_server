@@ -166,6 +166,7 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     "asg": "records.assignee",
     "asn": "records.associated_name",
     "aut": "records.author",
+    "bnd": "records.binder",
     "bsl": "records.bookseller",
     "ccp": "records.conceptor",
     "cmp": "records.composer",
@@ -174,6 +175,8 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     "cre": "records.composer_author",
     # A special case, where the cre relator code is used to label the 100 main entry field.
     "ctb": "records.contributor",
+    "dnc": "records.dancer",
+    "dnr": "records.donor",
     "dpt": "records.depositor",
     "dst": "records.distributor",
     "dte": "records.dedicatee",
