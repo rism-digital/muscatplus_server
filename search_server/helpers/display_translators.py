@@ -331,7 +331,6 @@ _FULL_COUNTRY_SIGLA_MAP: dict = {
      "ZA": "places.south_africa"
 } | SOURCE_SIGLA_COUNTRY_MAP
 
-# No immediate use for this, but handy to have for possible future uses.
 _GND_COUNTRY_CODE_MAP: dict = {
     "XA-AT": "places.austria",
     "XA-AT-2": "places.austria_carinthia",
@@ -444,8 +443,31 @@ def __lookup_translations(value, available_translations: dict, translations_map:
     return available_translations.get(trans_key)
 
 
-def gnd_country_code_labels_translator(value: str, translations: dict) -> dict:
-    return __lookup_translations(value, translations, _GND_COUNTRY_CODE_MAP)
+def __lookup_translations_list(values: list, available_translations: dict, translations_map: dict) -> dict:
+    """
+    Like the function above, but for lists of values instead of a single value.
+
+    :param values:
+    :param available_translations:
+    :param translations_map:
+    :return:
+    """
+    result: dict = {k: [] for k in SUPPORTED_LANGUAGES}
+
+    for trans_itm in values:
+        transl_key: Optional[str] = translations_map.get(trans_itm)
+        for lcode in SUPPORTED_LANGUAGES:
+            if transl_key:
+                trans: dict = available_translations.get(transl_key, {})
+                result[lcode].extend(trans[lcode] if lcode in trans else [trans_itm])
+            else:
+                result[lcode].extend([trans_itm])
+
+    return result
+
+
+def gnd_country_code_labels_translator(values: list, translations: dict) -> dict:
+    return __lookup_translations_list(values, translations, _GND_COUNTRY_CODE_MAP)
 
 
 def country_code_labels_translator(value: str, translations: dict) -> dict:
@@ -473,27 +495,8 @@ def person_institution_relationship_labels_translator(value: str, translations: 
 
 
 def printing_techniques_translator(values: list, translations: dict) -> dict:
-    """
-    Translates the printing techniques values. Since the values can be a list of
-    printing techniques, we need to gather all possible printing techniques and return
-    them.
+    return __lookup_translations_list(values, translations, _PRINTING_TECHNIQUE_MAP)
 
-    :param values: A list of values to translate
-    :param translations: The source of all translations
-    :return: A dictionary of translated terms.
-    """
-    result: dict = {k: [] for k in SUPPORTED_LANGUAGES}
-    for technique in values:
-        transl_key: Optional[str] = _PRINTING_TECHNIQUE_MAP.get(technique)
-
-        for lcode in SUPPORTED_LANGUAGES:
-            if transl_key:
-                trans: dict = translations.get(transl_key, {})
-                result[lcode].extend(trans[lcode] if lcode in trans else [technique])
-            else:
-                result[lcode].extend([technique])
-
-    return result
 
 
 def secondary_literature_json_value_translator(values: list, translations: dict) -> dict:
