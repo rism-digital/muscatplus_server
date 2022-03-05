@@ -111,7 +111,8 @@ def get_search_result_summary(field_config: dict, translations: dict, result: di
 
         output_fieldname: str = cfg[0]
         translation_key: str = cfg[1]
-        field_res: dict = _assemble_label_value(result, solr_fieldname, (translation_key, None), translations)
+        translation_value_translator_fn: Optional[Callable] = cfg[2]
+        field_res: dict = _assemble_label_value(result, solr_fieldname, (translation_key, translation_value_translator_fn), translations)
         summary.update({output_fieldname: field_res})
 
     return summary or None

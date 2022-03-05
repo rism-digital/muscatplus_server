@@ -6,6 +6,7 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
+from search_server.helpers.display_translators import gnd_country_code_labels_translator
 from search_server.helpers.record_types import create_record_block
 from search_server.helpers.display_fields import get_search_result_summary
 from search_server.helpers.fields import StaticField
@@ -151,11 +152,11 @@ class SourceSearchResult(ContextDictSerializer):
         transl: dict = req.app.ctx.translations
 
         field_config: dict = {
-            "source_member_composers_sm": ("sourceComposers", "records.composer"),
-            "date_statements_sm": ("dateStatements", "records.dates"),
-            "num_source_members_i": ("numItems", "records.item_in_collection"),
-            "material_group_types_sm": ("materialGroupTypes", "records.material_description"),
-            "num_holdings_i": ("numExemplars", "records.exemplars")
+            "source_member_composers_sm": ("sourceComposers", "records.composer", None),
+            "date_statements_sm": ("dateStatements", "records.dates", None),
+            "num_source_members_i": ("numItems", "records.item_in_collection", None),
+            "material_group_types_sm": ("materialGroupTypes", "records.material_description", None),
+            "num_holdings_i": ("numExemplars", "records.exemplars", None)
         }
         summary: Optional[dict] = get_search_result_summary(field_config, transl, obj)
 
@@ -265,7 +266,7 @@ class PersonSearchResult(ContextDictSerializer):
 
     def get_summary(self, obj: dict) -> Optional[dict]:
         field_config = {
-            "profession_function_sm": ("roles", "records.profession_or_function")
+            "profession_function_sm": ("roles", "records.profession_or_function", None)
         }
 
         req = self.context.get("request")
@@ -295,6 +296,7 @@ class InstitutionSearchResult(ContextDictSerializer):
     type_label = serpy.MethodField(
         label="typeLabel"
     )
+    summary = serpy.MethodField()
     flags = serpy.MethodField()
 
     def get_srid(self, obj: dict) -> str:
@@ -313,6 +315,16 @@ class InstitutionSearchResult(ContextDictSerializer):
         transl = req.app.ctx.translations
 
         return transl.get("records.institution")
+
+    def get_summary(self, obj: dict) -> dict:
+        field_config: dict = {
+            "gnd_country_codes_sm": ("countryName", "records.country", gnd_country_code_labels_translator)
+        }
+
+        req = self.context.get("request")
+        transl = req.app.ctx.translations
+
+        return get_search_result_summary(field_config, transl, obj)
 
     def get_flags(self, obj: dict) -> Optional[dict]:
         flags: dict = {}
@@ -424,8 +436,8 @@ class IncipitSearchResult(ContextDictSerializer):
 
     def get_summary(self, obj: dict) -> Optional[dict]:
         field_config: dict = {
-            "creator_name_s": ("incipitComposer", "records.composer_author"),
-            "text_incipit_s": ("textIncipit", "records.text_incipit")
+            "creator_name_s": ("incipitComposer", "records.composer_author", None),
+            "text_incipit_s": ("textIncipit", "records.text_incipit", None)
         }
 
         req = self.context.get("request")
