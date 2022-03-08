@@ -4,6 +4,7 @@ import logging
 
 import serpy
 
+from search_server.helpers.display_translators import title_json_value_translator
 from search_server.helpers.record_types import create_record_block
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.fields import StaticField
@@ -11,7 +12,6 @@ from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.shared.record_history import get_record_history
-from search_server.resources.sources.contents import ContentsSection
 
 
 # The Solr fields necessary to construct a base source record. Helps cut down on internal Solr
@@ -46,7 +46,6 @@ class BaseSource(JSONLDContextDictSerializer):
         label="partOf"
     )
     summary = serpy.MethodField()
-    contents = serpy.MethodField()
     record = serpy.MethodField()
     record_history = serpy.MethodField(
         label="recordHistory"
@@ -123,14 +122,15 @@ class BaseSource(JSONLDContextDictSerializer):
         transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "material_group_types_sm": ("records.type", None),
+            "source_member_composers_sm": ("records.composer", None),
+            "institution_s": ("records.institution", None),
+            "date_statements_sm": ("records.dates", None),
+            "num_source_members_i": ("records.items_in_source", None),
+            "material_group_types_sm": ("records.material_description", None),
+            "standard_titles_json": ("records.standardized_title", title_json_value_translator),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
-
-    def get_contents(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
-        return ContentsSection(obj, context={"request": req}).data
 
     def get_record(self, obj: SolrResult) -> dict:
         source_type: str = obj.get("source_type_s", "unspecified")

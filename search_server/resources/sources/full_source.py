@@ -41,6 +41,7 @@ class SourceItemList(JSONLDContextDictSerializer):
 
 
 class FullSource(BaseSource):
+    contents = serpy.MethodField()
     material_groups = serpy.MethodField(
         label="materialGroups"
     )
@@ -56,10 +57,14 @@ class FullSource(BaseSource):
         label="externalResources"
     )
 
-# In the full class view we don't want to display the summary as a top-level field
+    # In the full class view we don't want to display the summary as a top-level field
     # so we'll always return None.
     def get_summary(self, obj: dict) -> None:
         return None
+
+    def get_contents(self, obj: SolrResult) -> dict:
+        req = self.context.get("request")
+        return ContentsSection(obj, context={"request": req}).data
 
     def get_material_groups(self, obj: SolrResult) -> Optional[dict]:
         if 'material_groups_json' not in obj:
