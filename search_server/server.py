@@ -83,12 +83,6 @@ app.ctx.context_uri = context_uri
 # Make the application configuration object available in the app context
 app.ctx.config = config
 
-
-@app.middleware('response')
-async def add_cors(req, resp):
-    resp.headers['access-control-allow-origin'] = "*"
-
-
 @app.route("/")
 async def front(req):
     return await handle_front_request(req)
