@@ -444,7 +444,8 @@ class SearchRequest:
             # This will be refactored to take into account the other accepted values for the interval search modes,
             # once we know what they are.
             incipit_query: str = " ".join((str(s) for s in intervals))
-            self.filters.insert(0, f'{{!min_hash field="intervals_mh" sim="0.9"}}:\"{incipit_query}\"')
+            # self.filters.insert(0, f'{{!min_hash field="intervals_mh" sim="0.9"}}:\"{incipit_query}\"')
+            self.filters.insert(0, f'intervals_bi:\"{incipit_query}\"')
 
             # Create the sort query
             first_half = []
