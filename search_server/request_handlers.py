@@ -5,7 +5,6 @@ from sanic import request, response
 from small_asc.client import SolrError
 
 from search_server.exceptions import InvalidQueryException
-from search_server.helpers.semantic_web import to_turtle, to_rdf
 
 log = logging.getLogger("mp_server")
 
@@ -39,24 +38,9 @@ async def handle_request(req: request.Request, handler: Callable, **kwargs) -> r
     response_headers: dict = {}
 
     if accept and "text/turtle" in accept:
-        log.debug("Sending Turtle")
-
-        turtle_resp: str = to_turtle(data_obj)
-        response_headers["Content-Type"] = "text/turtle; charset=utf-8"
-
-        return response.text(
-            turtle_resp,
-            headers=response_headers
-        )
+        return response.text("Turtle responses will be implemented in the future.", status=501)
     elif accept and "application/n-quads" in accept:
-        log.debug("Sending RDF")
-        rdf_resp: str = to_rdf(data_obj)
-        response_headers["Content-Type"] = "application/n-quads; charset=utf-8"
-
-        return response.text(
-            rdf_resp,
-            headers=response_headers
-        )
+        return response.text("N-Quad responses will be implemented in the future", status=501)
     else:
         log.debug("Sending JSON-LD")
         # The default return type is JSON-LD
