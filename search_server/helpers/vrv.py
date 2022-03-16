@@ -147,24 +147,29 @@ def _find_err_msg(needle: str, transl_haystack: dict[str, dict]) -> dict:
     return {}
 
 
-def validate_pae(req) -> list:
+def validate_pae(req) -> dict:
     vrv_tk.resetXmlIdSeed(0)
     pae: str = create_pae_from_request(req)
     validation: str = vrv_tk.validatePAE(pae)
     validation_output: dict = ujson.loads(validation)
 
     if "data" not in validation_output:
-        return []
+        return {
+            "valid": True
+        }
 
     transl: dict = req.app.ctx.translations
 
-    validation_messages: list = validation_output["data"]
-    resp: list = []
+    validation_output: list = validation_output["data"]
+    translated_messages: list = []
 
-    for message in validation_messages:
+    for message in validation_output:
         code: int = message.get("code")
         err_needle: str = f"verovio.ERR_{code:03}"
         error_msg: dict = _find_err_msg(err_needle, transl)
-        resp.append({"value": error_msg})
+        translated_messages.append({"value": error_msg})
 
-    return resp
+    return {
+        "valid": False,
+        "messages": translated_messages
+    }
