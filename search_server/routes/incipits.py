@@ -1,6 +1,6 @@
 from sanic import Blueprint
 
-from search_server.resources.incipits.render import handle_incipit_render
+from search_server.resources.incipits.render import handle_incipit_render, handle_incipit_validate
 
 incipits_blueprint: Blueprint = Blueprint("incipits", url_prefix="/incipits")
 
@@ -13,3 +13,8 @@ async def incipit(req, incipit_id: str):
 @incipits_blueprint.route("/render")
 async def incipit_render(req):
     return await handle_incipit_render(req)
+
+
+@incipits_blueprint.route("/validate")
+async def incipit_validate(req):
+    return await handle_incipit_validate(req)

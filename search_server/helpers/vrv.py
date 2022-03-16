@@ -139,3 +139,32 @@ def get_pae_features(req) -> dict:
     feat_output: dict = ujson.loads(features)
 
     return feat_output
+
+def _find_err_msg(needle: str, transl_haystack: dict[str, dict]) -> dict:
+    for k, v in transl_haystack.items():
+        if k.startswith(needle):
+            return v
+    return {}
+
+
+def validate_pae(req) -> list:
+    vrv_tk.resetXmlIdSeed(0)
+    pae: str = create_pae_from_request(req)
+    validation: str = vrv_tk.validatePAE(pae)
+    validation_output: dict = ujson.loads(validation)
+
+    if "data" not in validation_output:
+        return []
+
+    transl: dict = req.app.ctx.translations
+
+    validation_messages: list = validation_output["data"]
+    resp: list = []
+
+    for message in validation_messages:
+        code: int = message.get("code")
+        err_needle: str = f"verovio.ERR_{code:03}"
+        error_msg: dict = _find_err_msg(err_needle, transl)
+        resp.append({"value": error_msg})
+
+    return resp

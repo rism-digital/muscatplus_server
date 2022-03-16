@@ -2,7 +2,7 @@ from typing import Optional
 
 from sanic import response
 
-from search_server.helpers.vrv import create_pae_from_request, render_pae
+from search_server.helpers.vrv import create_pae_from_request, render_pae, validate_pae
 
 
 async def handle_incipit_render(req) -> response.HTTPResponse:
@@ -18,14 +18,6 @@ async def handle_incipit_render(req) -> response.HTTPResponse:
 
         Returns SVG in the body of the response
     """
-    # requested_notation: str = req.args.get("n", "")
-
-    # if not requested_notation:
-    #     return response.text(
-    #         "No notation input supplied",
-    #         status=400
-    #     )
-    #
     pae: str = create_pae_from_request(req)
 
     # Generate random IDs to avoid ID collisions on the page.
@@ -42,4 +34,18 @@ async def handle_incipit_render(req) -> response.HTTPResponse:
     return response.text(
         svg,
         headers=response_headers
+    )
+
+
+async def handle_incipit_validate(req) -> response.HTTPResponse:
+    response_headers: dict = {
+        "Content-Type": "application/json; charset=utf-8"
+    }
+    data_obj: dict = validate_pae(req)
+
+    return response.json(
+        data_obj,
+        headers=response_headers,
+        escape_forward_slashes=False,
+        indent=(4 if req.app.ctx.config['common']['debug'] else 0)
     )
