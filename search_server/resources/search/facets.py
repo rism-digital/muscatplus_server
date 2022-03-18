@@ -55,7 +55,7 @@ def get_facets(req, obj: Results) -> Optional[dict]:
             "type": _get_facet_type(FacetTypeValues.NOTATION)
 
         }
-        facet_cfg.update(_create_notation_facet())
+        facet_cfg.update(_create_notation_facet(transl))
         facets[alias] = facet_cfg
 
     # the purpose of the query facet is to announce that there is a means of sending a full-text query
@@ -147,12 +147,33 @@ def _get_facet_type(val) -> str:
         return "rism:Facet"
 
 
-def _create_notation_facet() -> dict:
-    return {
-        "clef": "ic",
-        "keysig": "ik",
-        "timesig": "it"
-    }
+def _create_notation_facet(all_translations: dict) -> dict:
+    return {"options": {
+        "clef": {
+            "query": "ic",
+            "options": [{
+                "label": all_translations.get("records.g_minus_2_treble"),
+                "value": "G-2"
+            }, {
+                "label": all_translations.get("records.f_minus_4_bass"),
+                "value": "F-4"
+            }, {
+                "label": all_translations.get("records.c_plus_2"),
+                "value": "C+2"
+            }, {
+                "label": all_translations.get("records.c_plus_1"),
+                "value": "C+1"
+            }]
+        },
+        "keysig": {
+            "query": "ik",
+            "options": []
+        },
+        "timesig": {
+            "query": "it",
+            "options": []
+        },
+    }}
 
 
 def _create_range_facet(alias: str, res, req) -> dict:
