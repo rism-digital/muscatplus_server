@@ -104,7 +104,7 @@ def create_pae_from_request(req) -> str:
 
     # Clefs can also contain plus symbols indicating mensural notation
     raw_clef: str = req.args.get("ic", "G-2")
-    clef: str = urllib.parse.unquote_plus(raw_clef)
+    clef: str = urllib.parse.unquote(raw_clef)
 
     timesig: str = req.args.get("it", "")
     keysig: str = req.args.get("ik", "")
