@@ -43,6 +43,7 @@ class FacetSortValues:
 
 class IncipitModeValues:
     INTERVALS = "intervals"
+    EXACT_PITCHES = "exact-pitches"
 
 
 def sorting_for_mode(cfg: dict, mode: str) -> list:
@@ -444,28 +445,17 @@ class SearchRequest:
 
             # This will be refactored to take into account the other accepted values for the interval search modes,
             # once we know what they are.
-            incipit_query: str = " ".join((str(s) for s in intervals))
-            # self.filters.insert(0, f'{{!min_hash field="intervals_mh" sim="0.9"}}:\"{incipit_query}\"')
-            # self.filters.insert(0, f'intervals_bi:\"{incipit_query}\"')
-            self._requested_query.insert(0, f'intervals_bi:\"{incipit_query}\"')
-            self._extra_params["qq"] = f"intervals_bi:\"{incipit_query}\""
+            incipit_query: str = ""
+            incipit_query_field: str = "intervals_bi"
+            if self._incipit_mode == IncipitModeValues.EXACT_PITCHES:
+                incipit_query = " ".join((str(s) for s in pitches))
+                incipit_query_field = "pitches_bi"
+            else:
+                incipit_query = " ".join((str(s) for s in intervals))
+            self._requested_query.insert(0, f'{incipit_query_field}:\"{incipit_query}\"')
+            self._extra_params["qq"] = f"{incipit_query_field}:\"{incipit_query}\""
             score_stmt: str = f"div(query($qq), sub(add(intervals_len_i, {len(intervals)}), query($qq)))"
 
-            # Create the sort query
-            # first_half = []
-            # second_half = []
-            # for intn, intv in enumerate(intervals[:12], 1):
-            #     first_half.append(f"interval{intn}_i")
-            #     second_half.append(f"{intv}")
-
-            # first_half_q = ", ".join(first_half)
-            # second_half_q = ", ".join(second_half)
-            # score_stmt: str = f"sqedist({first_half_q}, {second_half_q})"
-
-            # score_stmt: str = f"div(query($qq), sub(add(intervals_len_i, {len(intervals)}), query($qq)))"
-            # Ask Solr to do a squared euclidean distance on the intervals for the sort, to try and approximate
-            # a relevancy calculation (that is, the distance between the intervals in the query to the distance of the
-            # intervals in any given document.
             self.sorts.insert(0, f"{score_stmt} desc, id desc")
             self.fields.append(f"custom_score:scale({score_stmt},0,100)")
 
