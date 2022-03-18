@@ -21,7 +21,7 @@ async def handle_incipit_render(req) -> response.HTTPResponse:
     pae: str = create_pae_from_request(req)
 
     # Generate random IDs to avoid ID collisions on the page.
-    rendered_pae: Optional[tuple] = render_pae(pae, use_crc=False, enlarged=True)
+    rendered_pae: Optional[tuple] = render_pae(pae, use_crc=False, enlarged=False)
     if not rendered_pae:
         return response.text(
             "There was a problem rendering the Plaine and Easie notation",
