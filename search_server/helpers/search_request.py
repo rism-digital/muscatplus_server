@@ -211,7 +211,6 @@ class SearchRequest:
         self._facets_for_mode: list = filters_for_mode(self._app_config, self._requested_mode)
         self._alias_config_map: dict = alias_config_map(self._facets_for_mode)
         self._behaviour_for_facet: dict = facet_modifier_map(self._requested_facet_behaviours)
-
         # Configure the sorting for the different result modes (source, people, institutions, etc.)
         self._sorts_for_mode: list = sorting_for_mode(self._app_config, self._requested_mode)
 
@@ -302,13 +301,19 @@ class SearchRequest:
             # do some processing and normalization on the value. First ensure we have a non-entity string.
             # This should convert the URL-encoded parameters back to 'normal' characters
             unencoded_values: list[str] = [urllib.parse.unquote_plus(s) for s in values]
-
             # Then remove any quotes (single or double) to ensure we control how the values actually get
             # to Solr.
             unquoted_values: list[str] = [s.replace("\"", "") for s in unencoded_values]
 
-            # If a value has a colon in it we need to requote it...
-            quoted_values: list[str] = [f"\"{s}\"" for s in unquoted_values if ":" in s]
+            # If a value has a colon in it we need to requote it... If the value is not truthy, drop it.
+            quoted_values: list[str] = []
+            for v in unquoted_values:
+                if v and ":" in v:
+                    quoted_values.append(f"\"{v}\"")
+                elif v:
+                    quoted_values.append(f"{v}")
+                else:
+                    continue
 
             # Some field types need to be tagged to help modify their behaviour and interactions with
             # facets for multi-select faceting. See:
