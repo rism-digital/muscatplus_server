@@ -281,9 +281,9 @@ class SearchRequest:
 
         # in a first pass, gather all the fields and values
         # into a dictionary {"fieldname":[value1, value2]}
+        # Only split at the first occurrence since any other colons will be in the field value.
         for filt in self._requested_filters:
-            field, raw_value = filt.split(":")
-
+            field, raw_value = filt.split(":", 1)
             # If the field we're looking at is not one that we know about,
             # ignore it and go to the next one.
             if field not in self._alias_config_map:
@@ -305,7 +305,10 @@ class SearchRequest:
 
             # Then remove any quotes (single or double) to ensure we control how the values actually get
             # to Solr.
-            quoted_values: list[str] = [s.replace("\"", "") for s in unencoded_values]
+            unquoted_values: list[str] = [s.replace("\"", "") for s in unencoded_values]
+
+            # If a value has a colon in it we need to requote it...
+            quoted_values: list[str] = [f"\"{s}\"" for s in unquoted_values if ":" in s]
 
             # Some field types need to be tagged to help modify their behaviour and interactions with
             # facets for multi-select faceting. See:
@@ -337,7 +340,7 @@ class SearchRequest:
             elif filter_type == FacetTypeValues.QUERY:
                 # The complexphrase query parser is also very sensitive to character escaping, so
                 # we do some custom escaping here to make sure things are sent to Solr correctly.
-                translation_table: dict = str.maketrans({"/": "\\\\/", "~": "\\\\~"})
+                translation_table: dict = str.maketrans({"/": "\\\\/", "~": "\\\\~", ":": "\\\\:"})
                 value = join_op.join([f"{val.translate(translation_table)}" for val in quoted_values])
                 tag = f"{{!complexphrase inOrder=true}}"
             else:
