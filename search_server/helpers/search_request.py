@@ -448,16 +448,25 @@ class SearchRequest:
 
             # This will be refactored to take into account the other accepted values for the interval search modes,
             # once we know what they are.
-            incipit_query: str = ""
+            incipit_query: str
             incipit_query_field: str = "intervals_bi"
+            incipit_len_field: str = "intervals_len_i"
+            query_len: int
+
             if self._incipit_mode == IncipitModeValues.EXACT_PITCHES:
                 incipit_query = " ".join((str(s) for s in pitches))
                 incipit_query_field = "pitches_bi"
+                incipit_len_field = "pitches_len_i"
+                query_len = len(pitches)
             else:
                 incipit_query = " ".join((str(s) for s in intervals))
+                query_len = len(intervals)
+
             self._requested_query.insert(0, f'{incipit_query_field}:\"{incipit_query}\"')
             self._extra_params["qq"] = f"{incipit_query_field}:\"{incipit_query}\""
-            score_stmt: str = f"div(query($qq), sub(add(intervals_len_i, {len(intervals)}), query($qq)))"
+            # query($qq) returns the score for the given subquery (qscore).
+            # scoring function is (qscore / ((doc_len + query_len) - qscore))
+            score_stmt: str = f"div(query($qq), sub(add({incipit_len_field}, {query_len}), query($qq)))"
 
             self.sorts.insert(0, f"{score_stmt} desc, id desc")
             self.fields.append(f"custom_score:scale({score_stmt},0,100)")
