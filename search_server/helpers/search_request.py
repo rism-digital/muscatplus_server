@@ -210,7 +210,15 @@ class SearchRequest:
         # Configure the facets to show for the selected mode.
         self._facets_for_mode: list = filters_for_mode(self._app_config, self._requested_mode)
         self._alias_config_map: dict = alias_config_map(self._facets_for_mode)
-        self._behaviour_for_facet: dict = facet_modifier_map(self._requested_facet_behaviours)
+
+        # Override the configured behaviour with the request behaviour. If a facet does not have a default_behaviour
+        # defined, it will be 'intersection'.
+        self._behaviour_from_config: dict = {k: v.get("default_behaviour", FacetBehaviourValues.INTERSECTION) for k, v in self._alias_config_map.items()}
+        self._behaviour_from_request: dict = facet_modifier_map(self._requested_facet_behaviours)
+        # Will merge both dictionaries, with the request behaviour overwriting any defaults in the config
+        # behaviour.
+        self._behaviour_for_facet: dict = {**self._behaviour_from_config, **self._behaviour_from_request}
+
         # Configure the sorting for the different result modes (source, people, institutions, etc.)
         self._sorts_for_mode: list = sorting_for_mode(self._app_config, self._requested_mode)
 
