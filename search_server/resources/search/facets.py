@@ -205,9 +205,12 @@ TIME_SIGNATURES = [
 
 def __get_time_signature(value: str) -> dict:
     if value == "-":
-        value = "None"
+        label = "None"
+    else:
+        label = value
+
     return {
-        "label": {"none": [f"{value}"]},
+        "label": {"none": [f"{label}"]},
         "value": value
     }
 
