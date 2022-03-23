@@ -110,15 +110,15 @@ def create_pae_from_request(req) -> str:
     keysig: str = req.args.get("ik", "")
     music_data = notedata if notedata.endswith("/") else f"{notedata}/"
 
-    pae_elements: list = [
-        f"@clef:{clef}",
-        f"@key:",
-        f"@keysig:{keysig}",
-        f"@timesig:{timesig}",
-        f"@data:{music_data}"
-    ]
+    pae_elements: list = []
 
-    log.debug(pae_elements)
+    if clef:
+        pae_elements.append(f"@clef:{clef}")
+    if keysig:
+        pae_elements.append(f"@keysig:{keysig}")
+    if timesig:
+        pae_elements.append(f"@timesig:{timesig}")
+    pae_elements.append(f"@data:{music_data}")
 
     return "\n".join(pae_elements)
 
@@ -139,6 +139,7 @@ def get_pae_features(req) -> dict:
     feat_output: dict = ujson.loads(features)
 
     return feat_output
+
 
 def _find_err_msg(needle: str, transl_haystack: dict[str, dict]) -> dict:
     for k, v in transl_haystack.items():
