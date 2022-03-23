@@ -13,7 +13,8 @@ from search_server.helpers.search_request import (
     FacetTypeValues,
     FacetBehaviourValues,
     FacetSortValues,
-    types_alias_map
+    types_alias_map,
+    IncipitModeValues
 )
 
 log = logging.getLogger(__name__)
@@ -147,33 +148,117 @@ def _get_facet_type(val) -> str:
         return "rism:Facet"
 
 
+def __get_key_signature(value: str) -> dict:
+    if value == "n":
+        return {
+            "label": {"none": ["None"]},
+            "value": value
+        }
+
+    symbol: str = ""
+    if value.startswith("x"):
+        symbol = "♯"
+    elif value.startswith("b"):
+        symbol = "♭"
+
+    # The number of accidentals is the length of the string, subtract 1 for the initial character.
+    num_accidentals: int = len(value) - 1
+    return {
+        "label": {"none": [f"{num_accidentals}{symbol}"]},
+        "value": value
+    }
+
+KEY_SIGNATURES = [
+    "n",
+    "xF",
+    "xFC",
+    "xFCG",
+    "xFCGD",
+    "xFCGDA",
+    "xFCGDAE",
+    "xFCGDAEB",
+    "bBEADGCF",
+    "bBEADGC",
+    "bBEADG",
+    "bBEAD",
+    "bBEA",
+    "bBE",
+    "bB",
+]
+
+
+def __get_key_signature_options() -> list[dict]:
+    return [__get_key_signature(v) for v in KEY_SIGNATURES]
+
+
+TIME_SIGNATURES = [
+    "-",
+    "4/4",
+    "3/4",
+    "6/8",
+    "c",
+    "c/",
+    "o",
+    "o."
+]
+
+
+def __get_time_signature(value: str) -> dict:
+    if value == "-":
+        value = "None"
+    return {
+        "label": {"none": [f"{value}"]},
+        "value": value
+    }
+
+
+def __get_time_signature_options() -> list[dict]:
+    return [__get_time_signature(v) for v in TIME_SIGNATURES]
+
+
 def _create_notation_facet(all_translations: dict) -> dict:
-    return {"options": {
-        "clef": {
-            "query": "ic",
+    return {
+        "modes": {
+            "label": {"none": ["Query modes"]},  # TODO: Translate
+            "query": "im",
             "options": [{
-                "label": all_translations.get("records.g_minus_2_treble"),
-                "value": "G-2"
+                "label": {"none": ["Intervals"]},
+                "value": IncipitModeValues.INTERVALS
             }, {
-                "label": all_translations.get("records.f_minus_4_bass"),
-                "value": "F-4"
-            }, {
-                "label": all_translations.get("records.c_plus_2"),
-                "value": "C+2"
-            }, {
-                "label": all_translations.get("records.c_plus_1"),
-                "value": "C+1"
+                "label": {"none": ["Exact pitches"]},
+                "value": IncipitModeValues.EXACT_PITCHES
             }]
         },
-        "keysig": {
-            "query": "ik",
-            "options": []
-        },
-        "timesig": {
-            "query": "it",
-            "options": []
-        },
-    }}
+        "options": {
+            "clef": {
+                "label": all_translations.get("records.clef"),
+                "query": "ic",
+                "options": [{
+                    "label": all_translations.get("records.g_minus_2_treble"),
+                    "value": "G-2"
+                }, {
+                    "label": all_translations.get("records.f_minus_4_bass"),
+                    "value": "F-4"
+                }, {
+                    "label": all_translations.get("records.c_minus_3"),
+                    "value": "C-3"
+                }, {
+                    "label": all_translations.get("records.c_plus_1"),
+                    "value": "C+1"
+                }]
+            },
+            "keysig": {
+                "label": all_translations.get("records.key_signature"),
+                "query": "ik",
+                "options": __get_key_signature_options()
+            },
+            "timesig": {
+                "label": all_translations.get("records.time_signature"),
+                "query": "it",
+                "options": __get_time_signature_options()
+            },
+        }
+    }
 
 
 def _create_range_facet(alias: str, res, req) -> dict:
