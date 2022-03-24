@@ -453,11 +453,11 @@ class SearchRequest:
 
             # If verovio returns empty features, then something went wrong. Assume the problem is with the input
             # query string, and flag an error to the user.
-            if len(self.pae_features.get("intervals")) == 0:
+            if len(self.pae_features.get("intervalsChromatic")) == 0:
                 raise InvalidQueryException("The requested mode was 'incipits', but the query could not be interpreted as music notation.")
 
-            intervals: Optional[list] = self.pae_features.get("intervals")
-            pitches: Optional[list] = self.pae_features.get("pitches")
+            intervals: Optional[list] = self.pae_features.get("intervalsChromatic")
+            pitches: Optional[list] = self.pae_features.get("pitchesChromatic")
 
             # This will be refactored to take into account the other accepted values for the interval search modes,
             # once we know what they are.

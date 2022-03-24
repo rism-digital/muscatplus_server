@@ -6,6 +6,7 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
+from search_server.helpers.search_request import IncipitModeValues
 from search_server.helpers.display_translators import gnd_country_code_labels_translator
 from search_server.helpers.record_types import create_record_block
 from search_server.helpers.display_fields import get_search_result_summary
@@ -416,6 +417,7 @@ class IncipitSearchResult(ContextDictSerializer):
     )
     summary = serpy.MethodField()
     rendered = serpy.MethodField()
+    score = serpy.MethodField()
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
@@ -492,6 +494,11 @@ class IncipitSearchResult(ContextDictSerializer):
             "data": midi
         }]
 
+    def get_score(self, obj: SolrResult) -> Optional[float]:
+        if 'custom_score' in obj:
+            return obj['custom_score']
+        return None
+
 
 def _format_institution_label(obj: dict) -> str:
     city = siglum = ""
@@ -564,11 +571,22 @@ def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional
 
     svg, b64midi = _render_incipit_pae(obj)
 
-    # For now, we only highlight interval successions.
-    document_interval_features: list = [str(s) for s in obj["intervals_im"]]
-    document_interval_ids: list = obj["interval_ids_json"]
+    # Find out what mode we're operating in to determine which fields we're using.
+    search_mode: str = req.args.get("im", IncipitModeValues.INTERVALS)
 
-    query_interval_feature: list = query_pae_features["intervals"]
+    feature_field: str = "intervals_im"
+    ids_field: str = "interval_ids_json"
+    query_features_field: str = "intervalsChromatic"
+
+    if search_mode == IncipitModeValues.EXACT_PITCHES:
+        feature_field = "pitches_sm"
+        ids_field = "pitches_ids_json"
+        query_features_field = "pitchesChromatic"
+
+    document_interval_features: list = [str(s) for s in obj[feature_field]]
+    document_interval_ids: list = obj[ids_field]
+
+    query_interval_feature: list = query_pae_features[query_features_field]
 
     log.debug("Document features: %s", document_interval_features)
     log.debug("Query features: %s", query_interval_feature)
@@ -589,9 +607,11 @@ def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional
 
     highlight_stmts = []
     for noteids in ids_to_highlight:
-        highlight_stmts.append(
-            f"g[data-id=\"{noteids[0]}\"] {{ fill: red; }} g[data-id=\"{noteids[1]}\"] {{ fill: red; }}"
-        )
+        for nid in noteids:
+            highlight_stmts.append(
+                f"g[data-id=\"{nid}\"] {{ fill: red; }}"
+            )
+
     highlight_css_stmt = " ".join(highlight_stmts)
 
     # Use Regex to insert the highlighting. The other option is to read the SVG in as XML and
