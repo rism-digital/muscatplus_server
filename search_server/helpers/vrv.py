@@ -23,6 +23,7 @@ vrv_tk.setOptions(ujson.dumps({
     "spacingSystem": 2,
     "pageMarginLeft": 0,
     "pageMarginRight": 0,
+    "ligatureAsBracket": True,
     # "adjustPageWidth": "true",
     "pageWidth": 2000,
     "scale": 40,
