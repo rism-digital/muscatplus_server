@@ -123,6 +123,7 @@ class BaseSource(JSONLDContextDictSerializer):
 
         field_config: LabelConfig = {
             "source_member_composers_sm": ("records.composer", None),
+            "creator_name_s": ("records.composer_author", None),
             "institution_s": ("records.institution", None),
             "date_statements_sm": ("records.dates", None),
             "num_source_members_i": ("records.items_in_source", None),
