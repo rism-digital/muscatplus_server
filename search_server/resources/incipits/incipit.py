@@ -68,6 +68,7 @@ class Incipit(JSONLDContextDictSerializer):
     )
     summary = serpy.MethodField()
     rendered = serpy.MethodField()
+    encodings = serpy.MethodField()
 
     def get_incip_id(self, obj: dict) -> str:
         req = self.context.get("request")
@@ -136,4 +137,25 @@ class Incipit(JSONLDContextDictSerializer):
         }, {
             "format": "audio/midi",
             "data": b64midi
+        }]
+
+    def get_encodings(self, obj: SolrResult) -> Optional[list]:
+        if "music_incipit_s" not in obj:
+            return None
+
+        pae_encoding: dict = {}
+
+        if c := obj.get("clef_s"):
+            pae_encoding["clef"] = c
+        if k := obj.get("keysig_s"):
+            pae_encoding["keysig"] = k
+        if t := obj.get("timesig_s"):
+            pae_encoding["timesig"] = t
+        if d := obj.get("music_incipit_s"):
+            pae_encoding["data"] = d
+
+
+        return [{
+            "format": "application/json",
+            "data": pae_encoding
         }]
