@@ -114,6 +114,7 @@ _CLEF_MAP: dict = {
     "G-2": "records.g_minus_2_treble",
     "C-1": "records.c_minus_1"
 }
+
 _SUBHEADING_MAP: dict = {
     "Excerpts": "records.excerpts",
     "Sketches": "records.sketches",
@@ -153,6 +154,7 @@ _QUALIFIER_LABELS_MAP = {
 
 _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     None: "records.unknown",
+    "now-in": "records.now_in",
     "brother of": "records.brother_of",
     "child of": "records.child_of",
     "confused with": "records.confused_with",

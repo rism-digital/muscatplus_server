@@ -32,8 +32,9 @@ class RelationshipsSection(JSONLDContextDictSerializer):
         people: list = obj.get("related_people_json", [])
         institutions: list = obj.get("related_institutions_json", [])
         places: list = obj.get("related_places_json", [])
+        now_in: list = obj.get("now_in_json", [])
 
-        all_relationships = itertools.chain(people, institutions, places)
+        all_relationships = itertools.chain(people, institutions, places, now_in)
 
         return Relationship(all_relationships,
                             many=True,
