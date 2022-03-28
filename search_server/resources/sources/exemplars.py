@@ -55,6 +55,7 @@ class Exemplar(JSONLDContextDictSerializer):
         label="type",
         value="rism:Exemplar"
     )
+    label = serpy.MethodField()
     summary = serpy.MethodField()
     notes = serpy.MethodField()
     held_by = serpy.MethodField(
@@ -71,6 +72,12 @@ class Exemplar(JSONLDContextDictSerializer):
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
 
         return get_identifier(req, "sources.exemplar", source_id=source_id, exemplar_id=obj.get("holding_id_sni"))
+
+    def get_label(self, obj: dict) -> dict:
+        req = self.context.get("request")
+        transl: dict = req.app.ctx.translations
+
+        return transl.get("records.institution")
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
