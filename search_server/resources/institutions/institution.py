@@ -112,6 +112,7 @@ class LocationAddressSection(ContextDictSerializer):
         label="mailingAddress"
     )
     website = serpy.MethodField()
+    email = serpy.MethodField()
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -136,22 +137,19 @@ class LocationAddressSection(ContextDictSerializer):
         return get_display_fields(obj, transl, mailing_address_field_config)
 
     def get_website(self, obj: SolrResult) -> Optional[dict]:
-        if "website_address_sm" not in obj:
+        if "website_address_sm" not in obj or len(obj.get("website_address_sm", [])) == 0:
             return None
 
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
-        website_address_field_config: dict = {
-            "website_address_sm": ("general.url", None)
-        }
         return {
             "label": transl.get("general.url"),
-            "value": obj.get("website_address_sm")
+            "value": obj.get("website_address_sm")[0]
         }
 
     def get_email(self, obj: SolrResult) -> Optional[dict]:
-        if "email_address_sm" not in obj:
+        if "email_address_sm" not in obj or len(obj.get("email_address_sm", [])) == 0:
             return None
 
         req = self.context.get("request")
@@ -159,6 +157,6 @@ class LocationAddressSection(ContextDictSerializer):
 
         return {
             "label": transl.get("general.e_mail"),
-            "value": obj.get("email_address_s")
+            "value": obj.get("email_address_sm")[0]
         }
 
