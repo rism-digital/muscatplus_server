@@ -3,6 +3,9 @@ from typing import Optional
 
 import serpy
 
+from search_server.helpers.fields import StaticField
+from search_server.helpers.serializers import ContextDictSerializer
+from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.institutions.base_institution import BaseInstitution
@@ -29,6 +32,7 @@ class Institution(BaseInstitution):
         label="externalAuthorities"
     )
     relationships = serpy.MethodField()
+    address = serpy.MethodField()
     notes = serpy.MethodField()
     external_resources = serpy.MethodField(
         label="externalResources"
@@ -61,6 +65,12 @@ class Institution(BaseInstitution):
             "coordinates": loc.split(",")
         }
 
+    def get_address(self, obj: SolrResult) -> Optional[dict]:
+        if {"street_address_sm", "city_address_sm", "website_address_sm", "email_address_sm"}.isdisjoint(obj):
+            return None
+
+        return LocationAddressSection(obj, context={"request": self.context.get("request")}).data
+
     def get_external_authorities(self, obj: SolrResult) -> Optional[list[dict]]:
         if 'external_ids' not in obj:
             return None
@@ -90,3 +100,65 @@ class Institution(BaseInstitution):
             return None
 
         return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+
+
+class LocationAddressSection(ContextDictSerializer):
+    ltype = StaticField(
+        label="type",
+        value="rism:LocationAddressSection"
+    )
+    label = serpy.MethodField()
+    mailing_address = serpy.MethodField(
+        label="mailingAddress"
+    )
+    website = serpy.MethodField()
+
+    def get_label(self, obj: SolrResult) -> dict:
+        req = self.context.get("request")
+        transl: dict = req.app.ctx.translations
+
+        return transl.get("records.location_and_address")
+
+    def get_mailing_address(self, obj: SolrResult) -> Optional[dict]:
+        if "street_address_sm" not in obj:
+            return None
+
+        req = self.context.get("request")
+        transl: dict = req.app.ctx.translations
+
+        mailing_address_field_config: dict = {
+            "street_address_sm": ("records.street_address", None),
+            "city_address_sm": ("records.city", None),
+            "country_address_sm": ("records.country", None),
+            "postcode_address_sm": ("records.postal_code", None),
+            "public_note_address_sm": ("records.public_note", None)
+        }
+        return get_display_fields(obj, transl, mailing_address_field_config)
+
+    def get_website(self, obj: SolrResult) -> Optional[dict]:
+        if "website_address_sm" not in obj:
+            return None
+
+        req = self.context.get("request")
+        transl: dict = req.app.ctx.translations
+
+        website_address_field_config: dict = {
+            "website_address_sm": ("general.url", None)
+        }
+        return {
+            "label": transl.get("general.url"),
+            "value": obj.get("website_address_sm")
+        }
+
+    def get_email(self, obj: SolrResult) -> Optional[dict]:
+        if "email_address_sm" not in obj:
+            return None
+
+        req = self.context.get("request")
+        transl: dict = req.app.ctx.translations
+
+        return {
+            "label": transl.get("general.e_mail"),
+            "value": obj.get("email_address_s")
+        }
+
