@@ -147,13 +147,14 @@ class Incipit(JSONLDContextDictSerializer):
 
         if c := obj.get("clef_s"):
             pae_encoding["clef"] = c
-        if k := obj.get("keysig_s"):
+        if k := obj.get("key_s"):
             pae_encoding["keysig"] = k
         if t := obj.get("timesig_s"):
             pae_encoding["timesig"] = t
+        if m := obj.get("key_mode_s"):
+            pae_encoding["key"] = m
         if d := obj.get("music_incipit_s"):
             pae_encoding["data"] = d
-
 
         return [{
             "format": "application/json",
