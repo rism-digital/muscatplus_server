@@ -8,7 +8,6 @@ from sentry_sdk.integrations.sanic import SanicIntegration
 
 from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.helpers.languages import load_translations
-from search_server.request_handlers import handle_request
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.countries import countries_blueprint
 from search_server.routes.festivals import festivals_blueprint
@@ -82,6 +81,7 @@ app.ctx.context_uri = context_uri
 
 # Make the application configuration object available in the app context
 app.ctx.config = config
+
 
 @app.route("/")
 async def front(req):

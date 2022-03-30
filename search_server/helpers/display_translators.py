@@ -500,7 +500,6 @@ def printing_techniques_translator(values: list, translations: dict) -> dict:
     return __lookup_translations_list(values, translations, _PRINTING_TECHNIQUE_MAP)
 
 
-
 def secondary_literature_json_value_translator(values: list, translations: dict) -> dict:
     works: list = []
     for work in values:
