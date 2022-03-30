@@ -32,7 +32,6 @@ class Institution(BaseInstitution):
         label="externalAuthorities"
     )
     relationships = serpy.MethodField()
-    address = serpy.MethodField()
     notes = serpy.MethodField()
     external_resources = serpy.MethodField(
         label="externalResources"
@@ -52,21 +51,7 @@ class Institution(BaseInstitution):
         }
 
     def get_location(self, obj: SolrResult) -> Optional[dict]:
-        req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
-
-        loc: str = obj.get("location_loc")
-        if not loc:
-            return None
-
-        return {
-            "label": transl.get("records.location"),
-            "type": "geojson:Point",
-            "coordinates": loc.split(",")
-        }
-
-    def get_address(self, obj: SolrResult) -> Optional[dict]:
-        if {"street_address_sm", "city_address_sm", "website_address_sm", "email_address_sm"}.isdisjoint(obj):
+        if {"street_address_sm", "city_address_sm", "website_address_sm", "email_address_sm", "location_loc"}.isdisjoint(obj):
             return None
 
         return LocationAddressSection(obj, context={"request": self.context.get("request")}).data
@@ -113,6 +98,7 @@ class LocationAddressSection(ContextDictSerializer):
     )
     website = serpy.MethodField()
     email = serpy.MethodField()
+    coordinates = serpy.MethodField()
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -135,6 +121,23 @@ class LocationAddressSection(ContextDictSerializer):
             "public_note_address_sm": ("records.public_note", None)
         }
         return get_display_fields(obj, transl, mailing_address_field_config)
+
+    def get_coordinates(self, obj: SolrResult) -> Optional[dict]:
+        if "location_loc" not in obj:
+            return None
+
+        req = self.context.get("request")
+        transl: dict = req.app.ctx.translations
+
+        loc: str = obj.get("location_loc")
+
+        return {
+            "label": transl.get("records.location"),
+            "geometry": {
+                "type": "geojson:Point",
+                "coordinates": loc.split(",")
+            }
+        }
 
     def get_website(self, obj: SolrResult) -> Optional[dict]:
         if "website_address_sm" not in obj or len(obj.get("website_address_sm", [])) == 0:
