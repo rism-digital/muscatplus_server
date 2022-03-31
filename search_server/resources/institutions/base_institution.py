@@ -3,6 +3,7 @@ from typing import Optional
 
 import serpy
 
+from search_server.helpers.formatters import format_institution_label
 from search_server.resources.shared.record_history import get_record_history
 from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.identifiers import ID_SUB, get_identifier
@@ -40,9 +41,9 @@ class BaseInstitution(JSONLDContextDictSerializer):
         return get_identifier(req, "institutions.institution", institution_id=institution_id)
 
     def get_label(self, obj: SolrResult) -> dict:
-        name: str = obj['name_s']
+        label: str = format_institution_label(obj)
 
-        return {"none": [name]}
+        return {"none": [label]}
 
     def get_type_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")

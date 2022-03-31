@@ -11,6 +11,7 @@ from search_server.helpers.display_fields import (
 )
 from search_server.helpers.display_translators import key_mode_value_translator, clef_translator
 from search_server.helpers.fields import StaticField
+from search_server.helpers.formatters import format_incipit_label
 from search_server.helpers.identifiers import (
     ID_SUB,
     get_identifier
@@ -78,11 +79,9 @@ class Incipit(JSONLDContextDictSerializer):
         return get_identifier(req, "sources.incipit", source_id=source_id, work_num=work_num)
 
     def get_label(self, obj: SolrResult) -> Optional[dict]:
-        work_num: str = obj['work_num_s']
-        source_title: str = obj["main_title_s"]
-        title: str = f" ({d})" if (d := obj.get("title_s")) else ""
+        label: str = format_incipit_label(obj)
 
-        return {"none": [f"{source_title}: {work_num}{title}"]}
+        return {"none": [label]}
 
     def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")

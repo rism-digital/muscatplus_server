@@ -4,6 +4,7 @@ from typing import Optional
 import serpy
 
 from search_server.helpers.fields import StaticField
+from search_server.helpers.formatters import format_person_label
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
@@ -38,10 +39,9 @@ class BasePerson(JSONLDContextDictSerializer):
         return get_identifier(req, "people.person", person_id=person_id)
 
     def get_label(self, obj: SolrResult) -> dict:
-        name: str = obj.get("name_s")
-        dates: Optional[str] = f" ({d})" if (d := obj.get("date_statement_s")) else ""
+        label: str = format_person_label(obj)
 
-        return {"none": [f"{name}{dates}"]}
+        return {"none": [label]}
 
     def get_type_label(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
