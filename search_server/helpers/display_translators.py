@@ -153,7 +153,7 @@ _QUALIFIER_LABELS_MAP = {
 }
 
 _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
-    None: "records.unknown",
+    None: "records.other",
     "now-in": "records.now_in",
     "brother of": "records.brother_of",
     "child of": "records.child_of",
@@ -202,7 +202,7 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
 }
 
 _PLACE_RELATIONSHIP_LABELS_MAP = {
-    None: "records.unknown",
+    None: "records.related_place",
     "go": "records.place_birth",
     "ha": "records.place_origin",
     "so": "records.place_death",
