@@ -38,7 +38,7 @@ class Institution(BaseInstitution):
     )
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
-        source_count: int = obj.get("source_count_i", 0)
+        source_count: int = obj.get("total_holdings_i", 0)
         if source_count == 0:
             return None
 

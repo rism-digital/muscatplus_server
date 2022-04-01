@@ -63,7 +63,7 @@ class Person(BasePerson):
             return None
 
         # if no sources are attached to this organization, don't show this section.
-        source_count: int = obj.get("source_count_i", 0)
+        source_count: int = obj.get("total_sources_i", 0)
         if source_count == 0:
             return None
 
