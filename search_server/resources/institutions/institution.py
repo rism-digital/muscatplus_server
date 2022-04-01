@@ -7,7 +7,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.display_fields import get_display_fields
 from search_server.helpers.identifiers import get_identifier, ID_SUB
-from search_server.helpers.solr_connection import SolrResult, SolrConnection
+from search_server.helpers.solr_connection import SolrResult, SolrConnection, result_count
 from search_server.resources.institutions.base_institution import BaseInstitution
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_link import ExternalResourcesSection
@@ -38,13 +38,18 @@ class Institution(BaseInstitution):
     )
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
-        # if no sources are attached to this organization, don't show this section. NB: This will
-        # omit the anonymous user since that is manually set to 0 sources.
-        source_count: int = obj.get("total_holdings_i", 0)
-        if source_count == 0:
+        institution_id: str = obj.get("institution_id")
+
+        # To get the correct number of sources for searching, we look up the full result
+        # from Solr
+        fq: list = ["type:source",
+                    f"holding_institutions_ids:{institution_id} OR related_institutions_ids:{institution_id}"]
+        source_count: int = result_count(fq=fq)
+
+        # if no sources are attached OR this is the 's.n.' record, return 0 sources attached.
+        if source_count == 0 or institution_id == "40009305":
             return None
 
-        institution_id: str = obj.get("institution_id")
         ident: str = re.sub(ID_SUB, "", institution_id)
 
         return {
