@@ -145,7 +145,7 @@ class SourceSearchResult(ContextDictSerializer):
 
         field_config: dict = {
             "source_member_composers_sm": ("sourceComposers", "records.composer", None),
-            "creator_name_s": ("sourceComposer", "records.composer", None),
+            "creator_name_s": ("sourceComposer", "records.composer_author", None),
             "date_statements_sm": ("dateStatements", "records.dates", None),
             "num_source_members_i": ("numItems", "records.items_in_source", None),
             "material_group_types_sm": ("materialGroupTypes", "records.material_description", None),
