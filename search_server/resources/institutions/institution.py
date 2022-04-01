@@ -38,6 +38,8 @@ class Institution(BaseInstitution):
     )
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
+        # if no sources are attached to this organization, don't show this section. NB: This will
+        # omit the anonymous user since that is manually set to 0 sources.
         source_count: int = obj.get("total_holdings_i", 0)
         if source_count == 0:
             return None

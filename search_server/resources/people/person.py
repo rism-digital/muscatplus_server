@@ -62,22 +62,18 @@ class Person(BasePerson):
         if not self.context.get("direct_request"):
             return None
 
-        # if no sources are attached to this organization, don't show this section.
+        # if no sources are attached to this organization, don't show this section. NB: This will
+        # omit the anonymous user since that is manually set to 0 sources.
         source_count: int = obj.get("total_sources_i", 0)
         if source_count == 0:
             return None
 
         person_id: str = obj.get('person_id')
-
-        # Do not show the list of sources if we're looking at the 'Anonymus' user.
-        if person_id == "person_30004985":
-            return None
-
         ident: str = re.sub(ID_SUB, "", person_id)
 
         return {
             "url": get_identifier(self.context.get("request"), "people.person_sources", person_id=ident),
-            "totalItems": obj.get("source_count_i", 0)
+            "totalItems": source_count
         }
 
     def get_summary(self, obj: SolrResult) -> list[dict]:
