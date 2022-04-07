@@ -13,6 +13,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.search_request import suggest_fields_for_alias
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrConnection
+from search_server.request_handlers import send_json_response
 
 log = logging.getLogger(__name__)
 
@@ -90,6 +91,7 @@ async def handle_suggest_request(req: request.Request, **kwargs) -> response.HTT
     alias: Optional[str] = req.args.get("alias")
     if not alias:
         raise InvalidQueryException("A suggest request requires an alias parameter")
+
     query: Optional[str] = req.args.get("q")
     if not query:
         raise InvalidQueryException("A suggest request requires a q parameter")
@@ -118,10 +120,4 @@ async def handle_suggest_request(req: request.Request, **kwargs) -> response.HTT
                                                        "direct_request": True,
                                                        "suggest_fields": fields}).data
 
-    response_headers: dict = {
-        "Content-Type": "application/ld+json; charset=utf-8"
-    }
-    return response.json(
-        suggest_results,
-        headers=response_headers
-    )
+    return send_json_response(suggest_results, req.app.ctx.config['common']['debug'])

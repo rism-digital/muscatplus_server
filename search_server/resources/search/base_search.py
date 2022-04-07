@@ -1,14 +1,15 @@
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, Type
 
-from small_asc.client import Results
 import serpy
+from small_asc.client import Results, SolrError
 
-from search_server.resources.search.sorting import get_sorting
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextSerializer
+from search_server.helpers.solr_connection import execute_query
 from search_server.resources.search.facets import get_facets
 from search_server.resources.search.pagination import Pagination
+from search_server.resources.search.sorting import get_sorting
 
 
 class BaseSearchResults(JSONLDContextSerializer):
@@ -62,3 +63,30 @@ class BaseSearchResults(JSONLDContextSerializer):
     @abstractmethod
     def get_items(self, obj: Results) -> Optional[list]:
         pass
+
+
+def serialize_response(req, solr_params: dict,
+                       serializer_cls: Type[BaseSearchResults],
+                       extra_context: Optional[dict] = None) -> dict:
+    """
+    Takes an incoming search request, performs a Solr query, and serializes
+    the response to a dict object suitable for sending as JSON-LD.
+
+    :param req: A sanic request object
+    :param solr_params: A dictionary representing a Solr query. Should be created by the SearchRequest compiler.
+    :param serializer_cls: The class to serialize the results with. Must be a subclass of BaseSearchResults
+    :param extra_context: Any extra context to pass to the serializer. (The request object is automatically passed)
+    :return: A dictionary of serialized content.
+    """
+    try:
+        solr_res: Optional[Results] = execute_query(solr_params)
+    except SolrError:
+        raise
+
+    ctx: dict = {"request": req}
+
+    if extra_context:
+        ctx.update(extra_context)
+
+    return serializer_cls(solr_res, context=ctx).data
+

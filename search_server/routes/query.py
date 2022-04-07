@@ -1,5 +1,6 @@
 from sanic import Blueprint
 
+from search_server.request_handlers import handle_search
 from search_server.resources.search.probe import handle_probe_request
 from search_server.resources.search.search import handle_search_request
 from search_server.resources.suggest.suggest import handle_suggest_request
@@ -10,7 +11,7 @@ query_blueprint: Blueprint = Blueprint("query")
 # The main search interface request handler.
 @query_blueprint.route("/search/")
 async def search(req):
-    return await handle_search_request(req)
+    return await handle_search(req, handle_search_request)
 
 
 # The Suggest request is available on specific fields (configured as query fields).
@@ -27,4 +28,4 @@ async def suggest(req):
 # modes that would be active for a given search query.
 @query_blueprint.route("/probe/")
 async def probe(req):
-    return await handle_probe_request(req)
+    return await handle_search(req, handle_probe_request)

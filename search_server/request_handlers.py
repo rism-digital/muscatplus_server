@@ -6,7 +6,21 @@ from small_asc.client import SolrError
 
 from search_server.exceptions import InvalidQueryException
 
+
 log = logging.getLogger("mp_server")
+
+
+def send_json_response(serialized_results: dict, debug_response: bool) -> response.HTTPResponse:
+    response_headers: dict = {
+        "Content-Type": "application/ld+json; charset=utf-8"
+    }
+
+    return response.json(
+        serialized_results,
+        headers=response_headers,
+        escape_forward_slashes=False,
+        indent=(4 if debug_response else 0)
+    )
 
 
 async def handle_request(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
@@ -44,14 +58,7 @@ async def handle_request(req: request.Request, handler: Callable, **kwargs) -> r
     else:
         log.debug("Sending JSON-LD")
         # The default return type is JSON-LD
-        response_headers["Content-Type"] = "application/ld+json; charset=utf-8"
-
-        return response.json(
-            data_obj,
-            headers=response_headers,
-            escape_forward_slashes=False,
-            indent=(4 if req.app.ctx.config['common']['debug'] else 0)
-        )
+        return send_json_response(data_obj, req.app.ctx.config['common']['debug'])
 
 
 async def handle_search(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
@@ -77,13 +84,4 @@ async def handle_search(req: request.Request, handler: Callable, **kwargs) -> re
         return response.text("The requested resource was not found",
                              status=404)
 
-    response_headers: dict = {
-        "Content-Type": "application/ld+json; charset=utf-8"
-    }
-
-    return response.json(
-        data_obj,
-        headers=response_headers,
-        escape_forward_slashes=False,
-        indent=(4 if req.app.ctx.config['common']['debug'] else 0)
-    )
+    return send_json_response(data_obj, req.app.ctx.config['common']['debug'])

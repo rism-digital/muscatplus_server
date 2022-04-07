@@ -9,10 +9,10 @@
 
 """
 import logging
-from typing import NewType
+from typing import NewType, Optional
 
 import yaml
-from small_asc.client import Solr
+from small_asc.client import Solr, Results, SolrError
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +25,23 @@ SolrConnection: Solr = Solr(solr_url)
 log.debug('Solr connection set to %s', solr_url)
 
 SolrResult = NewType('SolrResult', dict)
+
+
+def execute_query(solr_params: dict) -> Results:
+    """
+    Executes a search query. Expects a pre-compiled dictionary of parameters to pass to Solr. Raises SolrError
+    if there was a problem with the query.
+
+    :param solr_params: A dictionary representing a JSON Search API query for Solr.
+    :return: A Solr Results object with the results of a query.
+    """
+    try:
+        solr_res: Results = SolrConnection.search(solr_params)
+    except SolrError as e:
+        log.exception("Error sending search to solr: %s", e)
+        raise
+
+    return solr_res
 
 
 def result_count(**kwargs) -> int:
