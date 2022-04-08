@@ -142,6 +142,9 @@ class Incipit(JSONLDContextDictSerializer):
         if "music_incipit_s" not in obj:
             return None
 
+        req = self.context.get("request")
+        transl: dict = req.app.ctx.translations
+
         pae_encoding: dict = {}
 
         if c := obj.get("clef_s"):
@@ -156,6 +159,7 @@ class Incipit(JSONLDContextDictSerializer):
             pae_encoding["data"] = d
 
         return [{
+            "label": transl.get("records.plaine_and_easie"),
             "format": "application/json",
             "data": pae_encoding
         }]
