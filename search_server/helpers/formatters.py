@@ -7,7 +7,6 @@ def format_source_label(obj: dict) -> str:
     source_types: Optional[list] = obj.get("material_group_types_sm")
     shelfmark: Optional[str] = obj.get("shelfmark_s")
     siglum: Optional[str] = obj.get("siglum_s")
-    num_holdings: Optional[int] = obj.get("num_holdings_i")
 
     label: str = title
     if source_types:
@@ -19,14 +18,25 @@ def format_source_label(obj: dict) -> str:
 
 
 def format_institution_label(obj: dict) -> str:
-    city = siglum = ""
+    city = siglum = department = ""
 
+    print(obj)
+
+    # prefer institution records with 'name_s', but if used in
+    # holdings, then the field is 'institution_name_s'. Fall back
+    # to "[No name]" if neither is found.
+    name: Optional[str] = obj.get("name_s")
+    if not name:
+        name = obj.get("institution_name_s", "[No name]")
+
+    if 'department_s' in obj:
+        department = f", {obj['department_s']}"
     if 'city_s' in obj:
         city = f", {obj['city_s']}"
     if 'siglum_s' in obj:
         siglum = f" ({obj['siglum_s']})"
 
-    return f"{obj['name_s']}{city}{siglum}"
+    return f"{name}{department}{city}{siglum}"
 
 
 def format_person_label(obj: dict) -> str:

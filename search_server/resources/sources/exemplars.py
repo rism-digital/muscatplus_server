@@ -7,6 +7,7 @@ from small_asc.client import Results
 from search_server.helpers.display_translators import url_detecting_translator
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
+from search_server.helpers.formatters import format_institution_label
 from search_server.helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult, SolrConnection
@@ -116,12 +117,7 @@ class Exemplar(JSONLDContextDictSerializer):
         req = self.context.get('request')
         institution_id: str = re.sub(ID_SUB, "", obj.get("institution_id"))
 
-        institution_name: str = obj.get("institution_s")
-
-        if 'department_s' in obj:
-            institution_name += f", {obj.get('department_s')}"
-        if 'siglum_s' in obj:
-            institution_name += f" ({obj['siglum_s']})"
+        institution_name: str = format_institution_label(obj)
 
         return {
             "id": get_identifier(req, "institutions.institution", institution_id=institution_id),
