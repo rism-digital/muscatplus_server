@@ -34,6 +34,7 @@ fr:
     workflow: Flux de travail
     'yes': 'Oui'
   languages:
+    albanian: Albanais
     afrikaans: Afrikaans
     arabic: Arabe
     aragonese: Aragonais
@@ -50,6 +51,7 @@ fr:
     creoles_pidgins_other: Langues créoles et pidgins (autres)
     croatian: Croate
     czech: Tchèque
+    dakota: Dakota
     danish: Danois
     dutch: Néerlandais
     english: Anglais
@@ -288,6 +290,7 @@ fr:
     basso_continuo: Basso continuo
     bf_major: Si♭ majeur
     bf_minor: Si♭ mineur
+    bibliography: Bibliographie
     bibliographic_reference: Référence bibliographique
     binder: Relieur
     binding_note: Reliure
@@ -312,6 +315,7 @@ fr:
     c_plus_3: C+3
     c_plus_4: C+4
     c_plus_5: C+5
+    catalog: Catalogue
     catalog_opus_number: No. de catalogue thématique/Opus
     catalog_works: Catalogue des oeuvres
     cataloging_agency: Agence de catalogation
@@ -337,6 +341,7 @@ fr:
     coded_date: Date et lieu d'un événement
     coded_instrumentation: Instrumentation codée
     collaborator: Collaborateur
+    collective_catalog: Catalogue collectif
     colophon: Colophon
     common_clefs: Clés communes
     compiler: Compilateur
@@ -415,6 +420,7 @@ fr:
     editor: Editeur
     ef_major: Mi♭ majeur
     ef_minor: Mi♭ mineur
+    encyclopedia: Encyclopédie
     end_period: Fin de la période
     engraver: Graveur
     engraving: Gravure
@@ -493,7 +499,8 @@ fr:
     holdings_location: Données sur la collection, le fonds, etc.
     identity: Identité
     identity_area: Identité
-    iiif_manifest: Manifeste IIIF
+    iiif_manifest: "IIIF manifest (source numérisée)"
+    iiif_manifest_other: "IIIF manifest (autre)"
     illustrator: Illustrateur
     immediate_parent_body: Corps du parent immédiat
     import: Dates importés
@@ -609,6 +616,7 @@ fr:
     multiple_copies: Exemplaire multiples
     multiple_single_dates: Dates uniques multiples
     museum: Musée
+    music_edition: Édition musicale
     music_incipit: Incipit musical
     musical_composition: Composition musicale
     name: Nom
@@ -750,7 +758,7 @@ fr:
     series: Série
     series_added_entry: Champs de collection
     series_statement: Mentions de collection
-    set: Groupe de matériaux
+    material_group: Groupe de matériaux
     shelfmark: Cote
     shelfmark_olim: Ancienne cote (olim)
     short_title: Titre abrégé
@@ -801,6 +809,7 @@ fr:
     terms_voices_instruments: Abréviations RISM pour les instruments
     text_author: Parolier
     text_incipit: Incipit du texte
+    thematic_catalog: Catalogue thématique
     third_fourth_group: Troisième/quatrième groupe de caractères
     time_signature: Indication de mesure
     title: Titre
@@ -862,8 +871,6 @@ fr:
     keysig: "Armure"
     timesig: "Indication de mesure"
     ERR_001_EMPTY: Saisir un incipit.
-    ERR_002_JSON_PARSE: "Les données d'entrée en JSON ne peuvent pas être traitées."
-    ERR_003_JSON_KEY: "Il n'y a pas de clé 'data dans les données d'entrée en JSON."
     ERR_004_KEY_SPACE: Un changement d'armure doit être suivi d'un espace.
     ERR_005_CLEF_SPACE: Un changement de clef doit être suivi d'un espace.
     ERR_006_TIMESIG_SPACE: Un changement d'indication de mesure doit être suivi d'un espace.
@@ -901,7 +908,6 @@ fr:
     ERR_038_TIE_OPEN: Une liaison de prolongation codée avec '+' doit être suivie d'une note.
     ERR_039_TIE_NO_NOTE: Une liaison de prolongation codée avec '+' doit être précédée d'une note.
     ERR_040_HIERARCHY_INVALID: L'ordre des éléments ne peut pas être interprété (%{value}).
-    ERR_041_NESTING_INVALID: "Imbrication des balises d'ouverture et de fermeture n'est pas valide '%{value}'"
     ERR_042_CLEF_INCOMPLETE: La clef n'est pas codée correctement.
     ERR_043_CLEF_INVALID_2ND: Le deuxième caractère dans le signe de la clef doit être soit '+' soit '-'.
     ERR_044_CLEF_MENS: Ne mélangez pas les clefs mensurales et non mensurales.
@@ -920,3 +926,8 @@ fr:
     ERR_057_MENSUR_CHANGE: L'indication de mesure ne peut pas être modifiée plus d'une fois dans une mesure.
     ERR_058_FERMATA_MREST: "Les parenthèses d'un point d'orgue ne doivent contenir qu'une seule note ou un seul silence '%{value}'"
     ERR_059_DOUBLE_DOTS_MENS: "Les notes doubles pointées ne sont pas valides en notation mensurale."
+  testingForCrowdinWorkshop:
+    apple: pomme
+    pear: poire
+    table: tableau
+    chair: chaise

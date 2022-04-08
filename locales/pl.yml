@@ -34,6 +34,7 @@ pl:
     workflow: Przepływ pracy
     'yes': 'Tak'
   languages:
+    albanian: Albański
     afrikaans: Afrykanerski
     arabic: Arabski
     aragonese: Aragoński
@@ -50,6 +51,7 @@ pl:
     creoles_pidgins_other: Kreolski i Pidgin (inne)
     croatian: Chorwacki
     czech: Czeski
+    dakota: Dakota
     danish: Duński
     dutch: Holenderski
     english: Angielski
@@ -288,6 +290,7 @@ pl:
     basso_continuo: Basso continuo
     bf_major: B-dur
     bf_minor: b-moll
+    bibliography: Bibliografia
     bibliographic_reference: Odniesienie bibliograficzne
     binder: Introligator
     binding_note: Uwaga o oprawie
@@ -312,6 +315,7 @@ pl:
     c_plus_3: C+3
     c_plus_4: C+4
     c_plus_5: C+5
+    catalog: Katalog
     catalog_opus_number: Numer katalogu / numer opus
     catalog_works: Katalog utworów
     cataloging_agency: Jednostka katalogująca
@@ -337,6 +341,7 @@ pl:
     coded_date: Znormalizowana data
     coded_instrumentation: Standaryzowany zapis instrumentacji
     collaborator: Współtwórca
+    collective_catalog: Katalog zbiorczy
     colophon: Kolofon
     common_clefs: Klucze współczesne
     compiler: Kompilator
@@ -415,6 +420,7 @@ pl:
     editor: Edytor
     ef_major: Es-dur
     ef_minor: es-moll
+    encyclopedia: Encyklopedia
     end_period: Okres końcowy
     engraver: Rytownik
     engraving: Sztych
@@ -493,7 +499,8 @@ pl:
     holdings_location: Pola egzemplarza, lokalizacji itp.
     identity: Tożsamość
     identity_area: Obszar tożsamości
-    iiif_manifest: Manifest IIIF
+    iiif_manifest: "Manifest IIIF (źródło zdigitalizowane)"
+    iiif_manifest_other: "Manifest IIIF (inne)"
     illustrator: Ilustrator
     immediate_parent_body: Natychmiastowy rodzic
     import: Import
@@ -609,6 +616,7 @@ pl:
     multiple_copies: Wiele kopii
     multiple_single_dates: Wiele pojedynczych dat
     museum: Muzeum
+    music_edition: Edycja muzyczna
     music_incipit: Incipit muzyczny
     musical_composition: Kompozycja muzyczna
     name: Imię i nazwisko
@@ -714,7 +722,7 @@ pl:
     range_dates: Zakres dat
     real_world_object_uri: Identyfikator URI obiektu świata rzeczywistego
     record_actions: Działania na rekordzie
-    record_audit: Record audit
+    record_audit: Kontrola rekordu
     record_origin: Pochodzenie rekordu
     record_status: Status rekordu
     reference_instruction_phrase: Referencyjna fraza instrukcji w podpolu $i
@@ -750,9 +758,9 @@ pl:
     series: Seria
     series_added_entry: Dodatkowe wpisy tytułów
     series_statement: Pola uwag do serii
-    set: Zbiór
+    material_group: Grupa materiałów
     shelfmark: Sygnatura
-    shelfmark_olim: Former shelfmark (olim)
+    shelfmark_olim: Poprzednia sygnatura (olim)
     short_title: Skrócony tytuł
     sigla: Sigla
     siglum: Siglum
@@ -801,6 +809,7 @@ pl:
     terms_voices_instruments: Określenia głosów i instrumentów
     text_author: Autor tekstu
     text_incipit: Incipit tekstowy
+    thematic_catalog: Katalog tematyczny
     third_fourth_group: Grupa trzecia / czwarta
     time_signature: Metrum
     title: Tytuł
@@ -856,14 +865,12 @@ pl:
     P60194: "Wstawić do"
     P60183: "Wstawić"
   verovio:
-    position: "Position"
-    warning: "Warning"
+    position: "Pozycja"
+    warning: "Uwaga"
     clef: "Klucz"
     keysig: "Znaki przykluczowe"
     timesig: "Metrum"
-    ERR_001_EMPTY: Enter an encoded incipit.
-    ERR_002_JSON_PARSE: "Cannot parse the JSON input."
-    ERR_003_JSON_KEY: "No 'data' key in the JSON input."
+    ERR_001_EMPTY: Wprowadź zakodowany incipit.
     ERR_004_KEY_SPACE: Po zmianie znaku przykluczowego należy wprowadzić spację.
     ERR_005_CLEF_SPACE: Po zmianie klucza należy wprowadzić spację.
     ERR_006_TIMESIG_SPACE: Po zmianie metrum należy wprowadzić spację.
@@ -901,7 +908,6 @@ pl:
     ERR_038_TIE_OPEN: Łącznik „+” należy poprzedzić nutą.
     ERR_039_TIE_NO_NOTE: Łącznik „+” należy poprzedzić nutą.
     ERR_040_HIERARCHY_INVALID: Nie można zinterpretować kolejności elementów (%{value}).
-    ERR_041_NESTING_INVALID: "Invalid nesting of opening and closing tags '%{value}'"
     ERR_042_CLEF_INCOMPLETE: Zmiana klucza jest nieprawidłowa.
     ERR_043_CLEF_INVALID_2ND: Drugim znakiem w kluczu musi być „+” lub „-”.
     ERR_044_CLEF_MENS: Nie mieszaj kluczy notacji menzuralnej z kluczami notacji współczesnej.
@@ -912,11 +918,16 @@ pl:
     ERR_049_TIMESIG_MENS: Metrum jest zapisane nieprawidłowo.
     ERR_050_INVALID_CHAR: 'Usuń następujące nieprawidłowe znaki: %{value}'
     ERR_051_BARLINE: Kreska taktowa jest zapisana nieprawidłowo.
-    ERR_052_DURATION: "Duration cannot be interpreted."
+    ERR_052_DURATION: "Nie można zinterpretować czasu trwania."
     ERR_053_DURATION_MENS3: Czas trwania nie może wynosić „3” w notacji menzuralnej.
     ERR_054_DURATION_MENS5: Czas trwania nie może wynosić „5” w notacji menzuralnej.
     ERR_055_KEYSIG_CHANGE: Tonację można zmienić tylko raz w takcie.
     ERR_056_TIMESIG_CHANGE: Metrum można zmienić tylko raz w takcie.
     ERR_057_MENSUR_CHANGE: Menzurę można zmienić tylko raz w takcie.
-    ERR_058_FERMATA_MREST: "The parentheses of a fermata must only contain a single note or rest '%{value}'"
-    ERR_059_DOUBLE_DOTS_MENS: "Double-dotted notes are invalid with mensural notation."
+    ERR_058_FERMATA_MREST: "Nawiasy fermaty mogą zawierać tylko jedną nutę lub pauzę'%{value}'"
+    ERR_059_DOUBLE_DOTS_MENS: "Nuty z podwójnymi kropkami w notacji menzuralnej są nieprawidłowe."
+  testingForCrowdinWorkshop:
+    apple: jabłko
+    pear: gruszka
+    table: tabela
+    chair: krzesło

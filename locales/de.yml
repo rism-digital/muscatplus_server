@@ -34,6 +34,7 @@ de:
     workflow: Workflow
     'yes': 'Ja'
   languages:
+    albanian: Albanisch
     afrikaans: Afrikaans
     arabic: Arabisch
     aragonese: Aragonesisch
@@ -50,6 +51,7 @@ de:
     creoles_pidgins_other: Kreolisch und Kauderwelsch (andere)
     croatian: Kroatisch
     czech: Tschechisch
+    dakota: Dakota-Sprache
     danish: Dänisch
     dutch: Niederländisch
     english: Englisch
@@ -288,6 +290,7 @@ de:
     basso_continuo: Basso continuo
     bf_major: B-Dur
     bf_minor: b-Moll
+    bibliography: Bibliographie
     bibliographic_reference: Literaturverweis
     binder: Buchbinder
     binding_note: Einband
@@ -312,6 +315,7 @@ de:
     c_plus_3: C+3
     c_plus_4: C+4
     c_plus_5: C+5
+    catalog: Katalog
     catalog_opus_number: Werkverzeichnis/Opus
     catalog_works: Werkverzeichnis
     cataloging_agency: Katalogisierungsagentur
@@ -337,6 +341,7 @@ de:
     coded_date: Datum und Ort eines Ereignisses (codiert)
     coded_instrumentation: Kodierte Besetzung
     collaborator: Mitverfasser
+    collective_catalog: Sammelkatalog
     colophon: Kolophon
     common_clefs: Common clefs
     compiler: Kompilator
@@ -415,6 +420,7 @@ de:
     editor: Herausgeber
     ef_major: Es-Dur
     ef_minor: es-Moll
+    encyclopedia: Enzyklopädie
     end_period: Periode beenden
     engraver: Stecher
     engraving: Stich
@@ -493,7 +499,8 @@ de:
     holdings_location: Bestandsdaten
     identity: Identifizierung
     identity_area: Identity area
-    iiif_manifest: IIIF-Manifest
+    iiif_manifest: "IIIF-Manifest (digitalisierte Quelle)"
+    iiif_manifest_other: "IIIF-Manifest (sonstige)"
     illustrator: Illustrator
     immediate_parent_body: Unmittelbarer Elternteil
     import: Fremddateneinspielung
@@ -609,6 +616,7 @@ de:
     multiple_copies: Mehrere Exemplare
     multiple_single_dates: Mehrere Einzeldaten
     museum: Museum
+    music_edition: Musikedition
     music_incipit: Musikincipit
     musical_composition: Musikalische Komposition
     name: Personenname
@@ -750,7 +758,7 @@ de:
     series: Serie
     series_added_entry: Nebeneintragungen Gesamttitel
     series_statement: Gesamttitelangaben
-    set: Set
+    material_group: Materialgruppe
     shelfmark: Signatur
     shelfmark_olim: Alte Signatur (olim)
     short_title: Kurztitel
@@ -801,6 +809,7 @@ de:
     terms_voices_instruments: Stimmen- und Instrumentenbezeichnungen
     text_author: Textdichter
     text_incipit: Textincipit
+    thematic_catalog: Thematischer Katalog
     third_fourth_group: Dritte und vierte Zeichengruppe
     time_signature: Metrum
     title: Titel
@@ -862,8 +871,6 @@ de:
     keysig: "Akzidentien"
     timesig: "Metrum"
     ERR_001_EMPTY: Geben Sie einen verschlüsselten Incipit ein.
-    ERR_002_JSON_PARSE: "Kann die JSON-Eingabe nicht analysieren."
-    ERR_003_JSON_KEY: "Kein 'Daten' Schlüssel in der JSON-Eingabe."
     ERR_004_KEY_SPACE: Dem Wechsel der Tonart muss ein Leerzeichen folgen.
     ERR_005_CLEF_SPACE: Dem Wechsel des Notenschlüssels muss ein Leerzeichen folgen.
     ERR_006_TIMESIG_SPACE: Dem Taktartwechsel muss ein Leerzeichen folgen.
@@ -901,7 +908,6 @@ de:
     ERR_038_TIE_OPEN: Einem Haltebogen '+' muss eine Note vorangestellt werden.
     ERR_039_TIE_NO_NOTE: Einem Haltebogen '+' muss eine Note vorangestellt werden.
     ERR_040_HIERARCHY_INVALID: Die Reihenfolge der Elemente kann nicht interpretiert werden (%{value}).
-    ERR_041_NESTING_INVALID: "Ungültiges Schachteln der öffnenden und schließenden Tags '%{value}'"
     ERR_042_CLEF_INCOMPLETE: Der Wechsel des Notenschlüssels ist nicht korrekt.
     ERR_043_CLEF_INVALID_2ND: Das zweite Zeichen im Notenschlüssel muss entweder '+' oder '-' sein.
     ERR_044_CLEF_MENS: Mischen Sie keine Mensural- und Nicht-Mensuralschlüssel.
@@ -920,3 +926,8 @@ de:
     ERR_057_MENSUR_CHANGE: Die Mensur kann in einem Takt nur einmal geändert werden.
     ERR_058_FERMATA_MREST: "Die Klammern einer Fermate dürfen nur eine einzige Note oder Pause '%{value}' enthalten"
     ERR_059_DOUBLE_DOTS_MENS: "Doppelpunktierte Noten sind ungültig in der Mensuralnotation."
+  testingForCrowdinWorkshop:
+    apple: Apfel
+    pear: Birne
+    table: Tabelle
+    chair: Stuhl

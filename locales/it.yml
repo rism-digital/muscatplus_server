@@ -34,6 +34,7 @@ it:
     workflow: Workflow
     'yes': 'Sì'
   languages:
+    albanian: Albanese
     afrikaans: Afrikaans
     arabic: Arabo
     aragonese: Aragonese
@@ -50,6 +51,7 @@ it:
     creoles_pidgins_other: Lingue creole e pidgin (altre)
     croatian: Croato
     czech: Ceco
+    dakota: Dakota
     danish: Danese
     dutch: Olandese
     english: Inglese
@@ -288,6 +290,7 @@ it:
     basso_continuo: Basso continuo
     bf_major: Si♭ maggiore
     bf_minor: Si♭ minore
+    bibliography: Bibliografia
     bibliographic_reference: Riferimenti bibliografici
     binder: Rilegatore
     binding_note: Rilegatura
@@ -312,6 +315,7 @@ it:
     c_plus_3: C+3
     c_plus_4: C+4
     c_plus_5: C+5
+    catalog: Catalogo
     catalog_opus_number: Catalogo/Numero d'opera
     catalog_works: Catalogo delle opere
     cataloging_agency: Agenzia di catalogazione
@@ -337,6 +341,7 @@ it:
     coded_date: Data e luogo di un evento
     coded_instrumentation: Codice della strumentazione
     collaborator: Collaboratore
+    collective_catalog: Catalogo collettivo
     colophon: Colofone
     common_clefs: Chiavi comuni
     compiler: Compilatore
@@ -415,6 +420,7 @@ it:
     editor: Curatore
     ef_major: Mi♭ maggiore
     ef_minor: Mi♭ minore
+    encyclopedia: Enciclopedia
     end_period: Fine del periodo
     engraver: Incisore
     engraving: Incisione
@@ -493,7 +499,8 @@ it:
     holdings_location: Informazioni sul fondo
     identity: Identità
     identity_area: Identità
-    iiif_manifest: Manifesto IIIF
+    iiif_manifest: "IIIF manifest (fonte digitale)"
+    iiif_manifest_other: "IIIF manifest (altro)"
     illustrator: Disegnatore
     immediate_parent_body: Istituzione immediatamente precedente
     import: Dati importati
@@ -609,6 +616,7 @@ it:
     multiple_copies: Esemplari multipli
     multiple_single_dates: Date singole multiple
     museum: Museo
+    music_edition: Edizione musicale
     music_incipit: Incipit musicale
     musical_composition: Composizione musicale
     name: Nome
@@ -750,7 +758,7 @@ it:
     series: Serie
     series_added_entry: Notizia secondaria sul titolo sovraordinato
     series_statement: Informazioni sul titolo sovraordinato
-    set: Gruppo di materiale
+    material_group: Gruppo di materiale
     shelfmark: Segnatura
     shelfmark_olim: Segnatura antica (olim)
     short_title: Titolo breve
@@ -801,6 +809,7 @@ it:
     terms_voices_instruments: Abbreviazioni RISM per gli strumenti
     text_author: Poeta
     text_incipit: Incipit testuale
+    thematic_catalog: Catalogo tematico
     third_fourth_group: Terzo/Quarto gruppo
     time_signature: Misura
     title: Titolo
@@ -862,8 +871,6 @@ it:
     keysig: "Armatura di chiave"
     timesig: "Misura"
     ERR_001_EMPTY: Inserisci un incipit codificato.
-    ERR_002_JSON_PARSE: "Impossibile analizzare l'input JSON."
-    ERR_003_JSON_KEY: "Nessuna chiave 'data' nell'input JSON."
     ERR_004_KEY_SPACE: Il cambio di armatura di chiave deve essere seguito da uno spazio.
     ERR_005_CLEF_SPACE: Un cambio di chiave deve essere seguito da uno spazio.
     ERR_006_TIMESIG_SPACE: Il cambio ti tempo deve essere seguito da uno spazio.
@@ -901,7 +908,6 @@ it:
     ERR_038_TIE_OPEN: Una legatura con '+' deve essere seguita da una nota.
     ERR_039_TIE_NO_NOTE: Una legatura con '+' deve essere preceduta da una nota.
     ERR_040_HIERARCHY_INVALID: L'ordine degli elementi non può essere interpretato (%{value}).
-    ERR_041_NESTING_INVALID: "Sequenza non valida dei tag di apertura e chiusura '%{value}'"
     ERR_042_CLEF_INCOMPLETE: La chiave non è nel formato corretto.
     ERR_043_CLEF_INVALID_2ND: Il secondo carattere nel segno della chiave deve essere '+' o '-'.
     ERR_044_CLEF_MENS: Non mischiare chiavi mensurali e non mensurali.
@@ -920,3 +926,8 @@ it:
     ERR_057_MENSUR_CHANGE: La mensurazione non può essere modificata più di una volta in una battuta.
     ERR_058_FERMATA_MREST: "Le parentesi per una corona possono contenere solo una singola nota o una pausa di '%{value}'"
     ERR_059_DOUBLE_DOTS_MENS: "Le note con doppi punti sono invalide in notazione mensurale."
+  testingForCrowdinWorkshop:
+    apple: mela
+    pear: pera
+    table: tavolo
+    chair: sedia

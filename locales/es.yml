@@ -34,6 +34,7 @@ es:
     workflow: Flujo de trabajo
     'yes': 'Sí'
   languages:
+    albanian: Albano
     afrikaans: Afrikáans
     arabic: Árabe
     aragonese: Aragonés
@@ -50,6 +51,7 @@ es:
     creoles_pidgins_other: Creoles y Pidgins (otros)
     croatian: Croata
     czech: Checo
+    dakota: Dakota
     danish: Danés
     dutch: Holandés
     english: Inglés
@@ -288,6 +290,7 @@ es:
     basso_continuo: Bajo continuo
     bf_major: Si bemol Mayor
     bf_minor: Si bemol menor
+    bibliography: Bibliografía
     bibliographic_reference: Referencia bibliográfica
     binder: Encuadernador
     binding_note: Nota de encuadernación
@@ -312,6 +315,7 @@ es:
     c_plus_3: C+3
     c_plus_4: C+4
     c_plus_5: C+5
+    catalog: Catálogo
     catalog_opus_number: Catalog number/Opus number
     catalog_works: Catálogo de obras
     cataloging_agency: Agencia catalogadora
@@ -337,6 +341,7 @@ es:
     coded_date: Fecha codificada
     coded_instrumentation: Intrumentación codificada
     collaborator: Colaborador
+    collective_catalog: Catálogo colectivo
     colophon: Colofón
     common_clefs: Claves comunes
     compiler: Compilador
@@ -415,6 +420,7 @@ es:
     editor: Editor (curador)/Editorial
     ef_major: Mi bemol Mayor
     ef_minor: Mi bemol menor
+    encyclopedia: Enciclopedia
     end_period: Periodo final
     engraver: Grabador
     engraving: Grabado
@@ -443,7 +449,7 @@ es:
     family_name: Apellido
     father_of: Padre de
     field_link: Enlace de campo y número de secuencia
-    field_of_activity: Campo de actividad
+    field_of_activity: Profesión
     figured_bass_scores: Bajo cifrado
     fijian: Fijiano
     fingerprint_identifier: Identificador tipográfico
@@ -493,7 +499,8 @@ es:
     holdings_location: Campos de los ejemplares y su ubicación
     identity: Identidad
     identity_area: Identidad
-    iiif_manifest: Manifiesto IIIF
+    iiif_manifest: "Manifiesto IIIF (fuente digitalizada)"
+    iiif_manifest_other: "Manifiesto IIIF (otro)"
     illustrator: Ilustrador
     immediate_parent_body: Padre inmediato
     import: Importación
@@ -609,6 +616,7 @@ es:
     multiple_copies: Múltiples ejemplares en una institución
     multiple_single_dates: Fechas múltiples
     museum: Museum
+    music_edition: Edición de música
     music_incipit: Íncipit musical
     musical_composition: Composición musical
     name: Nombre
@@ -750,7 +758,7 @@ es:
     series: Serie
     series_added_entry: Entradas adicionales de la serie
     series_statement: Información de serie
-    set: Grupo de materiales
+    material_group: Grupo de material
     shelfmark: Signatura
     shelfmark_olim: Marca antigua (olim)
     short_title: Título breve
@@ -801,6 +809,7 @@ es:
     terms_voices_instruments: Terminología para voces e instrumentos
     text_author: Autor del texto
     text_incipit: Íncipit literario
+    thematic_catalog: Catálogo temático
     third_fourth_group: Tercero/cuarto grupo
     time_signature: Indicación de compás
     title: Título
@@ -862,8 +871,6 @@ es:
     keysig: "Armadura de clave"
     timesig: "Indicación de compás"
     ERR_001_EMPTY: Introduzca un incipit codificado.
-    ERR_002_JSON_PARSE: "No se puede analizar la entrada JSON."
-    ERR_003_JSON_KEY: "No hay clave 'data' en la entrada JSON."
     ERR_004_KEY_SPACE: Al cambio de armadura de clave debe seguirle un espacio.
     ERR_005_CLEF_SPACE: Al cambio de clave debe seguirle un espacio.
     ERR_006_TIMESIG_SPACE: Al cambio de indicacón de compás debe seguirle un espacio.
@@ -901,7 +908,6 @@ es:
     ERR_038_TIE_OPEN: El "+" de la ligadura de prolongación debe estár precedido por una nota.
     ERR_039_TIE_NO_NOTE: El "+" de la ligadura de prolongación debe estár precedido por una nota.
     ERR_040_HIERARCHY_INVALID: El orden de los elementos no se puede interpretar (%{value}).
-    ERR_041_NESTING_INVALID: "Anidación no válida de etiquetas de apertura y cierre '%{value}"
     ERR_042_CLEF_INCOMPLETE: La clave no tiene la forma correcta.
     ERR_043_CLEF_INVALID_2ND: El segundo carácter de la indicación de clave debe ser "+" o "-".
     ERR_044_CLEF_MENS: No combine claves mensurales y no mensurales.
@@ -920,3 +926,8 @@ es:
     ERR_057_MENSUR_CHANGE: La armadura de clave no puede ser modificada más de una vez en un compás.
     ERR_058_FERMATA_MREST: "Los paréntesis de una fermata solo deben contener una nota o descanso '%{value}'"
     ERR_059_DOUBLE_DOTS_MENS: "Las notas de doble punto no son válidas con notación mensural."
+  testingForCrowdinWorkshop:
+    apple: manzana
+    pear: pera
+    table: tabla
+    chair: presidente
