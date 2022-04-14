@@ -246,6 +246,9 @@ def _create_notation_facet(all_translations: dict) -> dict:
                     "label": all_translations.get("records.c_minus_3"),
                     "value": "C-3"
                 }, {
+                    "label": all_translations.get("records.c_minus_1"),
+                    "value": "C-1"
+                }, {
                     "label": all_translations.get("records.c_plus_1"),
                     "value": "C+1"
                 }]
