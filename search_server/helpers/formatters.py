@@ -20,8 +20,6 @@ def format_source_label(obj: dict) -> str:
 def format_institution_label(obj: dict) -> str:
     city = siglum = department = ""
 
-    print(obj)
-
     # prefer institution records with 'name_s', but if used in
     # holdings, then the field is 'institution_name_s'. Fall back
     # to "[No name]" if neither is found.
