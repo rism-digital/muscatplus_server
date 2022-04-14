@@ -1,4 +1,5 @@
 import re
+import urllib.parse
 from typing import Optional
 
 import serpy
@@ -104,7 +105,8 @@ class SourceSubject(JSONLDContextDictSerializer):
         label="type",
         value="rism:Subject"
     )
-    term = serpy.MethodField()
+    label = serpy.MethodField()
+    value = serpy.MethodField()
 
     def get_sid(self, obj: dict) -> str:
         req = self.context.get("request")
@@ -112,5 +114,8 @@ class SourceSubject(JSONLDContextDictSerializer):
 
         return get_identifier(req, "subjects.subject", subject_id=subject_id)
 
-    def get_term(self, obj: dict) -> dict:
+    def get_label(self, obj: dict) -> dict:
         return {"none": [obj.get("subject")]}
+
+    def get_value(self, obj: dict) -> str:
+        return urllib.parse.quote_plus(obj["subject"])
