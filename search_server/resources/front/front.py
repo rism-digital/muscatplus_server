@@ -1,3 +1,5 @@
+from typing import Optional
+
 import serpy
 from sanic import response
 from small_asc.client import Results
@@ -43,55 +45,15 @@ class Front(JSONLDContextDictSerializer):
         label="type",
         value="rism:Front"
     )
-    stats = serpy.MethodField()
     endpoints = serpy.MethodField()
     facets = serpy.MethodField()
 
-    def get_fid(self, obj: dict) -> str:
+    def get_fid(self, obj: Results) -> str:
         req = self.context.get("request")
 
         return get_identifier(req, "front")
 
-    def get_stats(self, obj: dict) -> dict:
-        req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
-
-        rq = {
-            "facet.field": "{!terms='source,person,institution,incipit'}type",
-            "rows": 0,
-            "facet": "on"
-        }
-        res: Results = SolrConnection.search({"params": {"q": "*:*", **rq}})
-        fields = res.facets['facet_fields']
-
-        # These two lines take a Solr facet list, which looks like
-        # ["foo", 22, "bar", 20, "baz", 18] and turn it into a list
-        # like [("foo", 22), ("bar", 20), ("baz", 18) which can easily be turned into a dictionary.
-        v_iter = iter(fields.get("type", []))
-        zipped_list = zip(v_iter, v_iter)
-
-        facet_numbers: dict = dict(zipped_list)
-
-        return {
-            "sources": {
-                "label": transl.get("records.sources"),
-                "value": facet_numbers.get("source", 0)
-            },
-            "institutions": {
-                "label": transl.get("records.institutions"),
-                "value": facet_numbers.get("institution", 0)
-            },
-            "people": {
-                "label": transl.get("records.people"),
-                "value": facet_numbers.get("person", 0)
-            },
-            "incipits": {
-                "label": transl.get("records.incipits"),
-                "value": facet_numbers.get("incipit", 0)
-            }
-        }
-
-    def get_endpoints(self, obj: dict) -> list:
+    def get_endpoints(self, obj: Results) -> list:
         req = self.context.get("request")
         return [
             get_identifier(req, "query.search")
