@@ -188,6 +188,7 @@ class SearchRequest:
         # A probe request will do all the reqular things EXCEPT it will hard-code the number of responses to 0
         # so that the actual results are not returned.
         self.probe: bool = probe
+
         # Initialize a dictionary for caching the query PAE features so that we only have to do this once
         # Is null if this request is not for incipits, or if PAE features could not be extracted from an incipit.
         self.pae_features: Optional[dict] = None
@@ -357,7 +358,7 @@ class SearchRequest:
                 value = join_op.join([f"{val.translate(translation_table)}" for val in quoted_values])
                 tag = f"{{!complexphrase inOrder=true}}"
             else:
-                value = join_op.join([f"\"{val}\"" for val in quoted_values])
+                value = join_op.join([f"{val}" for val in quoted_values])
                 tag = f"{{!tag={SolrQueryTags.SELECT_FILTER_TAG}}}" if behaviour == FacetBehaviourValues.UNION else ""
 
             query_string: str = f"{tag}{solr_field_name}:({value})"
