@@ -8,6 +8,8 @@ arg:
   label: languages.aragonese
 arm:
   label: languages.armenian
+art:
+  label: languages.artificial
 aus:
   label: languages.australian
 baq:
@@ -112,6 +114,8 @@ mao:
   label: languages.maori
 mon:
   label: languages.mongolian
+mul:
+  label: records.multiple
 nap:
   label: languages.neapolitan
 nds:
@@ -170,6 +174,8 @@ tur:
   label: languages.turkish
 ukr:
   label: languages.ukrainian
+und:
+  label: general.undetermined
 vie:
   label: languages.vietnamese
 wel:
