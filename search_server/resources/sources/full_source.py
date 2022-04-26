@@ -52,7 +52,9 @@ class FullSource(BaseSource):
     )
     works = serpy.MethodField()
     exemplars = serpy.MethodField()
-    items = serpy.MethodField()
+    source_items = serpy.MethodField(
+        label="sourceItems"
+    )
     external_resources = serpy.MethodField(
         label="externalResources"
     )
@@ -123,7 +125,7 @@ class FullSource(BaseSource):
 
         return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
 
-    def get_items(self, obj: SolrResult) -> Optional[dict]:
+    def get_source_items(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
         itms: dict = SourceItemsSection(obj, context={"request": req}).data
         if 'items' not in itms:
