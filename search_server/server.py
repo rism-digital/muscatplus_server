@@ -22,21 +22,14 @@ from search_server.routes.subjects import subjects_blueprint
 config: dict = yaml.safe_load(open('configuration.yml', 'r'))
 debug_mode: bool = config['common']['debug']
 
-sentry_sdk.init(
-    dsn=config["sentry"]["dsn"],
-    integrations=[SanicIntegration()],
-    environment=config["sentry"]["environment"]
-)
 
-# When debug mode is False, also disable the access log, and vice-versa (Debug mode also enables access_logs)
-app = Sanic("mp_server")
-
-
-# a workaround for Sanic path handling; can be removed if the handling is changed.
-def nonempty_str(value: str) -> str:
-    if not value:
-        raise ValueError
-    return value
+if debug_mode is False:
+    from sentry_sdk.integrations.sanic import SanicIntegration
+    sentry_sdk.init(
+        dsn=config["sentry"]["dsn"],
+        integrations=[SanicIntegration()],
+        environment=config["sentry"]["environment"]
+    )
 
 
 # Registers a string route handler that will *not* match on an empty string.
