@@ -9,7 +9,7 @@
 
 """
 import logging
-from typing import NewType, Optional
+from typing import NewType
 
 import yaml
 from small_asc.client import Solr, Results, SolrError
