@@ -10,17 +10,57 @@ from search_server.helpers.display_translators import person_institution_relatio
 from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
+from search_server.helpers.solr_connection import SolrResult
 
 log = logging.getLogger(__name__)
 
 
 class RelationshipsSection(JSONLDContextDictSerializer):
-    label = serpy.MethodField()
-    stype = StaticField(
-        label="type",
-        value="rism:RelationshipsSection"
+    rid = serpy.MethodField(
+        label="id"
     )
+    label = serpy.MethodField()
+    # stype = StaticField(
+    #     label="type",
+    #     value="rism:RelationshipsSection"
+    # )
     items = serpy.MethodField()
+
+    def get_rid(self, obj: SolrResult) -> str:
+        req = self.context.get('request')
+        related_id_val = obj.get("id")
+        related_id_type = obj.get("type")
+        relationship_id: str = re.sub(ID_SUB, "", related_id_val)
+
+        uri_section: str = ""
+        kwargs: dict = {}
+
+        if related_id_type == "source":
+            uri_section = "sources.relationships"
+            kwargs = {"source_id": relationship_id}
+        elif related_id_type == "person":
+            uri_section = "people.relationships"
+            kwargs = {"person_id": relationship_id}
+        elif related_id_type == "institution":
+            uri_section = "institutions.relationships"
+            kwargs = {"institution_id": relationship_id}
+        elif related_id_type == "holding":
+            uri_section = "holdings.relationships"
+            holding_id_val = obj.get("holding_id_sni")
+            if "-" in holding_id_val:
+                holding_id, source_id = holding_id_val.split("-")
+            else:
+                holding_id = relationship_id
+                source_id = relationship_id
+
+            kwargs = {"source_id": source_id, "holding_id": holding_id}
+        elif related_id_type == "material-group":
+            uri_section = "sources.material_group_relationships"
+            source_id = re.sub(ID_SUB, "", obj.get("source_id"))
+            mg_id = re.sub(ID_SUB, "", related_id_val)
+            kwargs = {"source_id": source_id, "mg_id": mg_id}
+
+        return get_identifier(req, uri_section, **kwargs)
 
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
