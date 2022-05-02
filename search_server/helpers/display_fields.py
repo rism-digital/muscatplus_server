@@ -1,6 +1,7 @@
 from typing import Optional, Callable, Union
 import logging
 
+from search_server.helpers.identifiers import SOLR_FIELD_DATA_TYPES
 from search_server.helpers.solr_connection import SolrResult
 
 
@@ -72,6 +73,9 @@ def _assemble_label_value(record: Union[SolrResult, dict], field_name: str, tran
         "label": translations.get(label_translation),
         "value": value_translator(record_value, translations)
     }
+
+    if dtype := SOLR_FIELD_DATA_TYPES.get(field_name):
+        label_value_map["type"] = dtype
 
     return label_value_map
 
