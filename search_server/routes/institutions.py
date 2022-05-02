@@ -33,31 +33,6 @@ async def institution_probe(req, institution_id: str):
                                institution_id=institution_id)
 
 
-@institutions_blueprint.route("/<institution_id:str>/people/")
-async def institution_people_relationships_list(req, institution_id: str):
-    pass
-
-
-@institutions_blueprint.route("/<institution_id:str>/people/<relationship_id:str>")
-async def institution_person_relationship(req, institution_id: str, relationship_id: str):
-    pass
-
-
-@institutions_blueprint.route("/<institution_id:str>/places/")
-async def institution_places_relationships_list(req, institution_id: str):
-    pass
-
-
-@institutions_blueprint.route("/<institution_id:str>/places/<relationship_id:str>")
-async def institution_place_relationship(req, institution_id: str, relationship_id: str):
-    pass
-
-
-@institutions_blueprint.route("/<institution_id:str>/institutions/")
-async def institution_institutions_relationships_list(req, institution_id: str):
-    pass
-
-
-@institutions_blueprint.route("/<institution_id:str>/institutions/<relationship_id:str>")
-async def institution_institution_relationship(req, institution_id: str, relationship_id: str):
+@institutions_blueprint.route("/<institution_id:str>/relationships/")
+async def relationships(req, institution_id: str):
     pass

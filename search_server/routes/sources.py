@@ -24,9 +24,35 @@ async def incipits_list(req, source_id: str):
                                 source_id=source_id)
 
 
-@sources_blueprint.route("/<source_id:str>/incipits/<work_num:nestr>/")
+@sources_blueprint.route("/<source_id:str>/incipits/<work_num:str>/")
 async def incipit(req, source_id: str, work_num: str):
     return await handle_request(req,
                                 handle_incipit_request,
                                 source_id=source_id,
                                 work_num=work_num)
+
+
+@sources_blueprint.route("/<source_id:str>/relationships/")
+async def relationships(req, source_id: str):
+    pass
+
+
+@sources_blueprint.route("/<source_id:str>/contents/")
+async def contents(req, source_id: str):
+    pass
+
+
+@sources_blueprint.route("/<source_id:str>/material-groups/")
+async def material_groups_list(req, source_id: str):
+    pass
+
+
+@sources_blueprint.route("/<source_id:str>/material-groups/<mg_id:str>/")
+async def material_group(req, source_id: str, mg_id: str):
+    pass
+
+
+@sources_blueprint.route("/<source_id:str>/material-groups/<mg_id:str>/relationships/")
+async def material_group_relationships(req, source_id: str, mg_id: str):
+    pass
+
