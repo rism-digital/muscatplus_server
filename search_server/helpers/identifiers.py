@@ -1,7 +1,7 @@
 import re
 from typing import Pattern
 
-ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_|festival_")
+ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_")
 
 EXTERNAL_IDS: dict = {
     "viaf": {"label": "Virtual Internet Authority File (VIAF)", "ident": "https://viaf.org/viaf/{ident}"},
@@ -40,6 +40,26 @@ def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) ->
 
     return request.app.url_for(viewname, _external=True, _scheme=scheme, _server=server, **kwargs)
 
+# Maps a solr field name to one or more Linked Data data types.
+FieldDataType = dict[str, list[str]]
+
+
+SOLR_FIELD_DATA_TYPES: FieldDataType = {
+    "source_title_s": ["dcterms:title"],
+    "variant_title_s": ["dcterms:alternate"],
+    "additional_titles_json": ["dcterms:alternate"],
+    "description_summary_sm": ["dcterms:description"],
+    "language_text_sm": ["dcterms:language"],
+    "language_libretto_sm": ["dcterms:language"],
+    "language_original_sm": ["dcterms:language"],
+    "rism_id": ["dterms:identifier", "pmo:RismNumber"],
+    "opus_numbers_sm": ["dcterms:identifier", "pmo:OpusNumberStatement"],
+    "material_group_types_sm": ["dcterms:type"],
+    "material_group_types": ["dcterms:type"],
+    "dramatic_roles_json": ["pmo:MediumOfPerformance"],
+    "scoring_json": ["pmo:MediumOfPerformance"]
+}
+
 
 RISM_JSONLD_CONTEXT: dict = {
     "@context": {
@@ -48,38 +68,18 @@ RISM_JSONLD_CONTEXT: dict = {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "rism": "https://rism.online/api/v1#",
         "rismdata": "https://rism.online/api/datatypes-v1#",
+        "pmo": "http://performedmusicontology.org/ontology/",
         "relators": "http://id.loc.gov/vocabulary/relators/",
         "dcterms": "http://purl.org/dc/terms/",
         "as": "http://www.w3.org/ns/activitystreams#",
         "hydra": "http://www.w3.org/ns/hydra/core#",
         "geojson": "https://purl.org/geojson/vocab#",
+        "schemaorg": "https://schema.org/",
         "type": "@type",
         "id": "@id",
         "none": "@none",
-        "rism:SourceRelationship": {
-            "@id": "rism:SourceRelationship",
-
-        },
         "label": {
             "@id": "rdfs:label",
-            "@container": [
-                "@language",
-                "@set"
-            ]
-        },
-        "roleLabel": {
-            "@id": "rdfs:label",
-            "@container": [
-                "@language",
-                "@set"
-            ]
-        },
-        "qualifier": {
-            "@id": "rismdata",
-            "@type": "@id"
-        },
-        "qualifierLabel": {
-            "@id": "rdf:label",
             "@container": [
                 "@language",
                 "@set"
@@ -92,67 +92,41 @@ RISM_JSONLD_CONTEXT: dict = {
                 "@set"
             ]
         },
-        "partOf": {
-            "@id": "dcterms:isPartOf",
-            "@type": "@id",
-            "@container": "@set"
-        },
-        "summary": {
-            "@type": "@id",
-            "@id": "rism:Summary"
-        },
-        "creator": {
-            "@id": "rism:SourceRelationship",
-            "@type": "@id",
+        "contents": "@nest",
+        "relationships": {
+            "@id": "rism:Relationships",
             "@context": {
                 "role": {
-                    "@id": "relators",
-                    "@type": "@id"
+                    "@id": "schemaorg:Role",
+                    "@type": "@vocab"
                 },
                 "relatedTo": {
-                    "@type": "@id",
-                    "@id": "dcterms:creator"
+                    "@id": "schemaorg:agent"
                 }
             }
         },
-        "related": {
-            "@id": "rism:RelationshipList",
+        "creator": {
+            "@id": "rism:Creator",
             "@type": "@id",
+            "@nest": "contents",
             "@context": {
-                "items": {
-                    "@container": "@list",
-                    "@id": "rism:SourceRelationship",
-                    "@type": "@id",
-                    "@context": {
-                        "role": {
-                            "@id": "relators",
-                            "@type": "@id"
-                        },
-                        "relatedTo": {
-                            "@type": "@id",
-                            "@id": "dcterms:contributor"
-                        }
-                    }
+                "role": {
+                    "@id": "schemaorg:Role",
+                    "@type": "@vocab"
+                },
+                "relatedTo": {
+                    "@id": "schemaorg:agent"
                 }
             }
+        },
+        "summary": {
+            "@id": "rism:Summary",
+            "@type": "@id"
         },
         "items": {
+            "@id": "rdfs:List",
             "@type": "@id",
-            "@id": "as:items",
             "@container": "@list"
         },
-        "relatedTo": {
-            "@type": "@id",
-            "@id": "dcterms:contributor"
-        },
-        "location": {
-            "@id": "rism:location",
-            "@context": {
-                "coordinates": {
-                    "@container": "@list",
-                    "@id": "geojson:coordinates"
-                }
-            }
-        }
     }
 }
