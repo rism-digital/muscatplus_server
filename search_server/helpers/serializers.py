@@ -26,7 +26,7 @@ def get_jsonld_context(request) -> JSONLDContext:
     if request.app.ctx.context_uri:
         return get_identifier(request, "context")
 
-    return RISM_JSONLD_CONTEXT
+    return RISM_JSONLD_CONTEXT["@context"]
 
 
 class ContextSerializer(serpy.Serializer):
