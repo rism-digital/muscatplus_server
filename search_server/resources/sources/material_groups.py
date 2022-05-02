@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Optional
 
 import serpy
@@ -6,6 +7,7 @@ import serpy
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.display_translators import printing_techniques_translator
 from search_server.helpers.fields import StaticField
+from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.shared.relationship import RelationshipsSection
@@ -14,6 +16,9 @@ log = logging.getLogger("muscat_indexer")
 
 
 class MaterialGroupsSection(JSONLDContextDictSerializer):
+    mgid = serpy.MethodField(
+        label="id"
+    )
     label = serpy.MethodField()
     stype = StaticField(
         label="type",
@@ -21,7 +26,14 @@ class MaterialGroupsSection(JSONLDContextDictSerializer):
     )
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult):
+    def get_mgid(self, obj: SolrResult) -> str:
+        req = self.context.get("request")
+        source_id_val = obj.get("id")
+        source_id: str = re.sub(ID_SUB, "", source_id_val)
+
+        return get_identifier(req, "sources.material_groups_list", source_id=source_id)
+
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
@@ -35,6 +47,9 @@ class MaterialGroupsSection(JSONLDContextDictSerializer):
 
 
 class MaterialGroup(JSONLDContextDictSerializer):
+    mgid = serpy.MethodField(
+        label="id"
+    )
     label = serpy.MethodField()
     mtype = StaticField(
         label="type",
@@ -43,6 +58,15 @@ class MaterialGroup(JSONLDContextDictSerializer):
     summary = serpy.MethodField()
     notes = serpy.MethodField()
     relationships = serpy.MethodField()
+
+    def get_mgid(self, obj: dict) -> str:
+        req = self.context.get("request")
+        source_id_val = obj.get("source_id")
+        source_id: str = re.sub(ID_SUB, "", source_id_val)
+        mg_id: str = obj.get("group_num")
+
+        return get_identifier(req, "sources.material_group", source_id=source_id, mg_id=mg_id)
+
 
     def get_label(self, obj: dict) -> dict:
         # TODO: Translate this header into the languages
