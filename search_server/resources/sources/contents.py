@@ -19,14 +19,24 @@ from search_server.resources.shared.relationship import Relationship
 
 
 class ContentsSection(JSONLDContextDictSerializer):
-    label = serpy.MethodField()
-    stype = StaticField(
-        label="type",
-        value="rism:ContentsSection"
+    csid = serpy.MethodField(
+        label="id"
     )
+    label = serpy.MethodField()
+    # stype = StaticField(
+    #     label="type",
+    #     value="rism:ContentsSection"
+    # )
     creator = serpy.MethodField()
     summary = serpy.MethodField()
     subjects = serpy.MethodField()
+
+    def get_csid(self, obj: SolrResult) -> str:
+        req = self.context.get('request')
+        source_id_val = obj.get("id")
+        source_id: str = re.sub(ID_SUB, "", source_id_val)
+
+        return get_identifier(req, "sources.contents", source_id=source_id)
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
