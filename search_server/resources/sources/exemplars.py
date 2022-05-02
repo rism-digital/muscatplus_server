@@ -49,9 +49,9 @@ class ExemplarsSection(JSONLDContextDictSerializer):
 
 
 class Exemplar(JSONLDContextDictSerializer):
-    # sid = serpy.MethodField(
-    #     label="id"
-    # )
+    sid = serpy.MethodField(
+        label="id"
+    )
     stype = StaticField(
         label="type",
         value="rism:Exemplar"
@@ -70,9 +70,14 @@ class Exemplar(JSONLDContextDictSerializer):
     def get_sid(self, obj: dict) -> str:
         req = self.context.get('request')
         # find the holding id
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+        holding_id_val = obj.get("holding_id_sni", "")
+        if "-" in holding_id_val:
+            holding_id, source_id = obj.get("holding_id_sni").split("-")
+        else:
+            holding_id = holding_id_val
+            source_id = holding_id_val
 
-        return get_identifier(req, "sources.exemplar", source_id=source_id, exemplar_id=obj.get("holding_id_sni"))
+        return get_identifier(req, "holdings.holding", source_id=source_id, holding_id=holding_id)
 
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
