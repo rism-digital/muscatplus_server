@@ -32,13 +32,6 @@ if debug_mode is False:
     )
 
 
-# Registers a string route handler that will *not* match on an empty string.
-app.router.register_pattern(
-    "nestr",
-    nonempty_str,
-    r"^[^/]+$"  # noqa
-)
-
 # register routes with their blueprints
 app.blueprint(sources_blueprint)
 app.blueprint(people_blueprint)
