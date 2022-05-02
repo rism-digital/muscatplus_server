@@ -46,46 +46,43 @@ class Relationship(JSONLDContextDictSerializer):
         label="type",
         value="rism:Relationship"
     )
-    label = serpy.MethodField()
     role = serpy.MethodField()
     qualifier = serpy.MethodField()
-    qualifier_label = serpy.MethodField(
-        label="qualifierLabel"
-    )
     related_to = serpy.MethodField(
         label="relatedTo"
     )
     name = serpy.MethodField()
 
-    def get_label(self, obj: dict) -> dict:
+    def get_role(self, obj: dict) -> Optional[dict]:
+        if 'relationship' not in obj:
+            return None
+
         req = self.context.get("request")
         transl = req.app.ctx.translations
         relationship_translator: Optional[Callable] = _relationship_translator(obj)
         if not relationship_translator:
             return {"none": ["[Unknown relationship]"]}
 
-        return relationship_translator(obj.get("relationship"), transl)
+        rel: str = obj.get('relationship').replace(' ', '_')
 
-    def get_role(self, obj: dict) -> Optional[str]:
-        if 'relationship' not in obj:
-            return None
+        return {
+            "label": relationship_translator(obj.get("relationship"), transl),
+            "value": f"{rel}",
+            "type": f"relators:{rel}"
+        }
 
-        return f"rism:{obj.get('relationship').replace(' ', '_')}"
-
-    def get_qualifier(self, obj: dict) -> Optional[str]:
-        if 'qualifier' not in obj:
-            return None
-
-        return f"rism:{obj.get('qualifier')}"
-
-    def get_qualifier_label(self, obj: dict) -> Optional[dict]:
+    def get_qualifier(self, obj: dict) -> Optional[dict]:
         if 'qualifier' not in obj:
             return None
 
         req = self.context.get("request")
         transl = req.app.ctx.translations
 
-        return qualifier_labels_translator(obj['qualifier'], transl)
+        return {
+            "label": qualifier_labels_translator(obj['qualifier'], transl),
+            "value": f"{obj.get('qualifier')}",
+            "type": f"rism:{obj.get('qualifier')}"
+        }
 
     def get_related_to(self, obj: dict) -> Optional[dict]:
         req = self.context.get("request")
