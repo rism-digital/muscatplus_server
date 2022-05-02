@@ -4,13 +4,13 @@ from typing import Optional
 import sentry_sdk
 import yaml
 from sanic import Sanic, response
-from sentry_sdk.integrations.sanic import SanicIntegration
 
 from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.helpers.languages import load_translations
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.countries import countries_blueprint
 from search_server.routes.festivals import festivals_blueprint
+from search_server.routes.holdings import holdings_blueprint
 from search_server.routes.incipits import incipits_blueprint
 from search_server.routes.institutions import institutions_blueprint
 from search_server.routes.people import people_blueprint
@@ -31,9 +31,11 @@ if debug_mode is False:
         environment=config["sentry"]["environment"]
     )
 
+app = Sanic("mp_server")
 
 # register routes with their blueprints
 app.blueprint(sources_blueprint)
+app.blueprint(holdings_blueprint)
 app.blueprint(people_blueprint)
 app.blueprint(places_blueprint)
 app.blueprint(institutions_blueprint)
