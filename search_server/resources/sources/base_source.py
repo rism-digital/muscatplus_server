@@ -100,8 +100,6 @@ class BaseSource(JSONLDContextDictSerializer):
 
         record_block: dict = create_record_block(record_type, source_type, content_types)
 
-        log.debug(record_block)
-
         return {
             "label": transl.get("records.item_part_of"),
             "type": "rism:PartOfSection",
