@@ -20,10 +20,6 @@ class RelationshipsSection(JSONLDContextDictSerializer):
         label="id"
     )
     label = serpy.MethodField()
-    # stype = StaticField(
-    #     label="type",
-    #     value="rism:RelationshipsSection"
-    # )
     items = serpy.MethodField()
 
     def get_rid(self, obj: SolrResult) -> str:
