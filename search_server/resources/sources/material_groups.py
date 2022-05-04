@@ -10,6 +10,7 @@ from search_server.helpers.fields import StaticField
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
 from search_server.helpers.solr_connection import SolrResult
+from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 
 log = logging.getLogger("muscat_indexer")
@@ -58,6 +59,9 @@ class MaterialGroup(JSONLDContextDictSerializer):
     summary = serpy.MethodField()
     notes = serpy.MethodField()
     relationships = serpy.MethodField()
+    external_resources = serpy.MethodField(
+        label="externalResources"
+    )
 
     def get_mgid(self, obj: dict) -> str:
         req = self.context.get("request")
@@ -114,3 +118,8 @@ class MaterialGroup(JSONLDContextDictSerializer):
             return None
         return RelationshipsSection(obj, context={"request": self.context.get("request")}).data
 
+    def get_external_resources(self, obj: dict) -> Optional[dict]:
+        if "external_resources" not in obj:
+            return None
+
+        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data

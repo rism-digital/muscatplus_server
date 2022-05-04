@@ -29,7 +29,12 @@ class ExternalResourcesSection(JSONLDContextDictSerializer):
         return transl.get("records.related_resources")
 
     def get_items(self, obj: SolrResult) -> list[dict]:
-        return ExternalResource(obj["external_resources_json"], many=True,
+        if "external_resources" in obj:
+            res = obj["external_resources"]
+        else:
+            res = obj["external_resources_json"]
+
+        return ExternalResource(res, many=True,
                                 context={"request": self.context.get("request")}).data
 
 
