@@ -16,6 +16,8 @@ from search_server.resources.shared.record_history import get_record_history
 
 # The Solr fields necessary to construct a base source record. Helps cut down on internal Solr
 # communication by limiting the fields to only those that are necessary.
+from search_server.resources.shared.relationship import Relationship
+
 SOLR_FIELDS_FOR_BASE_SOURCE: list = [
     "id", "type", "main_title_s", "material_group_types_sm", "shelfmark_s", "siglum_s",
     "source_membership_json", "source_id", "creator_name_s", "source_type_s", "content_types_sm", "record_type_s",
@@ -42,6 +44,7 @@ class BaseSource(JSONLDContextDictSerializer):
         label="typeLabel"
     )
     label = serpy.MethodField()
+    creator = serpy.MethodField()
     part_of = serpy.MethodField(
         label="partOf"
     )
@@ -78,6 +81,14 @@ class BaseSource(JSONLDContextDictSerializer):
         transl = req.app.ctx.translations
 
         return transl.get("records.source")
+
+    def get_creator(self, obj: SolrResult) -> Optional[dict]:
+        if 'creator_json' not in obj:
+            return None
+
+        return Relationship(obj["creator_json"][0],
+                            context={"request": self.context.get('request')}).data
+
 
     def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         # This source is not part of another source; return None

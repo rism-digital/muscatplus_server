@@ -27,7 +27,6 @@ class ContentsSection(JSONLDContextDictSerializer):
     #     label="type",
     #     value="rism:ContentsSection"
     # )
-    creator = serpy.MethodField()
     summary = serpy.MethodField()
     subjects = serpy.MethodField()
 
@@ -43,13 +42,6 @@ class ContentsSection(JSONLDContextDictSerializer):
         transl: dict = req.app.ctx.translations
 
         return transl.get("records.title_content_description")
-
-    def get_creator(self, obj: SolrResult) -> Optional[dict]:
-        if 'creator_json' not in obj:
-            return None
-
-        return Relationship(obj["creator_json"][0],
-                            context={"request": self.context.get('request')}).data
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
