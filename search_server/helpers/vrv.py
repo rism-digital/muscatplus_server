@@ -97,8 +97,8 @@ def create_pae_from_request(req) -> str:
     """
     raw_notedata: str = req.args.get("n", "")
     # Unencode spaces, etc.
-    unquoted_notedata: str = urllib.parse.unquote_plus(raw_notedata)
-    # Since "+" is a meaningful character in URLs, ties should be encoded with an underscore (_) when
+    unquoted_notedata: str = urllib.parse.unquote(raw_notedata)
+    # Since "+" is a meaningful character in URLs, both "+" and "_" can be encoded with an underscore (_) when
     # passed along in the URL. This regex will insert the "+" back into the PAE string until the PAE spec is
     # updated to allow "_" for ties.
     notedata: str = re.sub("_", "+", unquoted_notedata)
