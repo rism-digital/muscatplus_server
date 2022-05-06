@@ -1,0 +1,8 @@
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    {# Add one to the number of pages because we're starting at 1. #}
+    {% for page in range(1, sitemap_pages + 1) %}
+    <sitemap>
+        <loc>{{ site }}/sitemap-page.xml?pg={{ page }}</loc>
+    </sitemap>
+    {% endfor %}
+</sitemapindex>
