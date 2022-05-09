@@ -2,7 +2,7 @@ import serpy
 
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult
+from shared_helpers.solr_connection import SolrResult
 
 
 # TBD.

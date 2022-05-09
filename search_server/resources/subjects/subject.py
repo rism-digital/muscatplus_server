@@ -4,9 +4,9 @@ from typing import Optional
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier, ID_SUB
+from shared_helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrResult, result_count
+from shared_helpers.solr_connection import SolrConnection, SolrResult, result_count
 
 
 async def handle_subject_request(req, subject_id: str) -> Optional[dict]:

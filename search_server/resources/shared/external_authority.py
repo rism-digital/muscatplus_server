@@ -1,7 +1,7 @@
 import serpy
 
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import EXTERNAL_IDS
+from shared_helpers.identifiers import EXTERNAL_IDS
 from search_server.helpers.serializers import ContextDictSerializer
 
 

@@ -1,7 +1,7 @@
 import re
 from typing import Optional, Pattern, Match
 
-from search_server.helpers.identifiers import ID_SUB
+from shared_helpers.identifiers import ID_SUB
 from search_server.helpers.languages import SUPPORTED_LANGUAGES
 
 _SOURCE_TYPE_LABEL_MAP: dict = {

@@ -8,9 +8,9 @@ from search_server.helpers.display_translators import url_detecting_translator
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
 from search_server.helpers.formatters import format_institution_label
-from search_server.helpers.identifiers import get_identifier, ID_SUB
+from shared_helpers.identifiers import get_identifier, ID_SUB
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult, SolrConnection
+from shared_helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 

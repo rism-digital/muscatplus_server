@@ -5,7 +5,7 @@ import sentry_sdk
 import yaml
 from sanic import Sanic, response
 
-from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
+from shared_helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.helpers.languages import load_translations
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.countries import countries_blueprint

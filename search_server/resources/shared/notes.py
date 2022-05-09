@@ -5,7 +5,7 @@ import serpy
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult
+from shared_helpers.solr_connection import SolrResult
 
 
 class NotesSection(JSONLDContextDictSerializer):

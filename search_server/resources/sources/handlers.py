@@ -1,6 +1,6 @@
 from typing import Optional
 
-from search_server.helpers.solr_connection import SolrConnection
+from shared_helpers.solr_connection import SolrConnection
 from search_server.resources.sources.full_source import FullSource
 
 

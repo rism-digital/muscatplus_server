@@ -5,7 +5,7 @@ from small_asc.client import Results
 
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult, SolrConnection
+from shared_helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.incipits.incipit import Incipit
 
 

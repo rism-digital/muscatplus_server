@@ -13,12 +13,12 @@ from search_server.helpers.display_translators import gnd_country_code_labels_tr
 from search_server.helpers.record_types import create_record_block
 from search_server.helpers.display_fields import get_search_result_summary
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import (
+from shared_helpers.identifiers import (
     get_identifier,
     ID_SUB
 )
 from search_server.helpers.serializers import ContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult
+from shared_helpers.solr_connection import SolrResult
 from search_server.helpers.vrv import render_pae
 from search_server.resources.search.base_search import BaseSearchResults
 

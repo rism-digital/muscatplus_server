@@ -3,7 +3,7 @@ import logging
 import rdflib
 import ujson
 
-from search_server.helpers.identifiers import RISM_JSONLD_CONTEXT
+from shared_helpers.identifiers import RISM_JSONLD_CONTEXT
 
 log = logging.getLogger(__name__)
 

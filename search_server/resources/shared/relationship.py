@@ -8,9 +8,9 @@ import serpy
 from search_server.helpers.display_translators import person_institution_relationship_labels_translator, \
     qualifier_labels_translator, place_relationship_labels_translator
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from shared_helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult
+from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger(__name__)
 

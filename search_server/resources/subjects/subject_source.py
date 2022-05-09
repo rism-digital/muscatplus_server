@@ -3,7 +3,7 @@ from typing import Optional
 
 from small_asc.client import Results
 from search_server.helpers.search_request import SearchRequest
-from search_server.helpers.solr_connection import SolrConnection
+from shared_helpers.solr_connection import SolrConnection
 from search_server.resources.search.base_search import BaseSearchResults
 from search_server.resources.sources.base_source import BaseSource
 

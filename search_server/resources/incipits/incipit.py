@@ -12,12 +12,12 @@ from search_server.helpers.display_fields import (
 from search_server.helpers.display_translators import key_mode_value_translator, clef_translator
 from search_server.helpers.fields import StaticField
 from search_server.helpers.formatters import format_incipit_label
-from search_server.helpers.identifiers import (
+from shared_helpers.identifiers import (
     ID_SUB,
     get_identifier
 )
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection, SolrResult
+from shared_helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import render_pae
 from search_server.resources.sources.base_source import BaseSource
 

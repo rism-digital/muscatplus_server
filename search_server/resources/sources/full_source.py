@@ -4,9 +4,9 @@ from typing import Optional
 
 import serpy
 
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from shared_helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult
+from shared_helpers.solr_connection import SolrResult
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.contents import ContentsSection

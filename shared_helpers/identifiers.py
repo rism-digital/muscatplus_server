@@ -40,6 +40,27 @@ def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) ->
 
     return request.app.url_for(viewname, _external=True, _scheme=scheme, _server=server, **kwargs)
 
+
+def get_site(req) -> str:
+    """
+    Takes a request object, parses it out, and returns the base URL for the site.
+    Works even behind a proxy by looking at the X-Forwarded headers. Similar to the
+    get_identifier function but returns the base protocol (http|https) and the server
+    as a string, rather than passing them to Sanic for full templating.
+
+    Does NOT add a trailing slash.
+
+    :param req: A Sanic request object
+    :return: A templated string
+    """
+    fwd_scheme_header = req.headers.get('X-Forwarded-Proto')
+    fwd_host_header = req.headers.get('X-Forwarded-Host')
+
+    scheme: str = fwd_scheme_header if fwd_scheme_header else req.scheme
+    server: str = fwd_host_header if fwd_host_header else req.host
+
+    return f"{scheme}://{server}"
+
 # Maps a solr field name to one or more Linked Data data types.
 FieldDataType = dict[str, list[str]]
 

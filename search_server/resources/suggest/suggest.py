@@ -12,7 +12,7 @@ from search_server.exceptions import InvalidQueryException
 from search_server.helpers.fields import StaticField
 from search_server.helpers.search_request import suggest_fields_for_alias
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection
+from shared_helpers.solr_connection import SolrConnection
 from search_server.request_handlers import send_json_response
 
 log = logging.getLogger(__name__)

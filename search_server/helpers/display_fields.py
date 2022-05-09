@@ -1,8 +1,8 @@
 from typing import Optional, Callable, Union
 import logging
 
-from search_server.helpers.identifiers import SOLR_FIELD_DATA_TYPES
-from search_server.helpers.solr_connection import SolrResult
+from shared_helpers.identifiers import SOLR_FIELD_DATA_TYPES
+from shared_helpers.solr_connection import SolrResult
 
 
 # LabelConfig takes a Solr field, and maps it to a tuple containing the translation value for the label, and an

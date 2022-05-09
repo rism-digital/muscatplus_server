@@ -11,10 +11,10 @@ from search_server.helpers.display_translators import (
     secondary_literature_json_value_translator,
     scoring_json_value_translator)
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from shared_helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.languages import languages_translator
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult
+from shared_helpers.solr_connection import SolrResult
 from search_server.resources.shared.relationship import Relationship
 
 

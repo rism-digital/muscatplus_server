@@ -6,7 +6,7 @@ from small_asc.client import Results, SolrError
 
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextSerializer
-from search_server.helpers.solr_connection import execute_query
+from shared_helpers.solr_connection import execute_query
 from search_server.resources.search.facets import get_facets
 from search_server.resources.search.pagination import Pagination
 from search_server.resources.search.sorting import get_sorting

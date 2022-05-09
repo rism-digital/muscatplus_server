@@ -6,8 +6,8 @@ import serpy
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import ContextDictSerializer
 from search_server.helpers.display_fields import get_display_fields
-from search_server.helpers.identifiers import get_identifier, ID_SUB
-from search_server.helpers.solr_connection import SolrResult, SolrConnection, result_count
+from shared_helpers.identifiers import get_identifier, ID_SUB
+from shared_helpers.solr_connection import SolrResult, SolrConnection, result_count
 from search_server.resources.institutions.base_institution import BaseInstitution
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_link import ExternalResourcesSection

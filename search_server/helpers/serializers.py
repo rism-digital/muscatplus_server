@@ -2,7 +2,7 @@ import operator
 from typing import Union, Optional
 import serpy
 
-from search_server.helpers.identifiers import get_identifier, RISM_JSONLD_CONTEXT
+from shared_helpers.identifiers import get_identifier, RISM_JSONLD_CONTEXT
 
 
 def _remove_none(d: dict) -> dict:

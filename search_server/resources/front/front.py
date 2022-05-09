@@ -6,10 +6,10 @@ from small_asc.client import Results
 
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.fields import StaticField
-from search_server.helpers.identifiers import get_identifier
+from shared_helpers.identifiers import get_identifier
 from search_server.helpers.search_request import SearchRequest
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrConnection
+from shared_helpers.solr_connection import SolrConnection
 from search_server.resources.search.facets import get_facets
 
 

@@ -6,7 +6,7 @@ from typing import Optional
 
 from small_asc.client import Results
 
-from search_server.helpers.identifiers import get_identifier
+from shared_helpers.identifiers import get_identifier
 from search_server.helpers.search_request import (
     filters_for_mode,
     alias_config_map,

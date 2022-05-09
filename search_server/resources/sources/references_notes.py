@@ -9,7 +9,7 @@ from search_server.helpers.display_translators import (
 )
 from search_server.helpers.fields import StaticField
 from search_server.helpers.serializers import JSONLDContextDictSerializer
-from search_server.helpers.solr_connection import SolrResult
+from shared_helpers.solr_connection import SolrResult
 
 # 500, 505, 525, 691, 510, 596, 657, 651, 518, 856(?)
 from search_server.resources.liturgical_festivals.liturgical_festival import LiturgicalFestival
