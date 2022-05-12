@@ -1,10 +1,11 @@
 import math
 import re
+from typing import Optional
 
 from sanic import Blueprint, response
 
 from small_asc.client import Results
-from shared_helpers.identifiers import get_site, ID_SUB
+from shared_helpers.identifiers import get_site, ID_SUB, get_url_from_type
 from shared_helpers.solr_connection import SolrConnection
 
 sitemap_blueprint: Blueprint = Blueprint("sitemap")
@@ -62,21 +63,14 @@ async def sitemap_page(req):
     }
 
     res: Results = SolrConnection.search(solr_query, handler="/query")
-    site: str = get_site(req)
 
     urlentries: list = []
     for result in res:
         restype: str = result.get("type")
         resid: str = re.sub(ID_SUB, "", result.get("id"))
 
-        url: str
-        if restype == "source":
-            url = f"{site}/sources/{resid}"
-        elif restype == "person":
-            url = f"{site}/people/{resid}"
-        elif restype == "institution":
-            url = f"{site}/institutions/{resid}"
-        else:
+        url: Optional[str] = get_url_from_type(req, restype, resid)
+        if not url:
             continue
 
         urlentries.append({

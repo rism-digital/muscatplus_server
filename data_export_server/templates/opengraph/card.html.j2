@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>{{ record_title }}</title>
+
+    {%- if socialnetwork == "tw" %}
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content="@RISM_music" />
+    {% else %}
+        {# facebook markup? #}
+    {% endif -%}
+    <meta property="og:url" content="{{ record_url }}" />
+    <meta property="og:title" content="{{ record_title }}" />
+    <meta property="og:description" content="{{ record_description }}" />
+    <meta property="og:image" content="{{ record_image_url }}" />
+</head>
+<body>
+
+</body>
+</html>

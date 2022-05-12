@@ -1,6 +1,6 @@
 import sentry_sdk
 import yaml
-from jinja2 import Environment, PackageLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sanic import Sanic
 
 from data_export_server.routes.sitemap import sitemap_blueprint
@@ -23,7 +23,7 @@ if debug_mode is False:
     )
 
 template_env = Environment(
-    loader=PackageLoader('data_export_server', 'templates'),
+    loader=FileSystemLoader('data_export_server/templates'),
     autoescape=select_autoescape(['xml']),
     enable_async=True
 )
