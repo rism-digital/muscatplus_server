@@ -6,10 +6,10 @@ from small_asc.client import Results
 
 from search_server.helpers.display_translators import url_detecting_translator
 from search_server.helpers.display_fields import get_display_fields, LabelConfig
-from search_server.helpers.fields import StaticField
-from search_server.helpers.formatters import format_institution_label
+from shared_helpers.fields import StaticField
+from shared_helpers.formatters import format_institution_label
 from shared_helpers.identifiers import get_identifier, ID_SUB
-from search_server.helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDContextDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection

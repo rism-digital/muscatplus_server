@@ -3,8 +3,8 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
-from search_server.helpers.fields import StaticField
-from search_server.helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.fields import StaticField
+from shared_helpers.serializers import JSONLDContextDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.incipits.incipit import Incipit
 

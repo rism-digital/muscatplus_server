@@ -1,5 +1,5 @@
 import re
-from typing import Pattern
+from typing import Pattern, Optional
 
 ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_")
 
@@ -60,6 +60,23 @@ def get_site(req) -> str:
     server: str = fwd_host_header if fwd_host_header else req.host
 
     return f"{scheme}://{server}"
+
+
+def get_url_from_type(req, record_type: str, record_id: str) -> Optional[str]:
+    site: str = get_site(req)
+    url: str
+
+    if record_type == "source":
+        url = f"{site}/sources/{record_id}"
+    elif record_type == "person":
+        url = f"{site}/people/{record_id}"
+    elif record_type == "institution":
+        url = f"{site}/institutions/{record_id}"
+    else:
+        return None
+
+    return url
+
 
 # Maps a solr field name to one or more Linked Data data types.
 FieldDataType = dict[str, list[str]]

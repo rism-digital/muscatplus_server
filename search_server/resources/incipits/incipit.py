@@ -10,13 +10,13 @@ from search_server.helpers.display_fields import (
     LabelConfig
 )
 from search_server.helpers.display_translators import key_mode_value_translator, clef_translator
-from search_server.helpers.fields import StaticField
-from search_server.helpers.formatters import format_incipit_label
+from shared_helpers.fields import StaticField
+from shared_helpers.formatters import format_incipit_label
 from shared_helpers.identifiers import (
     ID_SUB,
     get_identifier
 )
-from search_server.helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDContextDictSerializer
 from shared_helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import render_pae
 from search_server.resources.sources.base_source import BaseSource

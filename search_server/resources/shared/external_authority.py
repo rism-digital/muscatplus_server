@@ -1,8 +1,8 @@
 import serpy
 
-from search_server.helpers.fields import StaticField
+from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import EXTERNAL_IDS
-from search_server.helpers.serializers import ContextDictSerializer
+from shared_helpers.serializers import ContextDictSerializer
 
 
 class ExternalAuthoritiesSection(ContextDictSerializer):

@@ -3,9 +3,9 @@ from typing import Optional
 
 import serpy
 
-from search_server.helpers.fields import StaticField
+from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import get_identifier, ID_SUB
-from search_server.helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDContextDictSerializer
 from shared_helpers.solr_connection import SolrConnection, SolrResult, result_count
 
 

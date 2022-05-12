@@ -3,8 +3,8 @@ from typing import Optional
 import serpy
 
 from search_server.helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP, country_code_labels_translator
-from search_server.helpers.fields import StaticField
-from search_server.helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.fields import StaticField
+from shared_helpers.serializers import JSONLDContextDictSerializer
 
 
 async def handle_country_request(req, country_id: str) -> Optional[dict]:

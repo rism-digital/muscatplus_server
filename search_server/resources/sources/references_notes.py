@@ -7,8 +7,8 @@ from search_server.helpers.display_translators import (
     secondary_literature_json_value_translator,
     url_detecting_translator
 )
-from search_server.helpers.fields import StaticField
-from search_server.helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.fields import StaticField
+from shared_helpers.serializers import JSONLDContextDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 # 500, 505, 525, 691, 510, 596, 657, 651, 518, 856(?)

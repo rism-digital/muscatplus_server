@@ -6,8 +6,8 @@ from small_asc.client import Results
 import serpy
 
 from search_server.exceptions import PaginationParseException
-from search_server.helpers.fields import StaticField
-from search_server.helpers.serializers import ContextDictSerializer
+from shared_helpers.fields import StaticField
+from shared_helpers.serializers import ContextDictSerializer
 from search_server.helpers.urls import replace_query_param, remove_query_param
 
 log = logging.getLogger(__name__)

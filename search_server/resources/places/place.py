@@ -7,12 +7,12 @@ from small_asc.client import Results, JsonAPIRequest
 
 from search_server.resources.shared.relationship import Relationship
 from search_server.resources.institutions.base_institution import BaseInstitution, SOLR_FIELDS_FOR_BASE_INSTITUTION
-from search_server.resources.people.base_person import SOLR_FIELDS_FOR_BASE_PERSON, BasePerson
+from search_server.resources.people.base_person import SOLR_FIELDS_FOR_BASE_PERSON
 from search_server.resources.sources.base_source import BaseSource, SOLR_FIELDS_FOR_BASE_SOURCE
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
-from search_server.helpers.fields import StaticField
+from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from search_server.helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDContextDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 log = logging.getLogger(__name__)

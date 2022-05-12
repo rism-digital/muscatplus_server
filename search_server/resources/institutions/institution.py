@@ -3,8 +3,8 @@ from typing import Optional
 
 import serpy
 
-from search_server.helpers.fields import StaticField
-from search_server.helpers.serializers import ContextDictSerializer
+from shared_helpers.fields import StaticField
+from shared_helpers.serializers import ContextDictSerializer
 from search_server.helpers.display_fields import get_display_fields
 from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.solr_connection import SolrResult, SolrConnection, result_count

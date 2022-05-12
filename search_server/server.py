@@ -73,6 +73,7 @@ app.ctx.config = config
 
 @app.route("/")
 async def front(req):
+    print("front request")
     return await handle_front_request(req)
 
 

@@ -6,18 +6,18 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
-from search_server.helpers.formatters import format_incipit_label, format_institution_label, format_person_label, \
+from shared_helpers.formatters import format_incipit_label, format_institution_label, format_person_label, \
     format_source_label
 from search_server.helpers.search_request import IncipitModeValues
 from search_server.helpers.display_translators import gnd_country_code_labels_translator
 from search_server.helpers.record_types import create_record_block
 from search_server.helpers.display_fields import get_search_result_summary
-from search_server.helpers.fields import StaticField
+from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import (
     get_identifier,
     ID_SUB
 )
-from search_server.helpers.serializers import ContextDictSerializer
+from shared_helpers.serializers import ContextDictSerializer
 from shared_helpers.solr_connection import SolrResult
 from search_server.helpers.vrv import render_pae
 from search_server.resources.search.base_search import BaseSearchResults

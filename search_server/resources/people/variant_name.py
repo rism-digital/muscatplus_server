@@ -1,8 +1,8 @@
 import serpy
 
 from search_server.helpers.display_translators import person_name_variant_labels_translator
-from search_server.helpers.fields import StaticField
-from search_server.helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.fields import StaticField
+from shared_helpers.serializers import JSONLDContextDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 
