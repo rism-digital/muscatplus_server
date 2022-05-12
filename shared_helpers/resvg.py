@@ -14,7 +14,6 @@ def render_svg(input: str, outpath: str, resvg_path: str, fontpath: str) -> bool
     """
     command = [
         resvg_path,
-        "--shape-rendering", "optimizeSpeed",
         "--background", "white",
         # "--skip-system-fonts",
         # "--use-fonts-dir", f"{fontpath}",
