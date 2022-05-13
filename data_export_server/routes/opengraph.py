@@ -113,7 +113,7 @@ async def og_image(req, image_name: str):
     # Create the temporary image file
     fd, tmpfile = tempfile.mkstemp()
 
-    render_success: bool = render_svg(rendered_svg, tmpfile, cfg["social"]["resvg"])
+    render_success: bool = render_svg(rendered_svg, tmpfile, cfg["social"]["resvg"], cfg["social"]["font_path"])
     if not render_success:
         return response.text("Failure to create image", status=500)
 

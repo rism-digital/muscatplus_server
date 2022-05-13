@@ -4,7 +4,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def render_svg(input: str, outpath: str, resvg_path: str) -> bool:
+def render_svg(input: str, outpath: str, resvg_path: str, font_path: str) -> bool:
     """
     Uses resvg to render an SVG string to a PNG file.
 
@@ -14,7 +14,12 @@ def render_svg(input: str, outpath: str, resvg_path: str) -> bool:
     """
     command = [
         resvg_path,
+        "--list-fonts",
         "--background", "white",
+        "--skip-system-fonts",
+        "--use-fonts-dir", f"{font_path}",
+        "--monospace-family", "Noto Sans Mono",
+        "--sans-serif-family", "Noto Sans Display",
         "-",
         outpath,
     ]
