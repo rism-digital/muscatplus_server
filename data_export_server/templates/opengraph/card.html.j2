@@ -7,13 +7,14 @@
     {%- if socialnetwork == "tw" %}
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:site" content="@RISM_music" />
+    <meta property="twitter:image" content="{{ record_image_url }}" />
     {% else %}
-        {# facebook markup? #}
+    <meta property="og:image" content="{{ record_image_url }}" />
     {% endif -%}
     <meta property="og:url" content="{{ record_url }}" />
     <meta property="og:title" content="{{ record_title }}" />
     <meta property="og:description" content="{{ record_description }}" />
-    <meta property="og:image" content="{{ record_image_url }}" />
+
 </head>
 <body>
 
