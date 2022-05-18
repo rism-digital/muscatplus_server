@@ -503,9 +503,9 @@ def printing_techniques_translator(values: list, translations: dict) -> dict:
 def secondary_literature_json_value_translator(values: list, translations: dict) -> dict:
     works: list = []
     for work in values:
-        reference: Optional[str] = work.get("reference")
-        number_page: Optional[str] = f"{n}" if (n := work.get("number_page")) else None
-        ref = ", ".join(f for f in [reference, number_page] if f)
+        reference: str = work.get("formatted", "")
+        number_page: str = work.get("pages", "")
+        ref = f"{reference} {number_page}."
         works.append(ref)
 
     return {"none": works}
