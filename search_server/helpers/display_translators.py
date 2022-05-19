@@ -517,9 +517,9 @@ def scoring_json_value_translator(values: list, translations: dict) -> dict:
     # (yet).
     instruments: list = []
     for inst in values:
-        voice: Optional[str] = inst.get("voice_instrument")
-        num: Optional[str] = f'({n})' if (n := inst.get("number")) else None
-        instrument = " ".join([f for f in [voice, num] if f])
+        voice: str = inst.get("voice_instrument", "")
+        num: str = f"({n})" if (n := inst.get("number")) else ""
+        instrument = f"{voice} {num}"
         instruments.append(instrument)
 
     return {"none": instruments}
