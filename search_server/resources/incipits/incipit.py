@@ -112,7 +112,8 @@ class Incipit(JSONLDContextDictSerializer):
         if not obj.get("music_incipit_s"):
             field_config.update({
                 "clef_s": ("records.clef", clef_translator),
-                "key_s": ("records.key_signature", None)
+                "key_s": ("records.key_signature", None),
+                "timesig_s": ("records.time_signature", None)
             })
 
         return get_display_fields(obj, transl, field_config)
