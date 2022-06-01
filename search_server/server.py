@@ -87,17 +87,20 @@ async def context(req) -> response.HTTPResponse:
 async def about(req):
     cfg: dict = req.app.ctx.config
     sort: str = "indexed desc"
-    idx_results: Results = SolrConnection.search({"query": "*:*", "sort": sort, "limit": 1, "fields": ["indexed"]})
+    idx_results: Results = SolrConnection.search({"query": "*:*", "filter": ["type:indexer"], "sort": sort, "limit": 1, "fields": ["indexed", "indexer_version_sni"]})
 
     # If, for some reason, we don't have a result for the last indexed
     # value, then return Jan 1, 1970.
     if idx_results.hits > 0:
         lastidx = idx_results.docs[0]["indexed"]
+        idxversion = idx_results.docs[0]["indexer_version_sni"]
     else:
         lastidx = "1970-01-01T00:00:00.000Z"
+        idxversion = "unknown"
 
     resp: dict = {
         "serverVersion": cfg["common"]["version"],
+        "indexerVersion": idxversion,
         "lastIndexed": lastidx
     }
 
