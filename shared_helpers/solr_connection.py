@@ -4,7 +4,7 @@
     and it will give them an instance of a Solr connection that
     they can then use to perform searches.
 
-      >>> from search_server.helpers.solr_connection import SolrConnection
+      >>> from shared_helpers.solr_connection import SolrConnection
       >>> res = SolrConnection.search("Some Query")
 
 """
