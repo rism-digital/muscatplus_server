@@ -90,11 +90,11 @@ class SuggestionResults(JSONLDContextDictSerializer):
 async def handle_suggest_request(req: request.Request, **kwargs) -> response.HTTPResponse:
     alias: Optional[str] = req.args.get("alias")
     if not alias:
-        raise InvalidQueryException("A suggest request requires an alias parameter")
+        return response.text("A suggest request requires an alias parameter", status=400)
 
     query: Optional[str] = req.args.get("q")
     if not query:
-        raise InvalidQueryException("A suggest request requires a q parameter")
+        return response.text("A suggest request requires a q parameter", status=400)
 
     cfg: dict = req.app.ctx.config
     # unlike the search handler we don't know what mode we're in, so we

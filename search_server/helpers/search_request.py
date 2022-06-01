@@ -334,7 +334,7 @@ class SearchRequest:
             field_has_values: bool = len(quoted_values) > 0
 
             if filter_type == FacetTypeValues.RANGE:
-                value = quoted_values[0] if field_has_values else ""
+                value = unquoted_values[0] if field_has_values else ""
                 tag = f"{{!tag={SolrQueryTags.RANGE_FILTER_TAG}}}"
             elif filter_type == FacetTypeValues.TOGGLE:
                 # We only accept 'true' as a value for toggles; anything else will

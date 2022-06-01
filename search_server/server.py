@@ -4,6 +4,7 @@ from typing import Optional
 import sentry_sdk
 import yaml
 from sanic import Sanic, response
+from small_asc.client import Results
 
 from shared_helpers.identifiers import RISM_JSONLD_CONTEXT
 from search_server.helpers.languages import load_translations
@@ -18,6 +19,7 @@ from search_server.routes.places import places_blueprint
 from search_server.routes.query import query_blueprint
 from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
+from shared_helpers.solr_connection import SolrConnection
 
 config: dict = yaml.safe_load(open('configuration.yml', 'r'))
 debug_mode: bool = config['common']['debug']
@@ -73,10 +75,33 @@ app.ctx.config = config
 
 @app.route("/")
 async def front(req):
-    print("front request")
     return await handle_front_request(req)
 
 
 @app.route("/api/v1/context.json")
 async def context(req) -> response.HTTPResponse:
     return response.json(RISM_JSONLD_CONTEXT)
+
+
+@app.route("/about")
+async def about(req):
+    cfg: dict = req.app.ctx.config
+    sort: str = "indexed desc"
+    idx_results: Results = SolrConnection.search({"query": "*:*", "filter": ["type:indexer"], "sort": sort, "limit": 1, "fields": ["indexed", "indexer_version_sni"]})
+
+    # If, for some reason, we don't have a result for the last indexed
+    # value, then return Jan 1, 1970.
+    if idx_results.hits > 0:
+        lastidx = idx_results.docs[0]["indexed"]
+        idxversion = idx_results.docs[0]["indexer_version_sni"]
+    else:
+        lastidx = "1970-01-01T00:00:00.000Z"
+        idxversion = "unknown"
+
+    resp: dict = {
+        "serverVersion": cfg["common"]["version"],
+        "indexerVersion": idxversion,
+        "lastIndexed": lastidx
+    }
+
+    return response.json(resp)
