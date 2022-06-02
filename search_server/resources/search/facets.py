@@ -222,7 +222,7 @@ def __get_time_signature_options() -> list[dict]:
 def _create_notation_facet(all_translations: dict) -> dict:
     return {
         "modes": {
-            "label": {"none": ["Query modes"]},  # TODO: Translate
+            "label": {"none": ["Query mode"]},  # TODO: Translate
             "query": "im",
             "options": [{
                 "label": {"none": ["Intervals"]},
