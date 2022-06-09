@@ -10,9 +10,10 @@ from shared_helpers.solr_connection import SolrConnection
 opengraph_blueprint: Blueprint = Blueprint("opengraph", url_prefix="/og")
 
 
-class SocialNetworks:
+class BotIdentifiers:
     TWITTER = "tw"
     FACEBOOK = "fb"
+    GOOGLE = "gg"
 
 
 SOLR_FIELDS: list = [
@@ -32,18 +33,23 @@ SOLR_FIELDS: list = [
     "department_s",
     "city_s",
     "date_statement_s",
-    "date_statements_sm"
+    "date_statements_sm",
+    "place_names_sm",
+    "profession_function_sm",
+    "people_names_sm",
+    "source_title_s",
+    "street_address_sm"
 ]
 
 
 async def render_og_tmpl(req, record_obj: dict) -> str:
     # The front-end server should have set this header. If it arrives here and it is
     # not set, then assume it's facebook.
-    socialnetwork: str = req.headers.get("X-RO-Social", SocialNetworks.FACEBOOK)
+    bot: str = req.headers.get("X-RO-BotIdentifier", BotIdentifiers.GOOGLE)
     tmpl_vars: dict = OpenGraph(record_obj, context={"request": req}).data
 
     tmpl_vars.update({
-        "socialnetwork": socialnetwork
+        "bot": bot
     })
     source_tmpl = req.app.ctx.template_env.get_template("opengraph/card.html.j2")
     rendered_template = await source_tmpl.render_async(**tmpl_vars)

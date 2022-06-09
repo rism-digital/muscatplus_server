@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "search_server"
-version = "0.1.0"
+version = "v1.0.4"
 description = "MuscatPlus Search Server"
 authors = ["Andrew Hankinson <andrew.hankinson@rism.digital>"]
 license = "MIT"
@@ -14,8 +14,8 @@ pyyaml = "^6.0.0"
 sanic = "^22.0.0"
 rdflib = "^6.0.0"
 small-asc = {git = "https://github.com/rism-digital/small-asc.git", rev = "main"}
-verovio = { version = "^3.10.0", allow-prereleases = true }
 cchardet = "2.1.7"
+verovio = { version = "^3.11.0.dev85", allow-prereleases = true }
 sentry-sdk = "^1.5.2"
 Jinja2 = "^3.1.2"
 
