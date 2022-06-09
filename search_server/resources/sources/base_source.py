@@ -89,15 +89,12 @@ class BaseSource(JSONLDContextDictSerializer):
         return Relationship(obj["creator_json"][0],
                             context={"request": self.context.get('request')}).data
 
-
     def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         # This source is not part of another source; return None
         if 'source_membership_json' not in obj:
             return None
 
         source_membership: dict = obj.get('source_membership_json', {})
-        log.debug(source_membership)
-
         req = self.context.get('request')
         parent_source_id: str = re.sub(ID_SUB, "", source_membership.get("source_id"))
         ident: str = get_identifier(req, "sources.source", source_id=parent_source_id)
