@@ -4,7 +4,14 @@ from typing import Optional
 from urllib.parse import urljoin
 import serpy
 
-from shared_helpers.formatters import format_source_label, format_person_label, format_institution_label
+from shared_helpers.formatters import (
+    format_source_label,
+    format_person_label,
+    format_institution_label,
+    format_source_description,
+    format_person_description,
+    format_institution_description
+)
 from shared_helpers.identifiers import ID_SUB, get_url_from_type, get_site
 from shared_helpers.serializers import ContextDictSerializer
 
@@ -23,21 +30,26 @@ class OpenGraph(ContextDictSerializer):
         return url
 
     def get_record_title(self, obj: dict) -> str:
-        title: str
-
         if obj["type"] == "source":
-            title = format_source_label(obj)
+            return format_source_label(obj)
         elif obj["type"] == "person":
-            title = format_person_label(obj)
+            return format_person_label(obj)
         elif obj["type"] == "institution":
-            title = format_institution_label(obj)
+            return format_institution_label(obj)
         else:
             return "[Unknown title]"
 
-        return title
-
     def get_record_description(self, obj: dict) -> str:
-        return ""
+        objtype: str = obj["type"]
+
+        if objtype == "source":
+            return format_source_description(obj)
+        elif objtype == "person":
+            return format_person_description(obj)
+        elif objtype == "institution":
+            return format_institution_description(obj)
+        else:
+            return "RISM Online"
 
     def get_record_image_url(self, obj: dict) -> str:
         """

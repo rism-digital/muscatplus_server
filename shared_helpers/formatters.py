@@ -63,3 +63,41 @@ def format_incipit_label(obj: dict) -> str:
 
     return f"{source_title}: {work_num}{title}"
 
+
+def format_source_description(obj: dict) -> str:
+    composers: str = ""
+    people: str = ""
+    source_title: str = ""
+
+    if "source_member_composers_sm" in obj:
+        composers = "; ".join(obj["source_member_composers_sm"])
+
+    if "people_names_sm" in obj:
+        people = "; ".join(obj["people_names_sm"])
+
+    if "source_title_s" in obj:
+        source_title = obj["source_title_s"]
+
+    return f"{source_title} {composers} {people}"
+
+
+def format_person_description(obj: dict) -> str:
+    places: str = ""
+    profession: str = ""
+
+    if "place_names_sm" in obj:
+        places = "; ".join(obj["place_names_sm"])
+
+    if "profession_function_sm" in obj:
+        profession = "; ".join(obj["profession_function_sm"])
+
+    return f"{places} {profession}"
+
+
+def format_institution_description(obj: dict) -> str:
+    address: str = ""
+
+    if "street_address_sm" in obj:
+        address = " ".join(obj["street_address_sm"])
+
+    return f"{address}"
