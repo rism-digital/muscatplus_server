@@ -36,6 +36,9 @@ class BaseSearchResults(JSONLDContextSerializer):
     facets = serpy.MethodField()
     modes = serpy.MethodField()
     sorts = serpy.MethodField()
+    page_sizes = serpy.MethodField(
+        label="pageSizes"
+    )
 
     def get_sid(self, obj: Results) -> str:
         """
@@ -55,6 +58,13 @@ class BaseSearchResults(JSONLDContextSerializer):
 
     def get_sorts(self, obj: Results) -> Optional[list]:
         return get_sorting(self.context.get("request"), obj)
+
+    def get_page_sizes(self, obj: Results) -> list[str]:
+        req = self.context.get("request")
+        cfg: dict = req.app.ctx.config
+        pgsizes: list[str] = [str(p) for p in cfg["search"]["page_sizes"]]
+
+        return pgsizes
 
     @abstractmethod
     def get_modes(self, obj: Results) -> Optional[dict]:
