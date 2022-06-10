@@ -102,10 +102,10 @@ class Incipit(JSONLDContextDictSerializer):
             "creator_name_s": ("records.composer_author", None),
             "text_incipit_s": ("records.text_incipit", None),
             "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
-            "scoring_summary_sm": ("records.scoring_summary", None),
             "work_num_s": ("records.work_number", None),
             "role_s": ("records.role", None),
             "scoring_sm": ("records.scoring_in_movement", None),
+            "voice_instrument_s": ("records.voice_instrument", None),
             "general_notes_sm": ("records.general_note_incipits", None)
         }
 
