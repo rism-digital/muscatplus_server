@@ -36,21 +36,20 @@ async def sitemap_root(req):
     return response.text(rendered_template, content_type="application/xml")
 
 
-@sitemap_blueprint.route("/sitemap-page.xml")
-async def sitemap_page(req):
-    page_num_param: str = req.args.get("pg", "1")
+@sitemap_blueprint.route(r"/<page_num:sitemap-page-(?P<page_num>\d+)\.xml>")
+async def sitemap_page(req, page_num: str):
     try:
-        page_num: int = int(page_num_param)
+        pnum: int = int(page_num)
     except ValueError as e:
-        page_num = 1
+        pnum = 1
 
-    if page_num < 1:
-        page_num = 1
+    if pnum < 1:
+        pnum = 1
 
     cfg = req.app.ctx.config
 
     page_size: int = cfg["sitemap"]["pagesize"]
-    offset: int = 0 if page_num == 1 else ((page_num - 1) * page_size)
+    offset: int = 0 if pnum == 1 else ((pnum - 1) * page_size)
 
     solr_query = {
         "query": "*:*",
