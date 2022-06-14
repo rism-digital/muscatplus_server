@@ -416,7 +416,6 @@ class SearchRequest:
             configuration_sorts = [", ".join(s['solr_sort']) for s in self._sorts_for_mode if s['alias'] == self._result_sorting]
 
         sort_parameters: list = self.sorts + configuration_sorts
-
         sort_statement: str = ", ".join(sort_parameters)
 
         return sort_statement if sort_statement else "score desc"
