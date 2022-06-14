@@ -317,7 +317,7 @@ class SearchRequest:
             # If a value has a colon in it we need to requote it... If the value is not truthy, drop it.
             quoted_values: list[str] = []
             for v in unquoted_values:
-                if v and (":" in v or " " in v):
+                if v and (set(v) & {":", " ", "[", "]"}):
                     quoted_values.append(f"\"{v}\"")
                 elif v:
                     quoted_values.append(f"{v}")
