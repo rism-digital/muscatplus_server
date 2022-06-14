@@ -68,7 +68,7 @@ class Person(BasePerson):
         if source_count == 0:
             return None
 
-        person_id: str = obj.get('person_id')
+        person_id: str = obj['person_id']
         ident: str = re.sub(ID_SUB, "", person_id)
 
         return {
