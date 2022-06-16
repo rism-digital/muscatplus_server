@@ -30,8 +30,11 @@ class ExemplarsSection(JSONLDContextDictSerializer):
         return transl.get("records.exemplars")
 
     def get_items(self, obj: SolrResult) -> Optional[dict]:
+        # Only select holdings where the institution ID is set. This is due to a buggy import; hopefully we'll
+        # be able to remove the institution_id filter clause later... 
         fq: list = [f"source_id:{obj.get('id')}",
-                    "type:holding"]
+                    "type:holding",
+                    "institution_id:[* TO *]"]
 
         sort: str = "siglum_s asc, shelfmark_ans asc"
         results: Results = SolrConnection.search({
@@ -118,7 +121,11 @@ class Exemplar(JSONLDContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_held_by(self, obj: dict) -> dict:
+    def get_held_by(self, obj: dict) -> Optional[dict]:
+        # This should never happen, but it did happen due to a buggy import so we check it first.
+        if "institution_id" not in obj:
+            return None
+
         req = self.context.get('request')
         institution_id: str = re.sub(ID_SUB, "", obj.get("institution_id"))
 
