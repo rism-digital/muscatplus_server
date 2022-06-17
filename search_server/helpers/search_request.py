@@ -317,7 +317,7 @@ class SearchRequest:
             # If a value has a colon in it we need to requote it... If the value is not truthy, drop it.
             quoted_values: list[str] = []
             for v in unquoted_values:
-                if v and (":" in v or " " in v):
+                if v and (set(v) & {":", " ", "[", "]"}):
                     quoted_values.append(f"\"{v}\"")
                 elif v:
                     quoted_values.append(f"{v}")
@@ -416,7 +416,6 @@ class SearchRequest:
             configuration_sorts = [", ".join(s['solr_sort']) for s in self._sorts_for_mode if s['alias'] == self._result_sorting]
 
         sort_parameters: list = self.sorts + configuration_sorts
-
         sort_statement: str = ", ".join(sort_parameters)
 
         return sort_statement if sort_statement else "score desc"

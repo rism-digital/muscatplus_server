@@ -16,7 +16,6 @@ from search_server.resources.sources.material_groups import MaterialGroupsSectio
 from search_server.resources.sources.references_notes import ReferencesNotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.source_items import SourceItemsSection
-from search_server.resources.sources.works import WorksSection
 
 log = logging.getLogger(__name__)
 
@@ -50,7 +49,6 @@ class FullSource(BaseSource):
     references_notes = serpy.MethodField(
         label="referencesNotes"
     )
-    works = serpy.MethodField()
     exemplars = serpy.MethodField()
     source_items = serpy.MethodField(
         label="sourceItems"
@@ -86,7 +84,7 @@ class FullSource(BaseSource):
         return RelationshipsSection(obj, context={"request": req}).data
 
     def get_incipits(self, obj: SolrResult) -> Optional[dict]:
-        if not obj.get("has_incipits_b"):
+        if not obj.get("has_incipits_b", False):
             return None
 
         req = self.context.get("request")
@@ -103,21 +101,11 @@ class FullSource(BaseSource):
 
         return refnotes
 
-    def get_works(self, obj: SolrResult) -> Optional[dict]:
-        req = self.context.get("request")
-        wks: dict = WorksSection(obj, context={"request": req}).data
-        if 'items' not in wks:
-            return None
-
-        return wks
-
     def get_exemplars(self, obj: SolrResult) -> Optional[dict]:
-        req = self.context.get("request")
-        exmplrs: dict = ExemplarsSection(obj, context={"request": req}).data
-        if 'items' not in exmplrs:
+        if "num_holdings_i" not in obj:
             return None
 
-        return exmplrs
+        return ExemplarsSection(obj, context={"request": self.context.get("request")}).data
 
     def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:
@@ -126,9 +114,7 @@ class FullSource(BaseSource):
         return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
 
     def get_source_items(self, obj: SolrResult) -> Optional[dict]:
-        req = self.context.get("request")
-        itms: dict = SourceItemsSection(obj, context={"request": req}).data
-        if 'items' not in itms:
+        if "num_source_members_i" not in obj:
             return None
 
-        return itms
+        return SourceItemsSection(obj, context={"request": self.context.get("request")}).data

@@ -1,9 +1,11 @@
+import re
 from typing import Optional
 
 import serpy
 from small_asc.client import Results
 
 from shared_helpers.fields import StaticField
+from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.serializers import JSONLDContextDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.sources.base_source import BaseSource
@@ -15,6 +17,10 @@ class SourceItemsSection(JSONLDContextDictSerializer):
         value="rism:SourceItemsSection"
     )
     label = serpy.MethodField()
+    url = serpy.MethodField()
+    total_items = serpy.MethodField(
+        label="totalItems"
+    )
     items = serpy.MethodField()
 
     def get_label(self, obj: SolrResult) -> dict:
@@ -22,6 +28,15 @@ class SourceItemsSection(JSONLDContextDictSerializer):
         transl: dict = req.app.ctx.translations
 
         return transl.get("records.items_in_source")
+
+    def get_url(self, obj: SolrResult) -> str:
+        source_id: str = obj["id"]
+        ident: str = re.sub(ID_SUB, "", source_id)
+
+        return get_identifier(self.context.get("request"), "sources.contents", source_id=ident)
+
+    def get_total_items(self, obj: SolrResult) -> int:
+        return obj.get("num_source_members_i", 0)
 
     def get_items(self, obj: SolrResult) -> Optional[list]:
         this_id: str = obj.get("id")
@@ -37,6 +52,10 @@ class SourceItemsSection(JSONLDContextDictSerializer):
         sort: str = "source_membership_order_i asc, source_id asc"
 
         source_results: Results = SolrConnection.search({"query": "*:*", "filter": fq, "sort": sort}, cursor=True)
+
+        if source_results.hits == 0:
+            return None
+
         items: list = []
 
         items += BaseSource(source_results,

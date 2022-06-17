@@ -22,16 +22,12 @@ class ContentsSection(JSONLDContextDictSerializer):
         label="id"
     )
     label = serpy.MethodField()
-    # stype = StaticField(
-    #     label="type",
-    #     value="rism:ContentsSection"
-    # )
     summary = serpy.MethodField()
     subjects = serpy.MethodField()
 
     def get_csid(self, obj: SolrResult) -> str:
         req = self.context.get('request')
-        source_id_val = obj.get("id")
+        source_id_val = obj["id"]
         source_id: str = re.sub(ID_SUB, "", source_id_val)
 
         return get_identifier(req, "sources.contents", source_id=source_id)

@@ -11,7 +11,7 @@ from search_server.resources.search.search_results import BaseSearchResults, Sou
 log = logging.getLogger(__name__)
 
 
-def _prepare_query(req, person_id: str, probe: bool = False) -> Optional[dict]:
+def _prepare_query(req, person_id: str, probe: bool = False) -> dict:
     try:
         request_compiler = SearchRequest(req, probe=probe)
         request_compiler.filters += ["type:source",
@@ -19,7 +19,7 @@ def _prepare_query(req, person_id: str, probe: bool = False) -> Optional[dict]:
         solr_params = request_compiler.compile()
     except InvalidQueryException as e:
         log.exception("Invalid query: %s", e)
-        return None
+        raise
 
     return solr_params
 
