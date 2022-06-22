@@ -100,7 +100,19 @@ class BaseSource(JSONLDContextDictSerializer):
         ident: str = get_identifier(req, "sources.source", source_id=parent_source_id)
         transl = req.app.ctx.translations
 
-        parent_title: Optional[str] = source_membership.get("main_title")
+        parent_title: str = source_membership.get("main_title", "[No title]")
+        parent_shelfmark: Optional[str] = source_membership.get("shelfmark")
+        parent_siglum: Optional[str] = source_membership.get("siglum")
+        parent_material_types: Optional[list] = source_membership.get("material_types")
+
+        # NB: This should match the format in formatters.format_source_label! But since
+        # we're dealing with a JSON field the names are different, and we only do this
+        # once in the whole app.
+        label: str = parent_title
+        if parent_material_types:
+            label = f"{label}; {', '.join(parent_material_types)}"
+        if parent_siglum and parent_shelfmark:
+            label = f"{label}; {parent_siglum} {parent_shelfmark}"
 
         record_type: str = source_membership.get("record_type", "item")
         source_type: str = source_membership.get("source_type", "unspecified")
@@ -116,7 +128,7 @@ class BaseSource(JSONLDContextDictSerializer):
                 "type": "rism:Source",
                 "typeLabel": transl.get("records.source"),
                 "record": record_block,
-                "label": {"none": [parent_title]}
+                "label": {"none": [label]}
             }
         }
 
