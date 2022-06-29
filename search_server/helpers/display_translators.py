@@ -502,6 +502,7 @@ def printing_techniques_translator(values: list, translations: dict) -> dict:
 
 def secondary_literature_json_value_translator(values: list, translations: dict) -> dict:
     works: list = []
+
     for work in values:
         reference: str = work.get("formatted", "")
         number_page: str = work.get("pages", "")
