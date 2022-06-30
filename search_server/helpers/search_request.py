@@ -134,20 +134,17 @@ def suggest_fields_for_alias(facet_definitions: dict) -> dict:
 
 class SearchRequest:
     """
-    Takes a number of parameters passed in from a search request and compiles them to produce a set of
-    parameters that can then be sent off to Solr. This is useful as a place to contain all the logic for
-    how requests from the front-end get parsed and compiled to a valid Solr request, particularly around
-    handling pagination.
-
-    While it's primary function is to interact with Solr for the main search interface, it can also be used
-    in other places where paginated interactions with Solr are required, such as viewing a person's list of
-    related sources.
+    Takes a number of parameters passed in from a RISM Online search request and compiles them to produce a set of
+    parameters that can be sent to Solr. This is useful as a place to contain all the logic for how requests from the
+    front-end get parsed and compiled to a valid Solr request, particularly around validating input and handling
+    pagination.
 
     A bit of terminology to be aware of:
         - FILTERS are requests sent to Solr to filter queries
         - FACETS are responses from Solr giving us the values for specific facet fields
 
-    In other words: Values from FACETS are then used by the client to compose requests for FILTERS.
+    In other words: Values from FACETS are sent to the client, which then uses this to compose requests for FILTERS
+    back to the server.
 
     For the input API, the following query parameters are recognized:
 
@@ -165,9 +162,17 @@ class SearchRequest:
      - `rows`: Number of results per page.
      - `sort`: Controls the sorting of returned results
 
-    Some parameters are specific to only incipit searches
-     - `im`: Incipit search mode. Controls the type of mode used for matching incipits. Currently only supports
-             a value of 'intervals' (also the default)
+    Some parameters are specific to only incipit searches:
+     - `n`: A Plaine and Easie string containing an encoded incipit search. Sent to Verovio to extract specific features
+            which can then be sent to Solr as a query.
+     - `im`: Incipit search mode. Controls the type of mode used for matching incipits. Supports a value of 'intervals'
+            (also the default) and "exact-pitches". Controls which features we extract from Verovio to sent to Solr
+            as a query.
+     - `ic`: Controls the *rendering* of the incipit clef. Sent to Verovio only.
+     - `it`: Controls the *rendering* of the incipit time signature. Sent to Verovio only.
+     - `ik`: Controls the *rendering* of the incipit key signature. Sent to Verovio only, but the value of this will
+            change the interval values of the resulting feature string returned from Verovio, which in turn will
+            be sent to Solr.
 
     """
     default_sort = "id asc"
