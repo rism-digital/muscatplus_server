@@ -113,6 +113,10 @@ def get_search_result_summary(field_config: dict, translations: dict, result: di
         if solr_fieldname not in result:
             continue
 
+        # omit any values from the result that are zero
+        if isinstance(result[solr_fieldname], int) and result[solr_fieldname] == 0:
+            continue
+
         output_fieldname: str = cfg[0]
         translation_key: str = cfg[1]
         translation_value_translator_fn: Optional[Callable] = cfg[2]
