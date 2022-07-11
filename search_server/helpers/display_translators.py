@@ -501,11 +501,23 @@ def printing_techniques_translator(values: list, translations: dict) -> dict:
 
 
 def secondary_literature_json_value_translator(values: list, translations: dict) -> dict:
-    works: list = []
+    # all_works: { "literature_123": {"formatted": "blah blah", pages: ["12", "13", "14", etc.]} }
+
+    all_works: dict = {}
 
     for work in values:
-        reference: str = work.get("formatted", "")
-        number_page: str = work.get("pages", "")
+        work_id = work.get("id")
+        if work_id not in all_works:
+            all_works[work_id] = {"formatted": work.get("formatted"), "pages": []}
+
+        if p := work.get("pages"):
+            all_works[work_id]["pages"].append(p)
+
+    works: list = []
+
+    for _, fmtwks in all_works.items():
+        number_page: str = "; ".join(fmtwks.get("pages", []))
+        reference: str = fmtwks.get("formatted", "")
         ref = f"{reference} {number_page}."
         works.append(ref)
 
