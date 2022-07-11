@@ -47,7 +47,6 @@ class ContentsSection(JSONLDContextDictSerializer):
             "source_title_s": ("records.title_on_source", None),
             "variant_title_s": ("records.variant_source_title", None),
             "standard_titles_json": ("records.standardized_title", title_json_value_translator),
-            "works_catalogue_json": ("records.catalog_works", secondary_literature_json_value_translator),
             "additional_titles_json": ("records.additional_title", title_json_value_translator),
             "opus_numbers_sm": ("records.opus_number", None),
             "description_summary_sm": ("records.description_summary", None),
