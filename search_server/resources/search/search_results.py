@@ -475,6 +475,7 @@ class IncipitSearchResult(ContextDictSerializer):
         # Grab the PAE features we computed from the incoming query request. These will
         # be used to perform the highlighting
         query_pae_features: Optional[dict] = self.context.get("query_pae_features")
+
         if not query_pae_features:
             svg, midi = _render_without_highlighting(req, obj)
         else:
@@ -539,9 +540,15 @@ def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional
         ids_field = "pitches_ids_json"
         query_features_field = "pitchesChromatic"
 
+    if feature_field not in obj:
+        # If, for some reason, we don't have the feature field in the Solr object, then
+        # just return the rendered incipit without highlighting. This is a bit of a cop-out,
+        # but it means that edge cases (like single-note incipits that match a result) don't
+        # cause the system to crash.
+        return svg, b64midi
+
     document_interval_features: list = [str(s) for s in obj[feature_field]]
     document_interval_ids: list = obj[ids_field]
-
     query_interval_feature: list = query_pae_features[query_features_field]
 
     log.debug("Document features: %s", document_interval_features)
