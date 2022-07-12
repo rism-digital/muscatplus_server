@@ -28,7 +28,7 @@ release: str = ""
 
 # If we have semver then remove the leading 'v', e.g., 'v1.1.1' -> '1.1.1'
 # The full release string would then be 'muscatplus_server@1.1.1'
-# Otherwise, use the version string verbatim, e.g., 'muscatplus_server@development'. 
+# Otherwise, use the version string verbatim, e.g., 'muscatplus_server@development'.
 if version_string.startswith("v"):
     release = version_string[1:]
 else:
