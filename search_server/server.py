@@ -23,14 +23,24 @@ from shared_helpers.solr_connection import SolrConnection
 
 config: dict = yaml.safe_load(open('configuration.yml', 'r'))
 debug_mode: bool = config['common']['debug']
+version_string: str = config['common']['version']
+release: str = ""
 
+# If we have semver then remove the leading 'v', e.g., 'v1.1.1' -> '1.1.1'
+# The full release string would then be 'muscatplus_server@1.1.1'
+# Otherwise, use the version string verbatim, e.g., 'muscatplus_server@development'. 
+if version_string.startswith("v"):
+    release = version_string[1:]
+else:
+    release = version_string
 
 if debug_mode is False:
     from sentry_sdk.integrations.sanic import SanicIntegration
     sentry_sdk.init(
         dsn=config["sentry"]["dsn"],
         integrations=[SanicIntegration()],
-        environment=config["sentry"]["environment"]
+        environment=config["sentry"]["environment"],
+        release=f"muscatplus_server@{release}"
     )
 
 app = Sanic("mp_server")
