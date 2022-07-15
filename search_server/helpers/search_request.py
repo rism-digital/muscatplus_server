@@ -319,7 +319,7 @@ class SearchRequest:
             # to Solr.
             unquoted_values: list[str] = [s.replace("\"", "") for s in unencoded_values]
 
-            # If a value has a colon in it we need to requote it... If the value is not truthy, drop it.
+            # If a value has a special character in it we need to requote it... If the value is not truthy, drop it.
             quoted_values: list[str] = []
             for v in unquoted_values:
                 if v and (set(v) & {":", " ", "[", "]", "\\"}):
@@ -360,7 +360,14 @@ class SearchRequest:
                 # The complexphrase query parser is also very sensitive to character escaping, so
                 # we do some custom escaping here to make sure things are sent to Solr correctly. This means
                 # double-escaping special characters which, when it's a backslash, also means triple-escaping it!
-                translation_table: dict = str.maketrans({"/": "\\\\/", "~": "\\\\~", ":": "\\\\:", "\\": "\\\\\\"})
+                translation_table: dict = str.maketrans({
+                    "/": "\\\\/",
+                    "~": "\\\\~",
+                    ":": "\\\\:",
+                    "\\": "\\\\\\",
+                    "[": "\\\\[",
+                    "]": "\\\\]"
+                })
                 value = join_op.join([f"{val.translate(translation_table)}" for val in quoted_values])
                 tag = f"{{!complexphrase inOrder=true}}"
             else:

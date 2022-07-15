@@ -82,7 +82,6 @@ async def handle_search(req: request.Request, handler: Callable, **kwargs) -> re
         return response.text(f"Invalid search query. {e}", status=400)
     except SolrError as e:
         error_message: str = f"Error sending search to Solr. {e}"
-        log.exception(error_message)
         return response.text(error_message, status=500)
 
     if not data_obj:
