@@ -12,7 +12,7 @@ import logging
 from typing import NewType
 
 import yaml
-from small_asc.client import Solr, Results, SolrError
+from small_asc.client import Solr, Results
 
 log = logging.getLogger(__name__)
 
@@ -35,12 +35,7 @@ def execute_query(solr_params: dict) -> Results:
     :param solr_params: A dictionary representing a JSON Search API query for Solr.
     :return: A Solr Results object with the results of a query.
     """
-    try:
-        solr_res: Results = SolrConnection.search(solr_params)
-    except SolrError as e:
-        log.exception("Error sending search to solr: %s", e)
-        raise
-
+    solr_res: Results = SolrConnection.search(solr_params)
     return solr_res
 
 
@@ -51,5 +46,5 @@ def result_count(**kwargs) -> int:
     :param kwargs: Keyword arguments to pass to the Solr query
     :return: The number of hits
     """
-    res = SolrConnection.search({"query": "*:*", "limit": 0, "params": {**kwargs}})
+    res: Results = SolrConnection.search({"query": "*:*", "limit": 0, "params": {**kwargs}})
     return res.hits
