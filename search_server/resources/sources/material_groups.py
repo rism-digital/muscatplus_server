@@ -71,7 +71,6 @@ class MaterialGroup(JSONLDContextDictSerializer):
 
         return get_identifier(req, "sources.material_group", source_id=source_id, mg_id=mg_id)
 
-
     def get_label(self, obj: dict) -> dict:
         # TODO: Translate this header into the languages
         group_num: str = obj.get("group_num")
@@ -89,9 +88,11 @@ class MaterialGroup(JSONLDContextDictSerializer):
             "printer_location": ("records.location_printer", None),
             "printer_name": ("records.name_printer", None),
             "physical_extent": ("records.format_extent", None),
-            "physical_details": ("records.other_physical_details", None),
+            "parts_held_extent": ("records.parts_held_extent", None),
             "physical_dimensions": ("records.dimensions", None),
-            "parts_held": ("records.parts_held", None),
+            "physical_details": ("records.other_physical_details", None),
+            # "parts_held": ("records.parts_held", None),
+            # "parts_extent": ("records.extent_parts", None),,
             "printing_techniques": ("records.printing_technique", printing_techniques_translator),
             "book_formats": ("records.book_format", None),
             "plate_numbers": ("records.plate_number", None),
