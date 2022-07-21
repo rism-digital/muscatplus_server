@@ -139,7 +139,7 @@ class BaseSource(JSONLDContextDictSerializer):
             "date_statements_sm": ("records.dates", None),
             "num_source_members_i": ("records.items_in_source", None),
             "material_group_types_sm": ("records.material_description", None),
-            "standard_titles_json": ("records.standardized_title", title_json_value_translator),
+            "standard_title_s": ("records.standardized_title", None),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
