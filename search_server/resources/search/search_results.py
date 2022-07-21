@@ -420,9 +420,10 @@ class IncipitSearchResult(ContextDictSerializer):
         return get_identifier(req, "sources.incipit", source_id=source_id, work_num=work_num)
 
     def get_label(self, obj: dict) -> dict:
-        label: str = format_incipit_label(obj)
+        work_num: str = obj.get("work_num_s")
+        title: str = f" ({d})" if (d := obj.get("title_s")) else ""
 
-        return {"none": [label]}
+        return {"none": [f"{work_num}{title}"]}
 
     def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")

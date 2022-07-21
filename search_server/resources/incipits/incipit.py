@@ -110,17 +110,17 @@ class Incipit(JSONLDContextDictSerializer):
             "title_s": ("records.title_movement_tempo", None),
             "text_incipit_s": ("records.text_incipit", None),
             "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
+            "clef_s": ("records.clef", clef_translator),
+            "timesig_s": ("records.time_signature", None),
             "role_s": ("records.role", None),
             "scoring_sm": ("records.scoring_in_movement", None),
             "voice_instrument_s": ("records.voice_instrument", None),
             "general_notes_sm": ("records.general_note_incipits", None)
         })
 
-        if not obj.get("music_incipit_s"):
+        if (k := obj.get("key_s")) and k != "n":
             field_config.update({
-                "clef_s": ("records.clef", clef_translator),
                 "key_s": ("records.key_signature", None),
-                "timesig_s": ("records.time_signature", None)
             })
 
         return get_display_fields(obj, transl, field_config)

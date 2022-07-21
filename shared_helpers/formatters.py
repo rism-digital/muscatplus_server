@@ -46,22 +46,14 @@ def format_person_label(obj: dict) -> str:
 
 def format_incipit_label(obj: dict) -> str:
     """
-    The format for incipit titles is:
-
-    Source title: Work num (supplied title)
-
-    e.g., "Overtures - winds, stck: 1.1.1 (Allegro)"
-
-    If the supplied title is not on the record, it will be omitted.
-
     :param obj: A Solr result object containing an incipit record
     :return: A string of the composite title
     """
     work_num: str = obj['work_num_s']
     # source_title: str = obj["main_title_s"]
-    title: str = f" ({d})" if (d := obj.get("title_s")) else ""
+    # title: str = f" ({d})" if (d := obj.get("title_s")) else ""
 
-    return f"{work_num}{title}"
+    return f"{work_num}"
 
 
 def format_source_description(obj: dict) -> str:
