@@ -5,8 +5,11 @@ from typing import Optional, Callable
 
 import serpy
 
-from search_server.helpers.display_translators import person_institution_relationship_labels_translator, \
-    qualifier_labels_translator, place_relationship_labels_translator
+from shared_helpers.display_translators import (
+    person_institution_relationship_labels_translator,
+    qualifier_labels_translator,
+    place_relationship_labels_translator
+)
 from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.serializers import JSONLDContextDictSerializer

@@ -5,11 +5,11 @@ from typing import Optional
 import serpy
 from small_asc.client import JsonAPIRequest, Results
 
-from search_server.helpers.display_fields import (
+from shared_helpers.display_fields import (
     get_display_fields,
     LabelConfig
 )
-from search_server.helpers.display_translators import key_mode_value_translator, clef_translator
+from shared_helpers.display_translators import key_mode_value_translator, clef_translator
 from shared_helpers.fields import StaticField
 from shared_helpers.formatters import format_incipit_label
 from shared_helpers.identifiers import (
@@ -130,6 +130,7 @@ class Incipit(JSONLDContextDictSerializer):
         pae_code: Optional[str] = obj.get("original_pae_sni")
         if not pae_code:
             return None
+
         is_mensural: bool = obj.get("is_mensural_b", False)
 
         # Set Verovio to render random IDs for this so that we don't have any ID collisions with

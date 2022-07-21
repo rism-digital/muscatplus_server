@@ -2,7 +2,7 @@ import re
 from typing import Optional, Pattern, Match
 
 from shared_helpers.identifiers import ID_SUB
-from search_server.helpers.languages import SUPPORTED_LANGUAGES
+from shared_helpers.languages import SUPPORTED_LANGUAGES
 
 _SOURCE_TYPE_LABEL_MAP: dict = {
     "printed": "",
@@ -502,7 +502,6 @@ def printing_techniques_translator(values: list, translations: dict) -> dict:
 
 def secondary_literature_json_value_translator(values: list, translations: dict) -> dict:
     # all_works: { "literature_123": {"formatted": "blah blah", pages: ["12", "13", "14", etc.]} }
-
     all_works: dict = {}
 
     for work in values:
@@ -579,11 +578,13 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
     # Get the individual fields for each entry in the title field, if any.
     for v in values:
         title = v.get("title", "[Without title]")
-        subheading = v.get("subheading")
-        arrangement = v.get("arrangement")
-        key_mode = v.get("key_mode")
-        scoring = ", ".join(v.get("scoring_summary", []))
-        catalogue_numbers = ", ".join(v.get("catalogue_numbers", []))
+        subheading: Optional[str] = v.get("subheading")
+        arrangement: Optional[str] = v.get("arrangement")
+        key_mode: Optional[str] = v.get("key_mode")
+        catalogue_numbers: Optional[str] = ", ".join(ch) if (ch := v.get("catalogue_numbers")) else None
+        holding_siglum: Optional[str] = v.get("holding_siglum")
+        holding_shelfmark: Optional[str] = v.get("holding_shelfmark")
+        material_group: Optional[str] = v.get("material_group")
         subheading_trans = arrangement_trans = key_mode_trans = {}
 
         if subheading:
@@ -596,11 +597,26 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
             key_mode_trans = key_mode_value_translator(key_mode, translations)
 
         for lang in SUPPORTED_LANGUAGES:
-            subh = ", ".join(subheading_trans.get(lang, []))
-            arrh = ", ".join(arrangement_trans.get(lang, []))
-            keyh = ", ".join(key_mode_trans.get(lang, []))
-            full_title_components: list = [title, keyh, subh, arrh, scoring, catalogue_numbers]
-            full_title = "; ".join([f.strip() for f in full_title_components if f])
+            tith = f"{title}"
+            subh = ', '.join(sh) if (sh := subheading_trans.get(lang, [])) else ""
+            arrh = f" {', '.join(ah)}" if (ah := arrangement_trans.get(lang, [])) else ""
+
+            exarr: str = ""
+            if subh:
+                exarr += subh.strip()
+            if arrh:
+                exarr += f", {arrh.strip()}" if subh else f"{arrh.strip()}"
+
+            exarr = f" ({exarr})" if exarr else ""
+
+            matg = f"; {mg}" if (mg := material_group) else ""
+            keyh = f"–{', '.join(kh)}" if (kh := key_mode_trans.get(lang, [])) else ""
+            cath = f"; {catalogue_numbers}" if catalogue_numbers else ""
+            hsigh = f"; {holding_siglum}" if holding_siglum else ""
+            hsmh = f" {holding_shelfmark}" if holding_shelfmark else ""
+
+            full_title: str = f"{tith}{keyh}{exarr}{matg}{cath}{hsigh}{hsmh}"
+
             result[lang].append(full_title)
 
     return result

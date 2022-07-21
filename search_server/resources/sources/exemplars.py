@@ -4,8 +4,8 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
-from search_server.helpers.display_translators import url_detecting_translator
-from search_server.helpers.display_fields import get_display_fields, LabelConfig
+from shared_helpers.display_translators import url_detecting_translator
+from shared_helpers.display_fields import get_display_fields, LabelConfig
 from shared_helpers.fields import StaticField
 from shared_helpers.formatters import format_institution_label
 from shared_helpers.identifiers import get_identifier, ID_SUB

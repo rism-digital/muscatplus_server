@@ -4,10 +4,11 @@ import logging
 
 import serpy
 
-from search_server.helpers.display_translators import title_json_value_translator
+from shared_helpers.display_translators import title_json_value_translator
 from search_server.helpers.record_types import create_record_block
-from search_server.helpers.display_fields import LabelConfig, get_display_fields
+from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.fields import StaticField
+from shared_helpers.formatters import format_source_label
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.serializers import JSONLDContextDictSerializer
 from shared_helpers.solr_connection import SolrResult
@@ -21,7 +22,7 @@ from search_server.resources.shared.relationship import Relationship
 SOLR_FIELDS_FOR_BASE_SOURCE: list = [
     "id", "type", "main_title_s", "material_group_types_sm", "shelfmark_s", "siglum_s",
     "source_membership_json", "source_id", "creator_name_s", "source_type_s", "content_types_sm", "record_type_s",
-    "created", "updated", "main_title_ans"
+    "created", "updated", "main_title_ans", "standard_titles_json"
 ]
 
 log = logging.getLogger(__name__)
@@ -62,19 +63,11 @@ class BaseSource(JSONLDContextDictSerializer):
         return get_identifier(req, "sources.source", source_id=source_id)
 
     def get_label(self, obj: SolrResult) -> dict:
-        title: str = obj.get("main_title_s", "[No title]")
-        #  TODO: Translate source types
-        source_types: Optional[list] = obj.get("material_group_types_sm")
-        shelfmark: Optional[str] = obj.get("shelfmark_s")
-        siglum: Optional[str] = obj.get("siglum_s")
+        req = self.context.get('request')
+        transl = req.app.ctx.translations
+        label = format_source_label(obj["standard_titles_json"], transl)
 
-        label: str = title
-        if source_types:
-            label = f"{label}; {', '.join(source_types)}"
-        if siglum and shelfmark:
-            label = f"{label}; {siglum} {shelfmark}"
-
-        return {"none": [label]}
+        return label
 
     def get_type_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")

@@ -7,7 +7,7 @@ from sanic import Sanic, response
 from small_asc.client import Results
 
 from shared_helpers.identifiers import RISM_JSONLD_CONTEXT
-from search_server.helpers.languages import load_translations
+from shared_helpers.languages import load_translations
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.countries import countries_blueprint
 from search_server.routes.festivals import festivals_blueprint

@@ -31,7 +31,20 @@ class OpenGraph(ContextDictSerializer):
 
     def get_record_title(self, obj: dict) -> str:
         if obj["type"] == "source":
-            return format_source_label(obj)
+            title: str = obj.get("main_title_s", "[No title]")
+            #  TODO: Translate source types
+            source_types: Optional[list] = obj.get("material_group_types_sm")
+            shelfmark: Optional[str] = obj.get("shelfmark_s")
+            siglum: Optional[str] = obj.get("siglum_s")
+
+            label: str = title
+            if source_types:
+                label = f"{label}; {', '.join(source_types)}"
+            if siglum and shelfmark:
+                label = f"{label}; {siglum} {shelfmark}"
+
+            return label
+
         elif obj["type"] == "person":
             return format_person_label(obj)
         elif obj["type"] == "institution":

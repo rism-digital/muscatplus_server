@@ -4,15 +4,14 @@ from typing import Optional
 
 import serpy
 
-from search_server.helpers.display_fields import LabelConfig, get_display_fields
-from search_server.helpers.display_translators import (
+from shared_helpers.display_fields import LabelConfig, get_display_fields
+from shared_helpers.display_translators import (
     dramatic_roles_json_value_translator,
     title_json_value_translator,
-    secondary_literature_json_value_translator,
     scoring_json_value_translator)
 from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from search_server.helpers.languages import languages_translator
+from shared_helpers.languages import languages_translator
 from shared_helpers.serializers import JSONLDContextDictSerializer
 from shared_helpers.solr_connection import SolrResult
 

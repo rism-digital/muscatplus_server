@@ -3,7 +3,7 @@ import urllib.parse
 from collections import defaultdict
 from typing import Optional
 
-from search_server.helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
+from shared_helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
 from search_server.exceptions import InvalidQueryException, PaginationParseException
 from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import parse_page_number, parse_row_number

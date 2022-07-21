@@ -1,20 +1,10 @@
 from typing import Optional
 
+from shared_helpers.display_translators import title_json_value_translator
 
-def format_source_label(obj: dict) -> str:
-    title: str = obj.get("main_title_s", "[No title]")
-    #  TODO: Translate source types
-    source_types: Optional[list] = obj.get("material_group_types_sm")
-    shelfmark: Optional[str] = obj.get("shelfmark_s")
-    siglum: Optional[str] = obj.get("siglum_s")
 
-    label: str = title
-    if source_types:
-        label = f"{label}; {', '.join(source_types)}"
-    if siglum and shelfmark:
-        label = f"{label}; {siglum} {shelfmark}"
-
-    return label
+def format_source_label(std_title: list, translations: dict) -> dict:
+    return title_json_value_translator(std_title, translations)
 
 
 def format_institution_label(obj: dict) -> str:

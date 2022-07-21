@@ -4,8 +4,8 @@ from typing import Optional
 
 import serpy
 
-from search_server.helpers.display_fields import LabelConfig, get_display_fields
-from search_server.helpers.display_translators import printing_techniques_translator
+from shared_helpers.display_fields import LabelConfig, get_display_fields
+from shared_helpers.display_translators import printing_techniques_translator
 from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.serializers import JSONLDContextDictSerializer
