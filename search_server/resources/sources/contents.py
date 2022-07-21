@@ -43,14 +43,14 @@ class ContentsSection(JSONLDContextDictSerializer):
 
         field_config: LabelConfig = {
             "material_group_types_sm": ("records.type", None),
+            "standard_title_s": ("records.standardized_title", None),
             "source_title_s": ("records.title_on_source", None),
             "variant_title_s": ("records.variant_source_title", None),
-            "standard_titles_json": ("records.standardized_title", title_json_value_translator),
             "additional_titles_json": ("records.additional_title", title_json_value_translator),
             "opus_numbers_sm": ("records.opus_number", None),
             "description_summary_sm": ("records.description_summary", None),
             "dramatic_roles_json": ("records.named_dramatic_roles", dramatic_roles_json_value_translator),
-            "scoring_json": ("records.total_scoring", scoring_json_value_translator),
+            "scoring_summary_sm": ("records.scoring_summary", None),
             "colophon_notes_sm": ("records.colophon", None),
             "language_text_sm": ("records.language_text", languages_translator),
             "language_libretto_sm": ("records.language_libretto", languages_translator),
