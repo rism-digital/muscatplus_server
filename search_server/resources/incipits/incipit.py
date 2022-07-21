@@ -5,11 +5,11 @@ from typing import Optional
 import serpy
 from small_asc.client import JsonAPIRequest, Results
 
-from search_server.helpers.display_fields import (
+from shared_helpers.display_fields import (
     get_display_fields,
     LabelConfig
 )
-from search_server.helpers.display_translators import key_mode_value_translator, clef_translator
+from shared_helpers.display_translators import key_mode_value_translator, clef_translator
 from shared_helpers.fields import StaticField
 from shared_helpers.formatters import format_incipit_label
 from shared_helpers.identifiers import (
@@ -97,23 +97,30 @@ class Incipit(JSONLDContextDictSerializer):
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
-        field_config: LabelConfig = {
+        field_config: LabelConfig = {}
+
+        # Insert the composer only if this is a direct request for the
+        # incipit record; otherwise it's embedded. We do this here
+        # because otherwise the composer will be added at the end. This
+        # way the composer is shown at the start of the block.
+        if self.context.get("direct_request"):
+            field_config["creator_name_s"] = ("records.composer_author", None)
+
+        field_config.update({
             "title_s": ("records.title_movement_tempo", None),
-            "creator_name_s": ("records.composer_author", None),
             "text_incipit_s": ("records.text_incipit", None),
             "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
-            "work_num_s": ("records.work_number", None),
+            "clef_s": ("records.clef", clef_translator),
+            "timesig_s": ("records.time_signature", None),
             "role_s": ("records.role", None),
             "scoring_sm": ("records.scoring_in_movement", None),
             "voice_instrument_s": ("records.voice_instrument", None),
             "general_notes_sm": ("records.general_note_incipits", None)
-        }
+        })
 
-        if not obj.get("music_incipit_s"):
+        if (k := obj.get("key_s")) and k != "n":
             field_config.update({
-                "clef_s": ("records.clef", clef_translator),
                 "key_s": ("records.key_signature", None),
-                "timesig_s": ("records.time_signature", None)
             })
 
         return get_display_fields(obj, transl, field_config)
@@ -123,6 +130,7 @@ class Incipit(JSONLDContextDictSerializer):
         pae_code: Optional[str] = obj.get("original_pae_sni")
         if not pae_code:
             return None
+
         is_mensural: bool = obj.get("is_mensural_b", False)
 
         # Set Verovio to render random IDs for this so that we don't have any ID collisions with

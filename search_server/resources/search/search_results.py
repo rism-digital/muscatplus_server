@@ -6,12 +6,15 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
-from shared_helpers.formatters import format_incipit_label, format_institution_label, format_person_label, \
+from shared_helpers.formatters import (
+    format_institution_label,
+    format_person_label,
     format_source_label
+)
 from search_server.helpers.search_request import IncipitModeValues
-from search_server.helpers.display_translators import gnd_country_code_labels_translator
+from shared_helpers.display_translators import gnd_country_code_labels_translator
 from search_server.helpers.record_types import create_record_block
-from search_server.helpers.display_fields import get_search_result_summary
+from shared_helpers.display_fields import get_search_result_summary
 from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import (
     get_identifier,
@@ -130,9 +133,11 @@ class SourceSearchResult(ContextDictSerializer):
         return get_identifier(req, "sources.source", source_id=id_value)
 
     def get_label(self, obj: dict) -> dict:
-        label: str = format_source_label(obj)
+        req = self.context.get("request")
+        transl: dict = req.app.ctx.translations
+        label: dict = format_source_label(obj["standard_titles_json"], transl)
 
-        return {"none": [label]}
+        return label
 
     def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
@@ -420,9 +425,10 @@ class IncipitSearchResult(ContextDictSerializer):
         return get_identifier(req, "sources.incipit", source_id=source_id, work_num=work_num)
 
     def get_label(self, obj: dict) -> dict:
-        label: str = format_incipit_label(obj)
+        work_num: str = obj.get("work_num_s")
+        title: str = f" ({d})" if (d := obj.get("title_s")) else ""
 
-        return {"none": [label]}
+        return {"none": [f"{work_num}{title}"]}
 
     def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")

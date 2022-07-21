@@ -102,7 +102,10 @@ class FullSource(BaseSource):
         return refnotes
 
     def get_exemplars(self, obj: SolrResult) -> Optional[dict]:
-        if "num_holdings_i" not in obj:
+        # If this record does not have any physical copies attached to it ("Holdings", either
+        # print holdings or a manuscript holding record) then bypass the solr query that will retrieve
+        # zero records.
+        if "num_physical_copies_i" not in obj:
             return None
 
         return ExemplarsSection(obj, context={"request": self.context.get("request")}).data

@@ -5,7 +5,7 @@ import serpy
 
 from shared_helpers.formatters import format_institution_label
 from search_server.resources.shared.record_history import get_record_history
-from search_server.helpers.display_fields import get_display_fields
+from shared_helpers.display_fields import get_display_fields
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 from shared_helpers.fields import StaticField

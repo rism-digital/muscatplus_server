@@ -2,7 +2,7 @@ from typing import Optional
 
 import serpy
 
-from search_server.helpers.display_fields import get_display_fields, LabelConfig
+from shared_helpers.display_fields import get_display_fields, LabelConfig
 from shared_helpers.fields import StaticField
 from shared_helpers.serializers import JSONLDContextDictSerializer
 from shared_helpers.solr_connection import SolrResult

@@ -4,10 +4,10 @@ from typing import Optional
 
 import serpy
 
-from search_server.helpers.display_fields import get_display_fields
+from shared_helpers.display_fields import get_display_fields
 from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.solr_connection import SolrResult, SolrConnection
-from search_server.helpers.display_translators import person_gender_translator
+from shared_helpers.display_translators import person_gender_translator
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.people.variant_name import VariantNamesSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection

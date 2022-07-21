@@ -30,8 +30,10 @@ class ExternalResourcesSection(JSONLDContextDictSerializer):
 
     def get_items(self, obj: SolrResult) -> list[dict]:
         if "external_resources" in obj:
+            # If we're serializing from a JSON field, then this will be the key
             res = obj["external_resources"]
         else:
+            # otherwise use the JSON field on the Solr document.
             res = obj["external_resources_json"]
 
         return ExternalResource(res, many=True,
