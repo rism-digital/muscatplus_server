@@ -278,7 +278,7 @@ def _create_range_facet(alias: str, res, req) -> dict:
     upper: int = max_val
 
     for arg in incoming_args:
-        arg_name, arg_value = arg.split(":")
+        arg_name, arg_value = arg.split(":", 1)
         if arg_name != alias:
             continue
 
