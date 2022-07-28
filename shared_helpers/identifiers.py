@@ -4,21 +4,27 @@ from typing import Pattern, Optional
 ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_")
 
 EXTERNAL_IDS: dict = {
-    "viaf": {"label": "Virtual Internet Authority File (VIAF)", "ident": "https://viaf.org/viaf/{ident}"},
-    "dnb": {"label": "Deutsche Nationalbibliothek (GND)", "ident": "http://d-nb.info/gnd/{ident}"},
-    "wkp": {"label": "Wikidata", "ident": "https://www.wikidata.org/wiki/{ident}"},
+    "viaf": {"label": "Virtual Internet Authority File (VIAF)",
+             "ident": "https://viaf.org/viaf/{ident}"},
+    "dnb": {"label": "Deutsche Nationalbibliothek (GND)",
+            "ident": "http://d-nb.info/gnd/{ident}"},
+    "wkp": {"label": "Wikidata",
+            "ident": "https://www.wikidata.org/wiki/{ident}"},
     "isil": {"label": "International Standard Identifier for Libraries and Related Organizations (ISIL)",
              "ident": "https://ld.zdb-services.de/resource/organisations/{ident}"},
-    "bne": {"label": "Biblioteca Nacional de España", "ident": "{ident}"},
-    "bnf": {"label": "Bibliothèque Nationale de France", "ident": "{ident}"},
-    "iccu": {"label": "Istituto Centrale per il Catalogo Unico", "ident": "{ident}"},
-    "isni": {"label": "International Standard Name Identifier", "ident": "https://isni.org/isni/{ident}"},
-    "lc": {"label": "Library of Congress", "ident": "{ident}"},
-    "nlp": {"label": "Biblioteka Narodowa", "ident": "{ident}"},
-    "nkc": {"label": "Národní knihovna České republiky", "ident": "{ident}"},
-    "swnl": {"label": "Schweizerische Nationalbibliothek", "ident": "{ident}"},
-    "moc": {"label": "MARC Organization Code", "ident": "{ident}"},
-    "orcid": {"label": "Open Researcher and Contributor ID (ORCiD)", "ident": "https://orcid.org/{ident}"},
+    "bne": {"label": "Biblioteca Nacional de España"},
+    "bnf": {"label": "Bibliothèque Nationale de France"},
+    "iccu": {"label": "Istituto Centrale per il Catalogo Unico"},  # No stable URI for authorities
+    "isni": {"label": "International Standard Name Identifier",
+             "ident": "https://isni.org/isni/{ident}"},
+    "lc": {"label": "Library of Congress",
+           "ident": "http://id.loc.gov/authorities/names/{ident}"},
+    "nlp": {"label": "Biblioteka Narodowa"},
+    "nkc": {"label": "Národní knihovna České republiky"},
+    "swnl": {"label": "Schweizerische Nationalbibliothek"},
+    "moc": {"label": "MARC Organization Code"},  # No URI possible.
+    "orcid": {"label": "Open Researcher and Contributor ID (ORCiD)",
+              "ident": "https://orcid.org/{ident}"},
 }
 
 

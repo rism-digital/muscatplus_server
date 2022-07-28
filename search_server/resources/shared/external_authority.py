@@ -1,3 +1,5 @@
+from typing import Optional
+
 import serpy
 
 from shared_helpers.fields import StaticField
@@ -28,12 +30,21 @@ class ExternalAuthoritiesSection(ContextDictSerializer):
                 continue
 
             label: str = base["label"]
-            uri: str = base["ident"].format(ident=ident)
+            uri_tmpl: Optional[str] = base.get("ident")
+            full_label: str = f"{label}: {ident}"
 
-            externals.append({
-                "url": uri,
-                "label": {"none": [label]},
+            record: dict = {}
+
+            # Do this first so the URL field appears first in the dictionary
+            if uri_tmpl:
+                uri: str = uri_tmpl.format(ident=ident)
+                record["url"] = uri
+
+            record.update({
+                "label": {"none": [full_label]},
                 "type": "rism:ExternalAuthority"
             })
+
+            externals.append(record)
 
         return externals
