@@ -534,7 +534,9 @@ def scoring_json_value_translator(values: list, translations: dict) -> dict:
         instrument = f"{voice} {num}"
         instruments.append(instrument)
 
-    return {"none": instruments}
+    instrument_line: str = ", ".join(instruments)
+
+    return {"none": [instrument_line]}
 
 
 def dramatic_roles_json_value_translator(values: list, translations: dict) -> dict:
