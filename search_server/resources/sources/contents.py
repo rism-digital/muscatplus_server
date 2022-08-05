@@ -51,6 +51,7 @@ class ContentsSection(JSONLDContextDictSerializer):
             "description_summary_sm": ("records.description_summary", None),
             "dramatic_roles_json": ("records.named_dramatic_roles", dramatic_roles_json_value_translator),
             "scoring_summary_sm": ("records.scoring_summary", None),
+            "scoring_json": ("records.total_scoring", scoring_json_value_translator),
             "colophon_notes_sm": ("records.colophon", None),
             "language_text_sm": ("records.language_text", languages_translator),
             "language_libretto_sm": ("records.language_libretto", languages_translator),
