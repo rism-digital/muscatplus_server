@@ -534,6 +534,8 @@ def scoring_json_value_translator(values: list, translations: dict) -> dict:
         instrument = f"{voice} {num}"
         instruments.append(instrument)
 
+    # Format the instrument entry into one string; otherwise the UI will render it
+    # as a list of entries.
     instrument_line: str = ", ".join(instruments)
 
     return {"none": [instrument_line]}
