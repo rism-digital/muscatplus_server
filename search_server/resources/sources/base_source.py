@@ -63,6 +63,9 @@ class BaseSource(JSONLDContextDictSerializer):
         return get_identifier(req, "sources.source", source_id=source_id)
 
     def get_label(self, obj: SolrResult) -> dict:
+        if "standard_titles_json" not in obj:
+            return {"none": [obj.get("main_title_s", "[No title]")]}
+
         req = self.context.get('request')
         transl = req.app.ctx.translations
         label = format_source_label(obj["standard_titles_json"], transl)

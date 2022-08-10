@@ -211,6 +211,18 @@ _PLACE_RELATIONSHIP_LABELS_MAP = {
     "wr": "records.region_active",
 }
 
+_SOURCE_RELATIONSHIP_LABELS_MAP = {
+    "rdau:P60191": "relations.P60191",
+    "rdau:P60198": "relations.P60198",
+    "rdau:P60311": "relations.P60311",
+    "rdau:P60312": "relations.P60312",
+    "rdau:P60195": "relations.P60195",
+    "rdau:P60242": "relations.P60242",
+    "rdau:P60274": "relations.P60274",
+    "rdau:P60194": "relations.P60194",
+    "rdau:P60183": "relations.P60183"
+}
+
 _PERSON_NAME_VARIANT_TYPES_MAP = {
     None: "records.unknown",
     "bn": "records.nickname",
@@ -488,6 +500,10 @@ def place_relationship_labels_translator(value: str, translations: dict) -> dict
     return __lookup_translations(value, translations, _PLACE_RELATIONSHIP_LABELS_MAP)
 
 
+def source_relationship_labels_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, _SOURCE_RELATIONSHIP_LABELS_MAP)
+
+
 def qualifier_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _QUALIFIER_LABELS_MAP)
 
@@ -534,7 +550,11 @@ def scoring_json_value_translator(values: list, translations: dict) -> dict:
         instrument = f"{voice} {num}"
         instruments.append(instrument)
 
-    return {"none": instruments}
+    # Format the instrument entry into one string; otherwise the UI will render it
+    # as a list of entries.
+    instrument_line: str = ", ".join(instruments)
+
+    return {"none": [instrument_line]}
 
 
 def dramatic_roles_json_value_translator(values: list, translations: dict) -> dict:
