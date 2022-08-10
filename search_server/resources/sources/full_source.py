@@ -77,7 +77,7 @@ class FullSource(BaseSource):
         # sets are cool; two sets are disjoint if they have no keys in common. We
         # can use this to check whether these keys are in the solr result; if not,
         # we have no relationships to render, so we can return.
-        if {'related_people_json', 'related_places_json', 'related_institutions_json', 'now_in_json'}.isdisjoint(obj.keys()):
+        if {'related_people_json', 'related_places_json', 'related_institutions_json', 'now_in_json', 'related_sources_json'}.isdisjoint(obj.keys()):
             return None
 
         req = self.context.get("request")

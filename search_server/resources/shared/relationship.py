@@ -8,7 +8,7 @@ import serpy
 from shared_helpers.display_translators import (
     person_institution_relationship_labels_translator,
     qualifier_labels_translator,
-    place_relationship_labels_translator
+    place_relationship_labels_translator, title_json_value_translator, source_relationship_labels_translator
 )
 from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
@@ -72,8 +72,9 @@ class RelationshipsSection(JSONLDContextDictSerializer):
         institutions: list = obj.get("related_institutions_json", [])
         places: list = obj.get("related_places_json", [])
         now_in: list = obj.get("now_in_json", [])
+        sources: list = obj.get("related_sources_json", [])
 
-        all_relationships = itertools.chain(people, institutions, places, now_in)
+        all_relationships = itertools.chain(people, institutions, places, now_in, sources)
 
         return Relationship(all_relationships,
                             many=True,
@@ -91,6 +92,7 @@ class Relationship(JSONLDContextDictSerializer):
         label="relatedTo"
     )
     name = serpy.MethodField()
+    note = serpy.MethodField()
 
     def get_role(self, obj: dict) -> Optional[dict]:
         if 'relationship' not in obj:
@@ -102,7 +104,13 @@ class Relationship(JSONLDContextDictSerializer):
         if not relationship_translator:
             return {"none": ["[Unknown relationship]"]}
 
-        rel: str = obj.get('relationship').replace(' ', '_')
+        relationship_value: str = obj.get("relationship")
+        # If the relator codes are already formatted as a namespace, then don't double
+        # namespace them.
+        if relationship_value.startswith("rdau"):
+            rel = relationship_value
+        else:
+            rel = obj.get('relationship').replace(' ', '_')
 
         return {
             "label": relationship_translator(obj.get("relationship"), transl),
@@ -131,6 +139,8 @@ class Relationship(JSONLDContextDictSerializer):
             return _related_to_institution(req, obj)
         elif 'place_id' in obj:
             return _related_to_place(req, obj)
+        elif 'source_id' in obj:
+            return _related_to_source(req, obj)
         else:
             # Something is wrong, but we can't find out what to display.
             return None
@@ -152,6 +162,12 @@ class Relationship(JSONLDContextDictSerializer):
             # we have neither a related object, nor a name, so how could any reasonable person expect us
             # to do anything with this? Just bail, and hope someone fixes the data.
             return None
+
+    def get_note(self, obj: dict) -> Optional[dict]:
+        if "note" not in obj:
+            return None
+
+        return {"none": [obj.get("note")]}
 
 
 def _related_to_person(req, obj: dict) -> dict:
@@ -196,6 +212,19 @@ def _related_to_place(req, obj: dict) -> dict:
     }
 
 
+def _related_to_source(req, obj: dict) -> dict:
+    transl = req.app.ctx.translations
+
+    source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+    source_title: dict = title_json_value_translator(obj.get("title"), transl)
+
+    return {
+        "id": get_identifier(req, "sources.source", source_id=source_id),
+        "label": source_title,
+        "type": "rism:Source"
+    }
+
+
 def _relationship_translator(obj: dict) -> Optional[Callable]:
     """
     We need different role translator functions for different types
@@ -211,6 +240,8 @@ def _relationship_translator(obj: dict) -> Optional[Callable]:
         return person_institution_relationship_labels_translator
     elif 'place_id' in obj:
         return place_relationship_labels_translator
+    elif 'source_id' in obj:
+        return source_relationship_labels_translator
     elif 'relationship' in obj:
         # To get around a bug where place IDs are not stored in Muscat, but the relationship
         # to them is. TODO: Fix this when the Muscat bug is fixed.
