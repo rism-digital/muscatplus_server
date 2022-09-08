@@ -14,6 +14,11 @@ sources_blueprint: Blueprint = Blueprint("sources", url_prefix="/sources")
 
 @sources_blueprint.route("/<source_id:str>/")
 async def source(req, source_id: str):
+    """
+    Retrieves a specific source, identified by the source_id.
+
+    For example, `/source/990041209`.
+    """
     return await handle_request(req,
                                 handle_source_request,
                                 source_id=source_id)
@@ -28,6 +33,10 @@ async def incipits_list(req, source_id: str):
 
 @sources_blueprint.route("/<source_id:str>/incipits/<work_num:str>/")
 async def incipit(req, source_id: str, work_num: str):
+    """
+        Retrieves an individual incipit. Requires both the source ID and a work ID.
+
+    """
     return await handle_request(req,
                                 handle_incipit_request,
                                 source_id=source_id,
@@ -36,6 +45,10 @@ async def incipit(req, source_id: str, work_num: str):
 
 @sources_blueprint.route("/<source_id:str>/contents/")
 async def contents(req, source_id: str):
+    """
+    Performs a search query for searches against the items in this source. All queries valid for
+    general source searches are valid as query arguments for this endpoint.
+    """
     return await handle_search(req,
                                handle_contents_search_request,
                                source_id=source_id)
@@ -43,11 +56,13 @@ async def contents(req, source_id: str):
 
 @sources_blueprint.route("/<source_id:str>/probe/")
 async def probe(req, source_id: str):
+    """
+    Performs a probe query for searches against the items in this source. See the documentation for the
+    `/probe` route documentation for more details.
+    """
     return await handle_search(req,
                                handle_contents_probe_request,
                                source_id=source_id)
-
-
 
 
 @sources_blueprint.route("/<source_id:str>/relationships/")

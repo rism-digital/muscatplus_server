@@ -14,6 +14,11 @@ async def get_people(req):
 
 @people_blueprint.route("/<person_id:str>/")
 async def person(req, person_id: str):
+    """
+    Retrieves a specific person record, identified by `person_id`.
+
+    For example, `/people/20000365`.
+    """
     return await handle_request(req,
                                 handle_person_request,
                                 person_id=person_id)
