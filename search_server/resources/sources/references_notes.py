@@ -44,10 +44,12 @@ class ReferencesNotesSection(JSONLDContextDictSerializer):
         field_config: LabelConfig = {
             "source_general_notes_smni": ("records.general_note", url_detecting_translator),
             "contents_notes_sm": ("records.contents_note", None),
+            "source_of_description_notes_sm": ("records.copy_examined", None),
             "performance_notes_sm": ("records.note_on_performance", None),
             "supplementary_material_sm": ("records.supplementary_material", None),
             "works_catalogue_json": ("records.catalog_works", secondary_literature_json_value_translator),
-            "bibliographic_references_json": ("records.bibliographic_reference", secondary_literature_json_value_translator),
+            "bibliographic_references_json": ("records.bibliographic_reference",
+                                              secondary_literature_json_value_translator),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
