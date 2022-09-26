@@ -20,6 +20,10 @@ class ContentsSection(JSONLDContextDictSerializer):
     csid = serpy.MethodField(
         label="id"
     )
+    cstype = StaticField(
+        label="type",
+        value="rism:ContentsSection"
+    )
     label = serpy.MethodField()
     summary = serpy.MethodField()
     subjects = serpy.MethodField()

@@ -22,6 +22,10 @@ class RelationshipsSection(JSONLDContextDictSerializer):
     rid = serpy.MethodField(
         label="id"
     )
+    rtype = StaticField(
+        label="type",
+        value="rism:RelationshipsSection"
+    )
     label = serpy.MethodField()
     items = serpy.MethodField()
 
