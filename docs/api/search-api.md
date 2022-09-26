@@ -64,21 +64,35 @@ Switzerland, or `?nc=GB` for the United Kingdom.
 
 When a National Collection is selected, the `person` mode is not available. All results in other modes are limited to
 those that are directly related to an institution in that country. For source records, this means that there must
-be at least one exemplar held in a related institution. Likewise, the National Collection filter for incipits limits
-the search to only sources that are held in a related institution.
+be at least one exemplar held in a related institution. Likewise, the National Collection filter for incipits limits the search to only sources that are held in a related institution.
 
-> People are not related to institutions, and the sources related to people may be held in different countries'
-> collections. It is for this reason that we have removed the "People" mode when limiting searches to National
-> Collections.
+## Incipit Search
 
-### The Search API for Resources
+The incipit notation search has a number of additional query parameters that control the behaviour of the notation search. These query parameters may also be combined with some of the general search query parameters; for example, it is possible to search using a `q` (keyword query) and an `n` (notation query) at the same time.
 
-Some resource records have a search endpoint where you can perform searches that are automatically limited to the
-relationship with that resource.
+### Notation
 
-For example, Institution resources have a search endpoint that let you search all the source records related to
-that institution, if there are any. Likewise, People resources have a search endpoint that let you search all the
-source records related to that person.
+The `n` query parameter uses the Plaine & Easie code to send a notation query to the server. This allows for fairly complex notation queries. The full range of Plaine & Easie code is supported; however, some components of the notation, such as note durations, are currently ignored during search. Measures are also accepted, but ignored. (This will likely change in later versions of the incipit search)
+
+In cases where chords are passed, the notation search will only consider the top-most note in the chord for the purposes of matching. 
+
+### Incipit search mode
+
+The `im` query parameter can be one of two values, `intervals` and `exact-pitches`. This selects how the notation query should be parsed. With `intervals`, the notation string is interpreted as a series of chromatic intervals, allowing the same "tune" to be matched regardless of transposition. `exact-pitches`, however, interprets the notation sequence as a set of exact note names.
+
+### Incipit clef display
+
+The `ic` query parameter sets the incipit clef, but only for the purposes of visualizing the notation. Including this parameter will not affect the results of the search. It accepts any valid Plaine & Easie clef value.
+
+### Incipit time signature display
+
+The `it` query parameter sets the rendering of the 
+
+## Searching for sources in authority records 
+
+Some resource records have a search endpoint where you can perform searches for source records that are automatically limited to the relationship with that resource.
+
+For example, Institution resources have a search endpoint that let you search all the source records related to that institution, if there are any. Likewise, People resources have a search endpoint that let you search all the source records related to that person.
 
 All the query parameters for searching in the `sources` mode apply to these search endpoints.
 
