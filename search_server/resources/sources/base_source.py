@@ -20,7 +20,7 @@ from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import Relationship
 
 SOLR_FIELDS_FOR_BASE_SOURCE: list = [
-    "id", "type", "main_title_s", "material_group_types_sm", "shelfmark_s", "siglum_s",
+    "id", "type", "main_title_s", "material_source_types_sm", "material_content_types_sm", "shelfmark_s", "siglum_s",
     "source_membership_json", "source_id", "creator_name_s", "source_type_s", "content_types_sm", "record_type_s",
     "created", "updated", "main_title_ans", "standard_titles_json"
 ]
@@ -141,7 +141,8 @@ class BaseSource(JSONLDContextDictSerializer):
             "institution_s": ("records.institution", None),
             "date_statements_sm": ("records.dates", None),
             "num_source_members_i": ("records.items_in_source", None),
-            "material_group_types_sm": ("records.material_description", None),
+            "material_source_types_sm": ("records.source_type", None),
+            "material_content_types_sm": ("records.content_type", None),
             "standard_title_s": ("records.standardized_title", None),
         }
 

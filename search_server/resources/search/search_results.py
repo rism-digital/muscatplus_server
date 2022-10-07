@@ -153,7 +153,8 @@ class SourceSearchResult(ContextDictSerializer):
             "creator_name_s": ("sourceComposer", "records.composer_author", None),
             "date_statements_sm": ("dateStatements", "records.dates", None),
             "num_source_members_i": ("numItems", "records.items_in_source", None),
-            "material_group_types_sm": ("materialGroupTypes", "records.material_description", None),
+            "material_source_types_sm": ("materialSourceTypes", "records.source_type", None),
+            "material_content_types_sm": ("materialContentTypes", "records.content_type", None),
             "num_holdings_i": ("numExemplars", "records.exemplars", None)
         }
         summary: Optional[dict] = get_search_result_summary(field_config, transl, obj)

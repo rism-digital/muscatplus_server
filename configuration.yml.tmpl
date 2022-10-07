@@ -168,11 +168,11 @@ search:
       type: "select"
       field: "format_extent_sm"
       default_sort: "count"
-    MATERIAL_GROUP_TYPES: &MATERIAL_GROUP_TYPES
-      label: "Material group types"
-      alias: "material-group-types"
+    MATERIAL_SOURCE_TYPES: &MATERIAL_SOURCE_TYPES
+      label: "Material source types"
+      alias: "material-source-types"
       type: "select"
-      field: "material_group_types_sm"
+      field: "material_source_types_sm"
       default_sort: "count"
     SOURCE_SUBJECTS: &SOURCE_SUBJECTS
       label: "Subjects"
@@ -291,7 +291,7 @@ search:
         - *NUM_HOLDINGS
         - *SOURCE_TYPE
         - *CONTENT_TYPES
-        - *MATERIAL_GROUP_TYPES
+        - *MATERIAL_SOURCE_TYPES
         - *SHOW_SOURCE_INCIPITS
         - *TEXT_LANGUAGE
         - *SHOW_SOURCE_ARRANGEMENT
