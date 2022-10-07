@@ -24,7 +24,7 @@ _CONTENT_TYPE_LABEL_MAP: dict = {
     "composite_content": ""
 }
 
-_MATERIAL_GROUP_TYPES_MAP: dict = {
+_MATERIAL_TYPES_MAP: dict = {
     "Print": "",
     "Autograph manuscript": "",
     "Libretto, handwritten": "",
@@ -604,7 +604,7 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
         catalogue_numbers: Optional[str] = ", ".join(ch) if (ch := v.get("catalogue_numbers")) else None
         holding_siglum: Optional[str] = v.get("holding_siglum")
         holding_shelfmark: Optional[str] = v.get("holding_shelfmark")
-        material_group: Optional[str] = v.get("material_group")
+        source_type: Optional[str] = v.get("source_type")
         subheading_trans = arrangement_trans = key_mode_trans = {}
 
         if subheading:
@@ -629,13 +629,13 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
 
             exarr = f" ({exarr})" if exarr else ""
 
-            matg = f"; {mg}" if (mg := material_group) else ""
+            styp = f"; {st}" if (st := source_type) else ""
             keyh = f"–{', '.join(kh)}" if (kh := key_mode_trans.get(lang, [])) else ""
             cath = f"; {catalogue_numbers}" if catalogue_numbers else ""
             hsigh = f"; {holding_siglum}" if holding_siglum else ""
             hsmh = f" {holding_shelfmark}" if holding_shelfmark else ""
 
-            full_title: str = f"{tith}{keyh}{exarr}{matg}{cath}{hsigh}{hsmh}"
+            full_title: str = f"{tith}{keyh}{exarr}{styp}{cath}{hsigh}{hsmh}"
 
             result[lang].append(full_title)
 
