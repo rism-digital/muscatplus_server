@@ -9,7 +9,7 @@
 
 """
 import logging
-from typing import NewType
+from typing import NewType, Optional
 
 import yaml
 from small_asc.client import Solr, Results
@@ -48,3 +48,8 @@ def result_count(**kwargs) -> int:
     """
     res: Results = SolrConnection.search({"query": "*:*", "limit": 0, "params": {**kwargs}})
     return res.hits
+
+
+def is_composite(source_id: str) -> bool:
+    res: Optional[dict] = SolrConnection.get(source_id, ["record_type_s"])
+    return res["record_type_s"] == "composite" if "record_type_s" in res else False

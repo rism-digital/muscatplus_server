@@ -6,24 +6,24 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
+from search_server.helpers.record_types import create_record_block
+from search_server.helpers.search_request import IncipitModeValues
+from search_server.helpers.vrv import render_pae
+from search_server.resources.search.base_search import BaseSearchResults
+from shared_helpers.display_fields import get_search_result_summary
+from shared_helpers.display_translators import gnd_country_code_labels_translator
+from shared_helpers.fields import StaticField
 from shared_helpers.formatters import (
     format_institution_label,
     format_person_label,
     format_source_label
 )
-from search_server.helpers.search_request import IncipitModeValues
-from shared_helpers.display_translators import gnd_country_code_labels_translator
-from search_server.helpers.record_types import create_record_block
-from shared_helpers.display_fields import get_search_result_summary
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import (
     get_identifier,
     ID_SUB
 )
 from shared_helpers.serializers import ContextDictSerializer
-from shared_helpers.solr_connection import SolrResult
-from search_server.helpers.vrv import render_pae
-from search_server.resources.search.base_search import BaseSearchResults
+from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 log = logging.getLogger(__name__)
 
@@ -87,6 +87,7 @@ class SearchResults(BaseSearchResults):
 
         results: list[dict] = []
         req = self.context.get('request')
+        is_composite: bool = self.context.get("is_composite", False)
 
         for d in obj.docs:
             if d['type'] == "source":
@@ -102,6 +103,19 @@ class SearchResults(BaseSearchResults):
             elif d['type'] == "incipit":
                 results.append(IncipitSearchResult(d, context={"request": req,
                                                                "query_pae_features": self.context.get("query_pae_features")}).data)
+            elif d['type'] == "holding" and is_composite is True:
+                # The SLOW path, but there shouldn't be many of these, so hopefully it won't be too bad.
+                # Look up the source based on the ID from the holding, then fetch the doc. This means this will
+                # trigger a Solr lookup for every result in the list that is a holding, but this should only ever
+                # happen when a source is marked as composite, and the relationship to an item in the source is
+                # a holding record.
+                source_id: str = d["source_id"]
+                source_doc: Optional[dict] = SolrConnection.get(source_id)
+                if not source_doc:
+                    log.error("Malformed holding %s", d["id"])
+                    continue
+
+                results.append(SourceSearchResult(source_doc, context={"request": req}).data)
             else:
                 return None
 
