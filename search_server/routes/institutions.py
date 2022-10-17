@@ -14,6 +14,11 @@ async def institution_list(req):
 
 @institutions_blueprint.route("/<institution_id:str>")
 async def institution(req, institution_id: str):
+    """
+    Retrieves a specific institution record, identified by `institution_id`.
+
+    For example, `/institutions/30000004`
+    """
     return await handle_request(req,
                                 handle_institution_request,
                                 institution_id=institution_id)

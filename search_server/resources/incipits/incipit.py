@@ -5,13 +5,14 @@ from typing import Optional
 import serpy
 from small_asc.client import JsonAPIRequest, Results
 
+from search_server.helpers.record_types import create_record_block
 from shared_helpers.display_fields import (
     get_display_fields,
     LabelConfig
 )
 from shared_helpers.display_translators import key_mode_value_translator, clef_translator
 from shared_helpers.fields import StaticField
-from shared_helpers.formatters import format_incipit_label
+from shared_helpers.formatters import format_incipit_label, format_source_label
 from shared_helpers.identifiers import (
     ID_SUB,
     get_identifier
@@ -42,7 +43,20 @@ def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
 
 
 async def handle_incipits_list_request(req, source_id: str) -> Optional[dict]:
-    return {"incipits": "not implemented"}
+    json_request: JsonAPIRequest = {
+        "query": "*:*",
+        "filter": ["type:source",
+                   f"id:source_{source_id}",
+                   "has_incipits_b:true"],
+    }
+
+    record: Results = SolrConnection.search(json_request)
+
+    if record.hits == 0:
+        return None
+
+    return IncipitsSection(record.docs[0], context={"request": req,
+                                                    "direct_request": True}).data
 
 
 async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[dict]:
@@ -53,6 +67,85 @@ async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional
 
     return Incipit(incipit_record, context={"request": req,
                                             "direct_request": True}).data
+
+
+class IncipitsSection(JSONLDContextDictSerializer):
+    isid = serpy.MethodField(
+        label="id"
+    )
+    label = serpy.MethodField()
+    stype = StaticField(
+        label="type",
+        value="rism:IncipitsSection"
+    )
+    part_of = serpy.MethodField(
+        label="partOf"
+    )
+    items = serpy.MethodField()
+
+    def get_isid(self, obj: SolrResult):
+        source_id = re.sub(ID_SUB, "", obj.get("id"))
+        req = self.context.get("request")
+
+        return get_identifier(req, "sources.incipits_list", source_id=source_id)
+
+    def get_label(self, obj: SolrResult):
+        req = self.context.get("request")
+        transl: dict = req.app.ctx.translations
+
+        return transl.get("records.incipits")
+
+    def get_part_of(self, obj: SolrResult):
+        if not self.context.get("direct_request"):
+            return None
+
+        req = self.context.get('request')
+        transl = req.app.ctx.translations
+        ident: str = get_identifier(req, "sources.source", source_id=obj.get("id"))
+
+        if "standard_titles_json" not in obj:
+            label = {"none": [obj.get("main_title_s", "[No title]")]}
+        else:
+            label = format_source_label(obj["standard_titles_json"], transl)
+
+        source_type: str = obj.get("source_type_s", "unspecified")
+        content_identifiers: list[str] = obj.get("content_types_sm", [])
+        record_type: str = obj.get("record_type_s", "item")
+
+        record_block = create_record_block(record_type, source_type, content_identifiers)
+
+        return {
+            "label": transl.get("records.item_part_of"),
+            "type": "rism:PartOfSection",
+            "source": {
+                "id": ident,
+                "type": "rism:Source",
+                "typeLabel": transl.get("records.source"),
+                "record": record_block,
+                "label": {"none": [label]}
+            }
+        }
+
+    def get_items(self, obj: SolrResult) -> Optional[list]:
+        fq: list = [f"source_id:{obj.get('id')}",
+                    "type:incipit"]
+        sort: str = "work_num_ans asc"
+
+        results: Results = SolrConnection.search({"query": "*:*",
+                                                  "filter": fq,
+                                                  "sort": sort}, cursor=True)
+
+        # It will be strange for this to happen, since we only
+        # call this code if the record has said there are incipits
+        # for this source. Nevertheless, we'll be safe and return
+        # None here.
+        if results.hits == 0:
+            return None
+
+        return Incipit(results,
+                       many=True,
+                       context={"request": self.context.get("request")}).data
+
 
 
 class Incipit(JSONLDContextDictSerializer):

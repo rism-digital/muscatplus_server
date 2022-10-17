@@ -177,7 +177,7 @@ class SearchRequest:
     """
     default_sort = "id asc"
 
-    def __init__(self, req, sort: Optional[str] = None, probe: Optional[bool] = False):
+    def __init__(self, req, probe: Optional[bool] = False, is_contents: bool = False):
         self._req = req
         self._app_config = req.app.ctx.config
 
@@ -193,6 +193,10 @@ class SearchRequest:
         # A probe request will do all the reqular things EXCEPT it will hard-code the number of responses to 0
         # so that the actual results are not returned.
         self.probe: bool = probe
+
+        # If the search request is a source contents search, then we need to adjust the
+        # sorting parameters accordingly.
+        self._is_contents: bool = is_contents
 
         # Initialize a dictionary for caching the query PAE features so that we only have to do this once
         # Is null if this request is not for incipits, or if PAE features could not be extracted from an incipit.
@@ -426,13 +430,34 @@ class SearchRequest:
         # If no sort statement can be found, we return "score desc", which is the default for relevancy search.
         configuration_sorts: list = []
 
+        # If the sort parameter has been passed, look up the actual sort fields in the config for that
+        # alias. If the sort parameter has *not* been passed, then use the sort configuration that is defined as
+        # the default.
         if self._result_sorting:
             configuration_sorts = [", ".join(s['solr_sort']) for s in self._sorts_for_mode if s['alias'] == self._result_sorting]
+        else:
+            for s in self._sorts_for_mode:
+                # Not interested in blocks that are not marked as a default search option.
+                if "default" not in s:
+                    continue
+
+                # If this is a contents search, if the config is marked for only contents, and if it's marked as
+                # default, then use this. Break afterwards, since we've found the default configuration for the
+                # sorting.
+                if self._is_contents and s.get("only_contents", False) is True and s.get("default", False) is True:
+                    configuration_sorts = [", ".join(s['solr_sort'])]
+                    break
+
+                # Else, if it isn't a contents search, and it's marked as default, use this configuration. Likewise,
+                # break afterwards.
+                elif not self._is_contents and s.get("default", False) is True:
+                    configuration_sorts = [", ".join(s["solr_sort"])]
+                    break
 
         sort_parameters: list = self.sorts + configuration_sorts
         sort_statement: str = ", ".join(sort_parameters)
 
-        return sort_statement if sort_statement else "score desc"
+        return sort_statement
 
     def _compile_fields(self) -> str:
         return ",".join(self.fields)
@@ -499,12 +524,22 @@ class SearchRequest:
             self.fields.append(f"custom_score:scale({score_stmt},0,100)")
 
         mode_filter: str = self._modes_to_filter()
-        # The tag allows us to reference this in the facets so that we can return all the types of results.
-        # See https://solr.apache.org/guide/8_8/faceting.html#tagging-and-excluding-filters
-        self.filters.append(f"{{!tag={SolrQueryTags.MODE_FILTER_TAG}}}{mode_filter}")
-
         requested_filters: list = self._compile_filters()
         self.filters += requested_filters
+
+        # Check to see if we're setting the "type:" field manually in the incoming request. If we aren't, then append
+        # the mode filter with the mode filter tag. Note that it also turns "off" the tagging of this field, so that
+        # the numbers per type feature (where we can show the number of results if a different `type` was applied)
+        # will effectively be disabled when manually setting the type.
+        # NB: Most "type" fields in Solr are given as a dynamic field, e.g., "foo_type_id", so if we have that in
+        # the query it will not falsely match since they do not end in "type:". BUT one should look here if, at
+        # some point in the future, this changes and weird stuff happens with the search result types not working
+        # correctly!
+        manual_type: bool = any(["type:" in f for f in self.filters])
+        if not manual_type:
+            # The tag allows us to reference this in the facets so that we can return all the types of results.
+            # See https://solr.apache.org/guide/8_8/faceting.html#tagging-and-excluding-filters
+            self.filters.append(f"{{!tag={SolrQueryTags.MODE_FILTER_TAG}}}{mode_filter}")
 
         if self._requested_national_collection:
             nc_value: str = self._requested_national_collection[0]

@@ -15,7 +15,7 @@ CONTENT_TYPE_MAP: dict = {
     "libretto": "rism:LibrettoContent",
     "treatise": "rism:TreatiseContent",
     "musical": "rism:MusicalContent",
-    "composite_content": "rism:CompositeContent"
+    "other": "rism:OtherContent"
 }
 
 

@@ -98,8 +98,8 @@ SOLR_FIELD_DATA_TYPES: FieldDataType = {
     "language_original_sm": ["dcterms:language"],
     "rism_id": ["dterms:identifier", "pmo:RismNumber"],
     "opus_numbers_sm": ["dcterms:identifier", "pmo:OpusNumberStatement"],
-    "material_group_types_sm": ["dcterms:type"],
-    "material_group_types": ["dcterms:type"],
+    "material_source_types_sm": ["dcterms:type"],
+    "material_source_types": ["dcterms:type"],
     "dramatic_roles_json": ["pmo:MediumOfPerformance"],
     "scoring_json": ["pmo:MediumOfPerformance"]
 }

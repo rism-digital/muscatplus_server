@@ -33,7 +33,7 @@ class OpenGraph(ContextDictSerializer):
         if obj["type"] == "source":
             title: str = obj.get("main_title_s", "[No title]")
             #  TODO: Translate source types
-            source_types: Optional[list] = obj.get("material_group_types_sm")
+            source_types: Optional[list] = obj.get("material_source_types_sm")
             shelfmark: Optional[str] = obj.get("shelfmark_s")
             siglum: Optional[str] = obj.get("siglum_s")
 
@@ -109,7 +109,7 @@ class OpenGraphSvg(ContextDictSerializer):
         if obj["type"] == "source":
             main_title: str = obj.get("main_title_s", "[No title]")
             #  TODO: Translate source types
-            source_types: Optional[list] = obj.get("material_group_types_sm")
+            source_types: Optional[list] = obj.get("material_source_types_sm")
             shelfmark: Optional[str] = obj.get("shelfmark_s")
             siglum: Optional[str] = obj.get("siglum_s")
 

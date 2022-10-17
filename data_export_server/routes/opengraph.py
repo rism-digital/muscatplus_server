@@ -19,9 +19,10 @@ class BotIdentifiers:
 SOLR_FIELDS: list = [
     "id",
     "type",
+    "source_type_s",
     "main_title_s",
     "creator_name_s",
-    "material_group_types_sm",
+    "material_source_types_sm",
     "source_member_composers_sm",
     "num_holdings_i",
     "total_sources_i",

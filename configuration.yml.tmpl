@@ -54,20 +54,15 @@ search:
     # Some examples:
     #  ?fq=source-type:foo&fq=source-type:bar  <-- default method, 'intersection'. Only sources of
     #    both type 'foo' and 'bar' are kept.
-    #  ?fq=source-type:foo&fq=source-type:bar&bh=source-type:union  <-- 'union'. Shows *all* sources who
+    #  ?fq=source-type:foo&fq=source-type:bar&fb=source-type:union  <-- 'union'. Shows *all* sources who
     #    have either type 'foo' or type 'bar'.
-    #  ?fq=source-type:foo&fq=source-type:bar&bh=source-type:intersection  <-- same as the default method,
+    #  ?fq=source-type:foo&fq=source-type:bar&fb=source-type:intersection  <-- same as the default method,
     #    but the behaviour is explicitly defined.
     #
     #  You can set the default behaviour of a facet using the 'default_behaviour' option on the config. Acceptable
     #    values are 'intersection' and 'union'.
     #
-    #  Select facets also have a facet sort ('fs') parameter that can control how the facet values are sorted. This
-    #  is either 'count' (count desc, most to least) or 'alpha' (alphabetical asc, A-Z). You can set the default using
-    #  the 'default_sort' configuration.
-    #
-    #  For example:
-    #    ?fq=source-type:foo&fs=source-type:count  <-- Will set the 'source type' to sort the facets by count
+    # You can set the default sort behaviour using the 'default_sort' configuration for select facets.
     #
     #  For facets that can have translations, you can set the `translation_prefix` configuration. This gives the
     #  section of the 'locale' file to look in and will append the Solr value on the end -- for example, if the
@@ -82,6 +77,26 @@ search:
     # Query facets also have a 'suggest_fields' parameter, which allows you to configure a solr suggestion.
     #  This is implemented using the TermsComponent, which takes terms from one or more fields.
     #
+    SOURCE_TYPE: &SOURCE_TYPE
+      label: "records.type"
+      alias: "source-type"
+      type: "select"
+      field: "source_type_s"
+      default_sort: "count"
+      default_behaviour: "union"
+      translation_prefix: "rism_online"
+    MATERIAL_SOURCE_TYPES: &MATERIAL_SOURCE_TYPES
+      label: "records.source_type"
+      alias: "material-source-types"
+      type: "select"
+      field: "material_source_types_sm"
+      default_sort: "count"
+    MATERIAL_CONTENT_TYPES: &MATERIAL_CONTENT_TYPES
+      label: "records.content_type"
+      alias: "material-content-types"
+      type: "select"
+      field: "material_content_types_sm"
+      default_sort: "count"
     DATE_RANGE: &DATE_RANGE
       label: "records.dates"
       alias: "date-range"
@@ -90,8 +105,8 @@ search:
     NUM_HOLDINGS: &NUM_HOLDINGS
       label: "Number of holdings"
       alias: "num-holdings"
-      type: "range"
-      field: "num_holdings_i"
+      type: "select"
+      field: "num_holdings_s"
     HIDE_SOURCE_CONTENTS: &HIDE_SOURCE_CONTENTS
       # Configures whether to show or hide Source Contents records.
       label: "Hide source contents"
@@ -117,6 +132,12 @@ search:
       type: "toggle"
       field: "has_digitization_b"
       active_value: true
+    HAS_IIIF_MANIFEST: &HAS_IIIF_MANIFEST
+      label: "IIIF Manifest available"
+      alias: "has-iiif"
+      type: "toggle"
+      field: "has_iiif_manifest_b"
+      active_value: true
     SHOW_SOURCE_INCIPITS: &SHOW_SOURCE_INCIPITS
       label: "Has incipits"
       alias: "has-incipits"
@@ -129,21 +150,73 @@ search:
       type: "toggle"
       field: "is_arrangement_b"
       active_value: true
-    PERSON_ROLE: &PERSON_ROLE
+    PERSON_ROLES: &PERSON_ROLES
       label: "records.role"
-      alias: "person-role"
+      alias: "roles"
       type: "select"
       field: "roles_sm"
       default_sort: "count"
       default_behaviour: "intersection"
-    SOURCE_TYPE: &SOURCE_TYPE
-      label: "records.source_type"
-      alias: "source-type"
+      translation_values:
+        "arr": "records.arranger"
+        "asg": "records.assignee"
+        "asn": "records.associated_name"
+        "aut": "records.author"
+        "bnd": "records.binder"
+        "bsl": "records.bookseller"
+        "ccp": "records.conceptor"
+        "cmp": "records.composer"
+        "cns": "records.censor"
+        "cph": "records.copyright_holder"
+        "cre": "records.composer_author"
+        # A special case, where the cre relator code is used to label the 100 main entry field.
+        "ctb": "records.contributor"
+        "dnc": "records.dancer"
+        "dnr": "records.donor"
+        "dpt": "records.depositor"
+        "dst": "records.distributor"
+        "dte": "records.dedicatee"
+        "edt": "records.editor"
+        "egr": "records.engraver"
+        "evp": "records.event_place"
+        "fmo": "records.former_owner"
+        "ill": "records.illustrator"
+        "lbt": "records.librettist"
+        "lse": "records.licensee"
+        "ltg": "records.lithographer"
+        "lyr": "records.lyricist"
+        "oth": "records.other"
+        "pbl": "records.publisher"
+        "ppm": "records.papermaker"
+        "prf": "records.performer"
+        "prt": "records.printer"
+        "scr": "records.copyist"
+        "trl": "records.translator"
+        "tyd": "records.type_designer"
+    PERSON_PROFESSION: &PERSON_PROFESSION
+      label: "records.profession_or_function"
+      alias: "profession"
       type: "select"
-      field: "source_type_s"
+      field: "profession_function_sm"
       default_sort: "count"
-      translation_prefix: "records"
-    INSTIUTION_CITY: &INSTITUTION_CITY
+      default_behaviour: "intersection"
+    PERSON_ASSOCIATED_PLACE: &PERSON_ASSOCIATED_PLACE
+      label: "records.associated_place"
+      alias: "associated-place"
+      type: "select"
+      field: "place_names_sm"
+      default_sort: "alpha"
+    PERSON_GENDER: &PERSON_GENDER
+      label: "records.gender"
+      alias: "gender"
+      type: "select"
+      field: "gender_s"
+      default_sort: "count"
+      translation_values:
+        male: "general.male"
+        female: "general.female"
+        unknown: "records.unknown"
+    INSTITUTION_CITY: &INSTITUTION_CITY
       label: "records.city"
       alias: "city"
       type: "select"
@@ -155,33 +228,20 @@ search:
       type: "select"
       field: "holding_institutions_sm"
       default_sort: "count"
-    CONTENT_TYPES: &CONTENT_TYPES
-      label: "Content types"
-      alias: "content-types"
-      type: "select"
-      field: "content_types_sm"
-      default_sort: "count"
-      translation_prefix: "records"
     FORMAT_EXTENT: &FORMAT_EXTENT
-      label: "Format and extent"
+      label: "records.format_extent"
       alias: "format-extent"
       type: "select"
       field: "format_extent_sm"
       default_sort: "count"
-    MATERIAL_GROUP_TYPES: &MATERIAL_GROUP_TYPES
-      label: "Material group types"
-      alias: "material-group-types"
-      type: "select"
-      field: "material_group_types_sm"
-      default_sort: "count"
     SOURCE_SUBJECTS: &SOURCE_SUBJECTS
-      label: "Subjects"
+      label: "records.subject_headings"
       alias: "subjects"
       type: "select"
       field: "subjects_sm"
       default_sort: "count"
     TEXT_LANGUAGE: &TEXT_LANGUAGE
-      label: "Language of text"
+      label: "records.language_text"
       alias: "text-language"
       type: "select"
       field: "language_text_sm"
@@ -192,11 +252,26 @@ search:
       alias: "notation"
       type: "notation"
     CLEF: &CLEF
-      label: "Clef"
+      label: "records.clef"
       alias: "clef"
       type: "select"
       field: "clef_s"
       default_sort: "count"
+      default_behaviour: "union"
+    KEY_SIGNATURE: &KEY_SIGNATURE
+      label: "records.key_signature"
+      alias: "key-signature"
+      type: "select"
+      field: "key_s"
+      default_sort: "count"
+      default_behaviour: "union"
+    TIME_SIGNATURE: &TIME_SIGNATURE
+      label: "records.time_signature"
+      alias: "time-signature"
+      type: "select"
+      field: "timesig_s"
+      default_sort: "count"
+      default_behaviour: "union"
     IS_MENSURAL: &IS_MENSURAL
       label: "Mensural encoding"
       alias: "is-mensural"
@@ -218,51 +293,73 @@ search:
     CREATOR_NAME: &CREATOR_NAME
       label: "records.composer_author"
       alias: "composer"
-      type: "query"
-      field: "creator_name_ft"
+      type: "select"
+      field: "creator_name_s"
+      default_sort: "count"
       default_behaviour: "union"
+    SCORING: &SCORING
+      label: "records.scoring_summary"
+      alias: "scoring"
+      type: "query"
+      field: "scoring_ti"
       suggest_fields:
-        - "creator_name_s"
-
+        - "scoring_sm"
     ALL_PEOPLE: &ALL_PEOPLE
       label: "records.related_personal_name"
       alias: "people"
+      type: "select"
+      field: "people_names_sm"
+      default_sort: "count"
+    RELATED_INSTITUTIONS: &RELATED_INSTITUTIONS
+      label: "records.related_institution"
+      alias: "related-institutions"
       type: "query"
-      field: "people_names_ft"
+      field: "related_institutions_sm"
       suggest_fields:
-        - "people_names_sm"
+        - "related_institutions_sm"
+    SIGLA: &SIGLA
+      label: "records.sigla"
+      alias: "sigla"
+      type: "query"
+      field: "siglum_kw"
+      suggest_fields:
+        - "holding_institutions_sm"
+    HAS_SIGLUM: &HAS_SIGLUM
+      label: "Has siglum"
+      alias: "has-siglum"
+      type: "toggle"
+      field: "has_siglum_b"
+      active_value: true
+
 
   sorting_definitions:
     # label: The human-readable label for the sorting. This can either be a complete string, or it can be a key
     #        into a translation in the locales files. If the key is found in the translation, that will be used;
     #        otherwise the literal value given here will be used.
-    # alias: The value of the 'sort' field, e.g., sort=relevance. This ties the incoming sort request to the actual
+    # alias: The value of the 'sort' field, e.g., ?sort=relevance. This ties the incoming sort request to the actual
     #        sort statements given in the solr_sort field
     # solr_sort: Provides a list of sort statements that will be passed to Solr. This can be multivalued to allow
     #        for complex sorts to be aliased to a single `sort` parameter.
+    # only_contents: True | False (Default). Only display this sort order when looking at the source item contents.
+    # TODO: Translate
     RELEVANCE: &RELEVANCE
-      label: "Relevance"
+      label: "Most relevant"
       alias: "relevance"
       solr_sort:
         - "score desc"
-    ALPHABETICAL_SOURCE: &ALPHABETICAL_SOURCE
+    ALPHABETICAL_TITLE: &ALPHABETICAL_TITLE
       label: "Alphabetical (Title, A-Z)"
-      alias: "alphabetical"
+      alias: "alphabetical-title"
       solr_sort:
         - "main_title_ans asc"
-    ALPHABETICAL_PERSON: &ALPHABETICAL_PERSON
+    ALPHABETICAL_NAME: &ALPHABETICAL_NAME
       label: "Alphabetical (Name, A-Z)"
-      alias: "alphabetical"
-      solr_sort:
-        - "name_ans asc"
-    ALPHABETICAL_INSTITUTION: &ALPHABETICAL_INSTITUTION
-      label: "Alphabetical (Name, A-Z)"
-      alias: "alphabetical"
+      alias: "alphabetical-name"
       solr_sort:
         - "name_ans asc"
     ALPHABETICAL_CREATOR: &ALPHABETICAL_CREATOR
       label: "Alphabetical (Creator, A-Z)"
-      alias: "alphabetical"
+      alias: "alphabetical-creator"
       solr_sort:
         - "creator_name_s asc"
     DATE_ADDED: &DATE_ADDED
@@ -270,11 +367,26 @@ search:
       alias: "date-added"
       solr_sort:
         - "created desc"
+    NUM_HOLDINGS_SORT: &NUM_HOLDINGS_SORT
+      label: "Number of sources"
+      alias: "num-holdings"
+      solr_sort:
+        - "total_holdings_i desc"
     NUM_SOURCES: &NUM_SOURCES
       label: "Number of sources"
       alias: "num-sources"
       solr_sort:
-        - "source_count_i desc"
+        - "total_sources_i desc"
+    EARLIEST_DATE: &EARLIEST_DATE
+      label: "Earliest known date (Oldest first)"
+      alias: "earliest-date"
+      solr_sort:
+        - "earliest_date_i asc"
+    SOURCE_ORDER: &SOURCE_ORDER
+      label: "Source order"
+      alias: "source-order"
+      solr_sort:
+        - "source_membership_order_i asc"
 
   modes:
     # Defines the specific configuration for each mode. Search modes can have specific filters and sorts
@@ -287,11 +399,12 @@ search:
         - *HIDE_SOURCE_COLLECTION_RECORDS
         - *HIDE_SOURCE_COMPOSITE_VOLUMES
         - *HAS_DIGITIZATION
+        - *HAS_IIIF_MANIFEST
         - *DATE_RANGE
         - *NUM_HOLDINGS
         - *SOURCE_TYPE
-        - *CONTENT_TYPES
-        - *MATERIAL_GROUP_TYPES
+        - *MATERIAL_SOURCE_TYPES
+        - *MATERIAL_CONTENT_TYPES
         - *SHOW_SOURCE_INCIPITS
         - *TEXT_LANGUAGE
         - *SHOW_SOURCE_ARRANGEMENT
@@ -301,19 +414,38 @@ search:
         - *CREATOR_NAME
         - *ALL_PEOPLE
         - *IS_ARRANGEMENT
+        - *SCORING
+        - *SIGLA
+        - *RELATED_INSTITUTIONS
+      # Expands the sort block by marking a given block as default. This lets
+      # us use the same sort definition as default in one configuration, but
+      # not in another. If two blocks are marked as default, the first one that
+      # applies will be chosen. This means that if a block is marked as default
+      # and also as "only_contents", it will be chosen when applied to a contents
+      # block, but will be skipped when applied to the full search, and the second
+      # block marked as default will be chosen.
       sorting:
-        - *RELEVANCE
-        - *ALPHABETICAL_SOURCE
+        - <<: *SOURCE_ORDER
+          default: true
+          only_contents: true
+        - <<: *RELEVANCE
+          default: true
+        - *ALPHABETICAL_TITLE
         - *DATE_ADDED
     people:
       label: "records.people"
       record_type: "person"
       filters:
         - *DATE_RANGE
-        - *PERSON_ROLE
+        - *PERSON_ROLES
+        - *PERSON_ASSOCIATED_PLACE
+        - *PERSON_GENDER
+        - *PERSON_PROFESSION
       sorting:
-        - *RELEVANCE
-        - *ALPHABETICAL_PERSON
+        - <<: *RELEVANCE
+          default: true
+        - *ALPHABETICAL_NAME
+        - *EARLIEST_DATE
         - *DATE_ADDED
         - *NUM_SOURCES
     institutions:
@@ -321,11 +453,13 @@ search:
       record_type: "institution"
       filters:
         - *INSTITUTION_CITY
+        - *HAS_SIGLUM
       sorting:
-        - *RELEVANCE
-        - *ALPHABETICAL_INSTITUTION
+        - <<: *RELEVANCE
+          default: true
+        - *ALPHABETICAL_NAME
         - *DATE_ADDED
-        - *NUM_SOURCES
+        - *NUM_HOLDINGS_SORT
     incipits:
       label: "records.incipits"
       record_type: "incipit"
@@ -336,9 +470,13 @@ search:
         - *CLEF
         - *IS_MENSURAL
         - *HAS_NOTATION
+        - *KEY_SIGNATURE
+        - *TIME_SIGNATURE
       sorting:
-        - *RELEVANCE
+        - <<: *RELEVANCE
+          default: true
         - *ALPHABETICAL_CREATOR
+        - *ALPHABETICAL_TITLE
     #    festivals:
     #      label: "records.liturgical_festivals"
     #      record_type: "liturgical_festival"

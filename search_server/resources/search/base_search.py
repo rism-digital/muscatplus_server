@@ -57,7 +57,8 @@ class BaseSearchResults(JSONLDContextSerializer):
         return get_facets(self.context.get('request'), obj)
 
     def get_sorts(self, obj: Results) -> Optional[list]:
-        return get_sorting(self.context.get("request"), obj)
+        is_contents: bool = self.context.get("is_contents", False)
+        return get_sorting(self.context.get("request"), obj, is_contents)
 
     def get_page_sizes(self, obj: Results) -> list[str]:
         req = self.context.get("request")

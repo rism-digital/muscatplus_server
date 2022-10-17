@@ -20,6 +20,10 @@ class ContentsSection(JSONLDContextDictSerializer):
     csid = serpy.MethodField(
         label="id"
     )
+    cstype = StaticField(
+        label="type",
+        value="rism:ContentsSection"
+    )
     label = serpy.MethodField()
     summary = serpy.MethodField()
     subjects = serpy.MethodField()
@@ -42,7 +46,8 @@ class ContentsSection(JSONLDContextDictSerializer):
         transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "material_group_types_sm": ("records.type", None),
+            "material_source_types_sm": ("records.source_type", None),
+            "material_content_types_sm": ("records.content_type", None),
             "standard_title_s": ("records.standardized_title", None),
             "source_title_s": ("records.title_on_source", None),
             "variant_title_s": ("records.variant_source_title", None),
