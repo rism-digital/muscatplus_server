@@ -68,7 +68,7 @@ be at least one exemplar held in a related institution. Likewise, the National C
 
 ## Incipit Search
 
-The incipit notation search has a number of additional query parameters that control the behaviour of the notation search. These query parameters may also be combined with some of the general search query parameters; for example, it is possible to search using a `q` (keyword query) and an `n` (notation query) at the same time.
+The incipit notation search has a number of additional query parameters that control the behaviour of the notation search. These query parameters may also be combined with some general search query parameters; for example, it is possible to search using a `q` (keyword query) and an `n` (notation query) at the same time.
 
 ### Notation
 
