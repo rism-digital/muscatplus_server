@@ -52,4 +52,4 @@ def result_count(**kwargs) -> int:
 
 def is_composite(source_id: str) -> bool:
     res: Optional[dict] = SolrConnection.get(source_id, ["record_type_s"])
-    return res["record_type_s"] == "composite" if "record_type_s" in res else False
+    return res["record_type_s"] == "composite" if res and "record_type_s" in res else False
