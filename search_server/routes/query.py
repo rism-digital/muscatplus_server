@@ -48,7 +48,8 @@ async def search(req):
 @query_blueprint.route("/suggest/")
 async def suggest(req):
     """
-    Handles suggest requests for specifically-configured fields. The supported query parameters are:
+    A suggest request will return a list of suggested terms based on a partial query
+    for configured fields. The supported query parameters are:
 
     - `alias`: The field name to search for term suggestions
     - `q`: The query term for which a suggestion is to be made
@@ -59,8 +60,8 @@ async def suggest(req):
 @query_blueprint.route("/probe/")
 async def probe(req):
     """
-    A probe request will perform a search, so it has all the functionality
-    of the [/search](#search) handler. The difference is that it will not return any
+    A probe request will return the number of results should a search be performed, so it has
+    all the functionality of the [/search](#search) handler. The difference is that it will not return any
     actual results. Instead, it will return the total number of results, and any facets or
     modes that would be active for a given search query.
     """
