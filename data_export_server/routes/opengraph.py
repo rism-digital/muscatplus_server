@@ -26,7 +26,7 @@ SOLR_FIELDS: list = [
     "source_member_composers_sm",
     "num_holdings_i",
     "total_sources_i",
-    "total_holdings_i",
+    # "total_holdings_i",
     "shelfmark_s",
     "siglum_s",
     "institution_name_s",

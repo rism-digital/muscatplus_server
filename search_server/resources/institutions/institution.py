@@ -39,12 +39,7 @@ class Institution(BaseInstitution):
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
         institution_id: str = obj.get("institution_id")
-
-        # To get the correct number of sources for searching, we look up the full result
-        # from Solr
-        fq: list = ["type:source",
-                    f"holding_institutions_ids:{institution_id} OR related_institutions_ids:{institution_id}"]
-        source_count: int = result_count(fq=fq)
+        source_count: int = obj.get("total_sources_i", 0)
 
         # if no sources are attached OR this is the 's.n.' record, return 0 sources attached.
         if source_count == 0 or institution_id == "40009305":
