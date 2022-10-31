@@ -1,4 +1,4 @@
-from sanic import Blueprint
+from sanic import Blueprint, response
 
 from search_server.request_handlers import handle_request, handle_search
 from search_server.resources.people.person import handle_person_request
@@ -9,7 +9,7 @@ people_blueprint: Blueprint = Blueprint("people", url_prefix="/people")
 
 @people_blueprint.route("/")
 async def get_people(req):
-    pass
+    return response.text("Not implemented", status=501)
 
 
 @people_blueprint.route("/<person_id:str>/")
@@ -26,6 +26,9 @@ async def person(req, person_id: str):
 
 @people_blueprint.route("/<person_id:str>/sources/")
 async def person_sources(req, person_id: str):
+    """
+        Query the sources attached to this person. Supports all search options for sources.
+    """
     return await handle_search(req,
                                handle_person_search_request,
                                person_id=person_id)
@@ -40,4 +43,4 @@ async def person_probe(req, person_id: str):
 
 @people_blueprint.route("/<person_id:str>/relationships/")
 async def relationships(req, person_id: str):
-    pass
+    return response.text("Not implemented", status=501)
