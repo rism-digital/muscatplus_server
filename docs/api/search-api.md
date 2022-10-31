@@ -51,6 +51,9 @@ The `sort` query parameter controls how the search results are sorted. Depending
 options are available. See the [modes](modes.md) documentation to see what options are available per node. To choose
 a sort option use the `alias` value, e.g., `?sort=alphabetical-name`.
 
+The default sort field is also given in the block. This is the sorting parameter that is used if no sort query
+parameter is provided.
+
 ### Number of Results
 
 The `rows` query parameter controls how many results are returned per page in the response. There are only three
@@ -64,39 +67,64 @@ Switzerland, or `?nc=GB` for the United Kingdom.
 
 When a National Collection is selected, the `person` mode is not available. All results in other modes are limited to
 those that are directly related to an institution in that country. For source records, this means that there must
-be at least one exemplar held in a related institution. Likewise, the National Collection filter for incipits limits the search to only sources that are held in a related institution.
+be at least one exemplar held in a related institution. Likewise, the National Collection filter for incipits limits the 
+search to only sources that are held in a related institution.
 
 ## Incipit Search
 
-The incipit notation search has a number of additional query parameters that control the behaviour of the notation search. These query parameters may also be combined with some general search query parameters; for example, it is possible to search using a `q` (keyword query) and an `n` (notation query) at the same time.
+The incipit notation search has a number of additional query parameters that control the behaviour of the notation 
+search. These query parameters may also be combined with some general search query parameters; for example, it is 
+possible to search using a `q` (keyword query) and an `n` (notation query) at the same time.
 
 ### Notation
 
-The `n` query parameter uses the Plaine & Easie code to send a notation query to the server. This allows for fairly complex notation queries. The full range of Plaine & Easie code is supported; however, some components of the notation, such as note durations, are currently ignored during search. Measures are also accepted, but ignored. (This will likely change in later versions of the incipit search)
+The `n` query parameter uses the Plaine & Easie code to send a notation query to the server. This allows for fairly 
+complex notation queries. The full range of Plaine & Easie code is supported; however, some components of the notation, 
+such as note durations, are currently ignored during search. Measures are also accepted, but ignored. 
+(This will likely change in later versions of the incipit search)
 
-In cases where chords are passed, the notation search will only consider the top-most note in the chord for the purposes of matching. 
+In cases where chords are passed, the notation search will only consider the top-most note in the chord for the 
+purposes of matching. 
 
 ### Incipit search mode
 
-The `im` query parameter can be one of two values, `intervals` and `exact-pitches`. This selects how the notation query should be parsed. With `intervals`, the notation string is interpreted as a series of chromatic intervals, allowing the same "tune" to be matched regardless of transposition. `exact-pitches`, however, interprets the notation sequence as a set of exact note names.
+The `im` query parameter can be one of two values, `intervals` and `exact-pitches`. This selects how the notation query 
+should be parsed. With `intervals`, the notation string is interpreted as a series of chromatic intervals, allowing the 
+same "tune" to be matched regardless of transposition. `exact-pitches`, however, interprets the notation sequence as a 
+set of exact note names.
 
 ### Incipit clef display
 
-The `ic` query parameter sets the incipit clef, but only for the purposes of visualizing the notation. Including this parameter will not affect the results of the search. It accepts any valid Plaine & Easie clef value.
+The `ic` query parameter sets the incipit clef, but only for the purposes of visualizing the notation. Including this 
+parameter will not affect the results of the search. If you wish to restrict your results to only those with a specific
+clef or clefs, it is better to use the clef filter field. It accepts any valid Plaine & Easie clef value. 
 
 ### Incipit time signature display
 
-The `it` query parameter sets the rendering of the 
+The `it` query parameter sets the rendering of the time signature display. Including this parameter will not affect
+the results of the search. If you wish to restrict your results to only those with a specific time signature, it is
+better to use the time signature filter field. It accepts any valid Plaine & Easie time signature value.
+
+### Incipit key signature
+
+The `ik` query parameter sets the rendering of the key signature display. This one requires special attention. Setting
+a key signature for a query will adjust the intervals of the resulting pitch string. If a key signature of one sharp is
+set, then any "F" notes in the query are no longer F naturals, but F sharps. Setting a key signature with `ik` will not
+restrict results to only those in that key signature. If you wish to do this, you should use the key signature filter.
+The `ik` query parameter accepts any valid Plaine & Easie key signature value.
 
 ## Searching for sources in authority records 
 
-Some resource records have a search endpoint where you can perform searches for source records that are automatically limited to the relationship with that resource.
+Some resource records have a search endpoint where you can perform searches for source records that are automatically 
+limited to the relationship with that resource.
 
-For example, Institution resources have a search endpoint that let you search all the source records related to that institution, if there are any. Likewise, People resources have a search endpoint that let you search all the source records related to that person.
+For example, Institution resources have a search endpoint that let you search all the source records related to that 
+institution, if there are any. Likewise, People resources have a search endpoint that let you search all the source 
+records related to that person.
 
 All the query parameters for searching in the `sources` mode apply to these search endpoints.
 
-### Parsing Search API Responses
+## Parsing Search API Responses
 
 The Search API will respond with JSON-LD containing all the information you might need to construct another request
 to the API. To understand this better we can look at the most important sections of the response.
@@ -119,7 +147,7 @@ It will also provide the total number of pages, and the number of the current pa
 
 #### `items`
 
-The list of results. Depending on the search mode, the type and contents of each result may change.
+The list of results. Depending on the search mode, the contents and structure of each result will change.
 
 #### `facets`
 
@@ -137,7 +165,8 @@ of results that you would retrieve for all other modes.
 
 #### `sorts`
 
-The available options, both labels and values, for the sorting parameters for the selected search mode.
+The available options, both labels and values, for the sorting parameters for the selected search mode. The default
+sort field is also provided.
 
 #### `pageSizes`
 

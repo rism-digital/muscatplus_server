@@ -1,4 +1,4 @@
-from sanic import Blueprint
+from sanic import Blueprint, response
 
 from search_server.request_handlers import handle_request
 from search_server.resources.places.place import handle_place_request
@@ -8,7 +8,7 @@ places_blueprint: Blueprint = Blueprint("places", url_prefix="/places")
 
 @places_blueprint.route("/")
 async def place_list(req):
-    pass
+    return response.text("Not implemented", status=501)
 
 
 @places_blueprint.route("/<place_id:str>/")

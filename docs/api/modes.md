@@ -163,13 +163,39 @@ Default sort
 For select facets, you can change the behaviour of the facet with the `fb` parameter, which takes the
 alias and a value of either `intersection` or `union`. For example:
  
-    ?fq=record-type:"Some value"&fq=record-type:"Some other value"&fb=record-type:union
+    ?fq=source-type:"Some value"&fq=source-type:"Some other value"&fb=source-type:union
 
 This would change the behaviour of the select facet to choose records with either the first or the second (a.k.a "OR")
 rather than records with both values (a.k.a. "AND"). 
 
 Alias
-: `record-type`
+: `source-type`
+
+Type
+: `select`
+
+Values
+: Any string value 
+
+Default behaviour
+: `union`
+
+Default sort
+: `count`
+
+
+#### Source type
+
+For select facets, you can change the behaviour of the facet with the `fb` parameter, which takes the
+alias and a value of either `intersection` or `union`. For example:
+ 
+    ?fq=material-source-types:"Some value"&fq=material-source-types:"Some other value"&fb=material-source-types:union
+
+This would change the behaviour of the select facet to choose records with either the first or the second (a.k.a "OR")
+rather than records with both values (a.k.a. "AND"). 
+
+Alias
+: `material-source-types`
 
 Type
 : `select`
@@ -184,44 +210,18 @@ Default sort
 : `count`
 
 
-#### Content types
+#### Content type
 
 For select facets, you can change the behaviour of the facet with the `fb` parameter, which takes the
 alias and a value of either `intersection` or `union`. For example:
  
-    ?fq=content-types:"Some value"&fq=content-types:"Some other value"&fb=content-types:union
+    ?fq=material-content-types:"Some value"&fq=material-content-types:"Some other value"&fb=material-content-types:union
 
 This would change the behaviour of the select facet to choose records with either the first or the second (a.k.a "OR")
 rather than records with both values (a.k.a. "AND"). 
 
 Alias
-: `content-types`
-
-Type
-: `select`
-
-Values
-: Any string value 
-
-Default behaviour
-: `intersection`
-
-Default sort
-: `count`
-
-
-#### Material group
-
-For select facets, you can change the behaviour of the facet with the `fb` parameter, which takes the
-alias and a value of either `intersection` or `union`. For example:
- 
-    ?fq=material-types:"Some value"&fq=material-types:"Some other value"&fb=material-types:union
-
-This would change the behaviour of the select facet to choose records with either the first or the second (a.k.a "OR")
-rather than records with both values (a.k.a. "AND"). 
-
-Alias
-: `material-types`
+: `material-content-types`
 
 Type
 : `select`
@@ -512,6 +512,13 @@ Example
 The available options for sorting results for the Sources mode are:
 
 
+#### Source order
+
+Alias
+: `source-order`
+
+
+
 #### Most relevant
 
 Alias
@@ -788,7 +795,7 @@ Alias
 #### Number of sources
 
 Alias
-: `num-holdings`
+: `num-sources`
 
 
 

@@ -5,8 +5,11 @@ from search_server.server import app
 
 INCLUDE_ROUTES: list = [
     "people/<person_id:str>",
+    "people/<person_id:str>/sources",
     "institutions/<institution_id:str>",
+    "institutions/<institution_id:str>/sources",
     "sources/<source_id:str>",
+    "sources/<source_id:str>/contents",
     "/<source_id:str>/incipits/<work_num:str>/",
     "search",
     "probe",

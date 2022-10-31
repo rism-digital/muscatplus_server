@@ -1,4 +1,4 @@
-from sanic import Blueprint
+from sanic import Blueprint, response
 
 from search_server.resources.incipits.render import handle_incipit_render, handle_incipit_validate
 
@@ -7,7 +7,7 @@ incipits_blueprint: Blueprint = Blueprint("incipits", url_prefix="/incipits")
 
 @incipits_blueprint.route("/<incipit_id:str>")
 async def incipit(req, incipit_id: str):
-    pass
+    return response.text("Not implemented", status=501)
 
 
 @incipits_blueprint.route("/render")

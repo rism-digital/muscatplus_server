@@ -6,6 +6,11 @@ Retrieves a specific institution record, identified by `institution_id`.
 For example, `/institutions/30000004`
 
 
+### `/institutions/<institution_id:str>/sources`
+
+Query the sources attached to this institution. Supports all search options for sources.
+
+
 ### `/people/<person_id:str>`
 
 Retrieves a specific person record, identified by `person_id`.
@@ -13,10 +18,15 @@ Retrieves a specific person record, identified by `person_id`.
 For example, `/people/20000365`.
 
 
+### `/people/<person_id:str>/sources`
+
+Query the sources attached to this person. Supports all search options for sources.
+
+
 ### `/probe`
 
-A probe request will perform a search, so it has all the functionality
-of the [/search](#search) handler. The difference is that it will not return any
+A probe request will return the number of results should a search be performed, so it has
+all the functionality of the [/search](#search) handler. The difference is that it will not return any
 actual results. Instead, it will return the total number of results, and any facets or
 modes that would be active for a given search query.
 
@@ -58,9 +68,17 @@ Retrieves a specific source, identified by the source_id.
 For example, `/source/990041209`.
 
 
+### `/sources/<source_id:str>/contents`
+
+Performs a search query for searches against the items in this source. All queries valid for
+general source searches are valid as query arguments for this endpoint, except that the mode
+cannot be changed from `sources`.
+
+
 ### `/suggest`
 
-Handles suggest requests for specifically-configured fields. The supported query parameters are:
+A suggest request will return a list of suggested terms based on a partial query
+for configured fields. The supported query parameters are:
 
 - `alias`: The field name to search for term suggestions
 - `q`: The query term for which a suggestion is to be made

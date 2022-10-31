@@ -333,7 +333,7 @@ class InstitutionSearchResult(ContextDictSerializer):
     def get_summary(self, obj: dict) -> dict:
         field_config: dict = {
             "gnd_country_codes_sm": ("countryName", "records.country", gnd_country_code_labels_translator),
-            "total_holdings_i": ("totalHoldings", "records.sources", None)  # TODO: Find a better label
+            "total_sources_i": ("totalSources", "records.sources", None)  # TODO: Find a better label
         }
 
         req = self.context.get("request")
@@ -343,7 +343,7 @@ class InstitutionSearchResult(ContextDictSerializer):
 
     def get_flags(self, obj: dict) -> Optional[dict]:
         flags: dict = {}
-        number_of_sources: int = obj.get("source_count_i", 0)
+        number_of_sources: int = obj.get("total_sources_i", 0)
 
         if number_of_sources > 0:
             flags.update({"numberOfSources": number_of_sources})

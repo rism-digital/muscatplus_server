@@ -7,16 +7,15 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-uvicorn = "^0.18.0"
+uvicorn = "^0.19.0"
 ujson = "^5.0.0"
 serpy = "^0.3.1"
 pyyaml = "^6.0.0"
 sanic = "^22.0.0"
 rdflib = "^6.0.0"
 small-asc = {git = "https://github.com/rism-digital/small-asc.git", rev = "main"}
-cchardet = "2.1.7"
-verovio = { version = "^3.11.0", allow-prereleases = true }
-sentry-sdk = "^1.5.2"
+verovio = { version = "^3.12.1", allow-prereleases = true }
+sentry-sdk = "^1.10.1"
 Jinja2 = "^3.1.2"
 
 [tool.poetry.dev-dependencies]

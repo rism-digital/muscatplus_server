@@ -1,4 +1,4 @@
-from sanic import Blueprint
+from sanic import Blueprint, response
 
 from search_server.request_handlers import handle_request, handle_search
 from search_server.resources.subjects.subject import handle_subject_request
@@ -9,7 +9,7 @@ subjects_blueprint: Blueprint = Blueprint("subjects", url_prefix="/subjects")
 
 @subjects_blueprint.route("/")
 async def subject_list(req):
-    pass
+    return response.text("Not implemented", status=501)
 
 
 @subjects_blueprint.route("/<subject_id:str>/")

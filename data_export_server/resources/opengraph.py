@@ -146,7 +146,7 @@ class OpenGraphSvg(ContextDictSerializer):
             src: str = "sources" if t > 1 else "source"
             label: str = f"Related to {t:,} {src}"
             return CardIcons.SOURCE, label
-        elif (t := obj.get("total_holdings_i")) and objtype == "institution":
+        elif (t := obj.get("total_sources_i")) and objtype == "institution":
             src: str = "sources" if t > 1 else "source"
             label: str = f"Related to {t:,} {src}"
             return CardIcons.SOURCE, label
