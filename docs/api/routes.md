@@ -6,11 +6,21 @@ Retrieves a specific institution record, identified by `institution_id`.
 For example, `/institutions/30000004`
 
 
+### `/institutions/<institution_id:str>/sources`
+
+Query the sources attached to this institution. Supports all search options for sources.
+
+
 ### `/people/<person_id:str>`
 
 Retrieves a specific person record, identified by `person_id`.
 
 For example, `/people/20000365`.
+
+
+### `/people/<person_id:str>/sources`
+
+Query the sources attached to this person. Supports all search options for sources.
 
 
 ### `/probe`
@@ -56,6 +66,13 @@ Some parameters are specific to only incipit searches:
 Retrieves a specific source, identified by the source_id.
 
 For example, `/source/990041209`.
+
+
+### `/sources/<source_id:str>/contents`
+
+Performs a search query for searches against the items in this source. All queries valid for
+general source searches are valid as query arguments for this endpoint, except that the mode
+cannot be changed from `sources`.
 
 
 ### `/suggest`
