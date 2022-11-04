@@ -87,3 +87,13 @@ async def material_group(req, source_id: str, mg_id: str):
 async def material_group_relationships(req, source_id: str, mg_id: str):
     return response.text("Not implemented", status=501)
 
+
+@sources_blueprint.route("/<source_id:str>/digital-objects/")
+async def digital_object_list(req, source_id: str):
+    return response.text("Not implemented", status=501)
+
+
+@sources_blueprint.route("/<source_id:str>/digital-objects/<dobject_id:str>")
+async def digital_object(req, source_id: str, digital_object_id: str):
+    return response.text("Not implemented", status=501)
+

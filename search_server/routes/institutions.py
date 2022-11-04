@@ -47,3 +47,13 @@ async def institution_probe(req, institution_id: str):
 @institutions_blueprint.route("/<institution_id:str>/relationships/")
 async def relationships(req, institution_id: str):
     return response.text("Not implemented", status=501)
+
+
+@institutions_blueprint.route("/<institution_id:str>/digital-objects/")
+async def digital_object_list(req, institution_id: str):
+    return response.text("Not implemented", status=501)
+
+
+@institutions_blueprint.route("/<institution_id:str>/digital-objects/<dobject_id:str>")
+async def digital_object(req, institution_id: str, dobject_id: str):
+    return response.text("Not implemented", status=501)

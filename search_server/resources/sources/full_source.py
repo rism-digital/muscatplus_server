@@ -4,18 +4,19 @@ from typing import Optional
 
 import serpy
 
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDContextDictSerializer
-from shared_helpers.solr_connection import SolrResult
+from search_server.resources.incipits.incipit import IncipitsSection
+from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_link import ExternalResourcesSection
+from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.contents import ContentsSection
 from search_server.resources.sources.exemplars import ExemplarsSection
-from search_server.resources.incipits.incipit import IncipitsSection
 from search_server.resources.sources.material_groups import MaterialGroupsSection
 from search_server.resources.sources.references_notes import ReferencesNotesSection
-from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.source_items import SourceItemsSection
+from shared_helpers.identifiers import ID_SUB, get_identifier
+from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger(__name__)
 
@@ -55,6 +56,9 @@ class FullSource(BaseSource):
     )
     external_resources = serpy.MethodField(
         label="externalResources"
+    )
+    digital_objects = serpy.MethodField(
+        label="digitalObjects"
     )
 
     # In the full class view we don't want to display the summary as a top-level field
@@ -121,3 +125,9 @@ class FullSource(BaseSource):
             return None
 
         return SourceItemsSection(obj, context={"request": self.context.get("request")}).data
+
+    def get_digital_objects(self, obj: SolrResult) -> Optional[dict]:
+        if not obj.get("has_digital_objects_b", False):
+            return None
+
+        return DigitalObjectsSection(obj, context={"request": self.context.get("request")}).data
