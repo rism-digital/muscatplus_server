@@ -5,6 +5,7 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
+from search_server.helpers.vrv import render_url
 from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.serializers import ContextDictSerializer, JSONLDContextDictSerializer
@@ -75,9 +76,8 @@ class DigitalObject(JSONLDContextDictSerializer):
     #     label="partOf"
     # )
     label = serpy.MethodField()
-    object_urls = serpy.MethodField(
-        label="objectUrls"
-    )
+    format = serpy.MethodField()
+    body = serpy.MethodField()
 
     def get_doid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
@@ -104,7 +104,10 @@ class DigitalObject(JSONLDContextDictSerializer):
         # TODO!
         pass
 
-    def get_object_urls(self, obj: SolrResult):
+    def get_format(self, obj: SolrResult) -> Optional[str]:
+        return obj.get("media_type_s")
+
+    def get_body(self, obj: SolrResult) -> dict:
         d = {}
         mt: Optional[str] = obj.get("media_type_s")
         if mt in ("image/jpeg", "image/png"):
@@ -123,10 +126,20 @@ class DigitalObject(JSONLDContextDictSerializer):
                 }
             })
         elif mt == "application/xml":
+            mei_url: str = obj["encoding_url_s"]
+            svg: Optional[str] = render_url(mei_url)
+
+            if not svg:
+                log.error("Could not render SVG for %s", obj.get("id"))
+
             d.update({
                 "encoding": {
                     "format": mt,
                     "url": obj.get("encoding_url_s")
+                },
+                "rendered": {
+                    "format": "image/svg+xml",
+                    "data": svg
                 }
             })
 

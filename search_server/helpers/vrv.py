@@ -1,20 +1,15 @@
 import logging
 import re
 import urllib.parse
+from functools import lru_cache
 from typing import Optional
 
-import ujson
+import httpx
 import verovio
 
 log = logging.getLogger(__name__)
 verovio.enableLog(False)
-
-
-log.info("Instantiating Verovio")
-vrv_tk = verovio.toolkit()
-
-vrv_tk.setInputFrom(verovio.PAE)
-vrv_tk.setOptions(ujson.dumps({
+VEROVIO_BASE_OPTIONS: dict = {
     "footer": 'none',
     "header": 'none',
     "breaks": 'auto',
@@ -34,7 +29,10 @@ vrv_tk.setOptions(ujson.dumps({
     "svgViewBox": True,
     "paeFeatures": True,
     "xmlIdSeed": 1
-}))
+}
+
+vrv_tk = verovio.toolkit()
+vrv_tk.setOptions(VEROVIO_BASE_OPTIONS)
 
 
 def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensural: bool = False) -> Optional[tuple]:
@@ -69,7 +67,8 @@ def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensu
         custom_options["spacingLinear"] = 0.25
         custom_options["spacingNonLinear"] = 0.6
 
-    vrv_tk.setOptions(ujson.dumps(custom_options))
+    vrv_tk.setInputFrom(verovio.PAE)
+    vrv_tk.setOptions(custom_options)
 
     load_status: bool = vrv_tk.loadData(pae)
 
@@ -85,13 +84,56 @@ def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensu
     return svg, b64midi
 
 
+@lru_cache(maxsize=128)
+def render_url(url: str) -> Optional[str]:
+    """
+    Takes a URL to an MEI file and returns the SVG for it.
+
+    :param url:
+    :param custom_options:
+    :return:
+    """
+    with httpx.Client() as client:
+        try:
+            res = client.get(url)
+        except httpx.TimeoutException as err:
+            log.error("Connection to server timed out for %s", url)
+            return None
+        except httpx.ConnectError as err:
+            log.error("Could not connect to server for %s", url)
+            return None
+        except httpx.HTTPError as err:
+            log.error("Unknown connection error for %s", url)
+            return None
+
+        if res.status_code != 200:
+            log.error("Server responded with non-success status code: %s", res.status_code)
+            return None
+
+        mei: str = res.text
+        vrv_opts: dict = VEROVIO_BASE_OPTIONS.copy()
+        vrv_opts.update({
+            "pageWidth": 1000,
+        })
+        vrv_tk.setOptions(vrv_opts)
+        vrv_tk.setInputFrom(verovio.MEI)
+        load_status: bool = vrv_tk.loadData(mei)
+
+        if not load_status:
+            log.error("Verovio could not load file %s", url)
+            return None
+
+        svg: str = vrv_tk.renderToSVG()
+
+        return svg
+
+
 def create_pae_from_request(req) -> str:
     """
     Takes an incoming incipit request and extracts the parameters (if present)
     for adjusting the PAE output.
 
     :param req: A request object
-    :param notedata: The PAE note data.
 
     :return: A string containing PAE for handing off to Verovio to render.
     """
@@ -134,12 +176,9 @@ def get_pae_features(req) -> dict:
     """
     vrv_tk.resetXmlIdSeed(0)
     pae: str = create_pae_from_request(req)
+    vrv_tk.setInputFrom(verovio.PAE)
     vrv_tk.loadData(pae)
-    features: str = vrv_tk.getDescriptiveFeatures("{}")
-
-    feat_output: dict = ujson.loads(features)
-
-    return feat_output
+    return vrv_tk.getDescriptiveFeatures("{}")
 
 
 def _find_err_msg(needle: str, transl_haystack: dict[str, dict]) -> dict:
@@ -152,8 +191,8 @@ def _find_err_msg(needle: str, transl_haystack: dict[str, dict]) -> dict:
 def validate_pae(req) -> dict:
     vrv_tk.resetXmlIdSeed(0)
     pae: str = create_pae_from_request(req)
-    validation: str = vrv_tk.validatePAE(pae)
-    validation_output: dict = ujson.loads(validation)
+    vrv_tk.setInputFrom(verovio.PAE)
+    validation_output: dict = vrv_tk.validatePAE(pae)
 
     if "data" not in validation_output:
         return {
