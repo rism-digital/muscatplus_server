@@ -560,6 +560,9 @@ def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional
         feature_field = "pitches_sm"
         ids_field = "pitches_ids_json"
         query_features_field = "pitchesChromatic"
+    elif search_mode == IncipitModeValues.CONTOUR:
+        feature_field = "contour_refined_sm"
+        query_features_field = "intervalRefinedContour"
 
     if feature_field not in obj:
         # If, for some reason, we don't have the feature field in the Solr object, then
