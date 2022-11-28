@@ -5,7 +5,6 @@ from urllib.parse import urljoin
 import serpy
 
 from shared_helpers.formatters import (
-    format_source_label,
     format_person_label,
     format_institution_label,
     format_source_description,
