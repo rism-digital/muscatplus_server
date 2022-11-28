@@ -67,7 +67,7 @@ def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensu
         custom_options["spacingLinear"] = 0.25
         custom_options["spacingNonLinear"] = 0.6
 
-    vrv_tk.setInputFrom(verovio.PAE)
+    vrv_tk.setInputFrom("pae")
     vrv_tk.setOptions(custom_options)
 
     load_status: bool = vrv_tk.loadData(pae)
@@ -116,7 +116,7 @@ def render_url(url: str) -> Optional[str]:
             "pageWidth": 1000,
         })
         vrv_tk.setOptions(vrv_opts)
-        vrv_tk.setInputFrom(verovio.MEI)
+        vrv_tk.setInputFrom("mei")
         load_status: bool = vrv_tk.loadData(mei)
 
         if not load_status:
@@ -176,7 +176,7 @@ def get_pae_features(req) -> dict:
     """
     vrv_tk.resetXmlIdSeed(0)
     pae: str = create_pae_from_request(req)
-    vrv_tk.setInputFrom(verovio.PAE)
+    vrv_tk.setInputFrom("pae")
     vrv_tk.loadData(pae)
     return vrv_tk.getDescriptiveFeatures("{}")
 
@@ -191,7 +191,7 @@ def _find_err_msg(needle: str, transl_haystack: dict[str, dict]) -> dict:
 def validate_pae(req) -> dict:
     vrv_tk.resetXmlIdSeed(0)
     pae: str = create_pae_from_request(req)
-    vrv_tk.setInputFrom(verovio.PAE)
+    vrv_tk.setInputFrom("pae")
     validation_output: dict = vrv_tk.validatePAE(pae)
 
     if "data" not in validation_output:
