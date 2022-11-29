@@ -1,5 +1,6 @@
 import os.path
 import tempfile
+from typing import Optional
 
 from sanic import Blueprint, response
 
@@ -112,7 +113,10 @@ async def og_image(req, image_name: str):
     #  7. Respond to the request with the PNG data.
     #  8. Delete the tempfile
     record_id: str = image_name.removesuffix(".png")
-    record: dict = SolrConnection.get(record_id, fields=SOLR_FIELDS, handler="/fetch")
+    record: Optional[dict] = SolrConnection.get(record_id, fields=SOLR_FIELDS, handler="/fetch")
+
+    if not record:
+        return response.text(f"Could not retrieve {record_id}", status=404)
 
     tmpl_data: dict = OpenGraphSvg(record, context={"request": req}).data
 

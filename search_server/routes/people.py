@@ -44,3 +44,13 @@ async def person_probe(req, person_id: str):
 @people_blueprint.route("/<person_id:str>/relationships/")
 async def relationships(req, person_id: str):
     return response.text("Not implemented", status=501)
+
+
+@people_blueprint.route("/<person_id:str>/digital-objects/")
+async def digital_object_list(req, person_id):
+    return response.text("Not implemented", status=501)
+
+
+@people_blueprint.route("/<person_id:str>/digital-objects/<dobject_id:str>")
+async def digital_object(req, person_id: str, dobject_id: str):
+    return response.text("Not implemented", status=501)

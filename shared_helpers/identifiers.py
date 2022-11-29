@@ -1,7 +1,7 @@
 import re
 from typing import Pattern, Optional
 
-ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_")
+ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_")
 
 EXTERNAL_IDS: dict = {
     "viaf": {"label": "Virtual Internet Authority File (VIAF)",
@@ -115,6 +115,7 @@ RISM_JSONLD_CONTEXT: dict = {
         "pmo": "http://performedmusicontology.org/ontology/",
         "relators": "http://id.loc.gov/vocabulary/relators/",
         "dcterms": "http://purl.org/dc/terms/",
+        "dctypes": "http://purl.org/dc/dcmitype/",
         "as": "http://www.w3.org/ns/activitystreams#",
         "hydra": "http://www.w3.org/ns/hydra/core#",
         "geojson": "https://purl.org/geojson/vocab#",

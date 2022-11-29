@@ -147,7 +147,6 @@ class IncipitsSection(JSONLDContextDictSerializer):
                        context={"request": self.context.get("request")}).data
 
 
-
 class Incipit(JSONLDContextDictSerializer):
     incip_id = serpy.MethodField(
         label="id"

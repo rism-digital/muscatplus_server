@@ -14,9 +14,10 @@ pyyaml = "^6.0.0"
 sanic = "^22.0.0"
 rdflib = "^6.0.0"
 small-asc = {git = "https://github.com/rism-digital/small-asc.git", rev = "main"}
-verovio = { version = "^3.12.1", allow-prereleases = true }
+verovio = "3.13.1"
 sentry-sdk = "^1.10.1"
 Jinja2 = "^3.1.2"
+httpx = "^0.23.0"
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.0.0"

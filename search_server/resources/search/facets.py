@@ -230,6 +230,9 @@ def _create_notation_facet(all_translations: dict) -> dict:
             }, {
                 "label": {"none": ["Exact pitches"]},
                 "value": IncipitModeValues.EXACT_PITCHES
+            }, {
+                "label": {"none": ["Contour"]},
+                "value": IncipitModeValues.CONTOUR
             }]
         },
         "options": {

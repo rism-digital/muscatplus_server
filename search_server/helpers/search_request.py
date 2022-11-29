@@ -44,6 +44,7 @@ class FacetSortValues:
 class IncipitModeValues:
     INTERVALS = "intervals"
     EXACT_PITCHES = "exact-pitches"
+    CONTOUR = "contour"
 
 
 def sorting_for_mode(cfg: dict, mode: str) -> list:
@@ -495,9 +496,6 @@ class SearchRequest:
             if len(self.pae_features.get("intervalsChromatic")) == 0:
                 raise InvalidQueryException("The requested mode was 'incipits', but the query could not be interpreted as music notation.")
 
-            intervals: Optional[list] = self.pae_features.get("intervalsChromatic")
-            pitches: Optional[list] = self.pae_features.get("pitchesChromatic")
-
             # This will be refactored to take into account the other accepted values for the interval search modes,
             # once we know what they are.
             incipit_query: str
@@ -506,11 +504,18 @@ class SearchRequest:
             query_len: int
 
             if self._incipit_mode == IncipitModeValues.EXACT_PITCHES:
-                incipit_query = " ".join((str(s) for s in pitches))
+                pitches: list = self.pae_features.get("pitchesChromatic", [])
+                incipit_query = " ".join(pitches)
                 incipit_query_field = "pitches_bi"
                 incipit_len_field = "pitches_len_i"
                 query_len = len(pitches)
+            elif self._incipit_mode == IncipitModeValues.CONTOUR:
+                contour: list = self.pae_features.get("intervalRefinedContour", [])
+                incipit_query = " ".join(contour)
+                incipit_query_field = "contour_refined_bi"
+                query_len = len(contour)
             else:
+                intervals: list = self.pae_features.get("intervalsChromatic", [])
                 incipit_query = " ".join((str(s) for s in intervals))
                 query_len = len(intervals)
 
