@@ -48,7 +48,7 @@ SOLR_FIELDS: list = [
 
 async def render_og_tmpl(req, record_obj: dict) -> str:
     # The front-end server should have set this header. If it arrives here and it is
-    # not set, then assume it's facebook.
+    # not set, then assume it's Google.
     bot: str = req.headers.get("X-RO-BotIdentifier", BotIdentifiers.GOOGLE)
     tmpl_vars: dict = OpenGraph(record_obj, context={"request": req}).data
 
