@@ -24,7 +24,7 @@ class ExternalAuthoritiesSection(ContextDictSerializer):
     def get_items(self, obj: list) -> list[dict]:
         externals: list = []
         for ext in obj:
-            source, ident = ext.split(":")
+            source, ident = ext.split(":", 1)
             base = EXTERNAL_IDS.get(source)
             if not base:
                 continue
