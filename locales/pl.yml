@@ -394,6 +394,7 @@ pl:
     dedicatee: Adresat dedykacji
     department: Wydział
     depositor: Deponent
+    deprecated_fields: Nieaktualne pola (nie uzupełniaj)
     description: Opis
     description_area: Obszar opisu
     description_summary: Podsumowanie
@@ -760,6 +761,7 @@ pl:
     scoring_in_movement: Obsada w części
     scoring_summary: Podsumowanie obsady
     scribe: Kopista
+    secondary_catalog_works: Drugi katalog dzieł
     secondary_literature: Literatura pomocnicza
     series: Seria
     series_added_entry: Dodatkowe wpisy tytułów
@@ -956,7 +958,7 @@ pl:
     no_results_header: "Nie znaleziono wyników dla Twojego wyszukiwania"
     no_results_to_find: "Nie znaleziono żadnych wyników dla tego wyszukiwania"
     page: "Strona"
-    words_anywhere: "Words anywhere"
+    words_anywhere: "Wprowadź zapytanie"
     record_preview: "Podgląd rekordu"
     record_uri: "URI rekordu (Odnośnik bezpośredni)"
     reset_all: "Zresetuj wszystko"
@@ -976,7 +978,7 @@ pl:
     biographical_details: "Szczegóły bibliograficzne"
     role_and_profession: "Funkcja i zawód"
     composer_composition: "Kompozytor i kompozycja"
-    full_record: "Full Record"
+    full_record: "Pełny widok rekordu"
   testingForCrowdinWorkshop:
     apple: jabłko
     pear: gruszka
