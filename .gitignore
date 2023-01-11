@@ -3,3 +3,7 @@ __pycache__
 search_server.egg-info
 .DS_Store
 configuration.yml
+scripts/node_modules
+
+scripts/package.json
+scripts/yarn.lock

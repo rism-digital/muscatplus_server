@@ -4,41 +4,6 @@ from typing import Optional, Pattern, Match
 from shared_helpers.identifiers import ID_SUB
 from shared_helpers.languages import SUPPORTED_LANGUAGES
 
-_SOURCE_TYPE_LABEL_MAP: dict = {
-    "printed": "",
-    "manuscript": "",
-    "composite": "",
-    "unspecified": ""
-}
-
-_RECORD_TYPE_LABEL_MAP: dict = {
-    "item": "",
-    "collection": "",
-    "composite": ""
-}
-
-_CONTENT_TYPE_LABEL_MAP: dict = {
-    "libretto": "",
-    "treatise": "",
-    "musical": "",
-    "composite_content": ""
-}
-
-_MATERIAL_TYPES_MAP: dict = {
-    "Print": "",
-    "Autograph manuscript": "",
-    "Libretto, handwritten": "",
-    "Libretto, printed": "",
-    "Manuscript copy": "",
-    "Manuscript copy with autograph annotations": "",
-    "Other": "",
-    "Partial autograph": "",
-    "Possible autograph manuscript": "",
-    "Print with autograph annotations": "",
-    "Print with non-autograph annotations": "",
-    "Treatise, handwritten": "",
-    "Treatise, printed": ""
-}
 
 _KEY_MODE_MAP: dict = {
     "A": "records.a_major",

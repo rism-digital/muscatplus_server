@@ -137,7 +137,6 @@ RISM_JSONLD_CONTEXT: dict = {
                 "@set"
             ]
         },
-        "contents": "@nest",
         "relationships": {
             "@id": "rism:Relationships",
             "@context": {
