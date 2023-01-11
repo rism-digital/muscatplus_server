@@ -596,7 +596,7 @@ def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional
     for noteids in ids_to_highlight:
         for nid in noteids:
             highlight_stmts.append(
-                f"g[data-id=\"{nid}\"] {{ fill: red; }}"
+                f"g[data-id=\"{nid}\"] {{ fill: red; color: red; }}"
             )
 
     highlight_css_stmt = " ".join(highlight_stmts)
