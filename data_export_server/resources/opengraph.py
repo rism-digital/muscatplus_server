@@ -12,10 +12,9 @@ from shared_helpers.formatters import (
     format_institution_description
 )
 from shared_helpers.identifiers import ID_SUB, get_url_from_type, get_site
-from shared_helpers.serializers import ContextDictSerializer
 
 
-class OpenGraph(ContextDictSerializer):
+class OpenGraph(serpy.DictSerializer):
     record_url = serpy.MethodField()
     record_title = serpy.MethodField()
     record_description = serpy.MethodField()
@@ -89,7 +88,7 @@ class CardIcons:
     SOURCE = "source"
 
 
-class OpenGraphSvg(ContextDictSerializer):
+class OpenGraphSvg(serpy.DictSerializer):
     record_type = serpy.MethodField()
     record_title = serpy.MethodField()
     record_first_line = serpy.MethodField()

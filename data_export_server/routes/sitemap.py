@@ -61,7 +61,7 @@ async def sitemap_page(req, page_num: str):
         "sort": "created asc"
     }
 
-    res: Results = SolrConnection.search(solr_query, handler="/query")
+    res: Results = await SolrConnection.search(solr_query, handler="/query")
 
     urlentries: list = []
     for result in res:
