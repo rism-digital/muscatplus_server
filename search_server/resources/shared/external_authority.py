@@ -2,14 +2,12 @@ from typing import Optional
 
 import serpy
 
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import EXTERNAL_IDS
-from shared_helpers.serializers import ContextDictSerializer
 
 
-class ExternalAuthoritiesSection(ContextDictSerializer):
+class ExternalAuthoritiesSection(serpy.DictSerializer):
     label = serpy.MethodField()
-    etype = StaticField(
+    etype = serpy.StaticField(
         label="type",
         value="rism:ExternalAuthoritiesSection"
     )

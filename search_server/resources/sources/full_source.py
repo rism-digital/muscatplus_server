@@ -15,13 +15,13 @@ from search_server.resources.sources.material_groups import MaterialGroupsSectio
 from search_server.resources.sources.references_notes import ReferencesNotesSection
 from search_server.resources.sources.source_items import SourceItemsSection
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger(__name__)
 
 
-class SourceItemList(JSONLDContextDictSerializer):
+class SourceItemList(JSONLDDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
@@ -87,12 +87,12 @@ class FullSource(BaseSource):
         req = self.context.get("request")
         return RelationshipsSection(obj, context={"request": req}).data
 
-    def get_incipits(self, obj: SolrResult) -> Optional[dict]:
+    async def get_incipits(self, obj: SolrResult) -> Optional[dict]:
         if not obj.get("has_incipits_b", False):
             return None
 
         req = self.context.get("request")
-        return IncipitsSection(obj, context={"request": req}).data
+        return await IncipitsSection(obj, context={"request": req}).data
 
     def get_references_notes(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
@@ -105,14 +105,14 @@ class FullSource(BaseSource):
 
         return refnotes
 
-    def get_exemplars(self, obj: SolrResult) -> Optional[dict]:
+    async def get_exemplars(self, obj: SolrResult) -> Optional[dict]:
         # If this record does not have any physical copies attached to it ("Holdings", either
         # print holdings or a manuscript holding record) then bypass the solr query that will retrieve
         # zero records.
         if "num_physical_copies_i" not in obj:
             return None
 
-        return ExemplarsSection(obj, context={"request": self.context.get("request")}).data
+        return await ExemplarsSection(obj, context={"request": self.context.get("request")}).data
 
     def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:
@@ -120,14 +120,14 @@ class FullSource(BaseSource):
 
         return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
 
-    def get_source_items(self, obj: SolrResult) -> Optional[dict]:
+    async def get_source_items(self, obj: SolrResult) -> Optional[dict]:
         if "num_source_members_i" not in obj:
             return None
 
-        return SourceItemsSection(obj, context={"request": self.context.get("request")}).data
+        return await SourceItemsSection(obj, context={"request": self.context.get("request")}).data
 
-    def get_digital_objects(self, obj: SolrResult) -> Optional[dict]:
+    async def get_digital_objects(self, obj: SolrResult) -> Optional[dict]:
         if not obj.get("has_digital_objects_b", False):
             return None
 
-        return DigitalObjectsSection(obj, context={"request": self.context.get("request")}).data
+        return await DigitalObjectsSection(obj, context={"request": self.context.get("request")}).data

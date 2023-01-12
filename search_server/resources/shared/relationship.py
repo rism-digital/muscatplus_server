@@ -10,19 +10,18 @@ from shared_helpers.display_translators import (
     qualifier_labels_translator,
     place_relationship_labels_translator, title_json_value_translator, source_relationship_labels_translator
 )
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger(__name__)
 
 
-class RelationshipsSection(JSONLDContextDictSerializer):
+class RelationshipsSection(JSONLDDictSerializer):
     rid = serpy.MethodField(
         label="id"
     )
-    rtype = StaticField(
+    rtype = serpy.StaticField(
         label="type",
         value="rism:RelationshipsSection"
     )
@@ -85,8 +84,8 @@ class RelationshipsSection(JSONLDContextDictSerializer):
                             context={"request": self.context.get("request")}).data
 
 
-class Relationship(JSONLDContextDictSerializer):
-    stype = StaticField(
+class Relationship(JSONLDDictSerializer):
+    stype = serpy.StaticField(
         label="type",
         value="rism:Relationship"
     )

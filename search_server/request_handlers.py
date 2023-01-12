@@ -1,6 +1,7 @@
 import logging
 from typing import Callable, Optional
 
+import orjson.orjson
 from sanic import request, response
 from small_asc.client import SolrError
 
@@ -10,7 +11,7 @@ from search_server.helpers.linked_data import to_turtle, to_expanded_jsonld
 log = logging.getLogger("mp_server")
 
 
-def send_json_response(serialized_results: dict, debug_response: bool) -> response.HTTPResponse:
+async def send_json_response(serialized_results: dict, debug_response: bool) -> response.HTTPResponse:
     response_headers: dict = {
         "Content-Type": "application/ld+json; charset=utf-8"
     }
@@ -18,8 +19,7 @@ def send_json_response(serialized_results: dict, debug_response: bool) -> respon
     return response.json(
         serialized_results,
         headers=response_headers,
-        # escape_forward_slashes=False,
-        # indent=(4 if debug_response else 0)
+        option=orjson.OPT_INDENT_2 if debug_response else 0
     )
 
 
@@ -63,7 +63,7 @@ async def handle_request(req: request.Request, handler: Callable, **kwargs) -> r
     else:
         log.debug("Sending JSON-LD")
         # The default return type is JSON-LD
-        return send_json_response(data_obj, req.app.ctx.config['common']['debug'])
+        return await send_json_response(data_obj, req.app.ctx.config['common']['debug'])
 
 
 async def handle_search(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
@@ -88,4 +88,4 @@ async def handle_search(req: request.Request, handler: Callable, **kwargs) -> re
         return response.text("The requested resource was not found",
                              status=404)
 
-    return send_json_response(data_obj, req.app.ctx.config['common']['debug'])
+    return await send_json_response(data_obj, req.app.ctx.config['common']['debug'])

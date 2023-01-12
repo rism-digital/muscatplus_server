@@ -6,9 +6,8 @@ import serpy
 
 from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.display_translators import printing_techniques_translator
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
@@ -16,12 +15,12 @@ from search_server.resources.shared.relationship import RelationshipsSection
 log = logging.getLogger("muscat_indexer")
 
 
-class MaterialGroupsSection(JSONLDContextDictSerializer):
+class MaterialGroupsSection(JSONLDDictSerializer):
     mgid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    stype = StaticField(
+    stype = serpy.StaticField(
         label="type",
         value="rism:MaterialGroupsSection"
     )
@@ -47,12 +46,12 @@ class MaterialGroupsSection(JSONLDContextDictSerializer):
                              context={"request": self.context.get("request")}).data
 
 
-class MaterialGroup(JSONLDContextDictSerializer):
+class MaterialGroup(JSONLDDictSerializer):
     mgid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    mtype = StaticField(
+    mtype = serpy.StaticField(
         label="type",
         value="rism:MaterialGroup"
     )

@@ -3,8 +3,7 @@ from typing import Optional
 import serpy
 
 from shared_helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP, country_code_labels_translator
-from shared_helpers.fields import StaticField
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 
 
 async def handle_country_request(req, country_id: str) -> Optional[dict]:
@@ -18,11 +17,11 @@ async def handle_country_list_request(req) -> Optional[dict]:
                                                           "direct_request": True}).data
 
 
-class CountryList(JSONLDContextDictSerializer):
+class CountryList(JSONLDDictSerializer):
     clid = serpy.MethodField(
         label="id"
     )
-    cltype = StaticField(
+    cltype = serpy.StaticField(
         label="type",
         value="rism:CountryListResults"
     )

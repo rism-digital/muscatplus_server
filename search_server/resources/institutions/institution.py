@@ -3,26 +3,24 @@ from typing import Optional
 
 import serpy
 
-from shared_helpers.fields import StaticField
-from shared_helpers.serializers import ContextDictSerializer
-from shared_helpers.display_fields import get_display_fields
-from shared_helpers.identifiers import get_identifier, ID_SUB
-from shared_helpers.solr_connection import SolrResult, SolrConnection, result_count
 from search_server.resources.institutions.base_institution import BaseInstitution
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
+from shared_helpers.display_fields import get_display_fields
+from shared_helpers.identifiers import get_identifier, ID_SUB
+from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 
 async def handle_institution_request(req, institution_id: str) -> Optional[dict]:
-    institution_record: Optional[dict] = SolrConnection.get(f"institution_{institution_id}")
+    institution_record: Optional[dict] = await SolrConnection.get(f"institution_{institution_id}")
 
     if not institution_record:
         return None
 
-    return Institution(institution_record, context={"request": req,
-                                                    "direct_request": True}).data
+    return await Institution(institution_record, context={"request": req,
+                                                          "direct_request": True}).data
 
 
 class Institution(BaseInstitution):
@@ -52,19 +50,19 @@ class Institution(BaseInstitution):
             "totalItems": source_count
         }
 
-    def get_location(self, obj: SolrResult) -> Optional[dict]:
+    async def get_location(self, obj: SolrResult) -> Optional[dict]:
         if {"street_address_sm", "city_address_sm", "website_address_sm", "email_address_sm", "location_loc"}.isdisjoint(obj):
             return None
 
         return LocationAddressSection(obj, context={"request": self.context.get("request")}).data
 
-    def get_external_authorities(self, obj: SolrResult) -> Optional[list[dict]]:
+    async def get_external_authorities(self, obj: SolrResult) -> Optional[list[dict]]:
         if 'external_ids' not in obj:
             return None
 
         return ExternalAuthoritiesSection(obj['external_ids'], context={"request": self.context.get("request")}).data
 
-    def get_relationships(self, obj: SolrResult) -> Optional[dict]:
+    async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         if not self.context.get("direct_request"):
             return None
 
@@ -75,22 +73,22 @@ class Institution(BaseInstitution):
 
         return RelationshipsSection(obj, context={"request": req}).data
 
-    def get_notes(self, obj: SolrResult) -> Optional[dict]:
-        notes: dict = NotesSection(obj, context={"request": self.context.get("request")}).data
+    async def get_notes(self, obj: SolrResult) -> Optional[dict]:
+        notes: dict = await NotesSection(obj, context={"request": self.context.get("request")}).data
         if 'notes' in notes:
             return notes
 
         return None
 
-    def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
+    async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:
             return None
 
         return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
 
 
-class LocationAddressSection(ContextDictSerializer):
-    ltype = StaticField(
+class LocationAddressSection(serpy.DictSerializer):
+    ltype = serpy.StaticField(
         label="type",
         value="rism:LocationAddressSection"
     )

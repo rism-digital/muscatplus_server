@@ -6,18 +6,17 @@ from small_asc.client import Results
 
 from shared_helpers.display_translators import url_detecting_translator
 from shared_helpers.display_fields import get_display_fields, LabelConfig
-from shared_helpers.fields import StaticField
 from shared_helpers.formatters import format_institution_label
 from shared_helpers.identifiers import get_identifier, ID_SUB
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 
 
-class ExemplarsSection(JSONLDContextDictSerializer):
+class ExemplarsSection(JSONLDAsyncDictSerializer):
     label = serpy.MethodField()
-    stype = StaticField(
+    stype = serpy.StaticField(
         label="type",
         value="rism:ExemplarsSection"
     )
@@ -29,7 +28,7 @@ class ExemplarsSection(JSONLDContextDictSerializer):
 
         return transl.get("records.exemplars")
 
-    def get_items(self, obj: SolrResult) -> Optional[dict]:
+    async def get_items(self, obj: SolrResult) -> Optional[dict]:
         # Only select holdings where the institution ID is set. This is due to a buggy import; hopefully we'll
         # be able to remove the institution_id filter clause later... 
         fq: list = [f"source_id:{obj.get('id')}",
@@ -37,7 +36,7 @@ class ExemplarsSection(JSONLDContextDictSerializer):
                     "institution_id:[* TO *]"]
 
         sort: str = "siglum_s asc, shelfmark_ans asc"
-        results: Results = SolrConnection.search({
+        results: Results = await SolrConnection.search({
                 "query": "*:*",
                 "filter": fq,
                 "sort": sort
@@ -46,16 +45,16 @@ class ExemplarsSection(JSONLDContextDictSerializer):
         if results.hits == 0:
             return None
 
-        return Exemplar(results,
-                        many=True,
-                        context={"request": self.context.get("request")}).data
+        return await Exemplar(results,
+                              many=True,
+                              context={"request": self.context.get("request")}).data
 
 
-class Exemplar(JSONLDContextDictSerializer):
+class Exemplar(JSONLDAsyncDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
-    stype = StaticField(
+    stype = serpy.StaticField(
         label="type",
         value="rism:Exemplar"
     )

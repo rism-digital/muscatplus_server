@@ -4,14 +4,13 @@ from typing import Optional
 import serpy
 
 from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrConnection
 
 
 async def handle_festival_request(req, festival_id: str) -> Optional[dict]:
-    record: Optional[dict] = SolrConnection.get(f"id:festival_{festival_id}")
+    record: Optional[dict] = await SolrConnection.get(f"id:festival_{festival_id}")
 
     if not record:
         return None
@@ -20,11 +19,11 @@ async def handle_festival_request(req, festival_id: str) -> Optional[dict]:
                                                "direct_request": True}).data
 
 
-class LiturgicalFestival(JSONLDContextDictSerializer):
+class LiturgicalFestival(JSONLDDictSerializer):
     fid = serpy.MethodField(
         label="id"
     )
-    ftype = StaticField(
+    ftype = serpy.StaticField(
         label="type",
         value="rism:LiturgicalFestival"
     )

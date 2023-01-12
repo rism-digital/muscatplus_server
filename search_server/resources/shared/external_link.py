@@ -2,12 +2,11 @@ from typing import Optional
 
 import serpy
 
-from shared_helpers.fields import StaticField
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 
-class ExternalResourcesSection(JSONLDContextDictSerializer):
+class ExternalResourcesSection(JSONLDDictSerializer):
     """
     Returns a formatted object of external links.
 
@@ -15,7 +14,7 @@ class ExternalResourcesSection(JSONLDContextDictSerializer):
     in the Solr result before calling this, as we assume that if this is called there
     is at least one link!
     """
-    rtype = StaticField(
+    rtype = serpy.StaticField(
         label="type",
         value="rism:ExternalResourcesSection"
     )
@@ -40,8 +39,8 @@ class ExternalResourcesSection(JSONLDContextDictSerializer):
                                 context={"request": self.context.get("request")}).data
 
 
-class ExternalResource(JSONLDContextDictSerializer):
-    rtype = StaticField(
+class ExternalResource(JSONLDDictSerializer):
+    rtype = serpy.StaticField(
         label="type",
         value="rism:ExternalResource"
     )
@@ -66,7 +65,7 @@ class ExternalResource(JSONLDContextDictSerializer):
         return {"none": [label]}
 
     def get_resource_type(self, obj: dict) -> Optional[str]:
-        rtype: str = ""
+        rtype: str
         link_type: Optional[str] = obj.get("link_type")
 
         if link_type in ("IIIF", "IIIF manifest (digitized source)", "IIIF manifest (other)"):

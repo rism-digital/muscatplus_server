@@ -4,15 +4,13 @@ from typing import Optional, Type
 import serpy
 from small_asc.client import Results, SolrError
 
-from shared_helpers.fields import StaticField
-from shared_helpers.serializers import JSONLDContextSerializer
-from shared_helpers.solr_connection import execute_query
 from search_server.resources.search.facets import get_facets
 from search_server.resources.search.pagination import Pagination
 from search_server.resources.search.sorting import get_sorting
+from shared_helpers.solr_connection import execute_query
 
 
-class BaseSearchResults(JSONLDContextSerializer):
+class BaseSearchResults(serpy.AsyncSerializer):
     """
     A Base Search Results serializer. Consumes a Solr response directly, and will manage the pagination
     data structures, but the actual serialization of the results is left to the classes derived from this
@@ -24,7 +22,7 @@ class BaseSearchResults(JSONLDContextSerializer):
     sid = serpy.MethodField(
         label="id"
     )
-    stype = StaticField(
+    stype = serpy.StaticField(
         label="type",
         value="Collection"
     )
@@ -72,13 +70,13 @@ class BaseSearchResults(JSONLDContextSerializer):
         return None
 
     @abstractmethod
-    def get_items(self, obj: Results) -> Optional[list]:
+    async def get_items(self, obj: Results) -> Optional[list]:
         pass
 
 
 async def serialize_response(req, solr_params: dict,
-                       serializer_cls: Type[BaseSearchResults],
-                       extra_context: Optional[dict] = None) -> dict:
+                             serializer_cls: Type[BaseSearchResults],
+                             extra_context: Optional[dict] = None) -> dict:
     """
     Takes an incoming search request, performs a Solr query, and serializes
     the response to a dict object suitable for sending as JSON-LD.
@@ -99,5 +97,5 @@ async def serialize_response(req, solr_params: dict,
     if extra_context:
         ctx.update(extra_context)
 
-    return serializer_cls(solr_res, context=ctx).data
+    return await serializer_cls(solr_res, context=ctx).data
 

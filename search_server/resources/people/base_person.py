@@ -3,10 +3,9 @@ from typing import Optional
 
 import serpy
 
-from shared_helpers.fields import StaticField
 from shared_helpers.formatters import format_person_label
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult
 from search_server.resources.shared.record_history import get_record_history
 
@@ -16,11 +15,11 @@ SOLR_FIELDS_FOR_BASE_PERSON: list = [
 ]
 
 
-class BasePerson(JSONLDContextDictSerializer):
+class BasePerson(JSONLDAsyncDictSerializer):
     pid = serpy.MethodField(
         label="id"
     )
-    stype = StaticField(
+    stype = serpy.StaticField(
         label="type",
         value="rism:Person"
     )

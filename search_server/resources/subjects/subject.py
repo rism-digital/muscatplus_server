@@ -3,24 +3,23 @@ from typing import Optional
 
 import serpy
 
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import get_identifier, ID_SUB
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrConnection, SolrResult, result_count
 
 
 async def handle_subject_request(req, subject_id: str) -> Optional[dict]:
-    subject_record: Optional[dict] = SolrConnection.get(f"subject_{subject_id}")
+    subject_record: Optional[dict] = await SolrConnection.get(f"subject_{subject_id}")
 
-    return Subject(subject_record, context={"request": req,
-                                            "direct_request": True}).data
+    return await Subject(subject_record, context={"request": req,
+                                                  "direct_request": True}).data
 
 
-class Subject(JSONLDContextDictSerializer):
+class Subject(JSONLDAsyncDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
-    stype = StaticField(
+    stype = serpy.StaticField(
         label="type",
         value="rism:Subject"
     )
@@ -71,7 +70,7 @@ class Subject(JSONLDContextDictSerializer):
 
         fq: list = ["type:source",
                     f"subject_ids:{subject_id}"]
-        num_results: int = result_count(fq=fq)
+        num_results: int = await result_count(fq=fq)
 
         if num_results == 0:
             return None

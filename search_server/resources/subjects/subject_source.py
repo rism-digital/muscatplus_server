@@ -10,21 +10,19 @@ from search_server.resources.sources.base_source import BaseSource
 log = logging.getLogger(__name__)
 
 
-def handle_subject_source_request(req, subject_id: str) -> dict:
+async def handle_subject_source_request(req, subject_id: str) -> dict:
     request_compiler = SearchRequest(req)
     request_compiler.filters += ["type:source", f"subject_ids:subject_{subject_id}"]
 
     solr_params: dict = request_compiler.compile()
-    solr_res: Results = SolrConnection.search({**solr_params})
+    solr_res: Results = await SolrConnection.search({**solr_params})
 
-    subject_source_results = SubjectResults(solr_res, context={"request": req})
-
-    return subject_source_results.data
+    return await SubjectResults(solr_res, context={"request": req}).data
 
 
 class SubjectResults(BaseSearchResults):
-    def get_items(self, obj: Results) -> Optional[list]:
+    async def get_items(self, obj: Results) -> Optional[list]:
         if obj.hits == 0:
             return None
 
-        return BaseSource(obj.docs, many=True, context={"request": self.context.get("request")}).data
+        return await BaseSource(obj.docs, many=True, context={"request": self.context.get("request")}).data

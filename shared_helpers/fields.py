@@ -15,3 +15,7 @@ class StaticField(serpy.Field):
 
     def as_getter(self, serializer_field_name, serializer_cls) -> Any:
         return self.to_value
+
+
+
+

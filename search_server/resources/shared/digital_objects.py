@@ -6,20 +6,19 @@ import serpy
 from small_asc.client import Results
 
 from search_server.helpers.vrv import render_url
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import ContextDictSerializer, JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 log = logging.getLogger(__name__)
 
 
-class DigitalObjectsSection(ContextDictSerializer):
+class DigitalObjectsSection(serpy.AsyncDictSerializer):
     doid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    dotype = StaticField(
+    dotype = serpy.StaticField(
         label="type",
         value="rism:DigitalObjectsSection"
     )
@@ -49,26 +48,26 @@ class DigitalObjectsSection(ContextDictSerializer):
 
         return transl.get("records.digital_objects")
 
-    def get_items(self, obj: SolrResult) -> Optional[list]:
+    async def get_items(self, obj: SolrResult) -> Optional[list]:
         fq: list = [f"linked_id:{obj.get('id')}",
                     "type:dobject"]
 
-        results: Results = SolrConnection.search({"query": "*:*",
-                                                  "filter": fq}, cursor=True)
+        results: Results = await SolrConnection.search({"query": "*:*",
+                                                        "filter": fq}, cursor=True)
 
         if results.hits == 0:
             return None
 
-        return DigitalObject(results,
-                             many=True,
-                             context={"request": self.context.get("request")}).data
+        return await DigitalObject(results,
+                                   many=True,
+                                   context={"request": self.context.get("request")}).data
 
 
-class DigitalObject(JSONLDContextDictSerializer):
+class DigitalObject(JSONLDAsyncDictSerializer):
     doid = serpy.MethodField(
         label="id"
     )
-    dotype = StaticField(
+    dotype = serpy.StaticField(
         label="type",
         value="rism:DigitalObject"
     )
@@ -107,7 +106,7 @@ class DigitalObject(JSONLDContextDictSerializer):
     def get_format(self, obj: SolrResult) -> Optional[str]:
         return obj.get("media_type_s")
 
-    def get_body(self, obj: SolrResult) -> dict:
+    async def get_body(self, obj: SolrResult) -> dict:
         d = {}
         mt: Optional[str] = obj.get("media_type_s")
         if mt in ("image/jpeg", "image/png"):
@@ -127,7 +126,7 @@ class DigitalObject(JSONLDContextDictSerializer):
             })
         elif mt == "application/xml":
             mei_url: str = obj["encoding_url_s"]
-            svg: Optional[str] = render_url(mei_url)
+            svg: Optional[str] = await render_url(mei_url)
 
             if not svg:
                 log.error("Could not render SVG for %s", obj.get("id"))

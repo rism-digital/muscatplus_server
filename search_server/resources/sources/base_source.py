@@ -8,10 +8,9 @@ from search_server.helpers.record_types import create_record_block
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import Relationship
 from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.fields import StaticField
 from shared_helpers.formatters import format_source_label
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 # The Solr fields necessary to construct a base source record. Helps cut down on internal Solr
@@ -25,7 +24,7 @@ SOLR_FIELDS_FOR_BASE_SOURCE: list = [
 log = logging.getLogger(__name__)
 
 
-class BaseSource(JSONLDContextDictSerializer):
+class BaseSource(JSONLDAsyncDictSerializer):
     """
     A base source serializer for providing a basic set of information for
     a RISM Source. A full record of the source is provided by the full source
@@ -34,7 +33,7 @@ class BaseSource(JSONLDContextDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
-    stype = StaticField(
+    stype = serpy.StaticField(
         label="type",
         value="rism:Source"
     )

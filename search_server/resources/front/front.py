@@ -1,12 +1,12 @@
 import serpy
 from sanic import response
 from small_asc.client import Results
+import orjson
 
 from search_server.exceptions import InvalidQueryException
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import get_identifier
 from search_server.helpers.search_request import SearchRequest
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrConnection
 from search_server.resources.search.facets import get_facets
 
@@ -18,7 +18,7 @@ async def handle_front_request(req) -> response.HTTPResponse:
     except InvalidQueryException as e:
         return response.text(f"Invalid search query. {e}", status=400)
 
-    solr_res: Results = SolrConnection.search(solr_params)
+    solr_res: Results = await SolrConnection.search(solr_params)
 
     results: dict = Front(solr_res,
                           context={"request": req, "direct_request": True}).data
@@ -30,16 +30,15 @@ async def handle_front_request(req) -> response.HTTPResponse:
     return response.json(
         results,
         headers=response_headers,
-        escape_forward_slashes=False,
-        indent=(4 if req.app.ctx.config['common']['debug'] else 0)
+        option=orjson.OPT_INDENT_2 if req.app.ctx.config['common']['debug'] else 0
     )
 
 
-class Front(JSONLDContextDictSerializer):
+class Front(JSONLDDictSerializer):
     fid = serpy.MethodField(
         label="id"
     )
-    ftype = StaticField(
+    ftype = serpy.StaticField(
         label="type",
         value="rism:Front"
     )
