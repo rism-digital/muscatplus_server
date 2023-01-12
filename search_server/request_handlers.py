@@ -18,8 +18,8 @@ def send_json_response(serialized_results: dict, debug_response: bool) -> respon
     return response.json(
         serialized_results,
         headers=response_headers,
-        escape_forward_slashes=False,
-        indent=(4 if debug_response else 0)
+        # escape_forward_slashes=False,
+        # indent=(4 if debug_response else 0)
     )
 
 

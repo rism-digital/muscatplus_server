@@ -18,4 +18,4 @@ async def handle_search_request(req) -> dict:
     extra_context: dict = {"query_pae_features": request_compiler.pae_features,
                            "direct_request": True}
 
-    return serialize_response(req, solr_params, SearchResults, extra_context)
+    return await serialize_response(req, solr_params, SearchResults, extra_context)

@@ -76,7 +76,7 @@ class BaseSearchResults(JSONLDContextSerializer):
         pass
 
 
-def serialize_response(req, solr_params: dict,
+async def serialize_response(req, solr_params: dict,
                        serializer_cls: Type[BaseSearchResults],
                        extra_context: Optional[dict] = None) -> dict:
     """
@@ -90,7 +90,7 @@ def serialize_response(req, solr_params: dict,
     :return: A dictionary of serialized content.
     """
     try:
-        solr_res: Optional[Results] = execute_query(solr_params)
+        solr_res: Optional[Results] = await execute_query(solr_params)
     except SolrError:
         raise
 
