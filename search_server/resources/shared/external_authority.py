@@ -14,10 +14,10 @@ class ExternalAuthoritiesSection(serpy.DictSerializer):
     items = serpy.MethodField()
 
     def get_label(self, obj: list) -> dict:
-        req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        req = self.context.get("request")  # type: ignore
+        transl: dict = req.app.ctx.translations  # type: ignore
 
-        return transl.get("records.other_standard_identifier")
+        return transl.get("records.other_standard_identifier", {})
 
     def get_items(self, obj: list) -> list[dict]:
         externals: list = []

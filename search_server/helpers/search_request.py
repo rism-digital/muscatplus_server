@@ -178,7 +178,7 @@ class SearchRequest:
     """
     default_sort = "id asc"
 
-    def __init__(self, req, probe: Optional[bool] = False, is_contents: bool = False):
+    def __init__(self, req, probe: bool = False, is_contents: bool = False):
         self._req = req
         self._app_config = req.app.ctx.config
 
@@ -339,6 +339,7 @@ class SearchRequest:
             # https://solr.apache.org/guide/8_8/faceting.html#tagging-and-excluding-filters
             value: str
             tag: str
+            translation_table: dict
             join_op: str = " OR " if behaviour == FacetBehaviourValues.UNION else " AND "
 
             field_has_values: bool = len(quoted_values) > 0
@@ -353,8 +354,8 @@ class SearchRequest:
                 if not field_has_values:
                     continue
 
-                raw_value: str = quoted_values[0]
-                if raw_value.lower() != "true":
+                quot_value: str = quoted_values[0]
+                if quot_value.lower() != "true":
                     continue
 
                 # uses the 'active value' to map a 'true' toggle to the actual field value
@@ -365,7 +366,7 @@ class SearchRequest:
                 # The complexphrase query parser is also very sensitive to character escaping, so
                 # we do some custom escaping here to make sure things are sent to Solr correctly. This means
                 # double-escaping special characters which, when it's a backslash, also means triple-escaping it!
-                translation_table: dict = str.maketrans({
+                translation_table = str.maketrans({
                     "/": "\\\\/",
                     "~": "\\\\~",
                     ":": "\\\\:",
@@ -377,7 +378,7 @@ class SearchRequest:
                 tag = f"{{!complexphrase inOrder=true}}"
             else:
                 # Select values are not as problematic, so we only need to double-escape backslashes.
-                translation_table: dict = str.maketrans({"\\": "\\\\"})
+                translation_table = str.maketrans({"\\": "\\\\"})
                 value = join_op.join([f"{val.translate(translation_table)}" for val in quoted_values])
                 tag = f"{{!tag={SolrQueryTags.SELECT_FILTER_TAG}}}" if behaviour == FacetBehaviourValues.UNION else ""
 
@@ -493,7 +494,7 @@ class SearchRequest:
 
             # If verovio returns empty features, then something went wrong. Assume the problem is with the input
             # query string, and flag an error to the user.
-            if len(self.pae_features.get("intervalsChromatic")) == 0:
+            if len(self.pae_features.get("intervalsChromatic", [])) == 0:
                 raise InvalidQueryException("The requested mode was 'incipits', but the query could not be interpreted as music notation.")
 
             # This will be refactored to take into account the other accepted values for the interval search modes,

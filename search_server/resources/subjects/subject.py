@@ -33,7 +33,7 @@ class Subject(JSONLDAsyncDictSerializer):
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
-        subject_id: str = re.sub(ID_SUB, "", obj.get("id"))
+        subject_id: str = re.sub(ID_SUB, "", obj["id"])
 
         return get_identifier(req, "subjects.subject", subject_id=subject_id)
 
@@ -41,7 +41,7 @@ class Subject(JSONLDAsyncDictSerializer):
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
-        return transl.get("records.subject_heading")
+        return transl.get("records.subject_heading", {})
 
     def get_term(self, obj: SolrResult) -> dict:
         return {"none": [obj.get('term_s')]}
@@ -66,7 +66,7 @@ class Subject(JSONLDAsyncDictSerializer):
         if not self.context.get("direct_request"):
             return None
 
-        subject_id: str = obj.get("id")
+        subject_id: str = obj["id"]
 
         fq: list = ["type:source",
                     f"subject_ids:{subject_id}"]

@@ -12,7 +12,7 @@ async def handle_country_request(req, country_id: str) -> Optional[dict]:
     return None
 
 
-async def handle_country_list_request(req) -> Optional[dict]:
+async def handle_country_list_request(req) -> Optional[dict]:  # type: ignore
     return CountryList(SOURCE_SIGLA_COUNTRY_MAP, context={"request": req,
                                                           "direct_request": True}).data
 
@@ -29,11 +29,11 @@ class CountryList(JSONLDDictSerializer):
     items = serpy.MethodField()
 
     def get_clid(self, _) -> str:
-        req = self.context.get("request")
+        req = self.context.get("request")  # type: ignore
         return req.url
 
     def get_items(self, obj: dict) -> list[dict]:
-        req = self.context.get("request")
+        req = self.context.get("request")  # type: ignore
         transl: dict = req.app.ctx.translations
 
         res: list = []

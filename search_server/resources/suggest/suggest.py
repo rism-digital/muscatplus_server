@@ -58,7 +58,7 @@ class SuggestionResults(JSONLDDictSerializer):
         fields: list = self.context.get("suggest_fields")
         terms: dict = obj.get("terms", [])
 
-        all_suggestions = defaultdict(int)
+        all_suggestions: dict = defaultdict(int)
         for f in fields:
             suggest_for_field: list = terms.get(f, [])
             v_iter = iter(suggest_for_field)

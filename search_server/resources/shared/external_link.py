@@ -25,7 +25,7 @@ class ExternalResourcesSection(JSONLDDictSerializer):
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
-        return transl.get("records.related_resources")
+        return transl.get("records.related_resources", {})
 
     def get_items(self, obj: SolrResult) -> list[dict]:
         if "external_resources" in obj:
@@ -57,9 +57,9 @@ class ExternalResource(JSONLDDictSerializer):
         label: str
 
         if "note" in obj:
-            label = obj.get("note")
+            label = obj["note"]
         elif "link_type" in obj:
-            label = obj.get("link_type")
+            label = obj["link_type"]
         else:
             label = "[External Resource]"
         return {"none": [label]}

@@ -22,11 +22,11 @@ class ExemplarsSection(JSONLDAsyncDictSerializer):
     )
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult):
+    def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
-        return transl.get("records.exemplars")
+        return transl.get("records.exemplars", {})
 
     async def get_items(self, obj: SolrResult) -> Optional[dict]:
         # Only select holdings where the institution ID is set. This is due to a buggy import; hopefully we'll

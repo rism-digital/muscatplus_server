@@ -40,45 +40,45 @@ def get_facets(req, obj: Results) -> Optional[dict]:
     # The notation and query search facets are treated slightly differently than the other facets
     # The purpose of the notation facet is to activate the keyboard interface in the search UI.
     notation_aliases: list = type_config_map.get(FacetTypeValues.NOTATION, [])
-    for alias in notation_aliases:
-        translation_key: str = facet_config_map[alias]['label']
-        translation: Optional[dict] = transl.get(translation_key)
+    for n_alias in notation_aliases:
+        n_translation_key: str = facet_config_map[n_alias]['label']
+        n_translation: Optional[dict] = transl.get(n_translation_key)
 
-        label: dict
-        if translation:
-            label = translation
+        n_label: dict
+        if n_translation:
+            n_label = n_translation
         else:
-            label = {"none": [translation_key]}
+            n_label = {"none": [n_translation_key]}
 
-        facet_cfg: dict = {
-            "label": label,
-            "alias": alias,
+        n_facet_cfg: dict = {
+            "label": n_label,
+            "alias": n_alias,
             "type": _get_facet_type(FacetTypeValues.NOTATION)
 
         }
-        facet_cfg.update(_create_notation_facet(transl))
-        facets[alias] = facet_cfg
+        n_facet_cfg.update(_create_notation_facet(transl))
+        facets[n_alias] = n_facet_cfg
 
     # the purpose of the query facet is to announce that there is a means of sending a full-text query
     # on a specific field to the server through a filter.
     query_aliases: list = type_config_map.get(FacetTypeValues.QUERY, [])
-    for alias in query_aliases:
-        translation_key: str = facet_config_map[alias]['label']
-        translation: Optional[dict] = transl.get(translation_key)
+    for q_alias in query_aliases:
+        q_translation_key: str = facet_config_map[q_alias]['label']
+        q_translation: Optional[dict] = transl.get(q_translation_key)
 
-        label: dict
-        if translation:
-            label = translation
+        q_label: dict
+        if q_translation:
+            q_label = q_translation
         else:
-            label = {"none": [translation_key]}
+            q_label = {"none": [q_translation_key]}
 
-        facet_cfg: dict = {
-            "label": label,
-            "alias": alias,
+        q_facet_cfg: dict = {
+            "label": q_label,
+            "alias": q_alias,
             "type": _get_facet_type(FacetTypeValues.QUERY)
         }
-        facet_cfg.update(_create_query_facet(alias, req, facet_config_map[alias]))
-        facets[alias] = facet_cfg
+        q_facet_cfg.update(_create_query_facet(q_alias, req, facet_config_map[q_alias]))
+        facets[q_alias] = q_facet_cfg
 
     # Facets that contain values that are returned from a Solr search
     for alias, res in facet_result.items():

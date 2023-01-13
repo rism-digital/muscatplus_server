@@ -33,7 +33,7 @@ class BasePerson(JSONLDAsyncDictSerializer):
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
-        person_id: str = re.sub(ID_SUB, "", obj.get('id'))
+        person_id: str = re.sub(ID_SUB, "", obj['id'])
 
         return get_identifier(req, "people.person", person_id=person_id)
 
@@ -47,7 +47,7 @@ class BasePerson(JSONLDAsyncDictSerializer):
         transl = req.app.ctx.translations
         return transl.get("records.person")
 
-    def get_record_history(self, obj: dict) -> dict:
+    def get_record_history(self, obj: dict) -> Optional[dict]:
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 

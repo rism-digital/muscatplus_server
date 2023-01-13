@@ -28,8 +28,7 @@ class MaterialGroupsSection(JSONLDDictSerializer):
 
     def get_mgid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
-        source_id_val = obj.get("id")
-        source_id: str = re.sub(ID_SUB, "", source_id_val)
+        source_id: str = re.sub(ID_SUB, "", obj["id"])
 
         return get_identifier(req, "sources.material_groups_list", source_id=source_id)
 
@@ -37,10 +36,10 @@ class MaterialGroupsSection(JSONLDDictSerializer):
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
-        return transl.get("records.material_description")
+        return transl.get("records.material_description", {})
 
     def get_items(self, obj: SolrResult) -> list[dict]:
-        mgdata: list = obj.get("material_groups_json")
+        mgdata: list = obj.get("material_groups_json", [])
         return MaterialGroup(mgdata,
                              many=True,
                              context={"request": self.context.get("request")}).data
@@ -64,9 +63,8 @@ class MaterialGroup(JSONLDDictSerializer):
 
     def get_mgid(self, obj: dict) -> str:
         req = self.context.get("request")
-        source_id_val = obj.get("source_id")
-        source_id: str = re.sub(ID_SUB, "", source_id_val)
-        mg_id: str = obj.get("group_num")
+        source_id: str = re.sub(ID_SUB, "", obj["source_id"])
+        mg_id: str = obj["group_num"]
 
         return get_identifier(req, "sources.material_group", source_id=source_id, mg_id=mg_id)
 

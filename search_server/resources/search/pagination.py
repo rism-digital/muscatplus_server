@@ -200,7 +200,7 @@ def parse_row_number(req, row_query_string: Optional[str]) -> int:
         return search_config['rows']
 
     try:
-        rows: int = int(row_query_string)
+        rows = int(row_query_string)
     except ValueError as e:
         raise PaginationParseException("Invalid value for rows. If provided, it must be a whole number.")
 

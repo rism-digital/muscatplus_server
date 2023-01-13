@@ -1765,22 +1765,19 @@ tornado = ["tornado (>=5)"]
 
 [[package]]
 name = "serpy"
-version = "0.3.1"
-description = "ridiculously fast object serialization"
+version = "0.3.3"
+description = ""
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = "^3.9"
 files = []
 develop = false
-
-[package.dependencies]
-six = "*"
 
 [package.source]
 type = "git"
 url = "https://github.com/rism-digital/serpy.git"
 reference = "main"
-resolved_reference = "6e236887c7f788e1e6367fa8e3c80dd57df4d44e"
+resolved_reference = "5c16d50f3a328c7135fd1b85490fbb4c18cdd9a0"
 
 [[package]]
 name = "setuptools"
@@ -1813,7 +1810,7 @@ files = [
 
 [[package]]
 name = "small-asc"
-version = "0.10.1"
+version = "0.10.2"
 description = "A small Solr client"
 category = "main"
 optional = false
@@ -1829,7 +1826,7 @@ orjson = "^3.8.5"
 type = "git"
 url = "https://github.com/rism-digital/small-asc.git"
 reference = "main"
-resolved_reference = "7490cd67b0dfc9b1420b5895043856e7f4a0b31b"
+resolved_reference = "df49460689251999c15176a8fd9b357609c5d3ba"
 
 [[package]]
 name = "sniffio"

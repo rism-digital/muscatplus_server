@@ -20,7 +20,7 @@ CONTENT_TYPE_MAP: dict = {
 
 
 def create_record_block(record_type: str, source_type: str, content_types: list[str]) -> dict:
-    type_identifier: str = SOURCE_TYPE_MAP.get(source_type)
+    type_identifier: str = SOURCE_TYPE_MAP[source_type]
     content_type_block: list = []
 
     for c in content_types:
@@ -29,7 +29,7 @@ def create_record_block(record_type: str, source_type: str, content_types: list[
             "type": CONTENT_TYPE_MAP.get(c, "rism:MusicalSource")
         })
 
-    record_type_identifier: str = RECORD_TYPE_MAP.get(record_type)
+    record_type_identifier: str = RECORD_TYPE_MAP[record_type]
 
     return {
         "recordType": {
