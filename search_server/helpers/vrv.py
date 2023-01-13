@@ -85,7 +85,7 @@ def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensu
 
 
 @lru_cache(maxsize=128)
-async def render_url(url: str) -> Optional[str]:
+def render_url(url: str) -> Optional[str]:
     """
     Takes a URL to an MEI file and returns the SVG for it.
 
@@ -93,9 +93,9 @@ async def render_url(url: str) -> Optional[str]:
     :param custom_options:
     :return:
     """
-    async with httpx.AsyncClient() as client:
+    with httpx.Client() as client:
         try:
-            res = await client.get(url)
+            res = client.get(url)
         except httpx.TimeoutException as err:
             log.error("Connection to server timed out for %s", url)
             return None
