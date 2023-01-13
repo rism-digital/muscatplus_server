@@ -1777,7 +1777,7 @@ develop = false
 type = "git"
 url = "https://github.com/rism-digital/serpy.git"
 reference = "main"
-resolved_reference = "5c16d50f3a328c7135fd1b85490fbb4c18cdd9a0"
+resolved_reference = "244b874c618c4ab25122b3011f366fff99392d7c"
 
 [[package]]
 name = "setuptools"
