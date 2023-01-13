@@ -168,7 +168,7 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
 
 _PLACE_RELATIONSHIP_LABELS_MAP = {
     None: "records.related_place",
-    "place": "records.related_place",  # special case for un-qualified place relationships
+    "xx": "records.related_place",  # special case for un-qualified place relationships
     "go": "records.place_birth",
     "ha": "records.place_origin",
     "so": "records.place_death",
