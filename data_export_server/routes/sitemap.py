@@ -22,7 +22,7 @@ async def sitemap_root(req):
         "limit": 0,
         "params": {"q.op": "OR"},
     }
-    res: Results = SolrConnection.search(solr_query, handler="/query")
+    res: Results = await SolrConnection.search(solr_query, handler="/query")
     num_pages: int = math.ceil(res.hits / page_size)
 
     tmpl_vars = {
@@ -64,7 +64,7 @@ async def sitemap_page(req, page_num: str):
     res: Results = await SolrConnection.search(solr_query, handler="/query")
 
     urlentries: list = []
-    for result in res:
+    for result in res.docs:
         restype: str = result.get("type")
         resid: str = re.sub(ID_SUB, "", result.get("id"))
 

@@ -1826,7 +1826,7 @@ orjson = "^3.8.5"
 type = "git"
 url = "https://github.com/rism-digital/small-asc.git"
 reference = "main"
-resolved_reference = "df49460689251999c15176a8fd9b357609c5d3ba"
+resolved_reference = "1217fc0897d5e150a2f8ed93d262cf5e872de863"
 
 [[package]]
 name = "sniffio"

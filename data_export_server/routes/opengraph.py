@@ -63,7 +63,7 @@ async def render_og_tmpl(req, record_obj: dict) -> str:
 
 @opengraph_blueprint.route("/sources/<source_id:str>")
 async def og_source(req, source_id: str) -> response.HTTPResponse:
-    source_record: dict = SolrConnection.get(f"source_{source_id}", fields=SOLR_FIELDS, handler="/fetch")
+    source_record: dict = await SolrConnection.get(f"source_{source_id}", fields=SOLR_FIELDS, handler="/fetch")
 
     if not source_record:
         return response.text("Not Found.", status=404)
@@ -75,7 +75,7 @@ async def og_source(req, source_id: str) -> response.HTTPResponse:
 
 @opengraph_blueprint.route("/people/<person_id:str>")
 async def og_person(req, person_id: str):
-    person_record: dict = SolrConnection.get(f"person_{person_id}", fields=SOLR_FIELDS, handler="/fetch")
+    person_record: dict = await SolrConnection.get(f"person_{person_id}", fields=SOLR_FIELDS, handler="/fetch")
 
     if not person_record:
         return response.text("Not Found.", status=404)
@@ -87,7 +87,7 @@ async def og_person(req, person_id: str):
 
 @opengraph_blueprint.route("/institutions/<institution_id:str>")
 async def og_institution(req, institution_id: str):
-    institution_record: dict = SolrConnection.get(f"institution_{institution_id}", fields=SOLR_FIELDS, handler="/fetch")
+    institution_record: dict = await SolrConnection.get(f"institution_{institution_id}", fields=SOLR_FIELDS, handler="/fetch")
 
     if not institution_record:
         return response.text("Not Found.", status=404)
@@ -113,7 +113,7 @@ async def og_image(req, image_name: str):
     #  7. Respond to the request with the PNG data.
     #  8. Delete the tempfile
     record_id: str = image_name.removesuffix(".png")
-    record: Optional[dict] = SolrConnection.get(record_id, fields=SOLR_FIELDS, handler="/fetch")
+    record: Optional[dict] = await SolrConnection.get(record_id, fields=SOLR_FIELDS, handler="/fetch")
 
     if not record:
         return response.text(f"Could not retrieve {record_id}", status=404)
