@@ -119,6 +119,7 @@ _QUALIFIER_LABELS_MAP = {
 
 _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     None: "records.other",
+    "xx": "records.associated_institution",
     "now-in": "records.now_in",
     "brother of": "records.brother_of",
     "child of": "records.child_of",
