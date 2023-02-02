@@ -8,7 +8,10 @@ from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.display_translators import (
     dramatic_roles_json_value_translator,
     title_json_value_translator,
-    scoring_json_value_translator)
+    scoring_json_value_translator,
+    material_content_types_translator,
+    material_source_types_translator
+)
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.languages import languages_translator
 from shared_helpers.serializers import JSONLDDictSerializer
@@ -45,8 +48,8 @@ class ContentsSection(JSONLDDictSerializer):
         transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "material_source_types_sm": ("records.source_type", None),
-            "material_content_types_sm": ("records.content_type", None),
+            "material_source_types_sm": ("records.source_type", material_source_types_translator),
+            "material_content_types_sm": ("records.content_type", material_content_types_translator),
             "standard_title_s": ("records.standardized_title", None),
             "source_title_s": ("records.title_on_source", None),
             "variant_title_s": ("records.variant_source_title", None),

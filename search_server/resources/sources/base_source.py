@@ -4,6 +4,7 @@ from typing import Optional
 
 import serpy
 
+from shared_helpers.display_translators import material_source_types_translator, material_content_types_translator
 from search_server.helpers.record_types import create_record_block
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import Relationship
@@ -137,8 +138,8 @@ class BaseSource(JSONLDAsyncDictSerializer):
             "institution_s": ("records.institution", None),
             "date_statements_sm": ("records.dates", None),
             "num_source_members_i": ("records.items_in_source", None),
-            "material_source_types_sm": ("records.source_type", None),
-            "material_content_types_sm": ("records.content_type", None),
+            "material_source_types_sm": ("records.source_type", material_source_types_translator),
+            "material_content_types_sm": ("records.content_type", material_content_types_translator),
             "standard_title_s": ("records.standardized_title", None),
         }
 

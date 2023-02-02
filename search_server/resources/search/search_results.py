@@ -11,7 +11,9 @@ from search_server.helpers.search_request import IncipitModeValues
 from search_server.helpers.vrv import render_pae
 from search_server.resources.search.base_search import BaseSearchResults
 from shared_helpers.display_fields import get_search_result_summary
-from shared_helpers.display_translators import gnd_country_code_labels_translator
+from shared_helpers.display_translators import (
+    gnd_country_code_labels_translator, material_content_types_translator, material_source_types_translator,
+)
 from shared_helpers.formatters import (
     format_institution_label,
     format_person_label,
@@ -165,8 +167,12 @@ class SourceSearchResult(serpy.DictSerializer):
             "creator_name_s": ("sourceComposer", "records.composer_author", None),
             "date_statements_sm": ("dateStatements", "records.dates", None),
             "num_source_members_i": ("numItems", "records.items_in_source", None),
-            "material_source_types_sm": ("materialSourceTypes", "records.source_type", None),
-            "material_content_types_sm": ("materialContentTypes", "records.content_type", None),
+            "material_source_types_sm": ("materialSourceTypes",
+                                         "records.source_type",
+                                         material_source_types_translator),
+            "material_content_types_sm": ("materialContentTypes",
+                                          "records.content_type",
+                                          material_content_types_translator),
             "num_holdings_i": ("numExemplars", "records.exemplars", None)
         }
         summary: Optional[dict] = get_search_result_summary(field_config, transl, obj)

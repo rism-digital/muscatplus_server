@@ -5,7 +5,11 @@ from typing import Optional
 import serpy
 
 from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.display_translators import printing_techniques_translator
+from shared_helpers.display_translators import (
+    printing_techniques_translator,
+    material_source_types_translator,
+    material_content_types_translator
+)
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
@@ -78,8 +82,8 @@ class MaterialGroup(JSONLDDictSerializer):
         transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "material_source_types": ("records.source_type", None),
-            "material_content_types": ("records.content_type", None),
+            "material_source_types": ("records.source_type", material_source_types_translator),
+            "material_content_types": ("records.content_type", material_content_types_translator),
             "publication_place": ("records.place_publication", None),
             "publisher_copyist": ("records.publisher_copyist", None),
             "date_statements": ("records.date", None),
