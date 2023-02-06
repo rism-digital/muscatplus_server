@@ -10,29 +10,28 @@ from search_server.resources.institutions.base_institution import BaseInstitutio
 from search_server.resources.people.base_person import SOLR_FIELDS_FOR_BASE_PERSON
 from search_server.resources.sources.base_source import BaseSource, SOLR_FIELDS_FOR_BASE_SOURCE
 from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 log = logging.getLogger(__name__)
 
 
 async def handle_place_request(req, place_id: str) -> Optional[dict]:
-    record: Optional[dict] = SolrConnection.get(f"place_{place_id}")
+    record: Optional[dict] = await SolrConnection.get(f"place_{place_id}")
 
     if not record:
         return None
 
-    return Place(record, context={"request": req,
-                                  "direct_request": True}).data
+    return await Place(record, context={"request": req,
+                                        "direct_request": True}).data
 
 
-class Place(JSONLDContextDictSerializer):
+class Place(JSONLDAsyncDictSerializer):
     pid = serpy.MethodField(
         label="id"
     )
-    ptype = StaticField(
+    ptype = serpy.StaticField(
         label="type",
         value="rism:Place"
     )
@@ -70,7 +69,7 @@ class Place(JSONLDContextDictSerializer):
 
         return get_display_fields(obj, transl, field_config)
 
-    def get_sources(self, obj: SolrResult) -> Optional[dict]:
+    async def get_sources(self, obj: SolrResult) -> Optional[dict]:
         # if there are no sources attached to this place, return None
         source_count: int = obj.get("sources_count_i", 0)
         if source_count == 0:
@@ -84,17 +83,17 @@ class Place(JSONLDContextDictSerializer):
             "fields": SOLR_FIELDS_FOR_BASE_SOURCE,
             "sort": "main_title_ans asc"
         }
-        source_results: Results = SolrConnection.search(q, cursor=True)
+        source_results: Results = await SolrConnection.search(q, cursor=True)
 
-        source_list: list = BaseSource(source_results,
-                                       context={"request": req}, many=True).data
+        source_list: list = await BaseSource(source_results,
+                                             context={"request": req}, many=True).data
 
         return {
             "type": "rism:PlaceSourceList",
             "items": source_list
         }
 
-    def get_people(self, obj: SolrResult) -> Optional[dict]:
+    async def get_people(self, obj: SolrResult) -> Optional[dict]:
         people_count: int = obj.get("people_count_i", 0)
         if people_count == 0:
             return None
@@ -107,7 +106,7 @@ class Place(JSONLDContextDictSerializer):
             "fields": SOLR_FIELDS_FOR_BASE_PERSON,
             "sort": "name_ans desc"
         }
-        person_results: Results = SolrConnection.search(q, cursor=True)
+        person_results: Results = await SolrConnection.search(q, cursor=True)
         person_list: list = Relationship(person_results, context={"request": req}, many=True).data
 
         return {
@@ -115,7 +114,7 @@ class Place(JSONLDContextDictSerializer):
             "items": person_list
         }
 
-    def get_institutions(self, obj: SolrResult) -> Optional[dict]:
+    async def get_institutions(self, obj: SolrResult) -> Optional[dict]:
         institution_count: int = obj.get("institutions_count_i", 0)
         if institution_count == 0:
             return None
@@ -128,10 +127,10 @@ class Place(JSONLDContextDictSerializer):
             "fields": SOLR_FIELDS_FOR_BASE_INSTITUTION,
             "sort": "name_ans asc"
         }
-        institution_results: Results = SolrConnection.search(q, cursor=True)
-        institution_list: list = BaseInstitution(institution_results,
-                                                 context={"request": req},
-                                                 many=True).data
+        institution_results: Results = await SolrConnection.search(q, cursor=True)
+        institution_list: list = await BaseInstitution(institution_results,
+                                                       context={"request": req},
+                                                       many=True).data
 
         return {
             "type": "rism:PlaceInstitutionList",

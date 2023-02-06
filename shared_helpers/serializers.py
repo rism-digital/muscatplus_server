@@ -1,5 +1,5 @@
-import operator
 from typing import Union, Optional
+
 import serpy
 
 from shared_helpers.identifiers import get_identifier, RISM_JSONLD_CONTEXT
@@ -29,44 +29,7 @@ def get_jsonld_context(request) -> JSONLDContext:
     return RISM_JSONLD_CONTEXT["@context"]
 
 
-class ContextSerializer(serpy.Serializer):
-    """
-        Used for passing along context settings for serializing objects.
-        This is useful for passing request data down serializer
-        chains to provide, for example, information about the current request
-        to the serialized output.
-    """
-    def __init__(self, *args, **kwargs) -> None:
-        super(ContextSerializer, self).__init__(*args, **kwargs)
-
-        if 'context' in kwargs:
-            self.context = kwargs['context']
-
-    def to_value(self, instance: dict) -> Union[dict, list]:
-        """
-        Filters out values that have been serialized to 'None' to prevent
-        them from being sent to the browser.
-
-        :param instance: An object to be serialized
-        :return: A filtered dictionary or a list of filtered dictionaries.
-        """
-        v = super().to_value(instance)
-
-        if self.many:
-            return [_remove_none(d) for d in v]
-
-        return _remove_none(v)
-
-
-class ContextDictSerializer(ContextSerializer):
-    """
-    Used for serializing dictionaries instead of Python objects.
-    Simply overrides the `getter` to operate on a dictionary.
-    """
-    default_getter = operator.itemgetter
-
-
-class JSONLDContextDictSerializer(ContextDictSerializer):
+class JSONLDDictSerializer(serpy.DictSerializer):
     """
     Automatically applies the lookup to add the JSON-LD Context to the result. Serializes a dictionary
     """
@@ -79,7 +42,27 @@ class JSONLDContextDictSerializer(ContextDictSerializer):
         return get_jsonld_context(self.context.get("request")) if direct_request else None
 
 
-class JSONLDContextSerializer(ContextSerializer):
+class JSONLDSerializer(serpy.Serializer):
+    ctx = serpy.MethodField(
+        label="@context"
+    )
+
+    def get_ctx(self, obj) -> Optional[dict]:
+        direct_request: bool = self.context.get("direct_request", False)
+        return get_jsonld_context(self.context.get("request")) if direct_request else None
+
+
+class JSONLDAsyncDictSerializer(serpy.AsyncDictSerializer):
+    ctx = serpy.MethodField(
+        label="@context"
+    )
+
+    def get_ctx(self, obj) -> Optional[dict]:
+        direct_request: bool = self.context.get("direct_request", False)
+        return get_jsonld_context(self.context.get("request")) if direct_request else None
+
+
+class JSONLDAsyncSerializer(serpy.AsyncSerializer):
     ctx = serpy.MethodField(
         label="@context"
     )

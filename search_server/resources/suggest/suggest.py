@@ -8,21 +8,19 @@ import serpy
 from sanic import request, response
 from small_asc.client import SolrError
 
-from search_server.exceptions import InvalidQueryException
-from shared_helpers.fields import StaticField
 from search_server.helpers.search_request import suggest_fields_for_alias
-from shared_helpers.serializers import JSONLDContextDictSerializer
-from shared_helpers.solr_connection import SolrConnection
 from search_server.request_handlers import send_json_response
+from shared_helpers.serializers import JSONLDDictSerializer
+from shared_helpers.solr_connection import SolrConnection
 
 log = logging.getLogger(__name__)
 
 
-class SuggestionResults(JSONLDContextDictSerializer):
+class SuggestionResults(JSONLDDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
-    typ = StaticField(
+    typ = serpy.StaticField(
         label="type",
         value="rism:SuggestionResults"
     )
@@ -60,7 +58,7 @@ class SuggestionResults(JSONLDContextDictSerializer):
         fields: list = self.context.get("suggest_fields")
         terms: dict = obj.get("terms", [])
 
-        all_suggestions = defaultdict(int)
+        all_suggestions: dict = defaultdict(int)
         for f in fields:
             suggest_for_field: list = terms.get(f, [])
             v_iter = iter(suggest_for_field)
@@ -108,7 +106,7 @@ async def handle_suggest_request(req: request.Request, **kwargs) -> response.HTT
     escaped_query: str = re.escape(query)
 
     try:
-        solr_res: dict = SolrConnection.term_suggest({"query": escaped_query, "fields": fields})
+        solr_res: dict = await SolrConnection.term_suggest({"query": escaped_query, "fields": fields})
     except SolrError:
         msg: str = "Error sending suggest request"
         log.exception(msg)
@@ -120,4 +118,4 @@ async def handle_suggest_request(req: request.Request, **kwargs) -> response.HTT
                                                        "direct_request": True,
                                                        "suggest_fields": fields}).data
 
-    return send_json_response(suggest_results, req.app.ctx.config['common']['debug'])
+    return await send_json_response(suggest_results, req.app.ctx.config['common']['debug'])

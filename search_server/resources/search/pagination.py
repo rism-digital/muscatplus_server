@@ -6,8 +6,6 @@ from small_asc.client import Results
 import serpy
 
 from search_server.exceptions import PaginationParseException
-from shared_helpers.fields import StaticField
-from shared_helpers.serializers import ContextDictSerializer
 from search_server.helpers.urls import replace_query_param, remove_query_param
 
 log = logging.getLogger(__name__)
@@ -16,7 +14,7 @@ PAGE_QUERY_PARAM = "page"
 ROWS_QUERY_PARAM = "rows"
 
 
-class Pagination(ContextDictSerializer):
+class Pagination(serpy.DictSerializer):
     """
     The PaginationSerializer will return a list of pagination links to assist
     consuming applications with navigation of the results. It is created as a
@@ -25,7 +23,7 @@ class Pagination(ContextDictSerializer):
     details.)
     """
 
-    pagination_type = StaticField(
+    pagination_type = serpy.StaticField(
         label="type",
         value="PartialCollectionView"
     )
@@ -202,7 +200,7 @@ def parse_row_number(req, row_query_string: Optional[str]) -> int:
         return search_config['rows']
 
     try:
-        rows: int = int(row_query_string)
+        rows = int(row_query_string)
     except ValueError as e:
         raise PaginationParseException("Invalid value for rows. If provided, it must be a whole number.")
 

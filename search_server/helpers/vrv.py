@@ -201,10 +201,10 @@ def validate_pae(req) -> dict:
 
     transl: dict = req.app.ctx.translations
 
-    validation_output: list = validation_output["data"]
+    validation_data: list = validation_output["data"]
     translated_messages: list = []
 
-    for message in validation_output:
+    for message in validation_data:
         code: int = message.get("code")
         err_needle: str = f"verovio.ERR_{code:03}"
         error_msg: dict = _find_err_msg(err_needle, transl)

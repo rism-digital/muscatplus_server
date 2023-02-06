@@ -3,14 +3,13 @@ from typing import Optional
 import serpy
 
 from shared_helpers.display_fields import get_display_fields, LabelConfig
-from shared_helpers.fields import StaticField
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 
-class NotesSection(JSONLDContextDictSerializer):
+class NotesSection(JSONLDAsyncDictSerializer):
     label = serpy.MethodField()
-    ntype = StaticField(
+    ntype = serpy.StaticField(
         label="type",
         value="rism:NotesSection"
     )

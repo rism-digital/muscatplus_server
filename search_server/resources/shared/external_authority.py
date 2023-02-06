@@ -2,24 +2,22 @@ from typing import Optional
 
 import serpy
 
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import EXTERNAL_IDS
-from shared_helpers.serializers import ContextDictSerializer
 
 
-class ExternalAuthoritiesSection(ContextDictSerializer):
+class ExternalAuthoritiesSection(serpy.DictSerializer):
     label = serpy.MethodField()
-    etype = StaticField(
+    etype = serpy.StaticField(
         label="type",
         value="rism:ExternalAuthoritiesSection"
     )
     items = serpy.MethodField()
 
     def get_label(self, obj: list) -> dict:
-        req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        req = self.context.get("request")  # type: ignore
+        transl: dict = req.app.ctx.translations  # type: ignore
 
-        return transl.get("records.other_standard_identifier")
+        return transl.get("records.other_standard_identifier", {})
 
     def get_items(self, obj: list) -> list[dict]:
         externals: list = []

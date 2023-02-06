@@ -1,7 +1,7 @@
 from typing import Optional
 import logging
 import rdflib
-import ujson
+import orjson
 
 from shared_helpers.identifiers import RISM_JSONLD_CONTEXT
 
@@ -17,7 +17,7 @@ def _to_graph_object(data: dict) -> rdflib.Graph:
     :param data: A dictionary coming from one of the JSON-LD serializers
     :return: An rdflib.Graph object.
     """
-    json_serialized: str = ujson.dumps(data)
+    json_serialized: str = orjson.dumps(data).decode("utf8")
     g = rdflib.Graph().parse(data=json_serialized, format="json-ld")
 
     for pfx in ["rdf", "rdfs", "rism", "rismdata", "relators", "dcterms", "as", "hydra", "geojson", "schemaorg", "pmo"]:

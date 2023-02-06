@@ -1,5 +1,6 @@
 from typing import Optional
 
+import orjson
 from sanic import response
 
 from search_server.helpers.vrv import create_pae_from_request, render_pae, validate_pae
@@ -46,6 +47,5 @@ async def handle_incipit_validate(req) -> response.HTTPResponse:
     return response.json(
         data_obj,
         headers=response_headers,
-        escape_forward_slashes=False,
-        indent=(4 if req.app.ctx.config['common']['debug'] else 0)
+        option=orjson.OPT_INDENT_2 if req.app.ctx.config['common']['debug'] else 0
     )

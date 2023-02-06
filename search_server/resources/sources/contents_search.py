@@ -6,7 +6,7 @@ from search_server.resources.search.search_results import SearchResults
 from shared_helpers.solr_connection import is_composite
 
 
-def _get_normal_results(req, source_id: str) -> dict:
+async def _get_normal_results(req, source_id: str) -> dict:
     try:
         request_compiler: SearchRequest = SearchRequest(req, is_contents=True)
         request_compiler.filters += ["type:source",
@@ -20,10 +20,10 @@ def _get_normal_results(req, source_id: str) -> dict:
     extra_context: dict = {"direct_request": True,
                            "is_contents": True}
 
-    return serialize_response(req, solr_params, SearchResults, extra_context)
+    return await serialize_response(req, solr_params, SearchResults, extra_context)
 
 
-def _get_composite_results(req, source_id: str) -> dict:
+async def _get_composite_results(req, source_id: str) -> dict:
     try:
         request_compiler: SearchRequest = SearchRequest(req, is_contents=True)
         request_compiler.filters += ["type:source OR type:holding",
@@ -40,22 +40,22 @@ def _get_composite_results(req, source_id: str) -> dict:
                            "is_composite": True,
                            "is_contents": True}
 
-    return serialize_response(req, solr_params, SearchResults, extra_context)
+    return await serialize_response(req, solr_params, SearchResults, extra_context)
 
 
 async def handle_contents_search_request(req, source_id: str) -> dict:
     this_id: str = f"source_{source_id}"
     # Since we don't know if this source is a composite source or not,
     # we first do a quick check.
-    is_comp: bool = is_composite(this_id)
+    is_comp: bool = await is_composite(this_id)
 
     # There are two paths for a source: The "normal" path, and the path
     # to take if the source is a composite volume, since composites need
     # special handling.
     if not is_comp:
-        return _get_normal_results(req, this_id)
+        return await _get_normal_results(req, this_id)
     else:
-        return _get_composite_results(req, this_id)
+        return await _get_composite_results(req, this_id)
 
 
 async def handle_contents_probe_request(req, source_id: str) -> dict:
@@ -73,4 +73,4 @@ async def handle_contents_probe_request(req, source_id: str) -> dict:
 
     extra_context: dict = {"direct_request": True}
 
-    return serialize_response(req, solr_params, SearchResults, extra_context)
+    return await serialize_response(req, solr_params, SearchResults, extra_context)

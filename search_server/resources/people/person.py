@@ -19,13 +19,13 @@ log = logging.getLogger(__name__)
 
 
 async def handle_person_request(req, person_id: str) -> Optional[dict]:
-    person_record = SolrConnection.get(f"person_{person_id}")
+    person_record = await SolrConnection.get(f"person_{person_id}")
 
     if not person_record:
         return None
 
-    return Person(person_record, context={"request": req,
-                                          "direct_request": True}).data
+    return await Person(person_record, context={"request": req,
+                                                "direct_request": True}).data
 
 
 class Person(BasePerson):
@@ -102,8 +102,8 @@ class Person(BasePerson):
         req = self.context.get("request")
         return RelationshipsSection(obj, context={"request": req}).data
 
-    def get_notes(self, obj: SolrResult) -> Optional[dict]:
-        notelist: dict = NotesSection(obj, context={"request": self.context.get("request")}).data
+    async def get_notes(self, obj: SolrResult) -> Optional[dict]:
+        notelist: dict = await NotesSection(obj, context={"request": self.context.get("request")}).data
 
         # Check that the items is not empty; if not, return the note list object.
         if "notes" in notelist:
@@ -116,4 +116,3 @@ class Person(BasePerson):
             return None
 
         return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
-

@@ -5,6 +5,28 @@ from shared_helpers.identifiers import ID_SUB
 from shared_helpers.languages import SUPPORTED_LANGUAGES
 
 
+_MATERIAL_SOURCE_TYPE_MAP: dict = {
+    "Manuscript copy": "records.manuscript_copy",
+    "Print": "records.print",
+    "Autograph manuscript": "records.autograph_manuscript",
+    "Possible autograph manuscript": "records.possible_autograph_manuscript",
+    "Partial autograph": "records.partial_autograph",
+    "Other": "records.other",
+    "Manuscript copy with autograph annotations": "records.manuscript_copy_with_autograph_annotations",
+    "Print with autograph annotations": "records.print_with_autograph_annotations",
+    "Print with non-autograph annotations": "records.print_with_non_autograph_annotations",
+    "Composite": "records.composite",
+    "Additional printed material": "records.additional_printed_material"
+}
+
+_MATERIAL_CONTENT_TYPE_MAP: dict = {
+    "Notated music": "records.notated_music",
+    "Other": "records.other",
+    "Libretto": "records.libretto",
+    "Treatise": "records.treatise",
+    "Mixed": "records.mixed"
+}
+
 _KEY_MODE_MAP: dict = {
     "A": "records.a_major",
     "a": "records.a_minor",
@@ -119,6 +141,7 @@ _QUALIFIER_LABELS_MAP = {
 
 _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     None: "records.other",
+    "xx": "records.associated_institution",
     "now-in": "records.now_in",
     "brother of": "records.brother_of",
     "child of": "records.child_of",
@@ -168,6 +191,7 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
 
 _PLACE_RELATIONSHIP_LABELS_MAP = {
     None: "records.related_place",
+    "xx": "records.related_place",  # special case for un-qualified place relationships
     "go": "records.place_birth",
     "ha": "records.place_origin",
     "so": "records.place_death",
@@ -444,6 +468,13 @@ def __lookup_translations_list(values: list, available_translations: dict, trans
 
     return result
 
+def material_source_types_translator(values: list, translations: dict) -> dict:
+    return __lookup_translations_list(values, translations, _MATERIAL_SOURCE_TYPE_MAP)
+
+
+def material_content_types_translator(values: list, translations: dict) -> dict:
+    return __lookup_translations_list(values, translations, _MATERIAL_CONTENT_TYPE_MAP)
+
 
 def gnd_country_code_labels_translator(values: list, translations: dict) -> dict:
     return __lookup_translations_list(values, translations, _GND_COUNTRY_CODE_MAP)
@@ -581,6 +612,9 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
         if key_mode:
             key_mode_trans = key_mode_value_translator(key_mode, translations)
 
+        if source_type:
+            source_type_trans = material_source_types_translator([source_type], translations)
+
         for lang in SUPPORTED_LANGUAGES:
             tith = f"{title}"
             subh = ', '.join(sh) if (sh := subheading_trans.get(lang, [])) else ""
@@ -593,8 +627,7 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
                 exarr += f", {arrh.strip()}" if subh else f"{arrh.strip()}"
 
             exarr = f" ({exarr})" if exarr else ""
-
-            styp = f"; {st}" if (st := source_type) else ""
+            styp = f"; {', '.join(st)}" if (st := source_type_trans.get(lang, [])) else source_type
             keyh = f"–{', '.join(kh)}" if (kh := key_mode_trans.get(lang, [])) else ""
             cath = f"; {catalogue_numbers}" if catalogue_numbers else ""
             hsigh = f"; {holding_siglum}" if holding_siglum else ""

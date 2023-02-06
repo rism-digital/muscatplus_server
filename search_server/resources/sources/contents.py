@@ -8,19 +8,21 @@ from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.display_translators import (
     dramatic_roles_json_value_translator,
     title_json_value_translator,
-    scoring_json_value_translator)
-from shared_helpers.fields import StaticField
+    scoring_json_value_translator,
+    material_content_types_translator,
+    material_source_types_translator
+)
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.languages import languages_translator
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 
-class ContentsSection(JSONLDContextDictSerializer):
+class ContentsSection(JSONLDDictSerializer):
     csid = serpy.MethodField(
         label="id"
     )
-    cstype = StaticField(
+    cstype = serpy.StaticField(
         label="type",
         value="rism:ContentsSection"
     )
@@ -46,8 +48,8 @@ class ContentsSection(JSONLDContextDictSerializer):
         transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "material_source_types_sm": ("records.source_type", None),
-            "material_content_types_sm": ("records.content_type", None),
+            "material_source_types_sm": ("records.source_type", material_source_types_translator),
+            "material_content_types_sm": ("records.content_type", material_content_types_translator),
             "standard_title_s": ("records.standardized_title", None),
             "source_title_s": ("records.title_on_source", None),
             "variant_title_s": ("records.variant_source_title", None),
@@ -75,8 +77,8 @@ class ContentsSection(JSONLDContextDictSerializer):
         return SourceSubjectsSection(obj, context={"request": self.context.get("request")}).data
 
 
-class SourceSubjectsSection(JSONLDContextDictSerializer):
-    stype = StaticField(
+class SourceSubjectsSection(JSONLDDictSerializer):
+    stype = serpy.StaticField(
         label="type",
         value="rism:SourceSubjectSection"
     )
@@ -98,11 +100,11 @@ class SourceSubjectsSection(JSONLDContextDictSerializer):
 # A minimal subject serializer. This is because the data for the subjects
 # comes from the JSON field on the source, rather than from the Solr records
 # for subjects.
-class SourceSubject(JSONLDContextDictSerializer):
+class SourceSubject(JSONLDDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
-    stype = StaticField(
+    stype = serpy.StaticField(
         label="type",
         value="rism:Subject"
     )

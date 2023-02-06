@@ -5,6 +5,7 @@ import sentry_sdk
 import yaml
 from sanic import Sanic, response
 from small_asc.client import Results
+import orjson
 
 from shared_helpers.identifiers import RISM_JSONLD_CONTEXT
 from shared_helpers.languages import load_translations
@@ -34,16 +35,16 @@ if version_string.startswith("v"):
 else:
     release = version_string
 
-if debug_mode is False:
-    from sentry_sdk.integrations.sanic import SanicIntegration
-    sentry_sdk.init(
-        dsn=config["sentry"]["dsn"],
-        integrations=[SanicIntegration()],
-        environment=config["sentry"]["environment"],
-        release=f"muscatplus_server@{release}"
-    )
+# if debug_mode is False:
+#     from sentry_sdk.integrations.sanic import SanicIntegration
+#     sentry_sdk.init(
+#         dsn=config["sentry"]["dsn"],
+#         integrations=[SanicIntegration()],
+#         environment=config["sentry"]["environment"],
+#         release=f"muscatplus_server@{release}"
+#     )
 
-app = Sanic("mp_server")
+app = Sanic("mp_server", dumps=orjson.dumps)
 
 # register routes with their blueprints
 app.blueprint(sources_blueprint)
@@ -63,7 +64,7 @@ app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
 if debug_mode:
     LOGLEVEL = logging.DEBUG
 else:
-    LOGLEVEL = logging.WARNING
+    LOGLEVEL = logging.ERROR
 
 logging.basicConfig(format="[%(asctime)s] [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
                     level=LOGLEVEL)
@@ -97,7 +98,7 @@ async def context(req) -> response.HTTPResponse:
 async def about(req):
     cfg: dict = req.app.ctx.config
     sort: str = "indexed desc"
-    idx_results: Results = SolrConnection.search({"query": "*:*", "filter": ["type:indexer"], "sort": sort, "limit": 1, "fields": ["indexed", "indexer_version_sni"]})
+    idx_results: Results = await SolrConnection.search({"query": "*:*", "filter": ["type:indexer"], "sort": sort, "limit": 1, "fields": ["indexed", "indexer_version_sni"]})
 
     # If, for some reason, we don't have a result for the last indexed
     # value, then return Jan 1, 1970.

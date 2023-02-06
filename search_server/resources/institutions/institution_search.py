@@ -33,7 +33,7 @@ async def handle_institution_search_request(req, institution_id: str) -> dict:
         raise
 
     try:
-        result_data: dict = serialize_response(req, solr_params, InstitutionResults)
+        result_data: dict = await serialize_response(req, solr_params, InstitutionResults)
     except SolrError:
         raise
 
@@ -47,7 +47,7 @@ async def handle_institution_probe_request(req, institution_id: str) -> dict:
         raise
 
     try:
-        result_data: dict = serialize_response(req, solr_params, InstitutionResults)
+        result_data: dict = await serialize_response(req, solr_params, InstitutionResults)
     except SolrError:
         raise
 
@@ -58,7 +58,7 @@ class InstitutionResults(BaseSearchResults):
     def get_modes(self, obj: Results) -> Optional[dict]:
         return None
 
-    def get_items(self, obj: Results) -> Optional[list]:
+    async def get_items(self, obj: Results) -> Optional[list]:
         if obj.hits == 0:
             return None
 

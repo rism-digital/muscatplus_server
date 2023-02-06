@@ -11,13 +11,12 @@ from shared_helpers.display_fields import (
     LabelConfig
 )
 from shared_helpers.display_translators import key_mode_value_translator, clef_translator
-from shared_helpers.fields import StaticField
 from shared_helpers.formatters import format_incipit_label, format_source_label
 from shared_helpers.identifiers import (
     ID_SUB,
     get_identifier
 )
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import render_pae
 from search_server.resources.sources.base_source import BaseSource
@@ -25,7 +24,7 @@ from search_server.resources.sources.base_source import BaseSource
 log = logging.getLogger(__name__)
 
 
-def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
+async def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
     json_request: JsonAPIRequest = {
         "query": "*:*",
         "filter": ["type:incipit",
@@ -34,7 +33,7 @@ def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
         "sort": "work_num_ans asc",
         "limit": 1
     }
-    record: Results = SolrConnection.search(json_request)
+    record: Results = await SolrConnection.search(json_request)
 
     if record.hits == 0:
         return None
@@ -50,31 +49,31 @@ async def handle_incipits_list_request(req, source_id: str) -> Optional[dict]:
                    "has_incipits_b:true"],
     }
 
-    record: Results = SolrConnection.search(json_request)
+    record: Results = await SolrConnection.search(json_request)
 
     if record.hits == 0:
         return None
 
-    return IncipitsSection(record.docs[0], context={"request": req,
-                                                    "direct_request": True}).data
+    return await IncipitsSection(record.docs[0], context={"request": req,
+                                                          "direct_request": True}).data
 
 
 async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[dict]:
-    incipit_record: Optional[SolrResult] = _fetch_incipit(source_id, work_num)
+    incipit_record: Optional[SolrResult] = await _fetch_incipit(source_id, work_num)
 
     if not incipit_record:
         return None
 
-    return Incipit(incipit_record, context={"request": req,
-                                            "direct_request": True}).data
+    return await Incipit(incipit_record, context={"request": req,
+                                                  "direct_request": True}).data
 
 
-class IncipitsSection(JSONLDContextDictSerializer):
+class IncipitsSection(JSONLDAsyncDictSerializer):
     isid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    stype = StaticField(
+    stype = serpy.StaticField(
         label="type",
         value="rism:IncipitsSection"
     )
@@ -126,14 +125,14 @@ class IncipitsSection(JSONLDContextDictSerializer):
             }
         }
 
-    def get_items(self, obj: SolrResult) -> Optional[list]:
+    async def get_items(self, obj: SolrResult) -> Optional[list]:
         fq: list = [f"source_id:{obj.get('id')}",
                     "type:incipit"]
         sort: str = "work_num_ans asc"
 
-        results: Results = SolrConnection.search({"query": "*:*",
-                                                  "filter": fq,
-                                                  "sort": sort}, cursor=True)
+        results: Results = await SolrConnection.search({"query": "*:*",
+                                                        "filter": fq,
+                                                        "sort": sort}, cursor=True)
 
         # It will be strange for this to happen, since we only
         # call this code if the record has said there are incipits
@@ -142,16 +141,16 @@ class IncipitsSection(JSONLDContextDictSerializer):
         if results.hits == 0:
             return None
 
-        return Incipit(results,
-                       many=True,
-                       context={"request": self.context.get("request")}).data
+        return await Incipit(results,
+                             many=True,
+                             context={"request": self.context.get("request")}).data
 
 
-class Incipit(JSONLDContextDictSerializer):
+class Incipit(JSONLDAsyncDictSerializer):
     incip_id = serpy.MethodField(
         label="id"
     )
-    itype = StaticField(
+    itype = serpy.StaticField(
         label="type",
         value="rism:Incipit"
     )
@@ -175,14 +174,14 @@ class Incipit(JSONLDContextDictSerializer):
 
         return {"none": [label]}
 
-    def get_part_of(self, obj: SolrResult) -> Optional[dict]:
+    async def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
         return {
             "label": transl.get("records.item_part_of"),  # TODO: This should probably be changed to 'incipit part of'
             "type": "rism:PartOfSection",
-            "source": BaseSource(obj, context={"request": req}).data
+            "source": await BaseSource(obj, context={"request": req}).data
         }
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:

@@ -5,10 +5,13 @@ from typing import Optional
 import serpy
 
 from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.display_translators import printing_techniques_translator
-from shared_helpers.fields import StaticField
+from shared_helpers.display_translators import (
+    printing_techniques_translator,
+    material_source_types_translator,
+    material_content_types_translator
+)
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
@@ -16,12 +19,12 @@ from search_server.resources.shared.relationship import RelationshipsSection
 log = logging.getLogger("muscat_indexer")
 
 
-class MaterialGroupsSection(JSONLDContextDictSerializer):
+class MaterialGroupsSection(JSONLDDictSerializer):
     mgid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    stype = StaticField(
+    stype = serpy.StaticField(
         label="type",
         value="rism:MaterialGroupsSection"
     )
@@ -29,8 +32,7 @@ class MaterialGroupsSection(JSONLDContextDictSerializer):
 
     def get_mgid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
-        source_id_val = obj.get("id")
-        source_id: str = re.sub(ID_SUB, "", source_id_val)
+        source_id: str = re.sub(ID_SUB, "", obj["id"])
 
         return get_identifier(req, "sources.material_groups_list", source_id=source_id)
 
@@ -38,21 +40,21 @@ class MaterialGroupsSection(JSONLDContextDictSerializer):
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
-        return transl.get("records.material_description")
+        return transl.get("records.material_description", {})
 
     def get_items(self, obj: SolrResult) -> list[dict]:
-        mgdata: list = obj.get("material_groups_json")
+        mgdata: list = obj.get("material_groups_json", [])
         return MaterialGroup(mgdata,
                              many=True,
                              context={"request": self.context.get("request")}).data
 
 
-class MaterialGroup(JSONLDContextDictSerializer):
+class MaterialGroup(JSONLDDictSerializer):
     mgid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    mtype = StaticField(
+    mtype = serpy.StaticField(
         label="type",
         value="rism:MaterialGroup"
     )
@@ -65,9 +67,8 @@ class MaterialGroup(JSONLDContextDictSerializer):
 
     def get_mgid(self, obj: dict) -> str:
         req = self.context.get("request")
-        source_id_val = obj.get("source_id")
-        source_id: str = re.sub(ID_SUB, "", source_id_val)
-        mg_id: str = obj.get("group_num")
+        source_id: str = re.sub(ID_SUB, "", obj["source_id"])
+        mg_id: str = obj["group_num"]
 
         return get_identifier(req, "sources.material_group", source_id=source_id, mg_id=mg_id)
 
@@ -81,8 +82,8 @@ class MaterialGroup(JSONLDContextDictSerializer):
         transl: dict = req.app.ctx.translations
 
         field_config: LabelConfig = {
-            "material_source_types": ("records.source_type", None),
-            "material_content_types": ("records.content_type", None),
+            "material_source_types": ("records.source_type", material_source_types_translator),
+            "material_content_types": ("records.content_type", material_content_types_translator),
             "publication_place": ("records.place_publication", None),
             "publisher_copyist": ("records.publisher_copyist", None),
             "date_statements": ("records.date", None),

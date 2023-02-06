@@ -1,13 +1,12 @@
 import serpy
 
 from shared_helpers.display_translators import person_name_variant_labels_translator
-from shared_helpers.fields import StaticField
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 
-class VariantNamesSection(JSONLDContextDictSerializer):
-    ntype = StaticField(
+class VariantNamesSection(JSONLDDictSerializer):
+    ntype = serpy.StaticField(
         label="type",
         value="rism:VariantNamesSection"
     )
@@ -26,8 +25,8 @@ class VariantNamesSection(JSONLDContextDictSerializer):
                            context={"request": self.context.get("request")}).data
 
 
-class NameVariant(JSONLDContextDictSerializer):
-    vtype = StaticField(
+class NameVariant(JSONLDDictSerializer):
+    vtype = serpy.StaticField(
         label="type",
         value="rism:VariantName"
     )

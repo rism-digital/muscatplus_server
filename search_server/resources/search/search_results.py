@@ -11,8 +11,9 @@ from search_server.helpers.search_request import IncipitModeValues
 from search_server.helpers.vrv import render_pae
 from search_server.resources.search.base_search import BaseSearchResults
 from shared_helpers.display_fields import get_search_result_summary
-from shared_helpers.display_translators import gnd_country_code_labels_translator
-from shared_helpers.fields import StaticField
+from shared_helpers.display_translators import (
+    gnd_country_code_labels_translator, material_content_types_translator, material_source_types_translator,
+)
 from shared_helpers.formatters import (
     format_institution_label,
     format_person_label,
@@ -22,7 +23,6 @@ from shared_helpers.identifiers import (
     get_identifier,
     ID_SUB
 )
-from shared_helpers.serializers import ContextDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 log = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ class SearchResults(BaseSearchResults):
             "items": mode_items
         }
 
-    def get_items(self, obj: Results) -> Optional[list]:
+    async def get_items(self, obj: Results) -> Optional[list]:
         is_probe: bool = self.context.get("probe_request", False)
         # If we have no hits, or we have a 'probe' request, then don't
         # return an empty items block.
@@ -110,7 +110,7 @@ class SearchResults(BaseSearchResults):
                 # happen when a source is marked as composite, and the relationship to an item in the source is
                 # a holding record.
                 source_id: str = d["source_id"]
-                source_doc: Optional[dict] = SolrConnection.get(source_id)
+                source_doc: Optional[dict] = await SolrConnection.get(source_id)
                 if not source_doc:
                     log.error("Malformed holding %s", d["id"])
                     continue
@@ -122,12 +122,12 @@ class SearchResults(BaseSearchResults):
         return results
 
 
-class SourceSearchResult(ContextDictSerializer):
+class SourceSearchResult(serpy.DictSerializer):
     srid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    result_type = StaticField(
+    result_type = serpy.StaticField(
         label="type",
         value="rism:Source"
     )
@@ -167,8 +167,12 @@ class SourceSearchResult(ContextDictSerializer):
             "creator_name_s": ("sourceComposer", "records.composer_author", None),
             "date_statements_sm": ("dateStatements", "records.dates", None),
             "num_source_members_i": ("numItems", "records.items_in_source", None),
-            "material_source_types_sm": ("materialSourceTypes", "records.source_type", None),
-            "material_content_types_sm": ("materialContentTypes", "records.content_type", None),
+            "material_source_types_sm": ("materialSourceTypes",
+                                         "records.source_type",
+                                         material_source_types_translator),
+            "material_content_types_sm": ("materialContentTypes",
+                                          "records.content_type",
+                                          material_content_types_translator),
             "num_holdings_i": ("numExemplars", "records.exemplars", None)
         }
         summary: Optional[dict] = get_search_result_summary(field_config, transl, obj)
@@ -245,12 +249,12 @@ class SourceSearchResult(ContextDictSerializer):
         return flags or None
 
 
-class PersonSearchResult(ContextDictSerializer):
+class PersonSearchResult(serpy.DictSerializer):
     srid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    result_type = StaticField(
+    result_type = serpy.StaticField(
         label="type",
         value="rism:Person"
     )
@@ -298,12 +302,12 @@ class PersonSearchResult(ContextDictSerializer):
         return flags or None
 
 
-class InstitutionSearchResult(ContextDictSerializer):
+class InstitutionSearchResult(serpy.DictSerializer):
     srid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    result_type = StaticField(
+    result_type = serpy.StaticField(
         label="type",
         value="rism:Institution"
     )
@@ -351,12 +355,12 @@ class InstitutionSearchResult(ContextDictSerializer):
         return flags or None
 
 
-class PlaceSearchResult(ContextDictSerializer):
+class PlaceSearchResult(serpy.DictSerializer):
     srid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    result_type = StaticField(
+    result_type = serpy.StaticField(
         label="type",
         value="rism:Place"
     )
@@ -382,12 +386,12 @@ class PlaceSearchResult(ContextDictSerializer):
         return transl.get("records.place")
 
 
-class LiturgicalFestivalSearchResult(ContextDictSerializer):
+class LiturgicalFestivalSearchResult(serpy.DictSerializer):
     srid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    result_type = StaticField(
+    result_type = serpy.StaticField(
         label="type",
         value="rism:LiturgicalFestival"
     )
@@ -413,12 +417,12 @@ class LiturgicalFestivalSearchResult(ContextDictSerializer):
         return transl.get("records.liturgical_festival")
 
 
-class IncipitSearchResult(ContextDictSerializer):
+class IncipitSearchResult(serpy.DictSerializer):
     srid = serpy.MethodField(
         label="id"
     )
     label = serpy.MethodField()
-    result_type = StaticField(
+    result_type = serpy.StaticField(
         label="type",
         value="rism:Incipit"
     )

@@ -20,4 +20,4 @@ async def handle_probe_request(req) -> dict:
                            "direct_request": True,
                            "probe_request": True}
 
-    return serialize_response(req, solr_params, SearchResults, extra_context)
+    return await serialize_response(req, solr_params, SearchResults, extra_context)

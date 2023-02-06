@@ -3,8 +3,7 @@ from typing import Optional
 import serpy
 
 from shared_helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP, country_code_labels_translator
-from shared_helpers.fields import StaticField
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 
 
 async def handle_country_request(req, country_id: str) -> Optional[dict]:
@@ -13,16 +12,16 @@ async def handle_country_request(req, country_id: str) -> Optional[dict]:
     return None
 
 
-async def handle_country_list_request(req) -> Optional[dict]:
+async def handle_country_list_request(req) -> Optional[dict]:  # type: ignore
     return CountryList(SOURCE_SIGLA_COUNTRY_MAP, context={"request": req,
                                                           "direct_request": True}).data
 
 
-class CountryList(JSONLDContextDictSerializer):
+class CountryList(JSONLDDictSerializer):
     clid = serpy.MethodField(
         label="id"
     )
-    cltype = StaticField(
+    cltype = serpy.StaticField(
         label="type",
         value="rism:CountryListResults"
     )
@@ -30,11 +29,11 @@ class CountryList(JSONLDContextDictSerializer):
     items = serpy.MethodField()
 
     def get_clid(self, _) -> str:
-        req = self.context.get("request")
+        req = self.context.get("request")  # type: ignore
         return req.url
 
     def get_items(self, obj: dict) -> list[dict]:
-        req = self.context.get("request")
+        req = self.context.get("request")  # type: ignore
         transl: dict = req.app.ctx.translations
 
         res: list = []

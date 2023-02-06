@@ -31,7 +31,7 @@ async def handle_person_search_request(req, person_id: str) -> dict:
         raise
 
     try:
-        result_data: dict = serialize_response(req, solr_params, PersonResults)
+        result_data: dict = await serialize_response(req, solr_params, PersonResults)
     except SolrError:
         raise
 
@@ -45,7 +45,7 @@ async def handle_person_probe_request(req, person_id: str) -> dict:
         raise
 
     try:
-        result_data:dict = serialize_response(req, solr_params, PersonResults)
+        result_data:dict = await serialize_response(req, solr_params, PersonResults)
     except SolrError:
         raise
 
@@ -56,7 +56,7 @@ class PersonResults(BaseSearchResults):
     def get_modes(self, obj: Results) -> Optional[dict]:
         return None
 
-    def get_items(self, obj: Results) -> Optional[list]:
+    async def get_items(self, obj: Results) -> Optional[list]:
         if obj.hits == 0:
             return None
 

@@ -10,19 +10,18 @@ from shared_helpers.display_translators import (
     qualifier_labels_translator,
     place_relationship_labels_translator, title_json_value_translator, source_relationship_labels_translator
 )
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger(__name__)
 
 
-class RelationshipsSection(JSONLDContextDictSerializer):
+class RelationshipsSection(JSONLDDictSerializer):
     rid = serpy.MethodField(
         label="id"
     )
-    rtype = StaticField(
+    rtype = serpy.StaticField(
         label="type",
         value="rism:RelationshipsSection"
     )
@@ -31,8 +30,8 @@ class RelationshipsSection(JSONLDContextDictSerializer):
 
     def get_rid(self, obj: SolrResult) -> str:
         req = self.context.get('request')
-        related_id_val = obj.get("id")
-        related_id_type = obj.get("type")
+        related_id_val = obj["id"]
+        related_id_type = obj["type"]
         relationship_id: str = re.sub(ID_SUB, "", related_id_val)
 
         uri_section: str = ""
@@ -49,7 +48,7 @@ class RelationshipsSection(JSONLDContextDictSerializer):
             kwargs = {"institution_id": relationship_id}
         elif related_id_type == "holding":
             uri_section = "holdings.relationships"
-            holding_id_val = obj.get("holding_id_sni")
+            holding_id_val: str = obj["holding_id_sni"]
             if "-" in holding_id_val:
                 holding_id, source_id = holding_id_val.split("-")
             else:
@@ -59,9 +58,8 @@ class RelationshipsSection(JSONLDContextDictSerializer):
             kwargs = {"source_id": source_id, "holding_id": holding_id}
         elif related_id_type == "material-group":
             uri_section = "sources.material_group_relationships"
-            source_id = re.sub(ID_SUB, "", obj.get("source_id"))
-            mg_id = re.sub(ID_SUB, "", related_id_val)
-            kwargs = {"source_id": source_id, "mg_id": mg_id}
+            source_id = re.sub(ID_SUB, "", obj["source_id"])
+            kwargs = {"source_id": source_id, "mg_id": relationship_id}
 
         return get_identifier(req, uri_section, **kwargs)
 
@@ -69,7 +67,7 @@ class RelationshipsSection(JSONLDContextDictSerializer):
         req = self.context.get("request")
         transl: dict = req.app.ctx.translations
 
-        return transl.get("records.relations")
+        return transl.get("records.relations", {})
 
     def get_items(self, obj: dict) -> list[dict]:
         people: list = obj.get("related_people_json", [])
@@ -85,8 +83,8 @@ class RelationshipsSection(JSONLDContextDictSerializer):
                             context={"request": self.context.get("request")}).data
 
 
-class Relationship(JSONLDContextDictSerializer):
-    stype = StaticField(
+class Relationship(JSONLDDictSerializer):
+    stype = serpy.StaticField(
         label="type",
         value="rism:Relationship"
     )
@@ -102,22 +100,22 @@ class Relationship(JSONLDContextDictSerializer):
         if 'relationship' not in obj:
             return None
 
+        relationship_value: str = obj["relationship"]
         req = self.context.get("request")
         transl = req.app.ctx.translations
         relationship_translator: Optional[Callable] = _relationship_translator(obj)
         if not relationship_translator:
             return {"none": ["[Unknown relationship]"]}
 
-        relationship_value: str = obj.get("relationship")
         # If the relator codes are already formatted as a namespace, then don't double
         # namespace them.
         if relationship_value.startswith("rdau"):
             rel = relationship_value
         else:
-            rel = obj.get('relationship').replace(' ', '_')
+            rel = relationship_value.replace(' ', '_')
 
         return {
-            "label": relationship_translator(obj.get("relationship"), transl),
+            "label": relationship_translator(relationship_value, transl),
             "value": f"{rel}",
             "type": f"relators:{rel}"
         }
@@ -181,7 +179,7 @@ def _related_to_person(req, obj: dict) -> dict:
     else:
         name = f"{obj.get('name')}"
 
-    person_id = re.sub(ID_SUB, "", obj.get('person_id'))
+    person_id = re.sub(ID_SUB, "", obj['person_id'])
 
     return {
         "id": get_identifier(req, "people.person", person_id=person_id),
@@ -197,7 +195,7 @@ def _related_to_institution(req, obj: dict) -> dict:
     else:
         name = f"{obj.get('name')}"
 
-    institution_id = re.sub(ID_SUB, "", obj.get("institution_id"))
+    institution_id = re.sub(ID_SUB, "", obj["institution_id"])
 
     return {
         "id": get_identifier(req, "institutions.institution", institution_id=institution_id),
@@ -207,7 +205,7 @@ def _related_to_institution(req, obj: dict) -> dict:
 
 
 def _related_to_place(req, obj: dict) -> dict:
-    place_id = re.sub(ID_SUB, "", obj.get("place_id"))
+    place_id = re.sub(ID_SUB, "", obj["place_id"])
 
     return {
         "id": get_identifier(req, "places.place", place_id=place_id),
@@ -219,8 +217,8 @@ def _related_to_place(req, obj: dict) -> dict:
 def _related_to_source(req, obj: dict) -> dict:
     transl = req.app.ctx.translations
 
-    source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
-    source_title: dict = title_json_value_translator(obj.get("title"), transl)
+    source_id: str = re.sub(ID_SUB, "", obj["source_id"])
+    source_title: dict = title_json_value_translator(obj.get("title", []), transl)
 
     return {
         "id": get_identifier(req, "sources.source", source_id=source_id),

@@ -3,19 +3,18 @@ import re
 from typing import Optional
 
 import serpy
-from small_asc.client import Results
+from shared_helpers.client import Results
 
 from search_server.resources.sources.base_source import BaseSource
-from shared_helpers.fields import StaticField
 from shared_helpers.identifiers import get_identifier, ID_SUB
-from shared_helpers.serializers import JSONLDContextDictSerializer
+from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 log = logging.getLogger(__name__)
 
 
-class SourceItemsSection(JSONLDContextDictSerializer):
-    stype = StaticField(
+class SourceItemsSection(JSONLDAsyncDictSerializer):
+    stype = serpy.StaticField(
         label="type",
         value="rism:SourceItemsSection"
     )
@@ -41,7 +40,7 @@ class SourceItemsSection(JSONLDContextDictSerializer):
     def get_total_items(self, obj: SolrResult) -> int:
         return obj.get("num_source_members_i", 0)
 
-    def get_items(self, obj: SolrResult) -> Optional[list]:
+    async def get_items(self, obj: SolrResult) -> Optional[list]:
         this_id: str = obj.get("id")
         is_composite: bool = obj["record_type_s"] == "composite"
 
@@ -59,31 +58,31 @@ class SourceItemsSection(JSONLDContextDictSerializer):
         # sort order of the source_id if that isn't present.
         sort: str = "source_membership_order_i asc, source_id asc"
 
-        source_results: Results = SolrConnection.search({"query": "*:*",
-                                                         "filter": fq,
-                                                         "sort": sort}, cursor=True)
+        source_results: Results = await SolrConnection.search({"query": "*:*",
+                                                               "filter": fq,
+                                                               "sort": sort}, cursor=True)
 
         if source_results.hits == 0:
             return None
 
         items: list[dict] = []
 
-        for res in source_results:
+        async for res in source_results:
             if res['type'] == "source":
-                items.append(BaseSource(res,
-                                        context={"request": self.context.get("request")}).data)
+                items.append(await BaseSource(res,
+                                              context={"request": self.context.get("request")}).data)
             elif res["type"] == "holding" and is_composite:
                 # This requires a Solr lookup, so it's slower, but it should only happen on a small
                 # proportion of the results.
                 source_id: str = res["source_id"]
-                source_doc: Optional[dict] = SolrConnection.get(source_id)
+                source_doc: Optional[dict] = await SolrConnection.get(source_id)
 
                 if not source_doc:
                     log.error("Could not load source for holding %s", res["id"])
                     continue
 
-                items.append(BaseSource(source_doc,
-                                        context={"request": self.context.get("request")}).data)
+                items.append(await BaseSource(source_doc,
+                                              context={"request": self.context.get("request")}).data)
             else:
                 log.error("Unexpected result type %s for %s", res.get("type"), this_id)
                 continue

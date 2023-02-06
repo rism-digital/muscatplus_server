@@ -2,14 +2,14 @@ afr:
   label: languages.afrikaans
 alb:
   label: languages.albanian
+art:
+  label: languages.artificial
 ara:
   label: languages.arabic
 arg:
   label: languages.aragonese
 arm:
   label: languages.armenian
-art:
-  label: languages.artificial
 aus:
   label: languages.australian
 baq:
@@ -28,10 +28,14 @@ chi:
   label: languages.chinese
 chu:
   label: languages.old_church_slavonic
+cre:
+  label: languages.cree
 crp:
   label: languages.creoles_pidgins_other
 cze:
   label: languages.czech
+dak:
+  label: languages.dakota
 dan:
   label: languages.danish
 dsb:
@@ -158,6 +162,8 @@ spa:
   label: languages.spanish
 srp:
   label: languages.serbian
+swa:
+  label: languages.swahili
 swe:
   label: languages.swedish
 tat:
