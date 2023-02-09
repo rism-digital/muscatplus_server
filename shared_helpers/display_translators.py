@@ -159,6 +159,7 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     "bnd": "records.binder",
     "bsl": "records.bookseller",
     "ccp": "records.conceptor",
+    "chr": "records.choreographer",
     "cmp": "records.composer",
     "cns": "records.censor",
     "cph": "records.copyright_holder",
@@ -600,8 +601,8 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
         catalogue_numbers: Optional[str] = ", ".join(ch) if (ch := v.get("catalogue_numbers")) else None
         holding_siglum: Optional[str] = v.get("holding_siglum")
         holding_shelfmark: Optional[str] = v.get("holding_shelfmark")
-        source_type: Optional[str] = v.get("source_type")
-        subheading_trans = arrangement_trans = key_mode_trans = {}
+        source_type: str = v.get("source_type", "")
+        subheading_trans = arrangement_trans = key_mode_trans = source_type_trans = {}
 
         if subheading:
             subheading_trans = subheading_value_translator(subheading, translations)
