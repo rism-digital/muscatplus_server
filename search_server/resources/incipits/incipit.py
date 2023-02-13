@@ -18,7 +18,7 @@ from shared_helpers.identifiers import (
 )
 from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrConnection, SolrResult
-from search_server.helpers.vrv import render_pae
+from search_server.helpers.vrv import render_pae, render_mei
 from search_server.resources.sources.base_source import BaseSource
 
 log = logging.getLogger(__name__)
@@ -66,6 +66,33 @@ async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional
 
     return await Incipit(incipit_record, context={"request": req,
                                                   "direct_request": True}).data
+
+
+async def handle_mei_download(req, source_id: str, work_num: str) -> Optional[dict]:
+    """
+    Handle MEI file download for a given incipit. Returns a dictionary containing the
+    attachment filename and the MEI content sent in the body of the response.
+    """
+    incipit_record: Optional[SolrResult] = await _fetch_incipit(source_id, work_num)
+
+    if not incipit_record:
+        return None
+
+    if "music_incipit_s" not in incipit_record:
+        return None
+
+    filename: str = f"rism-{source_id}-{work_num}.mei"
+    response_headers: dict = {"Content-Disposition": f"attachment; filename={filename}",
+                              "Content-Type": "application/mei+xml"}
+
+    mei_content: Optional[str] = render_mei(incipit_record)
+    if not mei_content:
+        return None
+
+    return {
+        "headers": response_headers,
+        "content": mei_content
+    }
 
 
 class IncipitsSection(JSONLDAsyncDictSerializer):

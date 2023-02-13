@@ -6,6 +6,7 @@ from typing import Optional
 
 import httpx
 import verovio
+from orjson import orjson
 
 log = logging.getLogger(__name__)
 verovio.enableLog(False)
@@ -126,6 +127,36 @@ def render_url(url: str) -> Optional[str]:
         svg: str = vrv_tk.renderToSVG()
 
         return svg
+
+
+def render_mei(incipit: dict) -> Optional[str]:
+    """
+    Renders an MEI result from PAE input. Includes information for the MEI header
+    in the `x-header` section.
+
+    :param incipit: A Solr result of an incipit record
+    :return: The MEI encoded as a string, or None if there was a problem loading
+    """
+    vrv_opts: dict = VEROVIO_BASE_OPTIONS.copy()
+    vrv_tk.setOptions(vrv_opts)
+    vrv_tk.setInputFrom("pae")
+
+    pae: dict = {
+        "x-header": {},  # TBD
+        "clef": incipit.get("clef_s", ""),
+        "keysig": incipit.get("key_s", ""),
+        "timesig": incipit.get("timesit_s", ""),
+        "data": incipit.get("music_incipit_s", "")
+    }
+
+    load_status: bool = vrv_tk.loadData(orjson.dumps(pae).decode("utf8"))
+    if not load_status:
+        incipit_id: str = incipit["id"]
+        log.error("Verovio could transform incipit %s to MEI", incipit_id)
+        return None
+
+    mei: str = vrv_tk.getMEI()
+    return mei
 
 
 def create_pae_from_request(req) -> str:
