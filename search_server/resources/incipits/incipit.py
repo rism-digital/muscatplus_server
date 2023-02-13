@@ -81,7 +81,7 @@ async def handle_mei_download(req, source_id: str, work_num: str) -> Optional[di
     if "music_incipit_s" not in incipit_record:
         return None
 
-    filename: str = f"rism-{source_id}-{work_num}.mei"
+    filename: str = f"rism-source-{source_id}-{work_num}.mei"
     response_headers: dict = {"Content-Disposition": f"attachment; filename={filename}",
                               "Content-Type": "application/mei+xml"}
 
