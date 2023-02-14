@@ -277,6 +277,12 @@ class Incipit(JSONLDAsyncDictSerializer):
         transl: dict = req.app.ctx.translations
 
         pae_encoding: dict = {}
+        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+        work_num: str = obj.get('work_num_s', "")
+        mei_download_url: str = get_identifier(req,
+                                               "sources.incipit_encoding",
+                                               source_id=source_id,
+                                               work_num=work_num)
 
         if c := obj.get("clef_s"):
             pae_encoding["clef"] = c
@@ -293,4 +299,8 @@ class Incipit(JSONLDAsyncDictSerializer):
             "label": transl.get("records.plaine_and_easie"),
             "format": "application/json",
             "data": pae_encoding
+        }, {
+            "label": transl.get("records.unknown"),
+            "format": "application/mei+xml",
+            "url": mei_download_url
         }]
