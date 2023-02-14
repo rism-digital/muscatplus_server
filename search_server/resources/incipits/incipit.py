@@ -225,7 +225,7 @@ class Incipit(JSONLDAsyncDictSerializer):
             field_config["creator_name_s"] = ("records.composer_author", None)
 
         field_config.update({
-            "title_s": ("records.title_movement_tempo", None),
+            "titles_sm": ("records.title_movement_tempo", None),
             "text_incipit_s": ("records.text_incipit", None),
             "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
             "clef_s": ("records.clef", clef_translator),

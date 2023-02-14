@@ -17,7 +17,8 @@ from shared_helpers.display_translators import (
 from shared_helpers.formatters import (
     format_institution_label,
     format_person_label,
-    format_source_label
+    format_source_label,
+    format_incipit_label
 )
 from shared_helpers.identifiers import (
     get_identifier,
@@ -444,10 +445,8 @@ class IncipitSearchResult(serpy.DictSerializer):
         return get_identifier(req, "sources.incipit", source_id=source_id, work_num=work_num)
 
     def get_label(self, obj: dict) -> dict:
-        work_num: str = obj.get("work_num_s")
-        title: str = f" ({d})" if (d := obj.get("title_s")) else ""
-
-        return {"none": [f"{work_num}{title}"]}
+        incipit_label: str = format_incipit_label(obj)
+        return {"none": [incipit_label]}
 
     def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
