@@ -35,14 +35,14 @@ if version_string.startswith("v"):
 else:
     release = version_string
 
-# if debug_mode is False:
-#     from sentry_sdk.integrations.sanic import SanicIntegration
-#     sentry_sdk.init(
-#         dsn=config["sentry"]["dsn"],
-#         integrations=[SanicIntegration()],
-#         environment=config["sentry"]["environment"],
-#         release=f"muscatplus_server@{release}"
-#     )
+if debug_mode is False:
+    from sentry_sdk.integrations.sanic import SanicIntegration
+    sentry_sdk.init(
+        dsn=config["sentry"]["dsn"],
+        integrations=[SanicIntegration()],
+        environment=config["sentry"]["environment"],
+        release=f"muscatplus_server@{release}"
+    )
 
 app = Sanic("mp_server", dumps=orjson.dumps)
 
