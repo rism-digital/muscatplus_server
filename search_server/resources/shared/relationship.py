@@ -65,7 +65,7 @@ class RelationshipsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.relations", {})
 
@@ -102,7 +102,7 @@ class Relationship(JSONLDDictSerializer):
 
         relationship_value: str = obj["relationship"]
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
         relationship_translator: Optional[Callable] = _relationship_translator(obj)
         if not relationship_translator:
             return {"none": ["[Unknown relationship]"]}
@@ -125,7 +125,7 @@ class Relationship(JSONLDDictSerializer):
             return None
 
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return {
             "label": qualifier_labels_translator(obj['qualifier'], transl),
@@ -215,7 +215,7 @@ def _related_to_place(req, obj: dict) -> dict:
 
 
 def _related_to_source(req, obj: dict) -> dict:
-    transl = req.app.ctx.translations
+    transl: dict = req.ctx.translations
 
     source_id: str = re.sub(ID_SUB, "", obj["source_id"])
     source_title: dict = title_json_value_translator(obj.get("title", []), transl)

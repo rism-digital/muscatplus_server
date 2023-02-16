@@ -15,7 +15,7 @@ class VariantNamesSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.name_variants")
 
@@ -35,7 +35,7 @@ class NameVariant(JSONLDDictSerializer):
 
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return person_name_variant_labels_translator(obj['type'], transl)
 

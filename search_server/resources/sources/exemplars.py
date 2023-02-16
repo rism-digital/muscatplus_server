@@ -24,7 +24,7 @@ class ExemplarsSection(JSONLDAsyncDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.exemplars", {})
 
@@ -83,13 +83,13 @@ class Exemplar(JSONLDAsyncDictSerializer):
 
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.institution")
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "shelfmark_s": ("records.shelfmark", None),
@@ -108,7 +108,7 @@ class Exemplar(JSONLDAsyncDictSerializer):
 
     def get_notes(self, obj: SolrResult) -> Optional[list]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "general_notes_sm": ("records.general_note", url_detecting_translator),

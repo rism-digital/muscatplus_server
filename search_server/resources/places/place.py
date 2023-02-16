@@ -55,12 +55,12 @@ class Place(JSONLDAsyncDictSerializer):
 
     def get_type_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
         return transl.get("records.place")
 
     def get_summary(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "country_s": ("records.country", None),

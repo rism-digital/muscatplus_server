@@ -39,13 +39,13 @@ class ContentsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.title_content_description")
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "material_source_types_sm": ("records.source_type", material_source_types_translator),
@@ -87,7 +87,7 @@ class SourceSubjectsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.subject_headings")
 

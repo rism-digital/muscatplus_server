@@ -31,14 +31,14 @@ class ReferencesNotesSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.references_and_notes")
 
     def get_notes(self, obj: SolrResult) -> Optional[dict]:
         # 500, 505, 518, 525
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "source_general_notes_smni": ("records.general_note", url_detecting_translator),
@@ -80,7 +80,7 @@ class PerformanceLocationsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.location_performance")
 
@@ -102,7 +102,7 @@ class LiturgicalFestivalsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.liturgical_festivals")
 

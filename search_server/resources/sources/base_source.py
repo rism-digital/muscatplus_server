@@ -64,14 +64,14 @@ class BaseSource(JSONLDAsyncDictSerializer):
             return {"none": [obj.get("main_title_s", "[No title]")]}
 
         req = self.context.get('request')
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
         label = format_source_label(obj["standard_titles_json"], transl)
 
         return label
 
     def get_type_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.source")
 
@@ -91,7 +91,7 @@ class BaseSource(JSONLDAsyncDictSerializer):
         req = self.context.get('request')
         parent_source_id: str = re.sub(ID_SUB, "", source_membership.get("source_id"))
         ident: str = get_identifier(req, "sources.source", source_id=parent_source_id)
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         parent_title: str = source_membership.get("main_title", "[No title]")
         parent_shelfmark: Optional[str] = source_membership.get("shelfmark")
@@ -130,7 +130,7 @@ class BaseSource(JSONLDAsyncDictSerializer):
     # identification fields.
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "source_member_composers_sm": ("records.composer", None),
@@ -154,7 +154,7 @@ class BaseSource(JSONLDAsyncDictSerializer):
 
     def get_record_history(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return get_record_history(obj, transl)
 

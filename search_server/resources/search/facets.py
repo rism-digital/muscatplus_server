@@ -28,7 +28,7 @@ def get_facets(req, obj: Results) -> Optional[dict]:
         return None
 
     cfg: dict = req.app.ctx.config
-    transl: dict = req.app.ctx.translations
+    transl: dict = req.ctx.translations
 
     current_mode: str = req.args.get("mode", cfg["search"]["default_mode"])
     filters = filters_for_mode(cfg, current_mode)

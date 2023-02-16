@@ -49,7 +49,7 @@ class LiturgicalFestival(JSONLDDictSerializer):
             return None
 
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             # should be "Alternate terms" but this is not available in the translations currently...

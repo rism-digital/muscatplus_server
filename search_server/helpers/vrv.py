@@ -230,7 +230,7 @@ def validate_pae(req) -> dict:
             "valid": True
         }
 
-    transl: dict = req.app.ctx.translations
+    transl: dict = req.ctx.translations
 
     validation_data: list = validation_output["data"]
     translated_messages: list = []

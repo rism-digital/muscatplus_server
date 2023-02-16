@@ -117,7 +117,7 @@ class IncipitsSection(JSONLDAsyncDictSerializer):
 
     def get_label(self, obj: SolrResult):
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.incipits")
 
@@ -126,7 +126,7 @@ class IncipitsSection(JSONLDAsyncDictSerializer):
             return None
 
         req = self.context.get('request')
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
         ident: str = get_identifier(req, "sources.source", source_id=obj.get("id"))
 
         if "standard_titles_json" not in obj:
@@ -203,7 +203,7 @@ class Incipit(JSONLDAsyncDictSerializer):
 
     async def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return {
             "label": transl.get("records.item_part_of"),  # TODO: This should probably be changed to 'incipit part of'
@@ -213,7 +213,7 @@ class Incipit(JSONLDAsyncDictSerializer):
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {}
 
@@ -274,7 +274,7 @@ class Incipit(JSONLDAsyncDictSerializer):
             return None
 
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         pae_encoding: dict = {}
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))

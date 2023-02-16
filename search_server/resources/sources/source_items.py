@@ -27,7 +27,7 @@ class SourceItemsSection(JSONLDAsyncDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.items_in_source")
 

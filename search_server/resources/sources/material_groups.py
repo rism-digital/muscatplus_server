@@ -38,7 +38,7 @@ class MaterialGroupsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.material_description", {})
 
@@ -79,7 +79,7 @@ class MaterialGroup(JSONLDDictSerializer):
 
     def get_summary(self, obj: dict) -> Optional[list]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "material_source_types": ("records.source_type", material_source_types_translator),
@@ -105,7 +105,7 @@ class MaterialGroup(JSONLDDictSerializer):
 
     def get_notes(self, obj: dict) -> Optional[list]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "general_notes": ("records.general_note", None),
@@ -119,6 +119,7 @@ class MaterialGroup(JSONLDDictSerializer):
         # a set is disjoint if there are no keys in common.
         if {'related_people_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
             return None
+
         return RelationshipsSection(obj, context={"request": self.context.get("request")}).data
 
     def get_external_resources(self, obj: dict) -> Optional[dict]:

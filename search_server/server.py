@@ -8,7 +8,7 @@ from small_asc.client import Results
 import orjson
 
 from shared_helpers.identifiers import RISM_JSONLD_CONTEXT
-from shared_helpers.languages import load_translations
+from shared_helpers.languages import load_translations, negotiate_languages
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.countries import countries_blueprint
 from search_server.routes.festivals import festivals_blueprint
@@ -82,6 +82,25 @@ app.ctx.context_uri = context_uri
 
 # Make the application configuration object available in the app context
 app.ctx.config = config
+
+
+@app.on_request
+def do_language_negotiation(req):
+    """
+    Performs language negotiation on every request. This looks for the presence of the
+    X-API-Accept-Language request header, with values of one or more language codes or "*".
+    If those language codes map to ones that are supported in RISM Online, then the full
+    dictionary of translations is filtered to only include the requested languages.
+
+    Serializers will then use the filtered translations dictionary on the request to produce
+    the translated values.
+
+    This process is run here so that it only runs once on each request.
+
+    :param req: A Sanic Request object
+    :return: None
+    """
+    req.ctx.translations = negotiate_languages(req, translations)
 
 
 @app.route("/")

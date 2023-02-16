@@ -78,7 +78,7 @@ class Person(BasePerson):
 
     def get_summary(self, obj: SolrResult) -> list[dict]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: dict = {
             "date_statement_s": ("records.years_birth_death", None),

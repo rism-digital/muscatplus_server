@@ -180,3 +180,36 @@ def languages_translator(value: Union[str, list], translations: dict) -> dict:
 
     # Unwrap the set into a list for the final result.
     return {k: list(v) for k, v in lang_dict.items()}
+
+
+def filter_languages(langcodes: set, translations: dict) -> dict:
+    return {trans_key:
+            {lcode: lvalues for lcode, lvalues in trans_value.items() if lcode in langcodes}
+            for trans_key, trans_value in translations.items()}
+
+
+def negotiate_languages(req, translations: dict) -> dict:
+    # If we're not doing any filtering, just return all translations
+    if "X-API-Accept-Language" not in req.headers:
+        log.debug("No language negotiation")
+        return translations
+
+    # If we're requesting all languages anyway
+    elif req.headers.get("X-API-Accept-Language") == "*":
+        log.debug("All languages negotiated")
+        return translations
+
+    lang_values: str = req.headers.get("X-API-Accept-Language")
+    split_vals: set = {f.strip() for f in lang_values.split(",")}
+
+    # Take the intersection of requested languages and supported languages. This
+    # determines which ones will be in the output.
+    acceptable_vals: set = split_vals & set(SUPPORTED_LANGUAGES)
+
+    # If no languages provided are acceptable, return all languages
+    if not acceptable_vals:
+        log.debug("No acceptable language values requested")
+        return translations
+
+    log.debug("filtering languages %s", acceptable_vals)
+    return filter_languages(acceptable_vals, translations)

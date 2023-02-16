@@ -34,7 +34,7 @@ class CountryList(JSONLDDictSerializer):
 
     def get_items(self, obj: dict) -> list[dict]:
         req = self.context.get("request")  # type: ignore
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         res: list = []
 

@@ -44,11 +44,11 @@ class BasePerson(JSONLDAsyncDictSerializer):
 
     def get_type_label(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
         return transl.get("records.person")
 
     def get_record_history(self, obj: dict) -> Optional[dict]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return get_record_history(obj, transl)

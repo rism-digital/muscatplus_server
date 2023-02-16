@@ -46,13 +46,13 @@ class BaseInstitution(JSONLDAsyncDictSerializer):
 
     def get_type_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.institution")
 
     def get_summary(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: dict = {
             "siglum_s": ("records.siglum", None),
@@ -67,6 +67,6 @@ class BaseInstitution(JSONLDAsyncDictSerializer):
 
     def get_record_history(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return get_record_history(obj, transl)
