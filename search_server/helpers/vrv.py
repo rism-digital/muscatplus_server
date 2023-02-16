@@ -8,6 +8,8 @@ import httpx
 import verovio
 from orjson import orjson
 
+from shared_helpers.identifiers import ID_SUB, get_identifier
+
 log = logging.getLogger(__name__)
 verovio.enableLog(False)
 VEROVIO_BASE_OPTIONS: dict = {
@@ -129,7 +131,7 @@ def render_url(url: str) -> Optional[str]:
         return svg
 
 
-def render_mei(incipit: dict) -> Optional[str]:
+def render_mei(req, incipit: dict) -> Optional[str]:
     """
     Renders an MEI result from PAE input. Includes information for the MEI header
     in the `x-header` section.
@@ -141,8 +143,34 @@ def render_mei(incipit: dict) -> Optional[str]:
     vrv_tk.setOptions(vrv_opts)
     vrv_tk.setInputFrom("pae")
 
+    source_id: str = re.sub(ID_SUB, "", incipit["source_id"])
+    work_num: str = incipit["work_num_s"]
+
+    source_url: str = get_identifier(req, "sources.source", source_id=source_id)
+    incipit_url: str = get_identifier(req, "sources.incipit_encoding", source_id=source_id, work_num=work_num)
+
+    metadata_header: dict = {
+        "source_url": source_url,
+        "download_url": incipit_url
+    }
+
+    if t := incipit.get("titles_sm", []):
+        metadata_header["title"] = " ".join(t)
+    if c := incipit.get("creator_name_s"):
+        metadata_header["composer"] = c
+    if sc := incipit.get("scoring_sm", []):
+        metadata_header["scoring"] = ", ".join(sc)
+    if st := incipit.get("main_title_s"):
+        metadata_header["source_title"] = st
+    if nt := incipit.get("general_notes_sm", []):
+        metadata_header["notes"] = nt
+    if vi := incipit.get("voice_instrument_s"):
+        metadata_header["voice_instrument"] = vi
+    if mv := incipit.get("work_num_s"):
+        metadata_header["movement"] = mv
+
     pae: dict = {
-        "x-header": {},  # TBD
+        "x-header": metadata_header,  # TBD
         "clef": incipit.get("clef_s", ""),
         "keysig": incipit.get("key_s", ""),
         "timesig": incipit.get("timesit_s", ""),

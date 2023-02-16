@@ -85,7 +85,7 @@ async def handle_mei_download(req, source_id: str, work_num: str) -> Optional[di
     response_headers: dict = {"Content-Disposition": f"attachment; filename={filename}",
                               "Content-Type": "application/mei+xml"}
 
-    mei_content: Optional[str] = render_mei(incipit_record)
+    mei_content: Optional[str] = render_mei(req, incipit_record)
     if not mei_content:
         return None
 
