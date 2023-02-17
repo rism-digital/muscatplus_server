@@ -77,9 +77,14 @@ def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensu
         return None
 
     svg: str = vrv_tk.renderToSVG()
-    mid: str = vrv_tk.renderToMIDI()
+
+    # NB: MIDI is disabled until a Verovio bug is fixed.
+    # mid: str = vrv_tk.renderToMIDI()
     # The toolkit has `paeFeatures=True` so this will output the PAE features
-    b64midi = f"data:audio/midi;base64,{mid}"
+    # b64midi = f"data:audio/midi;base64,{mid}"
+
+    # Use an empty string to keep the signature the same.
+    b64midi = ""
 
     return svg, b64midi
 

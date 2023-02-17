@@ -234,12 +234,16 @@ class Incipit(JSONLDAsyncDictSerializer):
 
         svg, b64midi = rendered_pae
 
+        # return [{
+        #     "format": "image/svg+xml",
+        #     "data": svg
+        # }, {
+        #     "format": "audio/midi",
+        #     "data": b64midi
+        # }]
         return [{
             "format": "image/svg+xml",
             "data": svg
-        }, {
-            "format": "audio/midi",
-            "data": b64midi
         }]
 
     def get_encodings(self, obj: SolrResult) -> Optional[list]:
