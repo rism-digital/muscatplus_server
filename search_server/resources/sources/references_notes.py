@@ -2,20 +2,18 @@ from typing import Optional
 
 import serpy
 
+# 500, 505, 525, 691, 510, 596, 657, 651, 518, 856(?)
+from search_server.resources.liturgical_festivals.liturgical_festival import LiturgicalFestival
+from search_server.resources.shared.relationship import Relationship
 from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.display_translators import (
     secondary_literature_json_value_translator,
     url_detecting_translator
 )
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
-# 500, 505, 525, 691, 510, 596, 657, 651, 518, 856(?)
-from search_server.resources.liturgical_festivals.liturgical_festival import LiturgicalFestival
-from search_server.resources.shared.relationship import Relationship
 
-
-class ReferencesNotesSection(JSONLDDictSerializer):
+class ReferencesNotesSection(serpy.DictSerializer):
     label = serpy.MethodField()
     stype = serpy.StaticField(
         label="type",
@@ -70,7 +68,7 @@ class ReferencesNotesSection(JSONLDDictSerializer):
                                           context={"request": self.context.get("request")}).data
 
 
-class PerformanceLocationsSection(JSONLDDictSerializer):
+class PerformanceLocationsSection(serpy.DictSerializer):
     label = serpy.MethodField()
     stype = serpy.StaticField(
         label="type",
@@ -92,7 +90,7 @@ class PerformanceLocationsSection(JSONLDDictSerializer):
                             context={"request": self.context.get("request")}).data
 
 
-class LiturgicalFestivalsSection(JSONLDDictSerializer):
+class LiturgicalFestivalsSection(serpy.DictSerializer):
     label = serpy.MethodField()
     stype = serpy.StaticField(
         label="type",

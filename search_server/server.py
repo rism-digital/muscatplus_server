@@ -7,7 +7,7 @@ from sanic import Sanic, response
 from small_asc.client import Results
 import orjson
 
-from shared_helpers.identifiers import RISM_JSONLD_CONTEXT
+from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT, RISM_JSONLD_PERSON_CONTEXT, RISM_JSONLD_DEFAULT_CONTEXT
 from shared_helpers.languages import load_translations, negotiate_languages
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.countries import countries_blueprint
@@ -108,9 +108,19 @@ async def front(req):
     return await handle_front_request(req)
 
 
+@app.route("/api/v1/source.json")
+async def source_context(req) -> response.HTTPResponse:
+    return response.json(RISM_JSONLD_SOURCE_CONTEXT)
+
+
+@app.route("/api/v1/person.json")
+async def person_context(req) -> response.HTTPResponse:
+    return response.json(RISM_JSONLD_PERSON_CONTEXT)
+
+
 @app.route("/api/v1/context.json")
-async def context(req) -> response.HTTPResponse:
-    return response.json(RISM_JSONLD_CONTEXT)
+async def default_context(req) -> response.HTTPResponse:
+    return response.json(RISM_JSONLD_DEFAULT_CONTEXT)
 
 
 @app.route("/about")

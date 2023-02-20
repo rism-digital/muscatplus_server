@@ -1,14 +1,13 @@
+import orjson
 import serpy
 from sanic import response
 from small_asc.client import Results
-import orjson
 
 from search_server.exceptions import InvalidQueryException
-from shared_helpers.identifiers import get_identifier
 from search_server.helpers.search_request import SearchRequest
-from shared_helpers.serializers import JSONLDDictSerializer
-from shared_helpers.solr_connection import SolrConnection
 from search_server.resources.search.facets import get_facets
+from shared_helpers.identifiers import get_identifier
+from shared_helpers.solr_connection import SolrConnection
 
 
 async def handle_front_request(req) -> response.HTTPResponse:
@@ -34,7 +33,7 @@ async def handle_front_request(req) -> response.HTTPResponse:
     )
 
 
-class Front(JSONLDDictSerializer):
+class Front(serpy.DictSerializer):
     fid = serpy.MethodField(
         label="id"
     )

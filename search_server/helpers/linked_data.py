@@ -3,7 +3,7 @@ import logging
 import rdflib
 import orjson
 
-from shared_helpers.identifiers import RISM_JSONLD_CONTEXT
+from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ def _to_graph_object(data: dict) -> rdflib.Graph:
     g = rdflib.Graph().parse(data=json_serialized, format="json-ld")
 
     for pfx in ["rdf", "rdfs", "rism", "rismdata", "relators", "dcterms", "as", "hydra", "geojson", "schemaorg", "pmo"]:
-        ns: Optional[str] = RISM_JSONLD_CONTEXT["@context"].get(pfx)
+        ns: Optional[str] = RISM_JSONLD_SOURCE_CONTEXT["@context"].get(pfx)
         if not ns:
             continue
         g.namespace_manager.bind(pfx, rdflib.URIRef(ns))
@@ -30,7 +30,9 @@ def _to_graph_object(data: dict) -> rdflib.Graph:
 
 
 def to_turtle(data: dict) -> str:
+    log.debug("Creating graph from data")
     graph_object: rdflib.Graph = _to_graph_object(data)
+    log.debug("Created graph object")
     turtle: str = graph_object.serialize(format="turtle")
 
     return turtle

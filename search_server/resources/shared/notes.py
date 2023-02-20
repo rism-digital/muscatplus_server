@@ -3,11 +3,10 @@ from typing import Optional
 import serpy
 
 from shared_helpers.display_fields import get_display_fields, LabelConfig
-from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 
-class NotesSection(JSONLDAsyncDictSerializer):
+class NotesSection(serpy.AsyncDictSerializer):
     label = serpy.MethodField()
     ntype = serpy.StaticField(
         label="type",

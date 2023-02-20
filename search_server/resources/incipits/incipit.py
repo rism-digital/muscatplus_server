@@ -6,6 +6,8 @@ import serpy
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.record_types import create_record_block
+from search_server.helpers.vrv import render_pae, render_mei
+from search_server.resources.sources.base_source import BaseSource
 from shared_helpers.display_fields import (
     get_display_fields,
     LabelConfig
@@ -16,10 +18,7 @@ from shared_helpers.identifiers import (
     ID_SUB,
     get_identifier
 )
-from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrConnection, SolrResult
-from search_server.helpers.vrv import render_pae, render_mei
-from search_server.resources.sources.base_source import BaseSource
 
 log = logging.getLogger(__name__)
 
@@ -95,7 +94,7 @@ async def handle_mei_download(req, source_id: str, work_num: str) -> Optional[di
     }
 
 
-class IncipitsSection(JSONLDAsyncDictSerializer):
+class IncipitsSection(serpy.AsyncDictSerializer):
     isid = serpy.MethodField(
         label="id"
     )
@@ -173,7 +172,7 @@ class IncipitsSection(JSONLDAsyncDictSerializer):
                              context={"request": self.context.get("request")}).data
 
 
-class Incipit(JSONLDAsyncDictSerializer):
+class Incipit(serpy.AsyncDictSerializer):
     incip_id = serpy.MethodField(
         label="id"
     )

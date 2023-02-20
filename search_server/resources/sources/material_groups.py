@@ -11,7 +11,6 @@ from shared_helpers.display_translators import (
     material_content_types_translator
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
@@ -19,7 +18,7 @@ from search_server.resources.shared.relationship import RelationshipsSection
 log = logging.getLogger("muscat_indexer")
 
 
-class MaterialGroupsSection(JSONLDDictSerializer):
+class MaterialGroupsSection(serpy.DictSerializer):
     mgid = serpy.MethodField(
         label="id"
     )
@@ -49,7 +48,7 @@ class MaterialGroupsSection(JSONLDDictSerializer):
                              context={"request": self.context.get("request")}).data
 
 
-class MaterialGroup(JSONLDDictSerializer):
+class MaterialGroup(serpy.DictSerializer):
     mgid = serpy.MethodField(
         label="id"
     )

@@ -11,13 +11,12 @@ from shared_helpers.display_translators import (
     place_relationship_labels_translator, title_json_value_translator, source_relationship_labels_translator
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger(__name__)
 
 
-class RelationshipsSection(JSONLDDictSerializer):
+class RelationshipsSection(serpy.DictSerializer):
     rid = serpy.MethodField(
         label="id"
     )
@@ -83,10 +82,12 @@ class RelationshipsSection(JSONLDDictSerializer):
                             context={"request": self.context.get("request")}).data
 
 
-class Relationship(JSONLDDictSerializer):
-    stype = serpy.StaticField(
-        label="type",
-        value="rism:Relationship"
+class Relationship(serpy.DictSerializer):
+    sid = serpy.MethodField(
+        label="id"
+    )
+    stype = serpy.MethodField(
+        label="type"
     )
     role = serpy.MethodField()
     qualifier = serpy.MethodField()
@@ -95,6 +96,23 @@ class Relationship(JSONLDDictSerializer):
     )
     name = serpy.MethodField()
     note = serpy.MethodField()
+
+    def get_sid(self, obj: dict) -> str:
+        ctx: dict = self.context
+        req = ctx.get("request")
+        source_id: str = re.sub(ID_SUB, "", obj["this_id"])
+        if "reltype" in ctx and ctx["reltype"] == "rism:Creator":
+            return get_identifier(req, "sources.creator", source_id=source_id)
+
+        relationship_id: str = obj["id"]
+        return get_identifier(req, "sources.relationship", source_id=source_id, relationship_id=relationship_id)
+
+    def get_stype(self, obj: dict) -> str:
+        ctx: dict = self.context
+        if "reltype" in ctx:
+            return ctx["reltype"]
+
+        return "rism:Relationship"
 
     def get_role(self, obj: dict) -> Optional[dict]:
         if 'relationship' not in obj:

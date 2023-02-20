@@ -14,11 +14,10 @@ from shared_helpers.display_translators import (
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.languages import languages_translator
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 
-class ContentsSection(JSONLDDictSerializer):
+class ContentsSection(serpy.DictSerializer):
     csid = serpy.MethodField(
         label="id"
     )
@@ -77,7 +76,7 @@ class ContentsSection(JSONLDDictSerializer):
         return SourceSubjectsSection(obj, context={"request": self.context.get("request")}).data
 
 
-class SourceSubjectsSection(JSONLDDictSerializer):
+class SourceSubjectsSection(serpy.DictSerializer):
     stype = serpy.StaticField(
         label="type",
         value="rism:SourceSubjectSection"
@@ -100,7 +99,7 @@ class SourceSubjectsSection(JSONLDDictSerializer):
 # A minimal subject serializer. This is because the data for the subjects
 # comes from the JSON field on the source, rather than from the Solr records
 # for subjects.
-class SourceSubject(JSONLDDictSerializer):
+class SourceSubject(serpy.DictSerializer):
     sid = serpy.MethodField(
         label="id"
     )

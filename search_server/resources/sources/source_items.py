@@ -3,17 +3,16 @@ import re
 from typing import Optional
 
 import serpy
-from shared_helpers.client import Results
+from small_asc.client import Results
 
 from search_server.resources.sources.base_source import BaseSource
 from shared_helpers.identifiers import get_identifier, ID_SUB
-from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 log = logging.getLogger(__name__)
 
 
-class SourceItemsSection(JSONLDAsyncDictSerializer):
+class SourceItemsSection(serpy.AsyncDictSerializer):
     stype = serpy.StaticField(
         label="type",
         value="rism:SourceItemsSection"

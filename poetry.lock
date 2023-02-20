@@ -1924,7 +1924,7 @@ files = [
 
 [[package]]
 name = "small-asc"
-version = "0.10.3"
+version = "0.10.4"
 description = "A small Solr client"
 category = "main"
 optional = false
@@ -1940,7 +1940,7 @@ orjson = "^3.8.5"
 type = "git"
 url = "https://github.com/rism-digital/small-asc.git"
 reference = "main"
-resolved_reference = "cd8cc80cede8c9209d61c0a31a36bf7843eece65"
+resolved_reference = "82a02dc91db2f4e5bc84be983b7a8d1f689727a4"
 
 [[package]]
 name = "sniffio"

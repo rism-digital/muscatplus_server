@@ -4,17 +4,16 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
-from shared_helpers.display_translators import url_detecting_translator
-from shared_helpers.display_fields import get_display_fields, LabelConfig
-from shared_helpers.formatters import format_institution_label
-from shared_helpers.identifiers import get_identifier, ID_SUB
-from shared_helpers.serializers import JSONLDAsyncDictSerializer
-from shared_helpers.solr_connection import SolrResult, SolrConnection
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
+from shared_helpers.display_fields import get_display_fields, LabelConfig
+from shared_helpers.display_translators import url_detecting_translator
+from shared_helpers.formatters import format_institution_label
+from shared_helpers.identifiers import get_identifier, ID_SUB
+from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 
-class ExemplarsSection(JSONLDAsyncDictSerializer):
+class ExemplarsSection(serpy.AsyncDictSerializer):
     label = serpy.MethodField()
     stype = serpy.StaticField(
         label="type",
@@ -50,7 +49,7 @@ class ExemplarsSection(JSONLDAsyncDictSerializer):
                               context={"request": self.context.get("request")}).data
 
 
-class Exemplar(JSONLDAsyncDictSerializer):
+class Exemplar(serpy.AsyncDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )

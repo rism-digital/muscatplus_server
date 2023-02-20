@@ -2,11 +2,10 @@ from typing import Optional
 
 import serpy
 
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 
-class ExternalResourcesSection(JSONLDDictSerializer):
+class ExternalResourcesSection(serpy.DictSerializer):
     """
     Returns a formatted object of external links.
 
@@ -39,7 +38,7 @@ class ExternalResourcesSection(JSONLDDictSerializer):
                                 context={"request": self.context.get("request")}).data
 
 
-class ExternalResource(JSONLDDictSerializer):
+class ExternalResource(serpy.DictSerializer):
     rtype = serpy.StaticField(
         label="type",
         value="rism:ExternalResource"

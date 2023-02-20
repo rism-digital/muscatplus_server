@@ -7,7 +7,6 @@ from small_asc.client import Results
 
 from search_server.helpers.vrv import render_url
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 log = logging.getLogger(__name__)
@@ -63,7 +62,7 @@ class DigitalObjectsSection(serpy.AsyncDictSerializer):
                                    context={"request": self.context.get("request")}).data
 
 
-class DigitalObject(JSONLDAsyncDictSerializer):
+class DigitalObject(serpy.AsyncDictSerializer):
     doid = serpy.MethodField(
         label="id"
     )

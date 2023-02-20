@@ -15,13 +15,12 @@ from search_server.resources.sources.material_groups import MaterialGroupsSectio
 from search_server.resources.sources.references_notes import ReferencesNotesSection
 from search_server.resources.sources.source_items import SourceItemsSection
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger(__name__)
 
 
-class SourceItemList(JSONLDDictSerializer):
+class SourceItemList(serpy.DictSerializer):
     sid = serpy.MethodField(
         label="id"
     )

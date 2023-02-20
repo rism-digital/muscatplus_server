@@ -102,8 +102,18 @@ async def probe(req, source_id: str):
                                source_id=source_id)
 
 
+@sources_blueprint.route("/<source_id:str>/creator/")
+async def creator(req, source_id: str):
+    return response.text("Not implemented", status=501)
+
+
 @sources_blueprint.route("/<source_id:str>/relationships/")
 async def relationships(req, source_id: str):
+    return response.text("Not implemented", status=501)
+
+
+@sources_blueprint.route("/<source_id:str>/relationships/<relationship_id:str>")
+async def relationship(req, source_id: str, relationship_id: str):
     return response.text("Not implemented", status=501)
 
 
