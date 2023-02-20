@@ -2160,37 +2160,37 @@ test = ["Cython (>=0.29.32,<0.30.0)", "aiohttp", "flake8 (>=3.9.2,<3.10.0)", "my
 
 [[package]]
 name = "verovio"
-version = "3.15.0.dev285"
+version = "3.15.0.dev320"
 description = "A library and toolkit for engraving MEI music notation into SVG"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "verovio-3.15.0.dev285-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:5f030f4492b7853bb2a59e8829b7b01b95b331feb40f8a2a528cfe2ce8a6dfed"},
-    {file = "verovio-3.15.0.dev285-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4f7305b043f7e04b8073126d5f1c246a4c926f6ee9423cec9c46b908cf0a1dbe"},
-    {file = "verovio-3.15.0.dev285-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ef91f1061fc0b6d4c9ec460c747f6c2e5c4065d984e3c01dba68c92ef3cde17d"},
-    {file = "verovio-3.15.0.dev285-cp310-cp310-win32.whl", hash = "sha256:f89606224f3b3697d09f55bdc49a9d498a91521947206bf07d738e3f61e5ae74"},
-    {file = "verovio-3.15.0.dev285-cp310-cp310-win_amd64.whl", hash = "sha256:29cd2f0e06fe15a24071c2a88b6e21b331743a0fd80fd982181eda880475048f"},
-    {file = "verovio-3.15.0.dev285-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:13e7b636e752dfb20dafce5161c8869e26db6254d89246013e61e2cf29597605"},
-    {file = "verovio-3.15.0.dev285-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:93eb55f998b87e3d876b65b24e4def988714b5b805636f9752d8c94b801a432e"},
-    {file = "verovio-3.15.0.dev285-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0b2a61b4af75f826a2fe343263a268c090aa207196a532edd973bc28538600bf"},
-    {file = "verovio-3.15.0.dev285-cp311-cp311-win32.whl", hash = "sha256:f0bf3b431256de0c81d6f7c1abad81d0b19191346ca5a81bd13176efcad2b5e4"},
-    {file = "verovio-3.15.0.dev285-cp311-cp311-win_amd64.whl", hash = "sha256:3044ac080a188dfe29602abad3b74de34ec408608205101caee89aab73e6a1c2"},
-    {file = "verovio-3.15.0.dev285-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:1c5e43e3f8f44f26b5992b36c178c63dddf06751826265a3ef9884eadc32599c"},
-    {file = "verovio-3.15.0.dev285-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e725cd77f3a51af7f153f745a6333195dad707058649111f6e884302d84e0367"},
-    {file = "verovio-3.15.0.dev285-cp37-cp37m-win32.whl", hash = "sha256:cb4a2923f285c85d1ce50320f24ce36aa2617e49f1e3a7772dac49d5efea797c"},
-    {file = "verovio-3.15.0.dev285-cp37-cp37m-win_amd64.whl", hash = "sha256:b098ded7f398ae3b4a0fd261fbfcfda4617fb01224dffac514499dc9b280c0fd"},
-    {file = "verovio-3.15.0.dev285-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:58cc68dc0392938838ac7be8fc2bbea45e756dabbe4807c6730a03c3a55dd47d"},
-    {file = "verovio-3.15.0.dev285-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:3b9bb85608bc71bee5028e513196d00f31a8f465d0a7a89064582b05d019826a"},
-    {file = "verovio-3.15.0.dev285-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a8cc31e17433b889427d9ed968d40480d4de428dc15de6580c5585520a2637f7"},
-    {file = "verovio-3.15.0.dev285-cp38-cp38-win32.whl", hash = "sha256:7d69686d9a4fdd3043d7242c993713a57d447c9d23189b431cbff5e1618daa49"},
-    {file = "verovio-3.15.0.dev285-cp38-cp38-win_amd64.whl", hash = "sha256:dd9e8e24f153857330e86140c41e79dfab34a4b103b0307f82e01b02c217aa7e"},
-    {file = "verovio-3.15.0.dev285-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:14f4c66f5c948bdb8bd191cca127445fbe419ece4f3d8a1d0985ce758f592060"},
-    {file = "verovio-3.15.0.dev285-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:0eebf03ced20458841a685baacbd8d35124d5e17bc4503987830f817f8794895"},
-    {file = "verovio-3.15.0.dev285-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1b5cc8ed93609eec476349a2e0d4230f4738f0a5d96832b3950320d6debfbf40"},
-    {file = "verovio-3.15.0.dev285-cp39-cp39-win32.whl", hash = "sha256:2dd4b12636ad433b6522925f0c0b981b8ac3934e4322d29f8b3fe3580693214c"},
-    {file = "verovio-3.15.0.dev285-cp39-cp39-win_amd64.whl", hash = "sha256:5f11da27293bed6d5a449386cb25c445e8702f372c26001100c73916992d329d"},
-    {file = "verovio-3.15.0.dev285.tar.gz", hash = "sha256:501395ecf5932b55c713056a4ca7074dc191c42898a4e7cdbd8fb65bb272771f"},
+    {file = "verovio-3.15.0.dev320-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:88d5880535e05b10161429e70431b3527b927e4cd2ce0aec7fa1da6f72d331e5"},
+    {file = "verovio-3.15.0.dev320-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:c31b9ba0fbaa58cef244408ba4c9ee10c375ba12dda7f1af07fc3dc864aa579b"},
+    {file = "verovio-3.15.0.dev320-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ec73612fa78c402696d8a6c7960e50620bc43fd0b06a256bae33e0779e6878d6"},
+    {file = "verovio-3.15.0.dev320-cp310-cp310-win32.whl", hash = "sha256:c02a173517cf059623805bf5256d8433bd47e21b912a5214c8077d84ab6cebb1"},
+    {file = "verovio-3.15.0.dev320-cp310-cp310-win_amd64.whl", hash = "sha256:5c5bcff4e02c9606aae2850facf07d7cb5478acfa4d71e61a75b214efa635d7a"},
+    {file = "verovio-3.15.0.dev320-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:c4d4401e49a407a5cdd0cc4c67be83d1a2253f86dcdf2b125379d3d554c669a8"},
+    {file = "verovio-3.15.0.dev320-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:37de52daf788257dcffec52eb0840f96ddff4959d714d7dcf67e4950347ea430"},
+    {file = "verovio-3.15.0.dev320-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:52df08ab48c40c769a0dd1d6d91f649bd212667432e68cbe2339962eee86b265"},
+    {file = "verovio-3.15.0.dev320-cp311-cp311-win32.whl", hash = "sha256:96f2d720a3056c507a74848995a4e4a1a173e115f7f4b8e499a76935bd21deff"},
+    {file = "verovio-3.15.0.dev320-cp311-cp311-win_amd64.whl", hash = "sha256:c16f928ab1e37679c28342cb9ccfc27281cbb1951355e4e448c1edc8622f6b60"},
+    {file = "verovio-3.15.0.dev320-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:0b22b65b0a4c493adbb2a999251882caaf9d974dd4501e7319a437a5c2b95487"},
+    {file = "verovio-3.15.0.dev320-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e369edfc84b6b83e2125a83d810f3241b0e7bab0d05122448306d7160d650201"},
+    {file = "verovio-3.15.0.dev320-cp37-cp37m-win32.whl", hash = "sha256:f325467f5e11beb0b29428a00882a3ecf4ae083e38c6725769175d361ff3a0cc"},
+    {file = "verovio-3.15.0.dev320-cp37-cp37m-win_amd64.whl", hash = "sha256:2969416ec6a97bc8de581b3460b9a93a2153c8016277604a4cdb497832976331"},
+    {file = "verovio-3.15.0.dev320-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:997fab787c22b1cbbda04cb5d499d53fe8943681f2f9638008487b13423195ca"},
+    {file = "verovio-3.15.0.dev320-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:e41b8c28cf72c7f749e4a43cfec38c547d8796e7cd3acfbbb243b9cc88688401"},
+    {file = "verovio-3.15.0.dev320-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:74e0bde862cc2614daad4891f7b4b61a4716fcb090634a6eefc649f0665f6d93"},
+    {file = "verovio-3.15.0.dev320-cp38-cp38-win32.whl", hash = "sha256:14776c66ffa2d78300337fc79aaeafc9221bc61838265ebea4582a944e88a4b6"},
+    {file = "verovio-3.15.0.dev320-cp38-cp38-win_amd64.whl", hash = "sha256:05d3ce2269d5779a4294fc2cdc5c053ed3977219f5f471826aee6812e197818e"},
+    {file = "verovio-3.15.0.dev320-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:ed8283a9ce05b7267aabd1a822cf16d4c3558588046723bf37f31fb9d2aadbfe"},
+    {file = "verovio-3.15.0.dev320-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:470648019be7138ac25499ae179a3e4a9f52336ab81d5a9700decd7947e1c24d"},
+    {file = "verovio-3.15.0.dev320-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2764a07cd1a0b1672b60f5d9f26cbc84f2f7f3ca46f3e351265787e3f31b783a"},
+    {file = "verovio-3.15.0.dev320-cp39-cp39-win32.whl", hash = "sha256:84064a4704849661bf5d0cea9b4e753b1125a70d668d006a1e87feaa9f208a35"},
+    {file = "verovio-3.15.0.dev320-cp39-cp39-win_amd64.whl", hash = "sha256:c98dbff6d0111fe13d944311436e2f39f9675839b43d50b7744fdf7513954ef7"},
+    {file = "verovio-3.15.0.dev320.tar.gz", hash = "sha256:14f571ab114eaf933021d3479f636c170a48846f2e3ae6fd03f8feea4133b696"},
 ]
 
 [package.source]

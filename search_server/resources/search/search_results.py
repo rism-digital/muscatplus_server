@@ -505,16 +505,12 @@ class IncipitSearchResult(serpy.DictSerializer):
         else:
             svg, midi = _render_with_highlighting(req, obj, query_pae_features)
 
-        # return [{
-        #     "format": "image/svg+xml",
-        #     "data": svg
-        # }, {
-        #     "format": "audio/midi",
-        #     "data": midi
-        # }]
         return [{
             "format": "image/svg+xml",
             "data": svg
+        }, {
+            "format": "audio/midi",
+            "data": midi
         }]
 
     def get_score(self, obj: SolrResult) -> Optional[float]:
