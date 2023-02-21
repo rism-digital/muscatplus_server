@@ -457,7 +457,7 @@ class IncipitSearchResult(serpy.DictSerializer):
     def get_summary(self, obj: dict) -> Optional[dict]:
         field_config: dict = {
             "creator_name_s": ("incipitComposer", "records.composer_author", None),
-            "text_incipit_s": ("textIncipit", "records.text_incipit", None),
+            "text_incipit_sm": ("textIncipit", "records.text_incipit", None),
             "voice_instrument_s": ("voiceInstrument", "records.voice_instrument", None)
         }
 

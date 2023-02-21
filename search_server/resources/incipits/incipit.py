@@ -225,7 +225,7 @@ class Incipit(serpy.AsyncDictSerializer):
 
         field_config.update({
             "titles_sm": ("records.title_movement_tempo", None),
-            "text_incipit_s": ("records.text_incipit", None),
+            "text_incipit_sm": ("records.text_incipit", None),
             "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
             "clef_s": ("records.clef", clef_translator),
             "timesig_s": ("records.time_signature", None),
