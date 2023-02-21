@@ -100,12 +100,27 @@ class Relationship(serpy.DictSerializer):
     def get_sid(self, obj: dict) -> str:
         ctx: dict = self.context
         req = ctx.get("request")
-        source_id: str = re.sub(ID_SUB, "", obj["this_id"])
-        if "reltype" in ctx and ctx["reltype"] == "rism:Creator":
-            return get_identifier(req, "sources.creator", source_id=source_id)
+        print(obj)
+        this_id: str = re.sub(ID_SUB, "", obj["this_id"])
+        this_type: str = obj["this_type"]
+        rel_type: str = obj["type"]
 
-        relationship_id: str = obj["id"]
-        return get_identifier(req, "sources.relationship", source_id=source_id, relationship_id=relationship_id)
+        if "reltype" in ctx and ctx["reltype"] == "rism:Creator":
+            # There is only one creator so we don't need to qualify this more.
+            return get_identifier(req, "sources.creator", source_id=this_id)
+
+        relationship_id = f"{rel_type}-{obj['id']}"
+
+        if this_type == "source":
+            return get_identifier(req, "sources.relationship", source_id=this_id, relationship_id=relationship_id)
+        elif this_type == "institution":
+            return get_identifier(req, "institutions.relationship", institution_id=this_id, relationship_id=relationship_id)
+        elif this_type == "place":
+            return get_identifier(req, "places.relationship", place_id=this_id, relationship_id=relationship_id)
+        elif this_type == "person":
+            return get_identifier(req, "people.relationship", source_id=this_id, relationship_id=relationship_id)
+        else:
+            return ""
 
     def get_stype(self, obj: dict) -> str:
         ctx: dict = self.context

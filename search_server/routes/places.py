@@ -16,3 +16,8 @@ async def place(req, place_id: str):
     return await handle_request(req,
                                 handle_place_request,
                                 place_id=place_id)
+
+
+@places_blueprint.route("/<place_id:str>/relationships/<relationship_id:str>")
+async def relationship(req, place_id: str, relationship_id: str):
+    return response.text("Not implemented", status=501)
