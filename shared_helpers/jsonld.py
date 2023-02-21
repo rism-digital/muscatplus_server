@@ -92,6 +92,6 @@ RouteOptions = namedtuple("RouteOptions", ["route", "context"])
 
 RouteContextMap: dict[str, RouteOptions] = {
     "mp_server.people.person": RouteOptions("person_context", RISM_JSONLD_PERSON_CONTEXT),
-    "mp_server.people.source": RouteOptions("source_context", RISM_JSONLD_SOURCE_CONTEXT),
+    "mp_server.sources.source": RouteOptions("source_context", RISM_JSONLD_SOURCE_CONTEXT),
     "__default": RouteOptions("default_context", RISM_JSONLD_DEFAULT_CONTEXT)
 }

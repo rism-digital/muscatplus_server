@@ -110,17 +110,17 @@ async def front(req):
 
 @app.route("/api/v1/source.json")
 async def source_context(req) -> response.HTTPResponse:
-    return response.json(RISM_JSONLD_SOURCE_CONTEXT)
+    return response.json({"@context": RISM_JSONLD_SOURCE_CONTEXT})
 
 
 @app.route("/api/v1/person.json")
 async def person_context(req) -> response.HTTPResponse:
-    return response.json(RISM_JSONLD_PERSON_CONTEXT)
+    return response.json({"@context": RISM_JSONLD_PERSON_CONTEXT})
 
 
 @app.route("/api/v1/context.json")
 async def default_context(req) -> response.HTTPResponse:
-    return response.json(RISM_JSONLD_DEFAULT_CONTEXT)
+    return response.json({"@context": RISM_JSONLD_DEFAULT_CONTEXT})
 
 
 @app.route("/about")
