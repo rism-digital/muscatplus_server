@@ -1,9 +1,7 @@
-from typing import Optional
 import logging
-import rdflib
-import orjson
 
-from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT
+import orjson
+import rdflib
 
 log = logging.getLogger(__name__)
 
@@ -18,13 +16,7 @@ def _to_graph_object(data: dict) -> rdflib.Graph:
     :return: An rdflib.Graph object.
     """
     json_serialized: str = orjson.dumps(data).decode("utf8")
-    g = rdflib.Graph().parse(data=json_serialized, format="json-ld")
-
-    for pfx in ["rdf", "rdfs", "rism", "rismdata", "relators", "dcterms", "as", "hydra", "geojson", "schemaorg", "pmo"]:
-        ns: Optional[str] = RISM_JSONLD_SOURCE_CONTEXT["@context"].get(pfx)
-        if not ns:
-            continue
-        g.namespace_manager.bind(pfx, rdflib.URIRef(ns))
+    g = rdflib.Graph().parse(data=json_serialized, format="application/ld+json")
 
     return g
 
