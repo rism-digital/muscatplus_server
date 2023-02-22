@@ -100,7 +100,6 @@ class Relationship(serpy.DictSerializer):
     def get_sid(self, obj: dict) -> str:
         ctx: dict = self.context
         req = ctx.get("request")
-        print(obj)
         this_id: str = re.sub(ID_SUB, "", obj["this_id"])
         this_type: str = obj["this_type"]
         rel_type: str = obj["type"]
@@ -118,7 +117,7 @@ class Relationship(serpy.DictSerializer):
         elif this_type == "place":
             return get_identifier(req, "places.relationship", place_id=this_id, relationship_id=relationship_id)
         elif this_type == "person":
-            return get_identifier(req, "people.relationship", source_id=this_id, relationship_id=relationship_id)
+            return get_identifier(req, "people.relationship", person_id=this_id, relationship_id=relationship_id)
         else:
             return ""
 
