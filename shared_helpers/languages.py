@@ -4,6 +4,7 @@ import glob
 import logging
 import os
 import re
+from pathlib import Path
 from typing import Optional, Pattern, Union
 
 import yaml
@@ -95,36 +96,30 @@ def load_translations(path: str) -> Optional[dict]:
         log.error("The path for loading the language files does not exist: %s", path)
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
 
-    locale_files: list = glob.glob(f"{path}/*.yml")
     output: dict = collections.defaultdict(dict)
 
-    for locale_file in locale_files:
-        log.debug("Opening %s", locale_file)
+    for langcode in SUPPORTED_LANGUAGES:
+        locale_file: Path = Path(path, f"{langcode}.yml")
 
-        lang, ext = os.path.splitext(os.path.basename(locale_file))
-        if lang not in SUPPORTED_LANGUAGES:
-            log.warning("'%s' is not a supported language, so %s will not be loaded", lang, locale_file)
+        if not locale_file.exists():
+            log.warning("%s could not be found; skipping", locale_file)
             continue
 
-        try:
-            locale_contents: dict = yaml.safe_load(
-                open(locale_file, "r")
-            )
-        except yaml.YAMLError:
-            log.error("Problem loading locale %s; It was skipped.", locale_file)
-            continue
+        log.debug("Opening translations: %s", locale_file)
 
-        try:
-            translations: dict = locale_contents[lang]
-        except KeyError:
+        with locale_file.open("r") as file_contents:
+            locale_contents = yaml.safe_load(file_contents)
+
+        if langcode not in locale_contents:
             log.error("The locale in the filename does not match the contents of the file: %s", locale_file)
             continue
 
+        translations: dict = locale_contents[langcode]
         flattened_translations: dict = __flatten(translations)
 
         for translation_key, translation_value in flattened_translations.items():
             if translation_value:
-                output[translation_key].update({lang: [translation_value]})
+                output[translation_key].update({langcode: [translation_value]})
 
     translations: dict = dict(output)
 
