@@ -17,13 +17,13 @@ log = logging.getLogger(__name__)
 
 
 class RelationshipsSection(serpy.DictSerializer):
-    rid = serpy.MethodField(
-        label="id"
-    )
-    rtype = serpy.StaticField(
-        label="type",
-        value="rism:RelationshipsSection"
-    )
+    # rid = serpy.MethodField(
+    #     label="id"
+    # )
+    # rtype = serpy.StaticField(
+    #     label="type",
+    #     value="rism:RelationshipsSection"
+    # )
     label = serpy.MethodField()
     items = serpy.MethodField()
 
@@ -83,12 +83,12 @@ class RelationshipsSection(serpy.DictSerializer):
 
 
 class Relationship(serpy.DictSerializer):
-    sid = serpy.MethodField(
-        label="id"
-    )
-    stype = serpy.MethodField(
-        label="type"
-    )
+    # sid = serpy.MethodField(
+    #     label="id"
+    # )
+    # stype = serpy.MethodField(
+    #     label="type"
+    # )
     role = serpy.MethodField()
     qualifier = serpy.MethodField()
     related_to = serpy.MethodField(
@@ -97,36 +97,46 @@ class Relationship(serpy.DictSerializer):
     name = serpy.MethodField()
     note = serpy.MethodField()
 
-    def get_sid(self, obj: dict) -> str:
-        ctx: dict = self.context
-        req = ctx.get("request")
-        this_id: str = re.sub(ID_SUB, "", obj["this_id"])
-        this_type: str = obj["this_type"]
-        rel_type: str = obj["type"]
-
-        if "reltype" in ctx and ctx["reltype"] == "rism:Creator":
-            # There is only one creator so we don't need to qualify this more.
-            return get_identifier(req, "sources.creator", source_id=this_id)
-
-        relationship_id = f"{rel_type}-{obj['id']}"
-
-        if this_type == "source":
-            return get_identifier(req, "sources.relationship", source_id=this_id, relationship_id=relationship_id)
-        elif this_type == "institution":
-            return get_identifier(req, "institutions.relationship", institution_id=this_id, relationship_id=relationship_id)
-        elif this_type == "place":
-            return get_identifier(req, "places.relationship", place_id=this_id, relationship_id=relationship_id)
-        elif this_type == "person":
-            return get_identifier(req, "people.relationship", person_id=this_id, relationship_id=relationship_id)
-        else:
-            return ""
-
-    def get_stype(self, obj: dict) -> str:
-        ctx: dict = self.context
-        if "reltype" in ctx:
-            return ctx["reltype"]
-
-        return "rism:Relationship"
+    # def get_sid(self, obj: dict) -> str:
+    #     ctx: dict = self.context
+    #     req = ctx.get("request")
+    #     this_id: str = re.sub(ID_SUB, "", obj["this_id"])
+    #     this_type: str = obj["this_type"]
+    #     rel_type: str = obj["type"]
+    #
+    #     if "reltype" in ctx and ctx["reltype"] == "rism:Creator":
+    #         # There is only one creator so we don't need to qualify this more.
+    #         return get_identifier(req, "sources.creator", source_id=this_id)
+    #
+    #     relationship_id = f"{rel_type}-{obj['id']}"
+    #
+    #     if this_type == "source":
+    #         return get_identifier(req, "sources.relationship", source_id=this_id, relationship_id=relationship_id)
+    #     elif this_type == "institution":
+    #         return get_identifier(req, "institutions.relationship", institution_id=this_id, relationship_id=relationship_id)
+    #     elif this_type == "place":
+    #         return get_identifier(req, "places.relationship", place_id=this_id, relationship_id=relationship_id)
+    #     elif this_type == "person":
+    #         return get_identifier(req, "people.relationship", person_id=this_id, relationship_id=relationship_id)
+    #     else:
+    #         return ""
+    #
+    # def get_stype(self, obj: dict) -> str:
+    #     ctx: dict = self.context
+    #     if "reltype" in ctx:
+    #         return ctx["reltype"]
+    #
+    #     this_type = obj["this_type"]
+    #     if this_type == "source":
+    #         return "rism:SourceRelationship"
+    #     elif this_type == "person":
+    #         return "rism:PersonRelationship"
+    #     elif this_type == "institution":
+    #         return "rism:InstitutionRelationship"
+    #     elif this_type == "place":
+    #         return "rism:PlaceRelationship"
+    #
+    #     return "rism:Relationship"
 
     def get_role(self, obj: dict) -> Optional[dict]:
         if 'relationship' not in obj:
@@ -142,14 +152,14 @@ class Relationship(serpy.DictSerializer):
         # If the relator codes are already formatted as a namespace, then don't double
         # namespace them.
         if relationship_value.startswith("rdau"):
-            rel = relationship_value
+            rel = f"{relationship_value}"
         else:
-            rel = relationship_value.replace(' ', '_')
+            rel = f"relators:{relationship_value.replace(' ', '_')}"
 
         return {
             "label": relationship_translator(relationship_value, transl),
             "value": f"{rel}",
-            "type": f"relators:{rel}"
+            "type": f"{rel}"
         }
 
     def get_qualifier(self, obj: dict) -> Optional[dict]:
