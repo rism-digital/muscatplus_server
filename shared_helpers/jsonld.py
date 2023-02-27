@@ -11,12 +11,13 @@ __BASE_CONTEXT = {
     # "rismdata": "https://rism.online/api/datatypes-v1#",
     # "pmo": "http://performedmusicontology.org/ontology/",
     "relators": "http://id.loc.gov/vocabulary/relators/",
-    # "dcterms": "http://purl.org/dc/terms/",
+    "dcterms": "http://purl.org/dc/terms/",
     # "dctypes": "http://purl.org/dc/dcmitype/",
     # "as": "http://www.w3.org/ns/activitystreams#",
     # "hydra": "http://www.w3.org/ns/hydra/core#",
     # "geojson": "https://purl.org/geojson/vocab#",
     "schemaorg": "https://schema.org/",
+    "rdau": "http://rdaregistry.info/Elements/u/",
     "type": "@type",
     "id": "@id",
     # "none": "@none",
@@ -50,7 +51,7 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
     "relationships": {
         "@id": "rism:Relationships",
-        # "@nest": "contents",
+        "@nest": "relationships",
         "@context": {
             "items": {
                 "@id": "rdf:Bag",
@@ -58,8 +59,11 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
                 "@container": "@graph"
             },
             "role": {
-                "@id": "schemaorg:Role",
+                "@id": "dcterms:relation",
                 "@type": "@vocab"
+            },
+            "qualifier": {
+                "@id": "rism:Qualifier"
             },
             "relatedTo": {
                 "@id": "schemaorg:agent"
@@ -68,12 +72,16 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     },
     "creator": {
         "@id": "rism:Relationships",
-        "@type": "@id",
-        # "@nest": "contents",
+        "@nest": "relationships",
+        # "@type": "@id",
+        # "@nest": "creator",
         "@context": {
             "role": {
-                "@id": "schemaorg:Role",
+                "@id": "dcterms:relation",
                 "@type": "@vocab"
+            },
+            "qualifier": {
+                "@id": "rism:Qualifier"
             },
             "relatedTo": {
                 "@id": "schemaorg:agent",
