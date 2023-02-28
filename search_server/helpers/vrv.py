@@ -225,7 +225,7 @@ def create_pae_from_request(req) -> str:
     return "\n".join(pae_elements)
 
 
-def get_pae_features(req) -> dict:
+def get_pae_features(req) -> Optional[dict]:
     """
         Parses an incoming search request containing some note data and some
         optional parameters, and returns a dictionary containing the PAE features.
@@ -236,8 +236,11 @@ def get_pae_features(req) -> dict:
     vrv_tk.resetXmlIdSeed(0)
     pae: str = create_pae_from_request(req)
     vrv_tk.setInputFrom("pae")
-    vrv_tk.loadData(pae)
-    return vrv_tk.getDescriptiveFeatures("{}")
+    load_success: bool = vrv_tk.loadData(pae)
+    if load_success is False:
+        log.warning("Could not load PAE for %s", pae)
+        return None
+    return vrv_tk.getDescriptiveFeatures({})
 
 
 def _find_err_msg(needle: str, transl_haystack: dict[str, dict]) -> dict:

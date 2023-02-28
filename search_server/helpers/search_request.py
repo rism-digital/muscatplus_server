@@ -490,7 +490,9 @@ class SearchRequest:
             #   3c. Doing all this while also supporting 'traditional' facet searches.
 
             # If we have an incipit mode, assume the incoming request is a PAE string.
-            self.pae_features = get_pae_features(self._req)
+            self.pae_features: Optional[dict] = get_pae_features(self._req)
+            if not self.pae_features:
+                raise InvalidQueryException("The requested mode was 'incipits', but the PAE input was malformed.")
 
             # If verovio returns empty features, then something went wrong. Assume the problem is with the input
             # query string, and flag an error to the user.
