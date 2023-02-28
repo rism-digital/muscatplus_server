@@ -1,13 +1,14 @@
 import argparse
 import asyncio
-import concurrent.futures
 import logging
+import logging.config
 import shutil
 import timeit
 from pathlib import Path
 
 import aiofiles
 import rdflib
+import uvloop
 from orjson import orjson
 from sanic.compat import Header
 from sanic.models.protocol_types import TransportProtocol
@@ -21,9 +22,13 @@ from search_server.server import app
 from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT
 from shared_helpers.languages import load_translations, filter_languages
 
-
-log = logging.getLogger(__name__)
+# Prevent other loggers from logging
+logging.config.dictConfig({'disable_existing_loggers': True, 'version': 1})
+log = logging.getLogger("ld_export")
 log.setLevel(logging.INFO)
+
+
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 def to_turtle(data: dict) -> str:
@@ -82,7 +87,7 @@ async def main(args: argparse.Namespace) -> bool:
         s = Solr("http://localhost:8983/solr/muscatplus_live")
         fq = [f"type:{record_type}"]
 
-        if args.country_code and resource_type in ("sources", "institutions"):
+        if args.country_code and resource_type in ("sources", ):
             log.info("Restricting to country %s", args.country_code)
             fq.append(f"country_code_s:{args.country_code}")
 
