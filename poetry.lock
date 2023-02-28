@@ -1443,14 +1443,14 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "prompt-toolkit"
-version = "3.0.37"
+version = "3.0.38"
 description = "Library for building powerful interactive command lines in Python"
 category = "dev"
 optional = false
 python-versions = ">=3.7.0"
 files = [
-    {file = "prompt_toolkit-3.0.37-py3-none-any.whl", hash = "sha256:6a2948ec427dfcc7c983027b1044b355db6aaa8be374f54ad2015471f7d81c5b"},
-    {file = "prompt_toolkit-3.0.37.tar.gz", hash = "sha256:d5d73d4b5eb1a92ba884a88962b157f49b71e06c4348b417dd622b25cdd3800b"},
+    {file = "prompt_toolkit-3.0.38-py3-none-any.whl", hash = "sha256:45ea77a2f7c60418850331366c81cf6b5b9cf4c7fd34616f733c5427e6abbb1f"},
+    {file = "prompt_toolkit-3.0.38.tar.gz", hash = "sha256:23ac5d50538a9a38c8bde05fecb47d0b403ecd0662857a86f886f798563d5b9b"},
 ]
 
 [package.dependencies]
@@ -2161,37 +2161,37 @@ test = ["Cython (>=0.29.32,<0.30.0)", "aiohttp", "flake8 (>=3.9.2,<3.10.0)", "my
 
 [[package]]
 name = "verovio"
-version = "3.15.0.dev336"
+version = "3.15.0.dev356"
 description = "A library and toolkit for engraving MEI music notation into SVG"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "verovio-3.15.0.dev336-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:f8f190f947ae02c0cca22a88f1786961e910b9f5484c22172d048173070178d2"},
-    {file = "verovio-3.15.0.dev336-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:b9cd3a41683289f87234aca930408b9786bdebb6913c3411fc02e02d244d7233"},
-    {file = "verovio-3.15.0.dev336-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:08d1d2cb513c5459bd3b6a609dfb72dbc9b16d0dc28b2793bf0150387987fe27"},
-    {file = "verovio-3.15.0.dev336-cp310-cp310-win32.whl", hash = "sha256:baadc2bef4c247f270961e1479bf5bf0fc3787a5f561bb138c11693e792761ad"},
-    {file = "verovio-3.15.0.dev336-cp310-cp310-win_amd64.whl", hash = "sha256:92b9079cf2c6846db2dd3f3750a61f1de55472e9c2efbc44a4632a3bbde4ba92"},
-    {file = "verovio-3.15.0.dev336-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:7fc34cb663a06815918d37151c54112df15eacd83dcea1fdbc38cc1bba511dfa"},
-    {file = "verovio-3.15.0.dev336-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:2ffa56f211f0ea451fb1b2a22ae256a36e9abd89230fb7e3852909a894c3f231"},
-    {file = "verovio-3.15.0.dev336-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b1be989965537fad7cfef86a13d484b46b2773933c5833d95c839e577f178cc3"},
-    {file = "verovio-3.15.0.dev336-cp311-cp311-win32.whl", hash = "sha256:fe5fbb9f5f3e7a46dcc7a5bf894c8e47eb28695a7fe81949a5b9b18b35a3ecf9"},
-    {file = "verovio-3.15.0.dev336-cp311-cp311-win_amd64.whl", hash = "sha256:2f23345b5b0323d1eb6ad19fa09e9e767f7485929a99dcea2011bd3dcf8fdcd9"},
-    {file = "verovio-3.15.0.dev336-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:5070281a36291552af4645083e82e3d9c293d08cdf1801d769403e3e4fd918cd"},
-    {file = "verovio-3.15.0.dev336-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c2cf21b260f77bd9329c647af4d5924988a8e59e314eda608bac74fe047e6405"},
-    {file = "verovio-3.15.0.dev336-cp37-cp37m-win32.whl", hash = "sha256:141875a9da97e128b97f77c0bf809aa731bb4d7b1836c0272f25c21c636dbe35"},
-    {file = "verovio-3.15.0.dev336-cp37-cp37m-win_amd64.whl", hash = "sha256:3f8ff469e3fe92b446318e8c840130245e18f2a94a293e06676701d25908b04e"},
-    {file = "verovio-3.15.0.dev336-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:611cefbe15812864edd4bb918c91921e7807724923b0df84c994dad09e458484"},
-    {file = "verovio-3.15.0.dev336-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:dfe58af6b0722e3f11ac91c56a8f4c23ffd6e34ba95b28e7fa594eb7b3daba87"},
-    {file = "verovio-3.15.0.dev336-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c224443b8e3721af2b1b46a290550fdeb28c35014c69d2c59b8723f00f669bf3"},
-    {file = "verovio-3.15.0.dev336-cp38-cp38-win32.whl", hash = "sha256:568af2ee6f3658694a6f954e255e3384958bfe9fce09c4bddea8e1b442098db5"},
-    {file = "verovio-3.15.0.dev336-cp38-cp38-win_amd64.whl", hash = "sha256:ee201ae78619c9aa5992d425435f25c1f979c0d6a5fadc57a8faf73928e0ab1a"},
-    {file = "verovio-3.15.0.dev336-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:df42a51a4b33a91dd425977df29df07fa2374389d60f96bce131a689df61a927"},
-    {file = "verovio-3.15.0.dev336-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:6a101f6cb942f8eaaf5950b41109079a4edabe5543ac9ae7062e0da20e69e720"},
-    {file = "verovio-3.15.0.dev336-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:252ae57cff3cfc561fa309847a38ec7e5d6a0b003bc3dd89a7afce4f23ecaa01"},
-    {file = "verovio-3.15.0.dev336-cp39-cp39-win32.whl", hash = "sha256:3059f821318d230b9c1191049f5328198e31dd920cd4afa504d2824fde8f8324"},
-    {file = "verovio-3.15.0.dev336-cp39-cp39-win_amd64.whl", hash = "sha256:2d8953099e66aec95ee6604237437daedea7e182167f9d776e684ba9ef952891"},
-    {file = "verovio-3.15.0.dev336.tar.gz", hash = "sha256:bdf601e9fbf98f5ae09572d04908c9e65e1a2fee667a033c02a115c2d4ad0b41"},
+    {file = "verovio-3.15.0.dev356-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:4737fc5e88a063bfb9252ff0fe6eca6439cf53e4ae46d0522c3f6f0febbc1c06"},
+    {file = "verovio-3.15.0.dev356-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:0332188051eee243d621e7e086b4a0be7d62d89cb95d668254865c7b102f4778"},
+    {file = "verovio-3.15.0.dev356-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6d9eb1d0f2b2a83854be77bbc636b13fc5333c90896d1123bed73629f51fef08"},
+    {file = "verovio-3.15.0.dev356-cp310-cp310-win32.whl", hash = "sha256:eecd6621a551ba1375421b2f032879f63eadc8d110b5dae5487b97e707fc08c3"},
+    {file = "verovio-3.15.0.dev356-cp310-cp310-win_amd64.whl", hash = "sha256:369a70288df85e59c5327932c29caaccd4d3e401f2e8521da5b3b0c48024ff8b"},
+    {file = "verovio-3.15.0.dev356-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:cd990ba4c479701777de0dc867c1d36bedc81c924227dfcb1f674874e457db65"},
+    {file = "verovio-3.15.0.dev356-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:d3ba7abcd24d050875b07cc9168f98cfb808fc3680300928bab7dac475cb1cd8"},
+    {file = "verovio-3.15.0.dev356-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:00d9b6f7c7d3c04f0267d52d2d9c61b5e8696a51d5ca94eff580e8c404a563d4"},
+    {file = "verovio-3.15.0.dev356-cp311-cp311-win32.whl", hash = "sha256:a0ce2ed6bf50d5f265ee330cab0409d9b90df1f3e5397e6f8437f1e925fbbc5d"},
+    {file = "verovio-3.15.0.dev356-cp311-cp311-win_amd64.whl", hash = "sha256:5b221cf501ad39ed7cb899f4be47b8e4e4efe3cc478b2ad311ce0a9b513055ef"},
+    {file = "verovio-3.15.0.dev356-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:948cbcb66f90e24e064672ae37b969d8c6e0552be766c0e5c04efe498d70f171"},
+    {file = "verovio-3.15.0.dev356-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c26976b059d598559e33acf62046db3ea370638d1b1b4b5a5a58b811d8d7021e"},
+    {file = "verovio-3.15.0.dev356-cp37-cp37m-win32.whl", hash = "sha256:1a8cbf885f87f5854450950a3edee5e09bf21a53f1ee19da7d7f702f6286d3eb"},
+    {file = "verovio-3.15.0.dev356-cp37-cp37m-win_amd64.whl", hash = "sha256:df4e3ee6f438eff04bdb1ce8833e64a4f0879d6dbece856dc22f18d7c8a4f4bc"},
+    {file = "verovio-3.15.0.dev356-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:382d6d5fd6c1dd1c38eaea1a93493bb3b3f5a54ce253163a246029fd099edf69"},
+    {file = "verovio-3.15.0.dev356-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:50111a97c3bc4462a8d8c4bcbe918253223a3bdfb26b5ac6534696710a5e3841"},
+    {file = "verovio-3.15.0.dev356-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8fdd62f5c708264650021a9513ef3ea95766e5bb7424f86b9a9cccfefcc93512"},
+    {file = "verovio-3.15.0.dev356-cp38-cp38-win32.whl", hash = "sha256:16a9b6210dc6e8b3f1c77ccf84dfa2dc672e63fff253db17b3e9e18f92c17ac4"},
+    {file = "verovio-3.15.0.dev356-cp38-cp38-win_amd64.whl", hash = "sha256:43cfc62140c5169e84c7476e575267bac89e53592eda772c6ccf3e23b4ac5bb6"},
+    {file = "verovio-3.15.0.dev356-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:010e8b13fa9b251434c3bcaabb84c754be2ea8157a73a270e17fca65dccd6c39"},
+    {file = "verovio-3.15.0.dev356-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:72d7c76441dd8ef2b4a71508816c316e1cab2fb1b7aa6b9c6457b7f80af22892"},
+    {file = "verovio-3.15.0.dev356-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1ca917ecb2d36c06f88f225244de7373e41a2f9b9b7ba1832e38ba248711ecc3"},
+    {file = "verovio-3.15.0.dev356-cp39-cp39-win32.whl", hash = "sha256:5fa907ed0ab25d5daf6eb877063bb8cf619eda2fd19e83209df6c19307775229"},
+    {file = "verovio-3.15.0.dev356-cp39-cp39-win_amd64.whl", hash = "sha256:53eb6525f7b8dac8b5ba4314f33a5c6c5e102a0aef5fc07d099297d9ecbfff13"},
+    {file = "verovio-3.15.0.dev356.tar.gz", hash = "sha256:8184bd4e28085d2a6d8d2e17df5ece7e2aff98169e607947b4464afc635c4e83"},
 ]
 
 [package.source]
@@ -2201,40 +2201,40 @@ reference = "testpypi"
 
 [[package]]
 name = "watchdog"
-version = "2.3.0"
+version = "2.3.1"
 description = "Filesystem events monitoring"
 category = "dev"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "watchdog-2.3.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:c1b3962e5463a848ba2a342cb66c80251dca27a102933b8f38d231d2a9e5a543"},
-    {file = "watchdog-2.3.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9e651b4874477c1bf239417d43818bbfd047aaf641b029fa60d6f5109ede0db0"},
-    {file = "watchdog-2.3.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:d04662017efd00a014cff9068708e085d67f2fac43f48bbbb95a7f97490487f3"},
-    {file = "watchdog-2.3.0-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:0f7d759299ce21a3d2a77e18d430c24811369c3432453701790acc6ff45a7101"},
-    {file = "watchdog-2.3.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:a4b9bece40d46bf6fb8621817ea7d903eae2b9b3ebac55a51ed50354a79061a8"},
-    {file = "watchdog-2.3.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:242e57253e84a736e6777ba756c48cf6a68d3d90cb9e01bd6bfd371a949ace3a"},
-    {file = "watchdog-2.3.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:3fa74b0ef4825f9112932675a002296cb2d3d3e400d7a44c32fafd1ecc83ada0"},
-    {file = "watchdog-2.3.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:15bf5b165d7a6b48265411dad74fb0d33053f8270eb6575faad0e016035cf9f7"},
-    {file = "watchdog-2.3.0-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:139262f678b4e6a7013261c772059bca358441de04fb0e0087489a34db9e3db0"},
-    {file = "watchdog-2.3.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:8a214955769d2ef0f7aaa82f31863e3bdf6b083ce1b5f1c2e85cab0f66fba024"},
-    {file = "watchdog-2.3.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:4e648df44a4c6ea6da4d9eb6722745c986b9d70268f25ae60f140082d7c8908e"},
-    {file = "watchdog-2.3.0-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:473164a2de473f708ca194a992466eeefff73b58273bbb88e089c5a5a98fcda1"},
-    {file = "watchdog-2.3.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:ebe756f788cb130fdc5c150ea8a4fda39cb4ee3a5873a345607c8b84fecf018b"},
-    {file = "watchdog-2.3.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:a623de186477e9e05f8461087f856412eae5cd005cc4bcb232ed5c6f9a8709f5"},
-    {file = "watchdog-2.3.0-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:43d76d7888b26850b908208bb82383a193e8b0f25d0abaa84452f191b4acdea4"},
-    {file = "watchdog-2.3.0-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:5ddbbe87f9ed726940d174076da030cd01ec45433ef2b1b2e6094c84f2af17f1"},
-    {file = "watchdog-2.3.0-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:3fa1572f5a2f6d17d4d860edbc04488fef31b007c25c2f3b11203fb8179b7c67"},
-    {file = "watchdog-2.3.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:1d9c656495172873bf1ddc7e39e80055fcdd21c4608cf68f23a28116dcba0b43"},
-    {file = "watchdog-2.3.0-py3-none-manylinux2014_armv7l.whl", hash = "sha256:00f93782c67042d9525ec51628330b5faf5fb84bcb7ebaac05ea8528cfb20bba"},
-    {file = "watchdog-2.3.0-py3-none-manylinux2014_i686.whl", hash = "sha256:f1a655f4a49f9232311b9967f42cc2eaf43fd4903f3bed850dd4570fda5d5eff"},
-    {file = "watchdog-2.3.0-py3-none-manylinux2014_ppc64.whl", hash = "sha256:aa4773160b9cb21ba369cb42d59a947087330b3a02480173033a6a6cc137a510"},
-    {file = "watchdog-2.3.0-py3-none-manylinux2014_ppc64le.whl", hash = "sha256:982f5416a2817003172994d865285dd6a2b3836f033cd3fa87d1a62096a162cc"},
-    {file = "watchdog-2.3.0-py3-none-manylinux2014_s390x.whl", hash = "sha256:45c13e7e6eea1013da419bf9aa9a8f5df7bbf3e5edce40bc6df84130febf39d5"},
-    {file = "watchdog-2.3.0-py3-none-manylinux2014_x86_64.whl", hash = "sha256:7767a3da3307d9cf597832f692702441a97c259e5d0d560f2e57c43ad0d191d2"},
-    {file = "watchdog-2.3.0-py3-none-win32.whl", hash = "sha256:8863913ea2c3f256d18c33d84546518636e391cd8f50d209b9a31221e0f7d3fd"},
-    {file = "watchdog-2.3.0-py3-none-win_amd64.whl", hash = "sha256:6d79b5954db8f41d6a7f5763042b988f7a4afd40b7d141456061fa7c5b7f2159"},
-    {file = "watchdog-2.3.0-py3-none-win_ia64.whl", hash = "sha256:a3559ee82a10976de1ec544b6ebe3b4aa398d491860a283d80ec0f550076d068"},
-    {file = "watchdog-2.3.0.tar.gz", hash = "sha256:9d39effe6909be898ba3e7286a9e9b17a6a9f734fb1ef9dde3e9bb68715fca39"},
+    {file = "watchdog-2.3.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:d1f1200d4ec53b88bf04ab636f9133cb703eb19768a39351cee649de21a33697"},
+    {file = "watchdog-2.3.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:564e7739abd4bd348aeafbf71cc006b6c0ccda3160c7053c4a53b67d14091d42"},
+    {file = "watchdog-2.3.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:95ad708a9454050a46f741ba5e2f3468655ea22da1114e4c40b8cbdaca572565"},
+    {file = "watchdog-2.3.1-cp311-cp311-macosx_10_9_universal2.whl", hash = "sha256:a073c91a6ef0dda488087669586768195c3080c66866144880f03445ca23ef16"},
+    {file = "watchdog-2.3.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:aa8b028750b43e80eea9946d01925168eeadb488dfdef1d82be4b1e28067f375"},
+    {file = "watchdog-2.3.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:964fd236cd443933268ae49b59706569c8b741073dbfd7ca705492bae9d39aab"},
+    {file = "watchdog-2.3.1-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:91fd146d723392b3e6eb1ac21f122fcce149a194a2ba0a82c5e4d0ee29cd954c"},
+    {file = "watchdog-2.3.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:efe3252137392a471a2174d721e1037a0e6a5da7beb72a021e662b7000a9903f"},
+    {file = "watchdog-2.3.1-cp38-cp38-macosx_10_9_universal2.whl", hash = "sha256:85bf2263290591b7c5fa01140601b64c831be88084de41efbcba6ea289874f44"},
+    {file = "watchdog-2.3.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:8f2df370cd8e4e18499dd0bfdef476431bcc396108b97195d9448d90924e3131"},
+    {file = "watchdog-2.3.1-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:ea5d86d1bcf4a9d24610aa2f6f25492f441960cf04aed2bd9a97db439b643a7b"},
+    {file = "watchdog-2.3.1-cp39-cp39-macosx_10_9_universal2.whl", hash = "sha256:6f5d0f7eac86807275eba40b577c671b306f6f335ba63a5c5a348da151aba0fc"},
+    {file = "watchdog-2.3.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:5b848c71ef2b15d0ef02f69da8cc120d335cec0ed82a3fa7779e27a5a8527225"},
+    {file = "watchdog-2.3.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:0d9878be36d2b9271e3abaa6f4f051b363ff54dbbe7e7df1af3c920e4311ee43"},
+    {file = "watchdog-2.3.1-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:4cd61f98cb37143206818cb1786d2438626aa78d682a8f2ecee239055a9771d5"},
+    {file = "watchdog-2.3.1-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:3d2dbcf1acd96e7a9c9aefed201c47c8e311075105d94ce5e899f118155709fd"},
+    {file = "watchdog-2.3.1-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:03f342a9432fe08107defbe8e405a2cb922c5d00c4c6c168c68b633c64ce6190"},
+    {file = "watchdog-2.3.1-py3-none-manylinux2014_aarch64.whl", hash = "sha256:7a596f9415a378d0339681efc08d2249e48975daae391d58f2e22a3673b977cf"},
+    {file = "watchdog-2.3.1-py3-none-manylinux2014_armv7l.whl", hash = "sha256:0e1dd6d449267cc7d6935d7fe27ee0426af6ee16578eed93bacb1be9ff824d2d"},
+    {file = "watchdog-2.3.1-py3-none-manylinux2014_i686.whl", hash = "sha256:7a1876f660e32027a1a46f8a0fa5747ad4fcf86cb451860eae61a26e102c8c79"},
+    {file = "watchdog-2.3.1-py3-none-manylinux2014_ppc64.whl", hash = "sha256:2caf77ae137935c1466f8cefd4a3aec7017b6969f425d086e6a528241cba7256"},
+    {file = "watchdog-2.3.1-py3-none-manylinux2014_ppc64le.whl", hash = "sha256:53f3e95081280898d9e4fc51c5c69017715929e4eea1ab45801d5e903dd518ad"},
+    {file = "watchdog-2.3.1-py3-none-manylinux2014_s390x.whl", hash = "sha256:9da7acb9af7e4a272089bd2af0171d23e0d6271385c51d4d9bde91fe918c53ed"},
+    {file = "watchdog-2.3.1-py3-none-manylinux2014_x86_64.whl", hash = "sha256:8a4d484e846dcd75e96b96d80d80445302621be40e293bfdf34a631cab3b33dc"},
+    {file = "watchdog-2.3.1-py3-none-win32.whl", hash = "sha256:a74155398434937ac2780fd257c045954de5b11b5c52fc844e2199ce3eecf4cf"},
+    {file = "watchdog-2.3.1-py3-none-win_amd64.whl", hash = "sha256:5defe4f0918a2a1a4afbe4dbb967f743ac3a93d546ea4674567806375b024adb"},
+    {file = "watchdog-2.3.1-py3-none-win_ia64.whl", hash = "sha256:4109cccf214b7e3462e8403ab1e5b17b302ecce6c103eb2fc3afa534a7f27b96"},
+    {file = "watchdog-2.3.1.tar.gz", hash = "sha256:d9f9ed26ed22a9d331820a8432c3680707ea8b54121ddcc9dc7d9f2ceeb36906"},
 ]
 
 [package.extras]
