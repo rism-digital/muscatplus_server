@@ -37,56 +37,47 @@ __BASE_CONTEXT = {
     },
 }
 
+__RELATIONSHIPS = {
+    "relationships": {
+        "@id": "rism:Relationships",
+        # "@type": "@id",
+        "@context": {
+            "items": "@set",
+            "role": {
+                "@id": "rism:Role",
+                "@type": "@id",
+            },
+            "qualifier": {
+                "@id": "rism:Qualifier",
+                "@type": "@id",
+            },
+            "relatedTo": {
+                "@id": "dcterms:relation",
+                "@type": "@vocab"
+            }
+        }
+    }
+}
+
 RISM_JSONLD_DEFAULT_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT
 }
 
 
 RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
-    **__BASE_CONTEXT
+    **__BASE_CONTEXT,
+    **__RELATIONSHIPS
 }
 
 
 RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
-    "relationships": {
-        "@id": "rism:Relationships",
-        "@nest": "relationships",
-        "@context": {
-            "items": {
-                "@id": "rdf:Bag",
-                "@type": "@id",
-                "@container": "@graph"
-            },
-            "role": {
-                "@id": "dcterms:relation",
-                "@type": "@vocab"
-            },
-            "qualifier": {
-                "@id": "rism:Qualifier"
-            },
-            "relatedTo": {
-                "@id": "schemaorg:agent"
-            }
-        }
-    },
+    **__RELATIONSHIPS,
     "creator": {
-        "@id": "rism:Relationships",
-        "@nest": "relationships",
-        # "@type": "@id",
-        # "@nest": "creator",
+        "@id": "dcterms:creator",
+        "@type": "@id",
         "@context": {
-            "role": {
-                "@id": "dcterms:relation",
-                "@type": "@vocab"
-            },
-            "qualifier": {
-                "@id": "rism:Qualifier"
-            },
-            "relatedTo": {
-                "@id": "schemaorg:agent",
-                "@type": "vocab"
-            }
+            "relatedTo": "@nest"
         }
     }
     # "summary": {
