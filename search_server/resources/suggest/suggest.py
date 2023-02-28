@@ -12,7 +12,7 @@ from search_server.helpers.search_request import suggest_fields_for_alias
 from search_server.request_handlers import send_json_response
 from shared_helpers.solr_connection import SolrConnection
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 class SuggestionResults(serpy.DictSerializer):

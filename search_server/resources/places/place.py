@@ -13,7 +13,7 @@ from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 async def handle_place_request(req, place_id: str) -> Optional[dict]:

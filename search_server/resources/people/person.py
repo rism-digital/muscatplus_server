@@ -15,7 +15,7 @@ from search_server.resources.shared.external_link import ExternalResourcesSectio
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 async def handle_person_request(req, person_id: str) -> Optional[dict]:

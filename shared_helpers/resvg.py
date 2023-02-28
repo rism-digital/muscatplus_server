@@ -1,7 +1,7 @@
 import subprocess
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 def render_svg(svginput: str, outpath: str, resvg_path: str, font_path: str) -> bool:

@@ -17,7 +17,7 @@ from search_server.resources.sources.source_items import SourceItemsSection
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 class SourceItemList(serpy.DictSerializer):

@@ -10,7 +10,7 @@ from orjson import orjson
 
 from shared_helpers.identifiers import ID_SUB, get_identifier
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 verovio.enableLog(False)
 VEROVIO_BASE_OPTIONS: dict = {
     "footer": 'none',

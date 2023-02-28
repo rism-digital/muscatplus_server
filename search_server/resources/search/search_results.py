@@ -26,7 +26,7 @@ from shared_helpers.identifiers import (
 )
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 class SearchResults(BaseSearchResults):

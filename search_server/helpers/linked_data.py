@@ -3,7 +3,7 @@ import logging
 import orjson
 import rdflib
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 def _to_graph_object(data: dict) -> rdflib.Graph:

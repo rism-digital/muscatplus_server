@@ -69,7 +69,7 @@ else:
 logging.basicConfig(format="[%(asctime)s] [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
                     level=LOGLEVEL)
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 translations: Optional[dict] = load_translations("locales/")
 if not translations:

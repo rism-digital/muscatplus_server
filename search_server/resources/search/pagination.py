@@ -8,7 +8,7 @@ import serpy
 from search_server.exceptions import PaginationParseException
 from search_server.helpers.urls import replace_query_param, remove_query_param
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 PAGE_QUERY_PARAM = "page"
 ROWS_QUERY_PARAM = "rows"

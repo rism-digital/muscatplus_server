@@ -21,7 +21,7 @@ SOLR_FIELDS_FOR_BASE_SOURCE: list = [
     "created", "updated", "main_title_ans", "standard_titles_json"
 ]
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 class BaseSource(serpy.AsyncDictSerializer):

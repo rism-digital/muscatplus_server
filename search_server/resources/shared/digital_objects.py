@@ -9,7 +9,7 @@ from search_server.helpers.vrv import render_url
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 class DigitalObjectsSection(serpy.AsyncDictSerializer):

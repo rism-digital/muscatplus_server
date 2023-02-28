@@ -17,7 +17,7 @@ from search_server.helpers.search_request import (
     IncipitModeValues
 )
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 RANGE_PARSING_REGEX: Pattern = re.compile(r'\[(?P<start>-?\d{,4})\s?TO\s?(?P<end>-?\d{,4})\]')
 
 

@@ -8,7 +8,7 @@ from search_server.exceptions import InvalidQueryException, PaginationParseExcep
 from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import parse_page_number, parse_row_number
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 DEFAULT_QUERY_STRING: str = "*:*"
 TERM_FACET_LIMIT: int = 200   # The maximum number of results to return with a select facet ('term' facet in solr).

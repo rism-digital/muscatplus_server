@@ -21,7 +21,7 @@ from shared_helpers.solr_connection import SolrResult
 #
 LabelConfig = dict[str, tuple[str, Optional[Union[Callable, dict]]]]
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 FIELD_CONFIG: LabelConfig = {
     "main_title_s": ("records.standardized_title", None),

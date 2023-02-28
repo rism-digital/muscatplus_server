@@ -13,7 +13,7 @@ from shared_helpers.display_translators import (
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 class RelationshipsSection(serpy.DictSerializer):

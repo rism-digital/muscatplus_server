@@ -14,7 +14,7 @@ from typing import NewType, Optional
 import yaml
 from small_asc.client import Solr, Results
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 config: dict = yaml.safe_load(open('configuration.yml', 'r'))
 

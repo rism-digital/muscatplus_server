@@ -9,7 +9,7 @@ from typing import Optional, Pattern, Union
 
 import yaml
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 # Removes ruby crud in the YML files.
 REMOVE_ACTIVESUPPORT: Pattern = re.compile(r"!map:ActiveSupport::HashWithIndifferentAccess")

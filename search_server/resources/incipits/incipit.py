@@ -20,7 +20,7 @@ from shared_helpers.identifiers import (
 )
 from shared_helpers.solr_connection import SolrConnection, SolrResult
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 async def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:

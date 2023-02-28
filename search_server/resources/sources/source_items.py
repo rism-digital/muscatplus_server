@@ -9,7 +9,7 @@ from search_server.resources.sources.base_source import BaseSource
 from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 class SourceItemsSection(serpy.AsyncDictSerializer):

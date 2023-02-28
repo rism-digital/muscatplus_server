@@ -15,7 +15,7 @@ from shared_helpers.solr_connection import SolrResult
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 
-log = logging.getLogger("muscat_indexer")
+log = logging.getLogger("mp_server")
 
 
 class MaterialGroupsSection(serpy.DictSerializer):
@@ -115,7 +115,8 @@ class MaterialGroup(serpy.DictSerializer):
         return get_display_fields(obj, transl, field_config=field_config)
 
     def get_relationships(self, obj: dict) -> Optional[dict]:
-        # a set is disjoint if there are no keys in common.
+        # a set is disjoint if there are no keys in common. Check if these keys exist in the
+        # record; if they are disjoint, then we don't need to process them.
         if {'related_people_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
             return None
 

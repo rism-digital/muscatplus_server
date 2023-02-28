@@ -9,7 +9,7 @@ from search_server.resources.search.base_search import BaseSearchResults, serial
 from search_server.resources.search.search_results import SourceSearchResult
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 def _prepare_query(req, institution_id: str, probe: bool = False) -> Optional[dict]:
