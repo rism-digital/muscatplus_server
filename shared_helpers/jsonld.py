@@ -9,7 +9,7 @@ __BASE_CONTEXT = {
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rism": "https://rism.online/api/v1#",
     # "rismdata": "https://rism.online/api/datatypes-v1#",
-    # "pmo": "http://performedmusicontology.org/ontology/",
+    "pmo": "http://performedmusicontology.org/ontology/",
     "relators": "http://id.loc.gov/vocabulary/relators/",
     "dcterms": "http://purl.org/dc/terms/",
     # "dctypes": "http://purl.org/dc/dcmitype/",
@@ -39,21 +39,20 @@ __BASE_CONTEXT = {
 
 __RELATIONSHIPS = {
     "relationships": {
-        "@id": "rism:Relationships",
-        # "@type": "@id",
+        "@id": "rism:hasRelationship",
+        "@type": "@id",
         "@context": {
             "items": "@set",
             "role": {
-                "@id": "rism:Role",
-                "@type": "@id",
+                "@id": "rism:hasRole",
+                "@type": "@vocab",
             },
             "qualifier": {
-                "@id": "rism:Qualifier",
-                "@type": "@id",
+                "@id": "rism:hasQualifier",
+                "@type": "@vocab",
             },
             "relatedTo": {
                 "@id": "dcterms:relation",
-                "@type": "@vocab"
             }
         }
     }
@@ -73,11 +72,49 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
 RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
     **__RELATIONSHIPS,
+    "summary": {
+        "@type": "@id",
+        "@id": "rism:hasSummary",
+        "@container": "@set",
+        "@propagate": "false"
+
+    },
+    # "contents": "@nest",
+    # "contents": {
+    #     "@id": "rism:hasContents",
+    #     "@type": "@id",
+    #     "@context": {
+    #         "@propagate": "false",
+    #         "label": {"@value": "null", "@propagate": "false"},
+    #         "summary": {
+    #             "@type": "@id",
+    #             "@id": "rism:hasSummary",
+    #             "@container": "@set",
+    #             "@context": {
+    #                 "label": {
+    #                     "@id": "rdfs:label",
+    #                     "@container": [
+    #                         "@language",
+    #                         "@set"
+    #                     ]
+    #                 }
+    #             }
+    #         }
+    #     }
+    # },
     "creator": {
         "@id": "dcterms:creator",
         "@type": "@id",
         "@context": {
             "relatedTo": "@nest"
+        }
+    },
+    "materialGroups": {
+        "@id": "rism:hasMaterialGroup",
+        "@type": "@id",
+        "@context": {
+            "label": {"@value": "null", "@propagate": "false"},
+            "items": "@set"
         }
     }
     # "summary": {
