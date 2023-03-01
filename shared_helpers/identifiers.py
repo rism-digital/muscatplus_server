@@ -96,7 +96,7 @@ SOLR_FIELD_DATA_TYPES: FieldDataType = {
     "language_text_sm": ["dcterms:language"],
     "language_libretto_sm": ["dcterms:language"],
     "language_original_sm": ["dcterms:language"],
-    "rism_id": ["dterms:identifier", "pmo:RismNumber"],
+    "rism_id": ["dcterms:identifier", "pmo:RismNumber"],
     "opus_numbers_sm": ["dcterms:identifier", "pmo:OpusNumberStatement"],
     "material_source_types_sm": ["dcterms:type"],
     "material_source_types": ["dcterms:type"],

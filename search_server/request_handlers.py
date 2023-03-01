@@ -73,6 +73,8 @@ async def handle_request(req: request.Request, handler: Callable, **kwargs) -> r
     else:
         log.debug("Sending JSON-LD")
 
+        # We can control the embedding of the context either globally, in the configuration, or
+        # per-request, with the X-Embed-Context header.
         if req.app.ctx.context_uri and "X-Embed-Context" not in req.headers:
             ctx_val = {"@context": get_identifier(req, ctx_options.route)}
         else:
