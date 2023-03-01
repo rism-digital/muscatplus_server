@@ -49,14 +49,14 @@ class MaterialGroupsSection(serpy.DictSerializer):
 
 
 class MaterialGroup(serpy.DictSerializer):
-    mgid = serpy.MethodField(
-        label="id"
-    )
+    # mgid = serpy.MethodField(
+    #     label="id"
+    # )
     label = serpy.MethodField()
-    mtype = serpy.StaticField(
-        label="type",
-        value="rism:MaterialGroup"
-    )
+    # mtype = serpy.StaticField(
+    #     label="type",
+    #     value="rism:MaterialGroup"
+    # )
     summary = serpy.MethodField()
     notes = serpy.MethodField()
     relationships = serpy.MethodField()

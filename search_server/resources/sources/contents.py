@@ -18,13 +18,13 @@ from shared_helpers.solr_connection import SolrResult
 
 
 class ContentsSection(serpy.DictSerializer):
-    csid = serpy.MethodField(
-        label="id"
-    )
-    cstype = serpy.StaticField(
-        label="type",
-        value="rism:ContentsSection"
-    )
+    # csid = serpy.MethodField(
+    #     label="id"
+    # )
+    # cstype = serpy.StaticField(
+    #     label="type",
+    #     value="rism:ContentsSection"
+    # )
     label = serpy.MethodField()
     summary = serpy.MethodField()
     subjects = serpy.MethodField()
