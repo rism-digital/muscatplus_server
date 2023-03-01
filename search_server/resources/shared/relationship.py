@@ -159,7 +159,7 @@ class Relationship(serpy.DictSerializer):
         return {
             "label": relationship_translator(relationship_value, transl),
             "value": f"{rel}",
-            "type": f"{rel}"
+            "id": f"{rel}"
         }
 
     def get_qualifier(self, obj: dict) -> Optional[dict]:
@@ -172,7 +172,7 @@ class Relationship(serpy.DictSerializer):
         return {
             "label": qualifier_labels_translator(obj['qualifier'], transl),
             "value": f"{obj.get('qualifier')}",
-            "type": f"rism:{obj.get('qualifier')}"
+            "id": f"rism:{obj.get('qualifier')}"
         }
 
     def get_related_to(self, obj: dict) -> Optional[dict]:
