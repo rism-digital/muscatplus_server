@@ -4,7 +4,6 @@ from typing import Optional
 import serpy
 
 from shared_helpers.identifiers import get_identifier, ID_SUB
-from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrConnection, SolrResult, result_count
 
 
@@ -15,7 +14,7 @@ async def handle_subject_request(req, subject_id: str) -> Optional[dict]:
                                                   "direct_request": True}).data
 
 
-class Subject(JSONLDAsyncDictSerializer):
+class Subject(serpy.AsyncDictSerializer):
     sid = serpy.MethodField(
         label="id"
     )
@@ -39,7 +38,7 @@ class Subject(JSONLDAsyncDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.subject_heading", {})
 

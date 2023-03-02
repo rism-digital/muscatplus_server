@@ -7,8 +7,8 @@ from sanic import Sanic, response
 from small_asc.client import Results
 import orjson
 
-from shared_helpers.identifiers import RISM_JSONLD_CONTEXT
-from shared_helpers.languages import load_translations
+from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT, RISM_JSONLD_PERSON_CONTEXT, RISM_JSONLD_DEFAULT_CONTEXT
+from shared_helpers.languages import load_translations, negotiate_languages
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.countries import countries_blueprint
 from search_server.routes.festivals import festivals_blueprint
@@ -35,14 +35,14 @@ if version_string.startswith("v"):
 else:
     release = version_string
 
-# if debug_mode is False:
-#     from sentry_sdk.integrations.sanic import SanicIntegration
-#     sentry_sdk.init(
-#         dsn=config["sentry"]["dsn"],
-#         integrations=[SanicIntegration()],
-#         environment=config["sentry"]["environment"],
-#         release=f"muscatplus_server@{release}"
-#     )
+if debug_mode is False:
+    from sentry_sdk.integrations.sanic import SanicIntegration
+    sentry_sdk.init(
+        dsn=config["sentry"]["dsn"],
+        integrations=[SanicIntegration()],
+        environment=config["sentry"]["environment"],
+        release=f"muscatplus_server@{release}"
+    )
 
 app = Sanic("mp_server", dumps=orjson.dumps)
 
@@ -69,7 +69,7 @@ else:
 logging.basicConfig(format="[%(asctime)s] [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
                     level=LOGLEVEL)
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 translations: Optional[dict] = load_translations("locales/")
 if not translations:
@@ -84,14 +84,43 @@ app.ctx.context_uri = context_uri
 app.ctx.config = config
 
 
+@app.on_request
+def do_language_negotiation(req):
+    """
+    Performs language negotiation on every request. This looks for the presence of the
+    X-API-Accept-Language request header, with values of one or more language codes or "*".
+    If those language codes map to ones that are supported in RISM Online, then the full
+    dictionary of translations is filtered to only include the requested languages.
+
+    Serializers will then use the filtered translations dictionary on the request to produce
+    the translated values.
+
+    This process is run here so that it only runs once on each request.
+
+    :param req: A Sanic Request object
+    :return: None
+    """
+    req.ctx.translations = negotiate_languages(req, translations)
+
+
 @app.route("/")
 async def front(req):
     return await handle_front_request(req)
 
 
+@app.route("/api/v1/source.json")
+async def source_context(req) -> response.HTTPResponse:
+    return response.json({"@context": RISM_JSONLD_SOURCE_CONTEXT})
+
+
+@app.route("/api/v1/person.json")
+async def person_context(req) -> response.HTTPResponse:
+    return response.json({"@context": RISM_JSONLD_PERSON_CONTEXT})
+
+
 @app.route("/api/v1/context.json")
-async def context(req) -> response.HTTPResponse:
-    return response.json(RISM_JSONLD_CONTEXT)
+async def default_context(req) -> response.HTTPResponse:
+    return response.json({"@context": RISM_JSONLD_DEFAULT_CONTEXT})
 
 
 @app.route("/about")

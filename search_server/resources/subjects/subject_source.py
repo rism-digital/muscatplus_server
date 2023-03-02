@@ -7,7 +7,7 @@ from shared_helpers.solr_connection import SolrConnection
 from search_server.resources.search.base_search import BaseSearchResults
 from search_server.resources.sources.base_source import BaseSource
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 async def handle_subject_source_request(req, subject_id: str) -> dict:

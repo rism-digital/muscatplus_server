@@ -4,14 +4,13 @@ from typing import Optional
 
 import serpy
 
-from shared_helpers.display_translators import material_source_types_translator, material_content_types_translator
 from search_server.helpers.record_types import create_record_block
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import Relationship
 from shared_helpers.display_fields import LabelConfig, get_display_fields
+from shared_helpers.display_translators import material_source_types_translator, material_content_types_translator
 from shared_helpers.formatters import format_source_label
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 # The Solr fields necessary to construct a base source record. Helps cut down on internal Solr
@@ -22,10 +21,10 @@ SOLR_FIELDS_FOR_BASE_SOURCE: list = [
     "created", "updated", "main_title_ans", "standard_titles_json"
 ]
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
-class BaseSource(JSONLDAsyncDictSerializer):
+class BaseSource(serpy.AsyncDictSerializer):
     """
     A base source serializer for providing a basic set of information for
     a RISM Source. A full record of the source is provided by the full source
@@ -64,14 +63,14 @@ class BaseSource(JSONLDAsyncDictSerializer):
             return {"none": [obj.get("main_title_s", "[No title]")]}
 
         req = self.context.get('request')
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
         label = format_source_label(obj["standard_titles_json"], transl)
 
         return label
 
     def get_type_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.source")
 
@@ -80,7 +79,8 @@ class BaseSource(JSONLDAsyncDictSerializer):
             return None
 
         return Relationship(obj["creator_json"][0],
-                            context={"request": self.context.get('request')}).data
+                            context={"request": self.context.get('request'),
+                                     "reltype": "rism:Creator"}).data
 
     def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         # This source is not part of another source; return None
@@ -91,7 +91,7 @@ class BaseSource(JSONLDAsyncDictSerializer):
         req = self.context.get('request')
         parent_source_id: str = re.sub(ID_SUB, "", source_membership.get("source_id"))
         ident: str = get_identifier(req, "sources.source", source_id=parent_source_id)
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         parent_title: str = source_membership.get("main_title", "[No title]")
         parent_shelfmark: Optional[str] = source_membership.get("shelfmark")
@@ -130,7 +130,7 @@ class BaseSource(JSONLDAsyncDictSerializer):
     # identification fields.
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "source_member_composers_sm": ("records.composer", None),
@@ -154,7 +154,7 @@ class BaseSource(JSONLDAsyncDictSerializer):
 
     def get_record_history(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return get_record_history(obj, transl)
 

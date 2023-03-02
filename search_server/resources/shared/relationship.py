@@ -11,20 +11,19 @@ from shared_helpers.display_translators import (
     place_relationship_labels_translator, title_json_value_translator, source_relationship_labels_translator
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
-class RelationshipsSection(JSONLDDictSerializer):
-    rid = serpy.MethodField(
-        label="id"
-    )
-    rtype = serpy.StaticField(
-        label="type",
-        value="rism:RelationshipsSection"
-    )
+class RelationshipsSection(serpy.DictSerializer):
+    # rid = serpy.MethodField(
+    #     label="id"
+    # )
+    # rtype = serpy.StaticField(
+    #     label="type",
+    #     value="rism:RelationshipsSection"
+    # )
     label = serpy.MethodField()
     items = serpy.MethodField()
 
@@ -65,7 +64,7 @@ class RelationshipsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.relations", {})
 
@@ -83,11 +82,13 @@ class RelationshipsSection(JSONLDDictSerializer):
                             context={"request": self.context.get("request")}).data
 
 
-class Relationship(JSONLDDictSerializer):
-    stype = serpy.StaticField(
-        label="type",
-        value="rism:Relationship"
-    )
+class Relationship(serpy.DictSerializer):
+    # sid = serpy.MethodField(
+    #     label="id"
+    # )
+    # stype = serpy.MethodField(
+    #     label="type"
+    # )
     role = serpy.MethodField()
     qualifier = serpy.MethodField()
     related_to = serpy.MethodField(
@@ -96,13 +97,54 @@ class Relationship(JSONLDDictSerializer):
     name = serpy.MethodField()
     note = serpy.MethodField()
 
+    # def get_sid(self, obj: dict) -> str:
+    #     ctx: dict = self.context
+    #     req = ctx.get("request")
+    #     this_id: str = re.sub(ID_SUB, "", obj["this_id"])
+    #     this_type: str = obj["this_type"]
+    #     rel_type: str = obj["type"]
+    #
+    #     if "reltype" in ctx and ctx["reltype"] == "rism:Creator":
+    #         # There is only one creator so we don't need to qualify this more.
+    #         return get_identifier(req, "sources.creator", source_id=this_id)
+    #
+    #     relationship_id = f"{rel_type}-{obj['id']}"
+    #
+    #     if this_type == "source":
+    #         return get_identifier(req, "sources.relationship", source_id=this_id, relationship_id=relationship_id)
+    #     elif this_type == "institution":
+    #         return get_identifier(req, "institutions.relationship", institution_id=this_id, relationship_id=relationship_id)
+    #     elif this_type == "place":
+    #         return get_identifier(req, "places.relationship", place_id=this_id, relationship_id=relationship_id)
+    #     elif this_type == "person":
+    #         return get_identifier(req, "people.relationship", person_id=this_id, relationship_id=relationship_id)
+    #     else:
+    #         return ""
+    #
+    # def get_stype(self, obj: dict) -> str:
+    #     ctx: dict = self.context
+    #     if "reltype" in ctx:
+    #         return ctx["reltype"]
+    #
+    #     this_type = obj["this_type"]
+    #     if this_type == "source":
+    #         return "rism:SourceRelationship"
+    #     elif this_type == "person":
+    #         return "rism:PersonRelationship"
+    #     elif this_type == "institution":
+    #         return "rism:InstitutionRelationship"
+    #     elif this_type == "place":
+    #         return "rism:PlaceRelationship"
+    #
+    #     return "rism:Relationship"
+
     def get_role(self, obj: dict) -> Optional[dict]:
         if 'relationship' not in obj:
             return None
 
         relationship_value: str = obj["relationship"]
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
         relationship_translator: Optional[Callable] = _relationship_translator(obj)
         if not relationship_translator:
             return {"none": ["[Unknown relationship]"]}
@@ -110,14 +152,14 @@ class Relationship(JSONLDDictSerializer):
         # If the relator codes are already formatted as a namespace, then don't double
         # namespace them.
         if relationship_value.startswith("rdau"):
-            rel = relationship_value
+            rel = f"{relationship_value}"
         else:
-            rel = relationship_value.replace(' ', '_')
+            rel = f"relators:{relationship_value.replace(' ', '_')}"
 
         return {
             "label": relationship_translator(relationship_value, transl),
             "value": f"{rel}",
-            "type": f"relators:{rel}"
+            "id": f"{rel}"
         }
 
     def get_qualifier(self, obj: dict) -> Optional[dict]:
@@ -125,12 +167,12 @@ class Relationship(JSONLDDictSerializer):
             return None
 
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return {
             "label": qualifier_labels_translator(obj['qualifier'], transl),
             "value": f"{obj.get('qualifier')}",
-            "type": f"rism:{obj.get('qualifier')}"
+            "id": f"rism:{obj.get('qualifier')}"
         }
 
     def get_related_to(self, obj: dict) -> Optional[dict]:
@@ -215,7 +257,7 @@ def _related_to_place(req, obj: dict) -> dict:
 
 
 def _related_to_source(req, obj: dict) -> dict:
-    transl = req.app.ctx.translations
+    transl: dict = req.ctx.translations
 
     source_id: str = re.sub(ID_SUB, "", obj["source_id"])
     source_title: dict = title_json_value_translator(obj.get("title", []), transl)

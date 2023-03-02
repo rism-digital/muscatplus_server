@@ -8,7 +8,7 @@ from search_server.exceptions import InvalidQueryException, PaginationParseExcep
 from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import parse_page_number, parse_row_number
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 DEFAULT_QUERY_STRING: str = "*:*"
 TERM_FACET_LIMIT: int = 200   # The maximum number of results to return with a select facet ('term' facet in solr).
@@ -490,7 +490,9 @@ class SearchRequest:
             #   3c. Doing all this while also supporting 'traditional' facet searches.
 
             # If we have an incipit mode, assume the incoming request is a PAE string.
-            self.pae_features = get_pae_features(self._req)
+            self.pae_features: Optional[dict] = get_pae_features(self._req)
+            if not self.pae_features:
+                raise InvalidQueryException("The requested mode was 'incipits', but the PAE input was malformed.")
 
             # If verovio returns empty features, then something went wrong. Assume the problem is with the input
             # query string, and flag an error to the user.

@@ -40,10 +40,9 @@ def format_incipit_label(obj: dict) -> str:
     :return: A string of the composite title
     """
     work_num: str = obj['work_num_s']
-    # source_title: str = obj["main_title_s"]
-    # title: str = f" ({d})" if (d := obj.get("title_s")) else ""
+    title: str = f" {' '.join(d)}" if (d := obj.get("titles_sm", [])) else ""
 
-    return f"{work_num}"
+    return f"{work_num}{title}"
 
 
 def format_source_description(obj: dict) -> str:

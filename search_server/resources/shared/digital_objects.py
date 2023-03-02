@@ -7,10 +7,9 @@ from small_asc.client import Results
 
 from search_server.helpers.vrv import render_url
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 class DigitalObjectsSection(serpy.AsyncDictSerializer):
@@ -44,7 +43,7 @@ class DigitalObjectsSection(serpy.AsyncDictSerializer):
 
     def get_label(self, obj: SolrResult):
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.digital_objects")
 
@@ -63,7 +62,7 @@ class DigitalObjectsSection(serpy.AsyncDictSerializer):
                                    context={"request": self.context.get("request")}).data
 
 
-class DigitalObject(JSONLDAsyncDictSerializer):
+class DigitalObject(serpy.AsyncDictSerializer):
     doid = serpy.MethodField(
         label="id"
     )
@@ -106,7 +105,7 @@ class DigitalObject(JSONLDAsyncDictSerializer):
     def get_format(self, obj: SolrResult) -> Optional[str]:
         return obj.get("media_type_s")
 
-    def get_body(self, obj: SolrResult) -> dict:
+    async def get_body(self, obj: SolrResult) -> dict:
         d = {}
         mt: Optional[str] = obj.get("media_type_s")
         if mt in ("image/jpeg", "image/png"):
@@ -126,7 +125,7 @@ class DigitalObject(JSONLDAsyncDictSerializer):
             })
         elif mt == "application/xml":
             mei_url: str = obj["encoding_url_s"]
-            svg: Optional[str] = render_url(mei_url)
+            svg: Optional[str] = await render_url(mei_url)
 
             if not svg:
                 log.error("Could not render SVG for %s", obj.get("id"))

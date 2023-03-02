@@ -96,7 +96,7 @@ SOLR_FIELD_DATA_TYPES: FieldDataType = {
     "language_text_sm": ["dcterms:language"],
     "language_libretto_sm": ["dcterms:language"],
     "language_original_sm": ["dcterms:language"],
-    "rism_id": ["dterms:identifier", "pmo:RismNumber"],
+    "rism_id": ["dcterms:identifier", "pmo:RismNumber"],
     "opus_numbers_sm": ["dcterms:identifier", "pmo:OpusNumberStatement"],
     "material_source_types_sm": ["dcterms:type"],
     "material_source_types": ["dcterms:type"],
@@ -104,73 +104,3 @@ SOLR_FIELD_DATA_TYPES: FieldDataType = {
     "scoring_json": ["pmo:MediumOfPerformance"]
 }
 
-
-RISM_JSONLD_CONTEXT: dict = {
-    "@context": {
-        "@version": 1.1,
-        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-        "rism": "https://rism.online/api/v1#",
-        "rismdata": "https://rism.online/api/datatypes-v1#",
-        "pmo": "http://performedmusicontology.org/ontology/",
-        "relators": "http://id.loc.gov/vocabulary/relators/",
-        "dcterms": "http://purl.org/dc/terms/",
-        "dctypes": "http://purl.org/dc/dcmitype/",
-        "as": "http://www.w3.org/ns/activitystreams#",
-        "hydra": "http://www.w3.org/ns/hydra/core#",
-        "geojson": "https://purl.org/geojson/vocab#",
-        "schemaorg": "https://schema.org/",
-        "type": "@type",
-        "id": "@id",
-        "none": "@none",
-        "label": {
-            "@id": "rdfs:label",
-            "@container": [
-                "@language",
-                "@set"
-            ]
-        },
-        "value": {
-            "@id": "rdf:value",
-            "@container": [
-                "@language",
-                "@set"
-            ]
-        },
-        "relationships": {
-            "@id": "rism:Relationships",
-            "@context": {
-                "role": {
-                    "@id": "schemaorg:Role",
-                    "@type": "@vocab"
-                },
-                "relatedTo": {
-                    "@id": "schemaorg:agent"
-                }
-            }
-        },
-        "creator": {
-            "@id": "rism:Creator",
-            "@type": "@id",
-            "@nest": "contents",
-            "@context": {
-                "role": {
-                    "@id": "schemaorg:Role",
-                    "@type": "@vocab"
-                },
-                "relatedTo": {
-                    "@id": "schemaorg:agent"
-                }
-            }
-        },
-        "summary": {
-            "@id": "rism:Summary",
-            "@type": "@id"
-        },
-        "items": {
-            "@id": "rdfs:List",
-            "@type": "@id",
-            "@container": "@list"
-        },
-    }
-}

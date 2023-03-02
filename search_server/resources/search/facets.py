@@ -17,7 +17,7 @@ from search_server.helpers.search_request import (
     IncipitModeValues
 )
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 RANGE_PARSING_REGEX: Pattern = re.compile(r'\[(?P<start>-?\d{,4})\s?TO\s?(?P<end>-?\d{,4})\]')
 
 
@@ -28,7 +28,7 @@ def get_facets(req, obj: Results) -> Optional[dict]:
         return None
 
     cfg: dict = req.app.ctx.config
-    transl: dict = req.app.ctx.translations
+    transl: dict = req.ctx.translations
 
     current_mode: str = req.args.get("mode", cfg["search"]["default_mode"])
     filters = filters_for_mode(cfg, current_mode)

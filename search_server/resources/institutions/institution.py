@@ -102,7 +102,7 @@ class LocationAddressSection(serpy.DictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.location_and_address")
 
@@ -111,7 +111,7 @@ class LocationAddressSection(serpy.DictSerializer):
             return None
 
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         mailing_address_field_config: dict = {
             "street_address_sm": ("records.street_address", None),
@@ -127,7 +127,7 @@ class LocationAddressSection(serpy.DictSerializer):
             return None
 
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         loc: str = obj.get("location_loc")
 
@@ -144,7 +144,7 @@ class LocationAddressSection(serpy.DictSerializer):
             return None
 
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return {
             "label": transl.get("general.url"),
@@ -156,7 +156,7 @@ class LocationAddressSection(serpy.DictSerializer):
             return None
 
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return {
             "label": transl.get("general.e_mail"),

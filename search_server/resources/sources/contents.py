@@ -14,18 +14,17 @@ from shared_helpers.display_translators import (
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.languages import languages_translator
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 
-class ContentsSection(JSONLDDictSerializer):
-    csid = serpy.MethodField(
-        label="id"
-    )
-    cstype = serpy.StaticField(
-        label="type",
-        value="rism:ContentsSection"
-    )
+class ContentsSection(serpy.DictSerializer):
+    # csid = serpy.MethodField(
+    #     label="id"
+    # )
+    # cstype = serpy.StaticField(
+    #     label="type",
+    #     value="rism:ContentsSection"
+    # )
     label = serpy.MethodField()
     summary = serpy.MethodField()
     subjects = serpy.MethodField()
@@ -39,13 +38,13 @@ class ContentsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.title_content_description")
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "material_source_types_sm": ("records.source_type", material_source_types_translator),
@@ -77,7 +76,7 @@ class ContentsSection(JSONLDDictSerializer):
         return SourceSubjectsSection(obj, context={"request": self.context.get("request")}).data
 
 
-class SourceSubjectsSection(JSONLDDictSerializer):
+class SourceSubjectsSection(serpy.DictSerializer):
     stype = serpy.StaticField(
         label="type",
         value="rism:SourceSubjectSection"
@@ -87,7 +86,7 @@ class SourceSubjectsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.subject_headings")
 
@@ -100,7 +99,7 @@ class SourceSubjectsSection(JSONLDDictSerializer):
 # A minimal subject serializer. This is because the data for the subjects
 # comes from the JSON field on the source, rather than from the Solr records
 # for subjects.
-class SourceSubject(JSONLDDictSerializer):
+class SourceSubject(serpy.DictSerializer):
     sid = serpy.MethodField(
         label="id"
     )

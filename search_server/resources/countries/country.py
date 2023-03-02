@@ -3,7 +3,6 @@ from typing import Optional
 import serpy
 
 from shared_helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP, country_code_labels_translator
-from shared_helpers.serializers import JSONLDDictSerializer
 
 
 async def handle_country_request(req, country_id: str) -> Optional[dict]:
@@ -17,7 +16,7 @@ async def handle_country_list_request(req) -> Optional[dict]:  # type: ignore
                                                           "direct_request": True}).data
 
 
-class CountryList(JSONLDDictSerializer):
+class CountryList(serpy.DictSerializer):
     clid = serpy.MethodField(
         label="id"
     )
@@ -34,7 +33,7 @@ class CountryList(JSONLDDictSerializer):
 
     def get_items(self, obj: dict) -> list[dict]:
         req = self.context.get("request")  # type: ignore
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         res: list = []
 

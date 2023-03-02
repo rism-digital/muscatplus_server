@@ -4,10 +4,13 @@ import urllib.parse
 from functools import lru_cache
 from typing import Optional
 
-import httpx
+import aiohttp
 import verovio
+from orjson import orjson
 
-log = logging.getLogger(__name__)
+from shared_helpers.identifiers import ID_SUB, get_identifier
+
+log = logging.getLogger("mp_server")
 verovio.enableLog(False)
 VEROVIO_BASE_OPTIONS: dict = {
     "footer": 'none',
@@ -46,12 +49,9 @@ def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensu
     :param use_crc: The ID seed to use for Verovio's ID generator
     :return: A named tuple containing SVG and MIDI.
     """
-    custom_options: dict = {}
+    custom_options: dict = {"xmlIdChecksum": use_crc}
 
-    if use_crc:
-        custom_options["xmlIdChecksum"] = True
-    else:
-        custom_options["xmlIdChecksum"] = False
+    if not use_crc:
         vrv_tk.resetXmlIdSeed(0)
 
     if enlarged:
@@ -90,7 +90,7 @@ def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensu
 
 
 @lru_cache(maxsize=128)
-def render_url(url: str) -> Optional[str]:
+async def render_url(url: str) -> Optional[str]:
     """
     Takes a URL to an MEI file and returns the SVG for it.
 
@@ -98,24 +98,21 @@ def render_url(url: str) -> Optional[str]:
     :param custom_options:
     :return:
     """
-    with httpx.Client() as client:
+    async with aiohttp.ClientSession() as client:
         try:
-            res = client.get(url)
-        except httpx.TimeoutException as err:
+            res = await client.get(url)
+        except aiohttp.ClientConnectionError as err:
             log.error("Connection to server timed out for %s", url)
             return None
-        except httpx.ConnectError as err:
-            log.error("Could not connect to server for %s", url)
-            return None
-        except httpx.HTTPError as err:
+        except aiohttp.ClientError as err:
             log.error("Unknown connection error for %s", url)
             return None
 
-        if res.status_code != 200:
-            log.error("Server responded with non-success status code: %s", res.status_code)
+        if res.status != 200:
+            log.error("Server responded with non-success status code: %s", res.status)
             return None
 
-        mei: str = res.text
+        mei: str = await res.text()
         vrv_opts: dict = VEROVIO_BASE_OPTIONS.copy()
         vrv_opts.update({
             "pageWidth": 1000,
@@ -131,6 +128,62 @@ def render_url(url: str) -> Optional[str]:
         svg: str = vrv_tk.renderToSVG()
 
         return svg
+
+
+def render_mei(req, incipit: dict) -> Optional[str]:
+    """
+    Renders an MEI result from PAE input. Includes information for the MEI header
+    in the `x-header` section.
+
+    :param incipit: A Solr result of an incipit record
+    :return: The MEI encoded as a string, or None if there was a problem loading
+    """
+    vrv_opts: dict = VEROVIO_BASE_OPTIONS.copy()
+    vrv_tk.setOptions(vrv_opts)
+    vrv_tk.setInputFrom("pae")
+
+    source_id: str = re.sub(ID_SUB, "", incipit["source_id"])
+    work_num: str = incipit["work_num_s"]
+
+    source_url: str = get_identifier(req, "sources.source", source_id=source_id)
+    incipit_url: str = get_identifier(req, "sources.incipit_encoding", source_id=source_id, work_num=work_num)
+
+    metadata_header: dict = {
+        "source_url": source_url,
+        "download_url": incipit_url
+    }
+
+    if t := incipit.get("titles_sm", []):
+        metadata_header["title"] = " ".join(t)
+    if c := incipit.get("creator_name_s"):
+        metadata_header["composer"] = c
+    if sc := incipit.get("scoring_sm", []):
+        metadata_header["scoring"] = ", ".join(sc)
+    if st := incipit.get("main_title_s"):
+        metadata_header["source_title"] = st
+    if nt := incipit.get("general_notes_sm", []):
+        metadata_header["notes"] = nt
+    if vi := incipit.get("voice_instrument_s"):
+        metadata_header["voice_instrument"] = vi
+    if mv := incipit.get("work_num_s"):
+        metadata_header["movement"] = mv
+
+    pae: dict = {
+        "x-header": metadata_header,  # TBD
+        "clef": incipit.get("clef_s", ""),
+        "keysig": incipit.get("key_s", ""),
+        "timesig": incipit.get("timesit_s", ""),
+        "data": incipit.get("music_incipit_s", "")
+    }
+
+    load_status: bool = vrv_tk.loadData(orjson.dumps(pae).decode("utf8"))
+    if not load_status:
+        incipit_id: str = incipit["id"]
+        log.error("Verovio could transform incipit %s to MEI", incipit_id)
+        return None
+
+    mei: str = vrv_tk.getMEI()
+    return mei
 
 
 def create_pae_from_request(req) -> str:
@@ -171,7 +224,7 @@ def create_pae_from_request(req) -> str:
     return "\n".join(pae_elements)
 
 
-def get_pae_features(req) -> dict:
+def get_pae_features(req) -> Optional[dict]:
     """
         Parses an incoming search request containing some note data and some
         optional parameters, and returns a dictionary containing the PAE features.
@@ -182,8 +235,11 @@ def get_pae_features(req) -> dict:
     vrv_tk.resetXmlIdSeed(0)
     pae: str = create_pae_from_request(req)
     vrv_tk.setInputFrom("pae")
-    vrv_tk.loadData(pae)
-    return vrv_tk.getDescriptiveFeatures("{}")
+    load_success: bool = vrv_tk.loadData(pae)
+    if load_success is False:
+        log.warning("Could not load PAE for %s", pae)
+        return None
+    return vrv_tk.getDescriptiveFeatures({})
 
 
 def _find_err_msg(needle: str, transl_haystack: dict[str, dict]) -> dict:
@@ -204,7 +260,7 @@ def validate_pae(req) -> dict:
             "valid": True
         }
 
-    transl: dict = req.app.ctx.translations
+    transl: dict = req.ctx.translations
 
     validation_data: list = validation_output["data"]
     translated_messages: list = []

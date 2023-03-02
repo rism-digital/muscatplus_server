@@ -1,11 +1,10 @@
 import serpy
 
 from shared_helpers.display_translators import person_name_variant_labels_translator
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 
-class VariantNamesSection(JSONLDDictSerializer):
+class VariantNamesSection(serpy.DictSerializer):
     ntype = serpy.StaticField(
         label="type",
         value="rism:VariantNamesSection"
@@ -15,7 +14,7 @@ class VariantNamesSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.name_variants")
 
@@ -25,7 +24,7 @@ class VariantNamesSection(JSONLDDictSerializer):
                            context={"request": self.context.get("request")}).data
 
 
-class NameVariant(JSONLDDictSerializer):
+class NameVariant(serpy.DictSerializer):
     vtype = serpy.StaticField(
         label="type",
         value="rism:VariantName"
@@ -35,7 +34,7 @@ class NameVariant(JSONLDDictSerializer):
 
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return person_name_variant_labels_translator(obj['type'], transl)
 

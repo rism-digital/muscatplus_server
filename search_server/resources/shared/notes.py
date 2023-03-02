@@ -3,11 +3,10 @@ from typing import Optional
 import serpy
 
 from shared_helpers.display_fields import get_display_fields, LabelConfig
-from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
 
-class NotesSection(JSONLDAsyncDictSerializer):
+class NotesSection(serpy.AsyncDictSerializer):
     label = serpy.MethodField()
     ntype = serpy.StaticField(
         label="type",
@@ -17,14 +16,14 @@ class NotesSection(JSONLDAsyncDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         # TODO: Change this to just 'notes' when the translation is available.
         return transl.get("records.references_and_notes")
 
     def get_notes(self, obj: SolrResult) -> Optional[list]:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "general_notes_sm": ("records.general_note", None),

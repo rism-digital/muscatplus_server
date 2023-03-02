@@ -8,7 +8,7 @@ from search_server.helpers.search_request import SearchRequest
 from search_server.resources.search.base_search import serialize_response
 from search_server.resources.search.search_results import BaseSearchResults, SourceSearchResult
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 def _prepare_query(req, person_id: str, probe: bool = False) -> dict:

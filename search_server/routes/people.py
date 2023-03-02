@@ -46,6 +46,11 @@ async def relationships(req, person_id: str):
     return response.text("Not implemented", status=501)
 
 
+@people_blueprint.route("/<person_id:str>/relationships/<relationship_id:str>")
+async def relationship(req, person_id: str, relationship_id: str):
+    return response.text("Not implemented", status=501)
+
+
 @people_blueprint.route("/<person_id:str>/digital-objects/")
 async def digital_object_list(req, person_id):
     return response.text("Not implemented", status=501)

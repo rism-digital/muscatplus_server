@@ -1,20 +1,19 @@
+import logging
 import re
 from typing import Optional
-import logging
 
 import serpy
 from small_asc.client import Results, JsonAPIRequest
 
-from search_server.resources.shared.relationship import Relationship
 from search_server.resources.institutions.base_institution import BaseInstitution, SOLR_FIELDS_FOR_BASE_INSTITUTION
 from search_server.resources.people.base_person import SOLR_FIELDS_FOR_BASE_PERSON
+from search_server.resources.shared.relationship import Relationship
 from search_server.resources.sources.base_source import BaseSource, SOLR_FIELDS_FOR_BASE_SOURCE
 from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 async def handle_place_request(req, place_id: str) -> Optional[dict]:
@@ -27,7 +26,7 @@ async def handle_place_request(req, place_id: str) -> Optional[dict]:
                                         "direct_request": True}).data
 
 
-class Place(JSONLDAsyncDictSerializer):
+class Place(serpy.AsyncDictSerializer):
     pid = serpy.MethodField(
         label="id"
     )
@@ -55,12 +54,12 @@ class Place(JSONLDAsyncDictSerializer):
 
     def get_type_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
         return transl.get("records.place")
 
     def get_summary(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "country_s": ("records.country", None),

@@ -15,7 +15,7 @@ class ExternalAuthoritiesSection(serpy.DictSerializer):
 
     def get_label(self, obj: list) -> dict:
         req = self.context.get("request")  # type: ignore
-        transl: dict = req.app.ctx.translations  # type: ignore
+        transl: dict = req.ctx.translations  # type: ignore
 
         return transl.get("records.other_standard_identifier", {})
 

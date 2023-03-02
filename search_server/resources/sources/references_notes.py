@@ -2,20 +2,18 @@ from typing import Optional
 
 import serpy
 
+# 500, 505, 525, 691, 510, 596, 657, 651, 518, 856(?)
+from search_server.resources.liturgical_festivals.liturgical_festival import LiturgicalFestival
+from search_server.resources.shared.relationship import Relationship
 from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.display_translators import (
     secondary_literature_json_value_translator,
     url_detecting_translator
 )
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 
-# 500, 505, 525, 691, 510, 596, 657, 651, 518, 856(?)
-from search_server.resources.liturgical_festivals.liturgical_festival import LiturgicalFestival
-from search_server.resources.shared.relationship import Relationship
 
-
-class ReferencesNotesSection(JSONLDDictSerializer):
+class ReferencesNotesSection(serpy.DictSerializer):
     label = serpy.MethodField()
     stype = serpy.StaticField(
         label="type",
@@ -31,14 +29,14 @@ class ReferencesNotesSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.references_and_notes")
 
     def get_notes(self, obj: SolrResult) -> Optional[dict]:
         # 500, 505, 518, 525
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "source_general_notes_smni": ("records.general_note", url_detecting_translator),
@@ -70,7 +68,7 @@ class ReferencesNotesSection(JSONLDDictSerializer):
                                           context={"request": self.context.get("request")}).data
 
 
-class PerformanceLocationsSection(JSONLDDictSerializer):
+class PerformanceLocationsSection(serpy.DictSerializer):
     label = serpy.MethodField()
     stype = serpy.StaticField(
         label="type",
@@ -80,7 +78,7 @@ class PerformanceLocationsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.location_performance")
 
@@ -92,7 +90,7 @@ class PerformanceLocationsSection(JSONLDDictSerializer):
                             context={"request": self.context.get("request")}).data
 
 
-class LiturgicalFestivalsSection(JSONLDDictSerializer):
+class LiturgicalFestivalsSection(serpy.DictSerializer):
     label = serpy.MethodField()
     stype = serpy.StaticField(
         label="type",
@@ -102,7 +100,7 @@ class LiturgicalFestivalsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.liturgical_festivals")
 

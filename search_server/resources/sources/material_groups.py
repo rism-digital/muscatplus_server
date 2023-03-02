@@ -11,15 +11,14 @@ from shared_helpers.display_translators import (
     material_content_types_translator
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrResult
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 
-log = logging.getLogger("muscat_indexer")
+log = logging.getLogger("mp_server")
 
 
-class MaterialGroupsSection(JSONLDDictSerializer):
+class MaterialGroupsSection(serpy.DictSerializer):
     mgid = serpy.MethodField(
         label="id"
     )
@@ -38,7 +37,7 @@ class MaterialGroupsSection(JSONLDDictSerializer):
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.material_description", {})
 
@@ -49,15 +48,15 @@ class MaterialGroupsSection(JSONLDDictSerializer):
                              context={"request": self.context.get("request")}).data
 
 
-class MaterialGroup(JSONLDDictSerializer):
-    mgid = serpy.MethodField(
-        label="id"
-    )
+class MaterialGroup(serpy.DictSerializer):
+    # mgid = serpy.MethodField(
+    #     label="id"
+    # )
     label = serpy.MethodField()
-    mtype = serpy.StaticField(
-        label="type",
-        value="rism:MaterialGroup"
-    )
+    # mtype = serpy.StaticField(
+    #     label="type",
+    #     value="rism:MaterialGroup"
+    # )
     summary = serpy.MethodField()
     notes = serpy.MethodField()
     relationships = serpy.MethodField()
@@ -79,7 +78,7 @@ class MaterialGroup(JSONLDDictSerializer):
 
     def get_summary(self, obj: dict) -> Optional[list]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "material_source_types": ("records.source_type", material_source_types_translator),
@@ -105,7 +104,7 @@ class MaterialGroup(JSONLDDictSerializer):
 
     def get_notes(self, obj: dict) -> Optional[list]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             "general_notes": ("records.general_note", None),
@@ -116,9 +115,11 @@ class MaterialGroup(JSONLDDictSerializer):
         return get_display_fields(obj, transl, field_config=field_config)
 
     def get_relationships(self, obj: dict) -> Optional[dict]:
-        # a set is disjoint if there are no keys in common.
+        # a set is disjoint if there are no keys in common. Check if these keys exist in the
+        # record; if they are disjoint, then we don't need to process them.
         if {'related_people_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
             return None
+
         return RelationshipsSection(obj, context={"request": self.context.get("request")}).data
 
     def get_external_resources(self, obj: dict) -> Optional[dict]:

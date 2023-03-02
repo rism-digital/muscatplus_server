@@ -1,9 +1,9 @@
 import re
+from collections import defaultdict
 from typing import Optional, Pattern, Match
 
 from shared_helpers.identifiers import ID_SUB
 from shared_helpers.languages import SUPPORTED_LANGUAGES
-
 
 _MATERIAL_SOURCE_TYPE_MAP: dict = {
     "Manuscript copy": "records.manuscript_copy",
@@ -456,18 +456,22 @@ def __lookup_translations_list(values: list, available_translations: dict, trans
     :param translations_map:
     :return:
     """
-    result: dict = {k: [] for k in SUPPORTED_LANGUAGES}
+    result: defaultdict = defaultdict(list)
+
+    # NB: we use a fixed key that is likely to always be available in the translations.
+    # If this gets changed, this will crash.
+    langcodes: list = list(available_translations["general.rism"].keys())
 
     for trans_itm in values:
         transl_key: Optional[str] = translations_map.get(trans_itm)
-        for lcode in SUPPORTED_LANGUAGES:
+        for lcode in langcodes:
             if transl_key:
                 trans: dict = available_translations.get(transl_key, {})
                 result[lcode].extend(trans[lcode] if lcode in trans else [trans_itm])
             else:
                 result[lcode].extend([trans_itm])
 
-    return result
+    return dict(result)
 
 def material_source_types_translator(values: list, translations: dict) -> dict:
     return __lookup_translations_list(values, translations, _MATERIAL_SOURCE_TYPE_MAP)
@@ -590,7 +594,12 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
     :param translations: A dictionary of available field label translations
     :return: A set of translated titles.
     """
-    result: dict = {k: [] for k in SUPPORTED_LANGUAGES}
+    result: defaultdict = defaultdict(list)
+
+    # We use the available translations to know what language codes we should get. To
+    # do this we'll take a known value for which it's unlikely it will change, and that will
+    # always have all available translations and then get the languages from that.
+    langcodes: list = list(translations["general.rism"].keys())
 
     # Get the individual fields for each entry in the title field, if any.
     for v in values:
@@ -616,7 +625,7 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
         if source_type:
             source_type_trans = material_source_types_translator([source_type], translations)
 
-        for lang in SUPPORTED_LANGUAGES:
+        for lang in langcodes:
             tith = f"{title}"
             subh = ', '.join(sh) if (sh := subheading_trans.get(lang, [])) else ""
             arrh = f" {', '.join(ah)}" if (ah := arrangement_trans.get(lang, [])) else ""
@@ -638,7 +647,7 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
 
             result[lang].append(full_title)
 
-    return result
+    return dict(result)
 
 
 def key_mode_value_translator(value: str, translations: dict) -> dict:

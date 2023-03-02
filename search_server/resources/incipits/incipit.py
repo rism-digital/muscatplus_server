@@ -6,6 +6,8 @@ import serpy
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.record_types import create_record_block
+from search_server.helpers.vrv import render_pae, render_mei
+from search_server.resources.sources.base_source import BaseSource
 from shared_helpers.display_fields import (
     get_display_fields,
     LabelConfig
@@ -16,12 +18,9 @@ from shared_helpers.identifiers import (
     ID_SUB,
     get_identifier
 )
-from shared_helpers.serializers import JSONLDAsyncDictSerializer
 from shared_helpers.solr_connection import SolrConnection, SolrResult
-from search_server.helpers.vrv import render_pae
-from search_server.resources.sources.base_source import BaseSource
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 async def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
@@ -68,7 +67,34 @@ async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional
                                                   "direct_request": True}).data
 
 
-class IncipitsSection(JSONLDAsyncDictSerializer):
+async def handle_mei_download(req, source_id: str, work_num: str) -> Optional[dict]:
+    """
+    Handle MEI file download for a given incipit. Returns a dictionary containing the
+    attachment filename and the MEI content sent in the body of the response.
+    """
+    incipit_record: Optional[SolrResult] = await _fetch_incipit(source_id, work_num)
+
+    if not incipit_record:
+        return None
+
+    if "music_incipit_s" not in incipit_record:
+        return None
+
+    filename: str = f"rism-source-{source_id}-{work_num}.mei"
+    response_headers: dict = {"Content-Disposition": f"attachment; filename={filename}",
+                              "Content-Type": "application/mei+xml"}
+
+    mei_content: Optional[str] = render_mei(req, incipit_record)
+    if not mei_content:
+        return None
+
+    return {
+        "headers": response_headers,
+        "content": mei_content
+    }
+
+
+class IncipitsSection(serpy.AsyncDictSerializer):
     isid = serpy.MethodField(
         label="id"
     )
@@ -90,7 +116,7 @@ class IncipitsSection(JSONLDAsyncDictSerializer):
 
     def get_label(self, obj: SolrResult):
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.incipits")
 
@@ -99,7 +125,7 @@ class IncipitsSection(JSONLDAsyncDictSerializer):
             return None
 
         req = self.context.get('request')
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
         ident: str = get_identifier(req, "sources.source", source_id=obj.get("id"))
 
         if "standard_titles_json" not in obj:
@@ -146,7 +172,7 @@ class IncipitsSection(JSONLDAsyncDictSerializer):
                              context={"request": self.context.get("request")}).data
 
 
-class Incipit(JSONLDAsyncDictSerializer):
+class Incipit(serpy.AsyncDictSerializer):
     incip_id = serpy.MethodField(
         label="id"
     )
@@ -176,7 +202,7 @@ class Incipit(JSONLDAsyncDictSerializer):
 
     async def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return {
             "label": transl.get("records.item_part_of"),  # TODO: This should probably be changed to 'incipit part of'
@@ -186,7 +212,7 @@ class Incipit(JSONLDAsyncDictSerializer):
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {}
 
@@ -198,8 +224,8 @@ class Incipit(JSONLDAsyncDictSerializer):
             field_config["creator_name_s"] = ("records.composer_author", None)
 
         field_config.update({
-            "title_s": ("records.title_movement_tempo", None),
-            "text_incipit_s": ("records.text_incipit", None),
+            "titles_sm": ("records.title_movement_tempo", None),
+            "text_incipit_sm": ("records.text_incipit", None),
             "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
             "clef_s": ("records.clef", clef_translator),
             "timesig_s": ("records.time_signature", None),
@@ -251,9 +277,15 @@ class Incipit(JSONLDAsyncDictSerializer):
             return None
 
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         pae_encoding: dict = {}
+        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+        work_num: str = obj.get('work_num_s', "")
+        mei_download_url: str = get_identifier(req,
+                                               "sources.incipit_encoding",
+                                               source_id=source_id,
+                                               work_num=work_num)
 
         if c := obj.get("clef_s"):
             pae_encoding["clef"] = c
@@ -270,4 +302,8 @@ class Incipit(JSONLDAsyncDictSerializer):
             "label": transl.get("records.plaine_and_easie"),
             "format": "application/json",
             "data": pae_encoding
+        }, {
+            "label": transl.get("records.unknown"),
+            "format": "application/mei+xml",
+            "url": mei_download_url
         }]

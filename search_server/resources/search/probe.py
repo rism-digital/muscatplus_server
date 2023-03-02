@@ -6,7 +6,7 @@ from search_server.helpers.search_request import SearchRequest
 from search_server.resources.search.base_search import serialize_response
 from search_server.resources.search.search_results import SearchResults
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 async def handle_probe_request(req) -> dict:

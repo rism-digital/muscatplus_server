@@ -5,7 +5,6 @@ import serpy
 
 from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.serializers import JSONLDDictSerializer
 from shared_helpers.solr_connection import SolrConnection
 
 
@@ -19,7 +18,7 @@ async def handle_festival_request(req, festival_id: str) -> Optional[dict]:
                                                "direct_request": True}).data
 
 
-class LiturgicalFestival(JSONLDDictSerializer):
+class LiturgicalFestival(serpy.DictSerializer):
     fid = serpy.MethodField(
         label="id"
     )
@@ -49,7 +48,7 @@ class LiturgicalFestival(JSONLDDictSerializer):
             return None
 
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
             # should be "Alternate terms" but this is not available in the translations currently...

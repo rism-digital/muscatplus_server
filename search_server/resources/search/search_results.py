@@ -17,7 +17,8 @@ from shared_helpers.display_translators import (
 from shared_helpers.formatters import (
     format_institution_label,
     format_person_label,
-    format_source_label
+    format_source_label,
+    format_incipit_label
 )
 from shared_helpers.identifiers import (
     get_identifier,
@@ -25,14 +26,14 @@ from shared_helpers.identifiers import (
 )
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("mp_server")
 
 
 class SearchResults(BaseSearchResults):
     def get_modes(self, obj: Results) -> Optional[dict]:
         req = self.context.get("request")
         cfg: dict = req.app.ctx.config
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         facet_results: Optional[dict] = obj.raw_response.get('facets')
         if not facet_results:
@@ -148,19 +149,19 @@ class SourceSearchResult(serpy.DictSerializer):
 
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
         label: dict = format_source_label(obj["standard_titles_json"], transl)
 
         return label
 
     def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
         return transl.get("records.source")
 
     def get_summary(self, obj: dict) -> Optional[dict]:
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         field_config: dict = {
             "source_member_composers_sm": ("sourceComposers", "records.composer", None),
@@ -202,7 +203,7 @@ class SourceSearchResult(serpy.DictSerializer):
         content_types: list[str] = source_membership.get("content_types", [])
 
         record_block: dict = create_record_block(record_type, source_type, content_types)
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return {
             "label": transl.get("records.item_part_of"),
@@ -277,7 +278,7 @@ class PersonSearchResult(serpy.DictSerializer):
 
     def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.person")
 
@@ -288,7 +289,7 @@ class PersonSearchResult(serpy.DictSerializer):
         }
 
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return get_search_result_summary(field_config, transl, obj)
 
@@ -330,7 +331,7 @@ class InstitutionSearchResult(serpy.DictSerializer):
 
     def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl = req.ctx.translations
 
         return transl.get("records.institution")
 
@@ -341,7 +342,7 @@ class InstitutionSearchResult(serpy.DictSerializer):
         }
 
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return get_search_result_summary(field_config, transl, obj)
 
@@ -381,7 +382,7 @@ class PlaceSearchResult(serpy.DictSerializer):
 
     def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.place")
 
@@ -412,7 +413,7 @@ class LiturgicalFestivalSearchResult(serpy.DictSerializer):
 
     def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.liturgical_festival")
 
@@ -444,26 +445,24 @@ class IncipitSearchResult(serpy.DictSerializer):
         return get_identifier(req, "sources.incipit", source_id=source_id, work_num=work_num)
 
     def get_label(self, obj: dict) -> dict:
-        work_num: str = obj.get("work_num_s")
-        title: str = f" ({d})" if (d := obj.get("title_s")) else ""
-
-        return {"none": [f"{work_num}{title}"]}
+        incipit_label: str = format_incipit_label(obj)
+        return {"none": [incipit_label]}
 
     def get_type_label(self, obj: dict) -> dict:
         req = self.context.get("request")
-        transl = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return transl.get("records.incipit")
 
     def get_summary(self, obj: dict) -> Optional[dict]:
         field_config: dict = {
             "creator_name_s": ("incipitComposer", "records.composer_author", None),
-            "text_incipit_s": ("textIncipit", "records.text_incipit", None),
+            "text_incipit_sm": ("textIncipit", "records.text_incipit", None),
             "voice_instrument_s": ("voiceInstrument", "records.voice_instrument", None)
         }
 
         req = self.context.get("request")
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return get_search_result_summary(field_config, transl, obj)
 
@@ -477,7 +476,7 @@ class IncipitSearchResult(serpy.DictSerializer):
 
         parent_title: str = obj.get("main_title_s")
         parent_source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         return {
             "label": transl.get("records.item_part_of"),
