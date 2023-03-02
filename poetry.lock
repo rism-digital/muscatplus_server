@@ -1846,15 +1846,17 @@ category = "main"
 optional = false
 python-versions = "^3.9"
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
 aiohttp = {version = "^3.8.4", extras = ["speedups"]}
 orjson = "^3.8.5"
 
 [package.source]
-type = "directory"
-url = "../small-asc"
+type = "git"
+url = "https://github.com/rism-digital/small-asc.git"
+reference = "main"
+resolved_reference = "7e1f95503da49d34c6a442ecdbd30b9e79f971c1"
 
 [[package]]
 name = "stack-data"
@@ -2334,4 +2336,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "3a1dc5e76b706b02f89498414c22a596e0431db372b6f829d60031e9bb2390de"
+content-hash = "0718fce518537b433a774ebca51e6150bb33e5c77a118f9afd5862b59d2e56ec"

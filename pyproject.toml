@@ -16,8 +16,8 @@ sentry-sdk = "^1.10.1"
 Jinja2 = "^3.1.2"
 orjson = "^3.8.5"
 verovio = { version = "^3.14.0", allow-prereleases = true }
-small-asc = { path = "../small-asc", develop = true }
 aiohttp = {extras = ["speedups"], version = "^3.8.4"}
+small-asc = {git = "https://github.com/rism-digital/small-asc.git", rev = "main"}
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.0.0"
