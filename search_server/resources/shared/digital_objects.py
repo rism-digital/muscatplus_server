@@ -105,7 +105,7 @@ class DigitalObject(serpy.AsyncDictSerializer):
     def get_format(self, obj: SolrResult) -> Optional[str]:
         return obj.get("media_type_s")
 
-    def get_body(self, obj: SolrResult) -> dict:
+    async def get_body(self, obj: SolrResult) -> dict:
         d = {}
         mt: Optional[str] = obj.get("media_type_s")
         if mt in ("image/jpeg", "image/png"):
@@ -125,7 +125,7 @@ class DigitalObject(serpy.AsyncDictSerializer):
             })
         elif mt == "application/xml":
             mei_url: str = obj["encoding_url_s"]
-            svg: Optional[str] = render_url(mei_url)
+            svg: Optional[str] = await render_url(mei_url)
 
             if not svg:
                 log.error("Could not render SVG for %s", obj.get("id"))

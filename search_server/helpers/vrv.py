@@ -4,7 +4,7 @@ import urllib.parse
 from functools import lru_cache
 from typing import Optional
 
-import httpx
+import aiohttp
 import verovio
 from orjson import orjson
 
@@ -88,7 +88,7 @@ def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensu
 
 
 @lru_cache(maxsize=128)
-def render_url(url: str) -> Optional[str]:
+async def render_url(url: str) -> Optional[str]:
     """
     Takes a URL to an MEI file and returns the SVG for it.
 
@@ -96,24 +96,21 @@ def render_url(url: str) -> Optional[str]:
     :param custom_options:
     :return:
     """
-    with httpx.Client() as client:
+    async with aiohttp.ClientSession() as client:
         try:
-            res = client.get(url)
-        except httpx.TimeoutException as err:
+            res = await client.get(url)
+        except aiohttp.ClientConnectionError as err:
             log.error("Connection to server timed out for %s", url)
             return None
-        except httpx.ConnectError as err:
-            log.error("Could not connect to server for %s", url)
-            return None
-        except httpx.HTTPError as err:
+        except aiohttp.ClientError as err:
             log.error("Unknown connection error for %s", url)
             return None
 
-        if res.status_code != 200:
-            log.error("Server responded with non-success status code: %s", res.status_code)
+        if res.status != 200:
+            log.error("Server responded with non-success status code: %s", res.status)
             return None
 
-        mei: str = res.text
+        mei: str = await res.text()
         vrv_opts: dict = VEROVIO_BASE_OPTIONS.copy()
         vrv_opts.update({
             "pageWidth": 1000,
