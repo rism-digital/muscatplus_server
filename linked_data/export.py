@@ -1,12 +1,9 @@
 import argparse
 import asyncio
-import concurrent.futures
-import logging
 import logging.config
 import shutil
 import timeit
 from pathlib import Path
-from typing import Iterable, Callable
 
 import aiofiles
 import rdflib
@@ -101,7 +98,7 @@ async def main(args: argparse.Namespace) -> bool:
             ctx = RISM_JSONLD_SOURCE_CONTEXT
             serializer = FullSource
         else:
-            log.debug("Could not determin serializer, so we are skipping resource type %s", resource_type)
+            log.debug("Could not determine serializer, so we are skipping resource type %s", resource_type)
             continue
 
         s = Solr("http://localhost:8983/solr/muscatplus_live")
@@ -114,9 +111,9 @@ async def main(args: argparse.Namespace) -> bool:
             fq.append(f"country_codes_sm:{args.country_code}")
 
         sort = "id asc"
-        ctx_val = {"@context": ctx}
         res = await s.search({"query": "*:*", "filter": fq, "sort": sort, "limit": 500}, cursor=True)
         num_records += res.hits
+        ctx_val = {"@context": ctx}
 
         async for sdoc in res:
             sid = sdoc['rism_id']
