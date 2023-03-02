@@ -49,12 +49,9 @@ def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensu
     :param use_crc: The ID seed to use for Verovio's ID generator
     :return: A named tuple containing SVG and MIDI.
     """
-    custom_options: dict = {}
+    custom_options: dict = {"xmlIdChecksum": use_crc}
 
-    if use_crc:
-        custom_options["xmlIdChecksum"] = True
-    else:
-        custom_options["xmlIdChecksum"] = False
+    if not use_crc:
         vrv_tk.resetXmlIdSeed(0)
 
     if enlarged:
