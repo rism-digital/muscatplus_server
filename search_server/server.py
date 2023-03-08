@@ -1,15 +1,14 @@
 import logging
 from typing import Optional
 
+import orjson
 import sentry_sdk
 import yaml
 from sanic import Sanic, response
 from small_asc.client import Results
-import orjson
 
-from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT, RISM_JSONLD_PERSON_CONTEXT, RISM_JSONLD_DEFAULT_CONTEXT
-from shared_helpers.languages import load_translations, negotiate_languages
 from search_server.resources.front.front import handle_front_request
+from search_server.routes.api import api_blueprint
 from search_server.routes.countries import countries_blueprint
 from search_server.routes.festivals import festivals_blueprint
 from search_server.routes.holdings import holdings_blueprint
@@ -20,6 +19,8 @@ from search_server.routes.places import places_blueprint
 from search_server.routes.query import query_blueprint
 from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
+from search_server.routes.works import works_blueprint
+from shared_helpers.languages import load_translations, negotiate_languages
 from shared_helpers.solr_connection import SolrConnection
 
 config: dict = yaml.safe_load(open('configuration.yml', 'r'))
@@ -56,7 +57,9 @@ app.blueprint(subjects_blueprint)
 app.blueprint(incipits_blueprint)
 app.blueprint(festivals_blueprint)
 app.blueprint(countries_blueprint)
+app.blueprint(works_blueprint)
 app.blueprint(query_blueprint)
+app.blueprint(api_blueprint)
 
 app.config.FORWARDED_SECRET = config['common']['secret']
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
@@ -106,21 +109,6 @@ def do_language_negotiation(req):
 @app.route("/")
 async def front(req):
     return await handle_front_request(req)
-
-
-@app.route("/api/v1/source.json")
-async def source_context(req) -> response.HTTPResponse:
-    return response.json({"@context": RISM_JSONLD_SOURCE_CONTEXT})
-
-
-@app.route("/api/v1/person.json")
-async def person_context(req) -> response.HTTPResponse:
-    return response.json({"@context": RISM_JSONLD_PERSON_CONTEXT})
-
-
-@app.route("/api/v1/context.json")
-async def default_context(req) -> response.HTTPResponse:
-    return response.json({"@context": RISM_JSONLD_DEFAULT_CONTEXT})
 
 
 @app.route("/about")
