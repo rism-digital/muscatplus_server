@@ -13,6 +13,7 @@ from sanic.compat import Header
 from sanic.models.protocol_types import TransportProtocol
 from sanic.request import Request
 from small_asc.client import Solr
+from alive_progress import alive_bar
 
 from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
@@ -50,6 +51,9 @@ async def main(args: argparse.Namespace) -> bool:
     log.debug("Starting export")
     start = timeit.default_timer()
 
+    # Alters the response to make all the URIs appear to be coming from the production site.
+    # Since every URL in the serializers runs through the `get_identifier` function, it will
+    # pick up on this info for constructing the URI.
     headers: Header = Header({
         "X-Forwarded-Proto": "https",
         "X-Forwarded-Host": "rism.online",
@@ -115,25 +119,28 @@ async def main(args: argparse.Namespace) -> bool:
         num_records += res.hits
         ctx_val = {"@context": ctx}
 
-        async for sdoc in res:
-            sid = sdoc['rism_id']
-            serialized = await serializer(sdoc, context={"request": req,
-                                                         "direct_request": True}).data
+        with alive_bar(res.hits, title=f"Exporting {resource_type}", title_length=25) as bar:
+            async for sdoc in res:
+                sid = sdoc['rism_id']
+                serialized = await serializer(sdoc, context={"request": req,
+                                                             "direct_request": True}).data
 
-            # Add the context value to the resulting dictionary so that we can serialize it
-            serialized.update(ctx_val)
+                # Add the context value to the resulting dictionary so that we can serialize it
+                serialized.update(ctx_val)
 
-            # Writes the output to a balanced directory structure, so that no single directory has too many
-            # files. Uses the last three digits of the
-            balanced_dir: str = f"{sid[-3:]:>03}"
-            outpath: Path = Path(args.output, f"{resource_type}", balanced_dir)
-            if not outpath.exists():
-                outpath.mkdir(parents=True)
+                # Writes the output to a balanced directory structure, so that no single directory has too many
+                # files. Uses the last three digits of the
+                balanced_dir: str = f"{sid[-3:]:>03}"
+                outpath: Path = Path(args.output, f"{resource_type}", balanced_dir)
+                if not outpath.exists():
+                    outpath.mkdir(parents=True)
 
-            turtle: str = await asyncio.get_running_loop().run_in_executor(None, to_turtle, serialized)
+                turtle: str = await asyncio.get_running_loop().run_in_executor(None, to_turtle, serialized)
 
-            async with aiofiles.open(str(Path(outpath, f"{sid}.ttl")), mode="w") as ttlout:
-                await ttlout.write(turtle)
+                async with aiofiles.open(str(Path(outpath, f"{sid}.ttl")), mode="w") as ttlout:
+                    await ttlout.write(turtle)
+
+                bar()
 
         elapsed_for_resource_type: float = timeit.default_timer() - start
         log.info(f"Processing rate for {resource_type}: {res.hits / elapsed_for_resource_type} docs/s")
