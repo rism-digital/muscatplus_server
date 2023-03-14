@@ -19,14 +19,14 @@ log = logging.getLogger("mp_server")
 
 
 class MaterialGroupsSection(serpy.DictSerializer):
-    mgid = serpy.MethodField(
-        label="id"
-    )
+    # mgid = serpy.MethodField(
+    #     label="id"
+    # )
     label = serpy.MethodField()
-    stype = serpy.StaticField(
-        label="type",
-        value="rism:MaterialGroupsSection"
-    )
+    # stype = serpy.StaticField(
+    #     label="type",
+    #     value="rism:MaterialGroupsSection"
+    # )
     items = serpy.MethodField()
 
     def get_mgid(self, obj: SolrResult) -> str:

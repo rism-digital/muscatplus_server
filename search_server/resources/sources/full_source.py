@@ -59,6 +59,7 @@ class FullSource(BaseSource):
     digital_objects = serpy.MethodField(
         label="digitalObjects"
     )
+    dates = serpy.MethodField()
 
     # In the full class view we don't want to display the summary as a top-level field
     # so we'll always return None.
@@ -130,3 +131,17 @@ class FullSource(BaseSource):
             return None
 
         return await DigitalObjectsSection(obj, context={"request": self.context.get("request")}).data
+
+    def get_dates(self, obj: SolrResult) -> Optional[dict]:
+        if "date_ranges_im" not in obj:
+            return None
+
+        earliest, latest = obj.get("date_ranges_im", [None, None])
+
+        d: dict = {
+            "earliestDate": earliest,
+            "latestDate": latest,
+            "dateStatement": ", ".join(obj.get("date_statements_sm", []))
+        }
+
+        return {k: v for k, v in d.items() if v}

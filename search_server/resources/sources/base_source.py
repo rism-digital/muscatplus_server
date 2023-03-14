@@ -115,7 +115,6 @@ class BaseSource(serpy.AsyncDictSerializer):
 
         return {
             "label": transl.get("records.item_part_of"),
-            "type": "rism:PartOfSection",
             "source": {
                 "id": ident,
                 "type": "rism:Source",

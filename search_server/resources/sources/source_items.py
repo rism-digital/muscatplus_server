@@ -13,10 +13,10 @@ log = logging.getLogger("mp_server")
 
 
 class SourceItemsSection(serpy.AsyncDictSerializer):
-    stype = serpy.StaticField(
-        label="type",
-        value="rism:SourceItemsSection"
-    )
+    # stype = serpy.StaticField(
+    #     label="type",
+    #     value="rism:SourceItemsSection"
+    # )
     label = serpy.MethodField()
     url = serpy.MethodField()
     total_items = serpy.MethodField(
