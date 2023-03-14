@@ -7,7 +7,7 @@ from small_asc.client import Results
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from shared_helpers.display_fields import get_display_fields, LabelConfig
-from shared_helpers.display_translators import url_detecting_translator
+from shared_helpers.display_translators import url_detecting_translator, secondary_literature_json_value_translator
 from shared_helpers.formatters import format_institution_label
 from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.solr_connection import SolrResult, SolrConnection
@@ -15,10 +15,10 @@ from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 class ExemplarsSection(serpy.AsyncDictSerializer):
     label = serpy.MethodField()
-    stype = serpy.StaticField(
-        label="type",
-        value="rism:ExemplarsSection"
-    )
+    # stype = serpy.StaticField(
+    #     label="type",
+    #     value="rism:ExemplarsSection"
+    # )
     items = serpy.MethodField()
 
     def get_label(self, obj: SolrResult) -> dict:
@@ -101,6 +101,8 @@ class Exemplar(serpy.AsyncDictSerializer):
             "acquisition_method_s": ("records.method_of_acquisition", None),
             "accession_number_s": ("records.accession_number", None),
             "access_restrictions_sm": ("records.access_restrictions", None),
+            "bibliographic_references_json": ("records.bibliographic_reference",
+                                              secondary_literature_json_value_translator)
         }
 
         return get_display_fields(obj, transl, field_config)
