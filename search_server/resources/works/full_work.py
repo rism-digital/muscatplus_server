@@ -4,7 +4,7 @@ from typing import Optional
 import serpy
 from small_asc.client import Results
 
-from search_server.resources.sources.base_source import BaseSource
+from search_server.resources.sources.base_source import BaseSource, SOLR_FIELDS_FOR_BASE_SOURCE
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from search_server.resources.works.base_work import BaseWork
 from shared_helpers.solr_connection import SolrResult, SolrConnection
@@ -37,8 +37,10 @@ async def get_source_objects(req, work_id: str) -> Optional[list]:
           f"work_ids:{work_id}"]
 
     sort: str = "main_title_ans asc"
-
-    source_results: Results = await SolrConnection.search({"query": "*:*", "filter": fq, "sort": sort}, cursor=True)
+    source_results: Results = await SolrConnection.search({"query": "*:*",
+                                                           "filter": fq,
+                                                           "fields": SOLR_FIELDS_FOR_BASE_SOURCE,
+                                                           "sort": sort}, cursor=True)
 
     if source_results.hits == 0:
         return None
