@@ -10,7 +10,7 @@ from shared_helpers.display_translators import (
     title_json_value_translator,
     scoring_json_value_translator,
     material_content_types_translator,
-    material_source_types_translator
+    material_source_types_translator, key_mode_value_translator
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.languages import languages_translator
@@ -49,6 +49,7 @@ class ContentsSection(serpy.DictSerializer):
         field_config: LabelConfig = {
             "material_source_types_sm": ("records.source_type", material_source_types_translator),
             "material_content_types_sm": ("records.content_type", material_content_types_translator),
+            "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
             "standard_title_s": ("records.standardized_title", None),
             "source_title_s": ("records.title_on_source", None),
             "variant_title_s": ("records.variant_source_title", None),
