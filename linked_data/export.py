@@ -1,44 +1,40 @@
 import argparse
 import asyncio
+import concurrent.futures
 import logging.config
-import shutil
+import os
+import sqlite3
+import subprocess
 import timeit
 from pathlib import Path
+from typing import Optional
 
-import aiofiles
+import aiohttp
 import rdflib
 import uvloop
+import yaml
 from orjson import orjson
 from sanic.compat import Header
 from sanic.models.protocol_types import TransportProtocol
 from sanic.request import Request
 from small_asc.client import Solr
-from alive_progress import alive_bar
 
 from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
 from search_server.resources.sources.full_source import FullSource
 from search_server.server import app
-from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT, RISM_JSONLD_PERSON_CONTEXT, RISM_JSONLD_DEFAULT_CONTEXT
+from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT
 from shared_helpers.languages import load_translations, filter_languages
 
-# Prevent other loggers from logging
 logging.config.dictConfig({'disable_existing_loggers': True, 'version': 1})
 log = logging.getLogger("ld_export")
-log.setLevel(logging.INFO)
 
+config: dict = yaml.safe_load(open('configuration.yml', 'r'))
+SOLR_SERVER: str = config["solr"]["server"]
+
+solr_conn = Solr(SOLR_SERVER)
 
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
-
-def to_turtle(data: dict) -> str:
-    log.debug("Creating graph from data")
-    # json_serialized: str = orjson.dumps(data).decode("utf8")
-    json_serialized: str = orjson.dumps(data)
-    graph_object: rdflib.Graph = rdflib.Graph().parse(data=json_serialized, format="application/ld+json")
-    turtle: str = graph_object.serialize(format="turtle")
-
-    return turtle
 
 
 # Mock route for the request
@@ -47,124 +43,209 @@ class Route:
         self.name = ""
 
 
-async def main(args: argparse.Namespace) -> bool:
-    log.debug("Starting export")
-    start = timeit.default_timer()
+# Alters the response to make all the URIs appear to be coming from the production site.
+# Since every URL in the serializers runs through the `get_identifier` function, it will
+# pick up on this info for constructing the URI.
+headers: Header = Header({
+    "X-Forwarded-Proto": "https",
+    "X-Forwarded-Host": "rism.online",
+})
+translations: dict = load_translations("locales/")
+filt_translations: dict = filter_languages({"en"}, translations)
 
-    # Alters the response to make all the URIs appear to be coming from the production site.
-    # Since every URL in the serializers runs through the `get_identifier` function, it will
-    # pick up on this info for constructing the URI.
-    headers: Header = Header({
-        "X-Forwarded-Proto": "https",
-        "X-Forwarded-Host": "rism.online",
-    })
-    translations: dict = load_translations("locales/")
-    filt_translations: dict = filter_languages({"en"}, translations)
+route = Route()
 
-    route = Route()
+req = Request(bytes("/foo", "ascii"), headers, "", "GET", TransportProtocol(), app)
+req.ctx.translations = filt_translations
+req.route = route
 
-    # Fake a sanic request object. We patch a bunch of things to the request to add exactly what the request
-    # needs to serialize the output. This includes the URL, of which the path part gets ignored -- the important
-    # bit is in the headers!
-    req = Request(bytes("/foo", "ascii"), headers, "", "GET", TransportProtocol(), app)
-    req.ctx.translations = filt_translations
-    req.route = route
+record_type_map: dict = {
+    "source": "sources",
+    "person": "people",
+    "institution": "institutions"
+}
 
-    if args.empty:
-        log.info("Emptying output directory %s", args.output)
-        shutil.rmtree(args.output)
+serializer_map: dict = {
+    "source": FullSource,
+    "person": Person,
+    "institution": Institution
+}
 
-    num_records: int = 0
-    outp: bool = True
-    inc: list
+
+def to_turtle(data: dict) -> str:
+    json_serialized: str = orjson.dumps(data)
+    graph_object: rdflib.Graph = rdflib.Graph().parse(data=json_serialized, format="application/ld+json")
+    turtle: str = graph_object.serialize(format="turtle")
+
+    return turtle
+
+
+async def create_id_groups(num_groups: int, record_type: str) -> list:
+    log.debug("Creating ID groups")
+    fq = [f"type:{record_type}"]
+    fl = ["id"]
+
+    res = await solr_conn.search({"query": "*:*", "filter": fq, "fields": fl, "sort": "id asc", "limit": 1000},
+                                 cursor=True)
+    log.debug("Gathering groups")
+    id_list: list = [sdoc["id"] async for sdoc in res]
+
+    log.debug("Gathering done, found %s total IDs", res.hits)
+    split_groups: list = [id_list[g::num_groups] for g in range(num_groups)]
+
+    log.debug("Created %s groups, first has %s IDs, last has %s IDs",
+              len(split_groups),
+              len(split_groups[0]),
+              len(split_groups[-1]))
+
+    return split_groups
+
+
+async def run_serializer(docid: str, serializer, ctx_val: dict, table_name: str, semaphore, session, sqlconn):
+    async with semaphore:
+        log.debug("Serializing %s", docid)
+        this_doc = await solr_conn.get(docid)
+        if this_doc is None:
+            log.error("No document for %s", docid)
+
+        serialized = await serializer(this_doc, context={"request": req,
+                                                         "direct_request": True,
+                                                         "session": session}).data
+        serialized.update(ctx_val)
+        sid = this_doc['rism_id']
+        turtle: str = to_turtle(serialized)
+        insert_stmt: str = f"INSERT INTO {table_name} VALUES (?, ?)"
+        sqlconn.execute(insert_stmt, (sid, turtle))
+        sqlconn.commit()
+        await asyncio.sleep(0.1)
+
+
+async def serialize(id_group: list, record_type: str, semaphore, dbname: str) -> None:
+    log.debug("Actually serializing! Processing %s IDs", len(id_group))
+    ctx_val = {"@context": RISM_JSONLD_SOURCE_CONTEXT}
+    tasks = set()
+    sqlconn = sqlite3.connect(dbname)
+
+    table_name: Optional[str] = record_type_map.get(record_type)
+    if not table_name:
+        log.critical("Unknown record type %s. Could not proceed.", record_type)
+        return None
+
+    # Yeah, yeah, I know. Format strings for SQL statements...
+    sql_stmt: str = f"CREATE TABLE {table_name}(rism_id TEXT PRIMARY KEY, ttl TEXT)"
+    sqlconn.execute(sql_stmt)
+
+    serializer = serializer_map.get(record_type)
+    if not serializer:
+        log.critical("There was a problem retrieving the serializer class for %s", record_type)
+        return None
+
+    async with aiohttp.ClientSession(json_serialize=lambda x: orjson.dumps(x).decode("utf-8")) as session:
+        for docid in id_group:
+            task = asyncio.create_task(run_serializer(docid, serializer, ctx_val, table_name, semaphore, session, sqlconn))
+            tasks.add(task)
+            task.add_done_callback(tasks.discard)
+
+        _ = await asyncio.wait(tasks)
+
+    sqlconn.close()
+
+
+def do_serialize(id_group: list, resource_type: str, dbname: str):
+    num_async_procs: int = 100
+    semaphore = asyncio.Semaphore(num_async_procs)
+    asyncio.run(serialize(id_group, resource_type, semaphore, dbname))
+
+
+def main(args: argparse.Namespace):
+    types_to_serialize: list
     if not args.include:
-        inc = ["sources", "institutions", "people"]
+        types_to_serialize = ["source", "person", "institution"]
     else:
-        inc = args.include
+        types_to_serialize = args.include
 
-    log.debug("Processing record types: %s", inc)
+    output_path: Path = args.output
+    output_path.mkdir(parents=True, exist_ok=True)
 
-    for resource_type in inc:
-        log.info("Processing %s", resource_type)
-        if resource_type in args.exclude:
-            continue
+    parallel_processes: int = os.cpu_count()
+    log.info(f"Running with {parallel_processes} processes")
 
-        if resource_type == "institutions":
-            record_type = "institution"
-            ctx = RISM_JSONLD_DEFAULT_CONTEXT
-            serializer = Institution
-        elif resource_type == "people":
-            record_type = "person"
-            ctx = RISM_JSONLD_PERSON_CONTEXT
-            serializer = Person
-        elif resource_type == "sources":
-            record_type = "source"
-            ctx = RISM_JSONLD_SOURCE_CONTEXT
-            serializer = FullSource
-        else:
-            log.debug("Could not determine serializer, so we are skipping resource type %s", resource_type)
-            continue
+    for rec_type in types_to_serialize:
+        id_groups: list = asyncio.run(create_id_groups(parallel_processes, rec_type))
+        log.debug("Got %s id groups, for %s parallel processes", len(id_groups), parallel_processes)
+        num_results: int = sum([len(x) for x in id_groups])
+        start_serialize = timeit.default_timer()
 
-        s = Solr("http://localhost:8983/solr/muscatplus_live")
-        fq = [f"type:{record_type}"]
+        futures = []
+        with concurrent.futures.ProcessPoolExecutor(parallel_processes) as executor:
+            for i in range(parallel_processes):
+                db_file = Path(args.output, f"output_{i}.db")
+                if args.empty:
+                    log.info("Removing %s", str(db_file))
+                    db_file.unlink(missing_ok=True)
 
-        if args.country_code and resource_type == "sources":
-            log.info("Restricting to country %s", args.country_code)
-            fq.append(f"country_code_s:{args.country_code}")
-        elif args.country_code and resource_type == "institutions":
-            fq.append(f"country_codes_sm:{args.country_code}")
+                db_name = str(db_file)
+                new_future = executor.submit(do_serialize, id_groups[i], rec_type, db_name)
+                futures.append(new_future)
 
-        sort = "id asc"
-        res = await s.search({"query": "*:*", "filter": fq, "sort": sort, "limit": 500}, cursor=True)
-        num_records += res.hits
-        ctx_val = {"@context": ctx}
+        for f in concurrent.futures.as_completed(futures):
+            f.result()
 
-        with alive_bar(res.hits, title=f"Exporting {resource_type}", title_length=25) as bar:
-            async for sdoc in res:
-                sid = sdoc['rism_id']
-                serialized = await serializer(sdoc, context={"request": req,
-                                                             "direct_request": True}).data
+        end_serialize = timeit.default_timer()
+        s_elapsed: float = end_serialize - start_serialize
+        s_hours, s_remainder = divmod(s_elapsed, 60 * 60)
+        s_minutes, s_seconds = divmod(s_remainder, 60)
+        log.info(f"Total time to serialize {rec_type}: {int(s_hours):02}:{int(s_minutes):02}:{round(s_seconds):02} (Total: {s_elapsed}s)")
+        log.info(f"Total processing rate: {num_results / s_elapsed} docs/s")
 
-                # Add the context value to the resulting dictionary so that we can serialize it
-                serialized.update(ctx_val)
+    for i in range(parallel_processes):
+        db_name = Path(args.output, f"output_{i}.db")
 
-                # Writes the output to a balanced directory structure, so that no single directory has too many
-                # files. Uses the last three digits of the
-                balanced_dir: str = f"{sid[-3:]:>03}"
-                outpath: Path = Path(args.output, f"{resource_type}", balanced_dir)
-                if not outpath.exists():
-                    outpath.mkdir(parents=True)
+        for rec_type in types_to_serialize:
+            ttl_path = Path(args.output, f"output_{rec_type}_{i}.ttl")
+            if args.empty:
+                log.info("Removing %s", str(ttl_path))
+                ttl_path.unlink(missing_ok=True)
 
-                turtle: str = await asyncio.get_running_loop().run_in_executor(None, to_turtle, serialized)
+            with open(ttl_path, "w") as ttl_out:
+                log.info("Writing TTL output to %s", str(ttl_path))
+                table_name = record_type_map.get(rec_type)
+                if not table_name:
+                    log.error("Bad record type %s", rec_type)
+                    continue
 
-                async with aiofiles.open(str(Path(outpath, f"{sid}.ttl")), mode="w") as ttlout:
-                    await ttlout.write(turtle)
+                sql_stmt = f"SELECT ttl FROM {table_name}"
 
-                bar()
+                subprocess.run(["sqlite3", str(db_name), sql_stmt],
+                               stdout=ttl_out)
 
-        elapsed_for_resource_type: float = timeit.default_timer() - start
-        log.info(f"Processing rate for {resource_type}: {res.hits / elapsed_for_resource_type} docs/s")
-        outp |= True
+    return True
 
-    end = timeit.default_timer()
-    elapsed: float = end - start
-
-    hours, remainder = divmod(elapsed, 60 * 60)
-    minutes, seconds = divmod(remainder, 60)
-    log.info(f"Total time to download: {int(hours):02}:{int(minutes):02}:{round(seconds):02} (Total: {elapsed}s)")
-    log.info(f"Total processing rate: {num_records / elapsed} docs/s")
-
-    return outp
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", "-o", default="../ttl", type=Path, help="Where to write the output. Default is '../ttl'. ")
-    parser.add_argument("--empty", "-m", action="store_true")
-    parser.add_argument("--country-code", "-c")
-    parser.add_argument("--include", "-i", action="extend", nargs="*", default=[])
-    parser.add_argument("--exclude", "-e", action="extend", nargs="*", default=[])
-    parser.add_argument("--base-uri", "-u", default="rism.online")
+    parser.add_argument("-o", "--output", default="../ttl", type=Path)
+    parser.add_argument("-e", "--empty", dest="empty", action="store_true",
+                        help="Empty the output directory before starting")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output (log level DEBUG)")
+    parser.add_argument("-q", "--quiet", action="store_true", help="Quiet output (log level WARNING)")
+    parser.add_argument("--include", action="extend", nargs="*")
 
-    input_args: argparse.Namespace = parser.parse_args()
+    incoming_args = parser.parse_args()
 
-    asyncio.run(main(input_args))
+    if incoming_args.verbose:
+        log.setLevel(logging.DEBUG)
+    elif incoming_args.quiet:
+        log.setLevel(logging.WARNING)
+    else:
+        log.setLevel(logging.INFO)
+
+    start = timeit.default_timer()
+
+    result: bool = main(incoming_args)
+
+    end = timeit.default_timer()
+    elapsed: float = end - start
+    hours, remainder = divmod(elapsed, 60 * 60)
+    minutes, seconds = divmod(remainder, 60)
+    log.info(f"Total time to run: {int(hours):02}:{int(minutes):02}:{round(seconds):02} (Total: {elapsed}s)")
