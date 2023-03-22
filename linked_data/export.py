@@ -59,12 +59,6 @@ req = Request(bytes("/foo", "ascii"), headers, "", "GET", TransportProtocol(), a
 req.ctx.translations = filt_translations
 req.route = route
 
-record_type_map: dict = {
-    "source": "sources",
-    "person": "people",
-    "institution": "institutions"
-}
-
 serializer_map: dict = {
     "source": FullSource,
     "person": Person,
@@ -80,9 +74,13 @@ def to_turtle(data: dict) -> str:
     return turtle
 
 
-async def create_id_groups(num_groups: int, record_type: str) -> list:
+async def create_id_groups(num_groups: int, record_type: str, country_code: Optional[str]) -> list:
     log.debug("Creating ID groups")
     fq = [f"type:{record_type}"]
+
+    if record_type == "source" and country_code:
+        fq.append(f"country_codes_sm:{country_code}")
+
     fl = ["id"]
 
     res = await solr_conn.search({"query": "*:*", "filter": fq, "fields": fl, "sort": "id asc", "limit": 1000},
@@ -101,7 +99,7 @@ async def create_id_groups(num_groups: int, record_type: str) -> list:
     return split_groups
 
 
-async def run_serializer(docid: str, serializer, ctx_val: dict, table_name: str, semaphore, session, sqlconn):
+async def run_serializer(docid: str, serializer, ctx_val: dict, semaphore, session, sqlconn):
     async with semaphore:
         log.debug("Serializing %s", docid)
         this_doc = await solr_conn.get(docid)
@@ -112,10 +110,9 @@ async def run_serializer(docid: str, serializer, ctx_val: dict, table_name: str,
                                                          "direct_request": True,
                                                          "session": session}).data
         serialized.update(ctx_val)
-        sid = this_doc['rism_id']
         turtle: str = to_turtle(serialized)
-        insert_stmt: str = f"INSERT INTO {table_name} VALUES (?, ?)"
-        sqlconn.execute(insert_stmt, (sid, turtle))
+        insert_stmt: str = f"INSERT INTO serialized VALUES (?, ?)"
+        sqlconn.execute(insert_stmt, (docid, turtle))
         sqlconn.commit()
         await asyncio.sleep(0.1)
 
@@ -126,13 +123,8 @@ async def serialize(id_group: list, record_type: str, semaphore, dbname: str) ->
     tasks = set()
     sqlconn = sqlite3.connect(dbname)
 
-    table_name: Optional[str] = record_type_map.get(record_type)
-    if not table_name:
-        log.critical("Unknown record type %s. Could not proceed.", record_type)
-        return None
-
     # Yeah, yeah, I know. Format strings for SQL statements...
-    sql_stmt: str = f"CREATE TABLE {table_name}(rism_id TEXT PRIMARY KEY, ttl TEXT)"
+    sql_stmt: str = f"CREATE TABLE IF NOT EXISTS serialized(id TEXT PRIMARY KEY, ttl TEXT)"
     sqlconn.execute(sql_stmt)
 
     serializer = serializer_map.get(record_type)
@@ -140,13 +132,17 @@ async def serialize(id_group: list, record_type: str, semaphore, dbname: str) ->
         log.critical("There was a problem retrieving the serializer class for %s", record_type)
         return None
 
+    sqlconn.execute("PRAGMA synchronous = OFF")
+    sqlconn.execute("PRAGMA journal_mode = MEMORY")
+    # sqlconn.execute("BEGIN TRANSACTION")
     async with aiohttp.ClientSession(json_serialize=lambda x: orjson.dumps(x).decode("utf-8")) as session:
         for docid in id_group:
-            task = asyncio.create_task(run_serializer(docid, serializer, ctx_val, table_name, semaphore, session, sqlconn))
+            task = asyncio.create_task(run_serializer(docid, serializer, ctx_val, semaphore, session, sqlconn))
             tasks.add(task)
             task.add_done_callback(tasks.discard)
 
         _ = await asyncio.wait(tasks)
+    # sqlconn.execute("END TRANSACTION")
 
     sqlconn.close()
 
@@ -170,8 +166,14 @@ def main(args: argparse.Namespace):
     parallel_processes: int = os.cpu_count()
     log.info(f"Running with {parallel_processes} processes")
 
+    if args.empty:
+        for i in range(parallel_processes):
+            db_file = Path(args.output, f"output_{i}.db")
+            log.info("Removing %s", str(db_file))
+            db_file.unlink(missing_ok=True)
+
     for rec_type in types_to_serialize:
-        id_groups: list = asyncio.run(create_id_groups(parallel_processes, rec_type))
+        id_groups: list = asyncio.run(create_id_groups(parallel_processes, rec_type, args.country))
         log.debug("Got %s id groups, for %s parallel processes", len(id_groups), parallel_processes)
         num_results: int = sum([len(x) for x in id_groups])
         start_serialize = timeit.default_timer()
@@ -180,10 +182,6 @@ def main(args: argparse.Namespace):
         with concurrent.futures.ProcessPoolExecutor(parallel_processes) as executor:
             for i in range(parallel_processes):
                 db_file = Path(args.output, f"output_{i}.db")
-                if args.empty:
-                    log.info("Removing %s", str(db_file))
-                    db_file.unlink(missing_ok=True)
-
                 db_name = str(db_file)
                 new_future = executor.submit(do_serialize, id_groups[i], rec_type, db_name)
                 futures.append(new_future)
@@ -201,23 +199,17 @@ def main(args: argparse.Namespace):
     for i in range(parallel_processes):
         db_name = Path(args.output, f"output_{i}.db")
 
-        for rec_type in types_to_serialize:
-            ttl_path = Path(args.output, f"output_{rec_type}_{i}.ttl")
-            if args.empty:
-                log.info("Removing %s", str(ttl_path))
-                ttl_path.unlink(missing_ok=True)
+        ttl_path = Path(args.output, f"output_{i}.ttl")
+        if args.empty:
+            log.info("Removing %s", str(ttl_path))
+            ttl_path.unlink(missing_ok=True)
 
-            with open(ttl_path, "w") as ttl_out:
-                log.info("Writing TTL output to %s", str(ttl_path))
-                table_name = record_type_map.get(rec_type)
-                if not table_name:
-                    log.error("Bad record type %s", rec_type)
-                    continue
+        with open(ttl_path, "w") as ttl_out:
+            log.info("Writing TTL output to %s", str(ttl_path))
+            sql_stmt = f"SELECT ttl FROM serialized"
 
-                sql_stmt = f"SELECT ttl FROM {table_name}"
-
-                subprocess.run(["sqlite3", str(db_name), sql_stmt],
-                               stdout=ttl_out)
+            subprocess.run(["sqlite3", str(db_name), sql_stmt],
+                           stdout=ttl_out)
 
     return True
 
@@ -227,6 +219,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", default="../ttl", type=Path)
     parser.add_argument("-e", "--empty", dest="empty", action="store_true",
                         help="Empty the output directory before starting")
+    parser.add_argument("-c", "--country", help="Optional country code for sources")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output (log level DEBUG)")
     parser.add_argument("-q", "--quiet", action="store_true", help="Quiet output (log level WARNING)")
     parser.add_argument("--include", action="extend", nargs="*")
