@@ -18,25 +18,13 @@ from shared_helpers.solr_connection import SolrResult
 
 
 class ContentsSection(serpy.DictSerializer):
-    # csid = serpy.MethodField(
-    #     label="id"
-    # )
-    # cstype = serpy.StaticField(
-    #     label="type",
-    #     value="rism:ContentsSection"
-    # )
-    label = serpy.MethodField()
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     summary = serpy.MethodField()
     subjects = serpy.MethodField()
 
-    def get_csid(self, obj: SolrResult) -> str:
-        req = self.context.get('request')
-        source_id_val = obj["id"]
-        source_id: str = re.sub(ID_SUB, "", source_id_val)
-
-        return get_identifier(req, "sources.contents", source_id=source_id)
-
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -75,18 +63,17 @@ class ContentsSection(serpy.DictSerializer):
         if 'subjects_json' not in obj:
             return None
 
-        return SourceSubjectsSection(obj, context={"request": self.context.get("request")}).data
+        return SourceSubjectsSection(obj, context={"request": self.context.get("request"),
+                                                   "session": self.context.get("session")}).data
 
 
 class SourceSubjectsSection(serpy.DictSerializer):
-    stype = serpy.StaticField(
-        label="type",
-        value="rism:SourceSubjectSection"
+    section_label = serpy.MethodField(
+        label="sectionLabel"
     )
-    label = serpy.MethodField()
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -95,7 +82,8 @@ class SourceSubjectsSection(serpy.DictSerializer):
     def get_items(self, obj: SolrResult) -> list:
         return SourceSubject(obj['subjects_json'],
                              many=True,
-                             context={"request": self.context.get("request")}).data
+                             context={"request": self.context.get("request"),
+                                      "session": self.context.get("session")}).data
 
 
 # A minimal subject serializer. This is because the data for the subjects

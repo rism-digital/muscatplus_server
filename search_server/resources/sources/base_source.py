@@ -80,7 +80,8 @@ class BaseSource(serpy.AsyncDictSerializer):
 
         return Relationship(obj["creator_json"][0],
                             context={"request": self.context.get('request'),
-                                     "reltype": "rism:Creator"}).data
+                                     "reltype": "rism:Creator",
+                                     "session": self.context.get("session")}).data
 
     def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         # This source is not part of another source; return None
@@ -114,7 +115,7 @@ class BaseSource(serpy.AsyncDictSerializer):
         record_block: dict = create_record_block(record_type, source_type, content_types)
 
         return {
-            "label": transl.get("records.item_part_of"),
+            "sectionLabel": transl.get("records.item_part_of"),
             "source": {
                 "id": ident,
                 "type": "rism:Source",

@@ -14,14 +14,12 @@ from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 
 class ExemplarsSection(serpy.AsyncDictSerializer):
-    label = serpy.MethodField()
-    # stype = serpy.StaticField(
-    #     label="type",
-    #     value="rism:ExemplarsSection"
-    # )
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -39,14 +37,17 @@ class ExemplarsSection(serpy.AsyncDictSerializer):
                 "query": "*:*",
                 "filter": fq,
                 "sort": sort
-        }, cursor=True)
+            },
+            cursor=True,
+            session=self.context.get("session"))
 
         if results.hits == 0:
             return None
 
         return await Exemplar(results,
                               many=True,
-                              context={"request": self.context.get("request")}).data
+                              context={"request": self.context.get("request"),
+                                       "session": self.context.get("session")}).data
 
 
 class Exemplar(serpy.AsyncDictSerializer):
@@ -57,7 +58,9 @@ class Exemplar(serpy.AsyncDictSerializer):
         label="type",
         value="rism:Exemplar"
     )
-    label = serpy.MethodField()
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     summary = serpy.MethodField()
     notes = serpy.MethodField()
     held_by = serpy.MethodField(
@@ -70,17 +73,20 @@ class Exemplar(serpy.AsyncDictSerializer):
 
     def get_sid(self, obj: dict) -> str:
         req = self.context.get('request')
-        # find the holding id
-        holding_id_val = obj.get("holding_id_sni", "")
-        if "-" in holding_id_val:
-            holding_id, source_id = obj.get("holding_id_sni").split("-")
+
+        source_holding_id_val: str = obj['id']
+        if "-" in source_holding_id_val:
+            holding_id_val, source_id_val = source_holding_id_val.split("-")
         else:
-            holding_id = holding_id_val
-            source_id = holding_id_val
+            holding_id_val = obj['id']
+            source_id_val = obj['source_id']
+
+        holding_id = re.sub(ID_SUB, "", holding_id_val)
+        source_id = re.sub(ID_SUB, "", source_id_val)
 
         return get_identifier(req, "holdings.holding", source_id=source_id, holding_id=holding_id)
 
-    def get_label(self, obj: dict) -> dict:
+    def get_section_label(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -144,10 +150,12 @@ class Exemplar(serpy.AsyncDictSerializer):
             return None
 
         req = self.context.get("request")
-        return RelationshipsSection(obj, context={"request": req}).data
+        return RelationshipsSection(obj, context={"request": req,
+                                                  "session": self.context.get("session")}).data
 
     def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:
             return None
 
-        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+        return ExternalResourcesSection(obj, context={"request": self.context.get("request"),
+                                                      "session": self.context.get("session")}).data

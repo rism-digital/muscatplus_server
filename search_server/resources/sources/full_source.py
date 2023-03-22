@@ -68,14 +68,16 @@ class FullSource(BaseSource):
 
     def get_contents(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        return ContentsSection(obj, context={"request": req}).data
+        return ContentsSection(obj, context={"request": req,
+                                             "session": self.context.get("session")}).data
 
     def get_material_groups(self, obj: SolrResult) -> Optional[dict]:
         if 'material_groups_json' not in obj:
             return None
 
         req = self.context.get("request")
-        return MaterialGroupsSection(obj, context={"request": req}).data
+        return MaterialGroupsSection(obj, context={"request": req,
+                                                   "session": self.context.get("session")}).data
 
     def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         # sets are cool; two sets are disjoint if they have no keys in common. We
@@ -85,18 +87,21 @@ class FullSource(BaseSource):
             return None
 
         req = self.context.get("request")
-        return RelationshipsSection(obj, context={"request": req}).data
+        return RelationshipsSection(obj, context={"request": req,
+                                                  "session": self.context.get("session")}).data
 
     async def get_incipits(self, obj: SolrResult) -> Optional[dict]:
         if not obj.get("has_incipits_b", False):
             return None
 
         req = self.context.get("request")
-        return await IncipitsSection(obj, context={"request": req}).data
+        return await IncipitsSection(obj, context={"request": req,
+                                                   "session": self.context.get("session")}).data
 
     def get_references_notes(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        refnotes: dict = ReferencesNotesSection(obj, context={"request": req}).data
+        refnotes: dict = ReferencesNotesSection(obj, context={"request": req,
+                                                              "session": self.context.get("session")}).data
 
         # if the only two keys in the references and notes section is 'label' and 'type'
         # then there is no content and we can hide this section.
@@ -112,25 +117,29 @@ class FullSource(BaseSource):
         if "num_physical_copies_i" not in obj:
             return None
 
-        return await ExemplarsSection(obj, context={"request": self.context.get("request")}).data
+        return await ExemplarsSection(obj, context={"request": self.context.get("request"),
+                                                    "session": self.context.get("session")}).data
 
     def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:
             return None
 
-        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+        return ExternalResourcesSection(obj, context={"request": self.context.get("request"),
+                                                      "session": self.context.get("session")}).data
 
     async def get_source_items(self, obj: SolrResult) -> Optional[dict]:
         if "num_source_members_i" not in obj:
             return None
 
-        return await SourceItemsSection(obj, context={"request": self.context.get("request")}).data
+        return await SourceItemsSection(obj, context={"request": self.context.get("request"),
+                                                      "session": self.context.get("session")}).data
 
     async def get_digital_objects(self, obj: SolrResult) -> Optional[dict]:
         if not obj.get("has_digital_objects_b", False):
             return None
 
-        return await DigitalObjectsSection(obj, context={"request": self.context.get("request")}).data
+        return await DigitalObjectsSection(obj, context={"request": self.context.get("request"),
+                                                         "session": self.context.get("session")}).data
 
     def get_dates(self, obj: SolrResult) -> Optional[dict]:
         if "date_ranges_im" not in obj:

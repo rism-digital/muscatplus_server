@@ -2,7 +2,9 @@ import logging
 import re
 from typing import Optional
 
+import aiohttp
 import serpy
+from orjson import orjson
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.record_types import create_record_block
@@ -98,7 +100,9 @@ class IncipitsSection(serpy.AsyncDictSerializer):
     isid = serpy.MethodField(
         label="id"
     )
-    label = serpy.MethodField()
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     stype = serpy.StaticField(
         label="type",
         value="rism:IncipitsSection"
@@ -114,7 +118,7 @@ class IncipitsSection(serpy.AsyncDictSerializer):
 
         return get_identifier(req, "sources.incipits_list", source_id=source_id)
 
-    def get_label(self, obj: SolrResult):
+    def get_section_label(self, obj: SolrResult):
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -154,10 +158,11 @@ class IncipitsSection(serpy.AsyncDictSerializer):
         fq: list = [f"source_id:{obj.get('id')}",
                     "type:incipit"]
         sort: str = "work_num_ans asc"
-
         results: Results = await SolrConnection.search({"query": "*:*",
                                                         "filter": fq,
-                                                        "sort": sort}, cursor=True)
+                                                        "sort": sort},
+                                                       cursor=True,
+                                                       session=self.context.get("session"))
 
         # It will be strange for this to happen, since we only
         # call this code if the record has said there are incipits
@@ -168,7 +173,8 @@ class IncipitsSection(serpy.AsyncDictSerializer):
 
         return await Incipit(results,
                              many=True,
-                             context={"request": self.context.get("request")}).data
+                             context={"request": self.context.get("request"),
+                                      "session": self.context.get("session")}).data
 
 
 class Incipit(serpy.AsyncDictSerializer):
@@ -206,7 +212,8 @@ class Incipit(serpy.AsyncDictSerializer):
 
         return {
             "label": transl.get("records.item_part_of"),  # TODO: This should probably be changed to 'incipit part of'
-            "source": await BaseSource(obj, context={"request": req}).data
+            "source": await BaseSource(obj, context={"request": req,
+                                                     "session": self.context.get("session")}).data
         }
 
     def get_properties(self, obj: SolrResult) -> Optional[dict]:
