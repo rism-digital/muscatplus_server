@@ -1813,21 +1813,23 @@ files = [
 
 [[package]]
 name = "small-asc"
-version = "0.11.0"
+version = "0.12.0"
 description = "A small Solr client"
 category = "main"
 optional = false
 python-versions = "^3.9"
 files = []
-develop = true
+develop = false
 
 [package.dependencies]
 aiohttp = {version = "^3.8.4", extras = ["speedups"]}
 orjson = "^3.8.5"
 
 [package.source]
-type = "directory"
-url = "../small-asc"
+type = "git"
+url = "https://github.com/rism-digital/small-asc.git"
+reference = "main"
+resolved_reference = "193bc671727e3b1c980ba8b0f4968f717ef2d20e"
 
 [[package]]
 name = "stack-data"
@@ -2306,4 +2308,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "6d900df7bbd18be576685412264f623c90e40aa962f168fc126c5e66210c8d8e"
+content-hash = "8cd21d9ef9388c883e11e7ab93f439ade6784bad18a6991f1cfdab92fe032125"
