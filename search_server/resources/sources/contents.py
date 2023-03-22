@@ -65,7 +65,8 @@ class ContentsSection(serpy.DictSerializer):
             "language_original_sm": ("records.language_original_text", languages_translator),
             "language_notes_sm": ("records.language_note", None),
             "rism_series_identifiers_sm": ("records.series_statement", None),
-            "rism_id": ("records.rism_id_number", None)
+            "rism_id": ("records.rism_id_number", None),
+            "source_fingerprint_s": ("records.fingerprint_identifier", None),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
