@@ -112,7 +112,6 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
 RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT
 }
-
 RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
     **__RELATIONSHIPS,
@@ -171,8 +170,20 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
                 "@id": "rism:hasHoldingInstitution"
             }
         }
+    },
+    "contents": {
+        "@id": "@nest",
+    },
+    "subjects": {
+        "@id": "rism:hasSubject",
+        "@type": "@id",
+        "@context": {
+            "items": "@set"
+        }
     }
+
 }
+
 
 RouteOptions = namedtuple("RouteOptions", ["route", "context"])
 
