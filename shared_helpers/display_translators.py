@@ -143,6 +143,7 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     None: "records.other",
     "xx": "records.associated_institution",
     "now-in": "records.now_in",
+    "contained-by": "records.related_institution",
     "brother of": "records.brother_of",
     "child of": "records.child_of",
     "confused with": "records.confused_with",
