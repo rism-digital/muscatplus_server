@@ -27,8 +27,13 @@ class ExemplarsSection(serpy.AsyncDictSerializer):
 
     async def get_items(self, obj: SolrResult) -> Optional[dict]:
         # Only select holdings where the institution ID is set. This is due to a buggy import; hopefully we'll
-        # be able to remove the institution_id filter clause later... 
-        fq: list = [f"source_id:{obj.get('id')}",
+        # be able to remove the institution_id filter clause later...
+        if obj.get("is_contents_record_b", False):
+            source_qstmt = f"source_id:{obj.get('source_membership_id')}"
+        else:
+            source_qstmt = f"source_id:{obj.get('id')}"
+
+        fq: list = [source_qstmt,
                     "type:holding",
                     "institution_id:[* TO *]"]
 
@@ -36,7 +41,8 @@ class ExemplarsSection(serpy.AsyncDictSerializer):
         results: Results = await SolrConnection.search({
                 "query": "*:*",
                 "filter": fq,
-                "sort": sort
+                "sort": sort,
+                "limit": 100
             },
             cursor=True,
             session=self.context.get("session"))

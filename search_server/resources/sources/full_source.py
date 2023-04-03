@@ -60,6 +60,7 @@ class FullSource(BaseSource):
         label="digitalObjects"
     )
     dates = serpy.MethodField()
+    properties = serpy.MethodField()
 
     # In the full class view we don't want to display the summary as a top-level field
     # so we'll always return None.
@@ -154,3 +155,10 @@ class FullSource(BaseSource):
         }
 
         return {k: v for k, v in d.items() if v}
+
+    def get_properties(self, obj: SolrResult) -> Optional[dict]:
+        d: dict = {
+            "keyMode": obj.get("key_mode_s")
+        }
+
+        return {k: v for k, v in d.items() if v} or None

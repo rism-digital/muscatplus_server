@@ -56,7 +56,8 @@ class SourceItemsSection(serpy.AsyncDictSerializer):
         sort: str = "source_membership_order_i asc, source_id asc"
         source_results: Results = await SolrConnection.search({"query": "*:*",
                                                                "filter": fq,
-                                                               "sort": sort},
+                                                               "sort": sort,
+                                                               "limit": 100},
                                                               cursor=True,
                                                               session=self.context.get("session"))
 
