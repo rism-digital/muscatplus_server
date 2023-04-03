@@ -4,7 +4,9 @@ from shared_helpers.jsonld import (
     RISM_JSONLD_DEFAULT_CONTEXT,
     RISM_JSONLD_WORK_CONTEXT,
     RISM_JSONLD_PERSON_CONTEXT,
-    RISM_JSONLD_SOURCE_CONTEXT)
+    RISM_JSONLD_SOURCE_CONTEXT,
+    RISM_JSONLD_INSTITUTION_CONTEXT
+)
 
 api_blueprint: Blueprint = Blueprint("api", url_prefix="/api/v1")
 
@@ -17,6 +19,11 @@ async def source_context(req) -> response.HTTPResponse:
 @api_blueprint.route("/person.json")
 async def person_context(req) -> response.HTTPResponse:
     return response.json({"@context": RISM_JSONLD_PERSON_CONTEXT})
+
+
+@api_blueprint.route("/institution.json")
+async def institution_context(req) -> response.HTTPResponse:
+    return response.json({"@context": RISM_JSONLD_INSTITUTION_CONTEXT})
 
 
 @api_blueprint.route("/work.json")

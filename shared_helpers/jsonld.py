@@ -108,6 +108,17 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
     **__RELATIONSHIPS
 }
 
+RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    "properties": "@nest",
+    "siglum": {
+        "@id": "rism:hasSiglum",
+    },
+    "countryCodes": {
+        "@id": "rism:hasCountryCodes",
+        "@type": "@set"
+    }
+}
 
 RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT
@@ -122,6 +133,13 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
             "earliestDate": {
                 "@id": "rism:earliestDate",
                 "@type": "xsd:integer"
+            },
+            "latestDate": {
+                "@id": "rism:latestDate",
+                "@type": "xsd:integer"
+            },
+            "dateStatement": {
+                "@id": "rism:dateStatement",
             }
         }
     },
@@ -136,7 +154,6 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@id": "rism:hasMaterialGroup",
         "@type": "@id",
         "@context": {
-            "label": {"@value": "null", "@propagate": "false"},
             "items": "@set",
             "summary": {
                 "@id": "rism:hasSummary",
@@ -148,7 +165,6 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@id": "rism:isPartOf",
         "@type": "@id",
         "@context": {
-            "label": {"@value": "null", "@propagate": "false"},
             "source": "@nest"
         }
     },
@@ -156,7 +172,6 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@id": "rism:hasSourceItem",
         "@type": "@id",
         "@context": {
-            "label": {"@value": "null", "@propagate": "false"},
             "items": "@set"
         }
     },
@@ -164,7 +179,6 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@id": "rism:hasHolding",
         "@type": "@id",
         "@context": {
-            "label": {"@value": "null", "@propagate": "false"},
             "items": "@set",
             "heldBy": {
                 "@id": "rism:hasHoldingInstitution"
@@ -180,8 +194,11 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@context": {
             "items": "@set"
         }
+    },
+    "properties": "@nest",
+    "keyMode": {
+        "@id": "rism:hasKeyMode",
     }
-
 }
 
 
@@ -189,6 +206,7 @@ RouteOptions = namedtuple("RouteOptions", ["route", "context"])
 
 RouteContextMap: dict[str, RouteOptions] = {
     "mp_server.people.person": RouteOptions("api.person_context", RISM_JSONLD_PERSON_CONTEXT),
+    "mp_server.institutions.institution": RouteOptions("api.institution_context", RISM_JSONLD_INSTITUTION_CONTEXT),
     "mp_server.sources.source": RouteOptions("api.source_context", RISM_JSONLD_SOURCE_CONTEXT),
     "mp_server.works.work": RouteOptions("api.work_context", RISM_JSONLD_WORK_CONTEXT),
     "__default": RouteOptions("api.default_context", RISM_JSONLD_DEFAULT_CONTEXT)
