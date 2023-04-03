@@ -32,9 +32,10 @@ class RelationshipsSection(serpy.DictSerializer):
         institutions: list = obj.get("related_institutions_json", [])
         places: list = obj.get("related_places_json", [])
         now_in: list = obj.get("now_in_json", [])
+        contains: list = obj.get("contains_json", [])
         sources: list = obj.get("related_sources_json", [])
 
-        all_relationships = itertools.chain(people, institutions, places, now_in, sources)
+        all_relationships = itertools.chain(people, institutions, places, now_in, contains, sources)
 
         return Relationship(all_relationships,
                             many=True,
@@ -149,6 +150,12 @@ def _related_to_institution(req, obj: dict) -> dict:
         name = f"{obj.get('name')}, {obj.get('department')}"
     else:
         name = f"{obj.get('name')}"
+
+    if "place" in obj:
+        name = f"{name}, {obj['place']}"
+
+    if "siglum" in obj:
+        name = f"{name} ({obj.get('siglum')})"
 
     institution_id = re.sub(ID_SUB, "", obj["institution_id"])
 
