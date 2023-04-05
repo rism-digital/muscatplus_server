@@ -7,21 +7,19 @@ from small_asc.client import Results
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from shared_helpers.display_fields import get_display_fields, LabelConfig
-from shared_helpers.display_translators import url_detecting_translator
+from shared_helpers.display_translators import url_detecting_translator, secondary_literature_json_value_translator
 from shared_helpers.formatters import format_institution_label
 from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 
 class ExemplarsSection(serpy.AsyncDictSerializer):
-    label = serpy.MethodField()
-    stype = serpy.StaticField(
-        label="type",
-        value="rism:ExemplarsSection"
+    section_label = serpy.MethodField(
+        label="sectionLabel"
     )
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -29,8 +27,13 @@ class ExemplarsSection(serpy.AsyncDictSerializer):
 
     async def get_items(self, obj: SolrResult) -> Optional[dict]:
         # Only select holdings where the institution ID is set. This is due to a buggy import; hopefully we'll
-        # be able to remove the institution_id filter clause later... 
-        fq: list = [f"source_id:{obj.get('id')}",
+        # be able to remove the institution_id filter clause later...
+        if obj.get("is_contents_record_b", False):
+            source_qstmt = f"source_id:{obj.get('source_membership_id')}"
+        else:
+            source_qstmt = f"source_id:{obj.get('id')}"
+
+        fq: list = [source_qstmt,
                     "type:holding",
                     "institution_id:[* TO *]"]
 
@@ -38,15 +41,19 @@ class ExemplarsSection(serpy.AsyncDictSerializer):
         results: Results = await SolrConnection.search({
                 "query": "*:*",
                 "filter": fq,
-                "sort": sort
-        }, cursor=True)
+                "sort": sort,
+                "limit": 100
+            },
+            cursor=True,
+            session=self.context.get("session"))
 
         if results.hits == 0:
             return None
 
         return await Exemplar(results,
                               many=True,
-                              context={"request": self.context.get("request")}).data
+                              context={"request": self.context.get("request"),
+                                       "session": self.context.get("session")}).data
 
 
 class Exemplar(serpy.AsyncDictSerializer):
@@ -57,7 +64,9 @@ class Exemplar(serpy.AsyncDictSerializer):
         label="type",
         value="rism:Exemplar"
     )
-    label = serpy.MethodField()
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     summary = serpy.MethodField()
     notes = serpy.MethodField()
     held_by = serpy.MethodField(
@@ -70,17 +79,20 @@ class Exemplar(serpy.AsyncDictSerializer):
 
     def get_sid(self, obj: dict) -> str:
         req = self.context.get('request')
-        # find the holding id
-        holding_id_val = obj.get("holding_id_sni", "")
-        if "-" in holding_id_val:
-            holding_id, source_id = obj.get("holding_id_sni").split("-")
+
+        source_holding_id_val: str = obj['id']
+        if "-" in source_holding_id_val:
+            holding_id_val, source_id_val = source_holding_id_val.split("-")
         else:
-            holding_id = holding_id_val
-            source_id = holding_id_val
+            holding_id_val = obj['id']
+            source_id_val = obj['source_id']
+
+        holding_id = re.sub(ID_SUB, "", holding_id_val)
+        source_id = re.sub(ID_SUB, "", source_id_val)
 
         return get_identifier(req, "holdings.holding", source_id=source_id, holding_id=holding_id)
 
-    def get_label(self, obj: dict) -> dict:
+    def get_section_label(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -101,6 +113,8 @@ class Exemplar(serpy.AsyncDictSerializer):
             "acquisition_method_s": ("records.method_of_acquisition", None),
             "accession_number_s": ("records.accession_number", None),
             "access_restrictions_sm": ("records.access_restrictions", None),
+            "bibliographic_references_json": ("records.bibliographic_reference",
+                                              secondary_literature_json_value_translator)
         }
 
         return get_display_fields(obj, transl, field_config)
@@ -142,10 +156,12 @@ class Exemplar(serpy.AsyncDictSerializer):
             return None
 
         req = self.context.get("request")
-        return RelationshipsSection(obj, context={"request": req}).data
+        return RelationshipsSection(obj, context={"request": req,
+                                                  "session": self.context.get("session")}).data
 
     def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:
             return None
 
-        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+        return ExternalResourcesSection(obj, context={"request": self.context.get("request"),
+                                                      "session": self.context.get("session")}).data

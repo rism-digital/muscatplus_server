@@ -2,7 +2,6 @@ from typing import Optional
 
 import serpy
 
-# 500, 505, 525, 691, 510, 596, 657, 651, 518, 856(?)
 from search_server.resources.liturgical_festivals.liturgical_festival import LiturgicalFestival
 from search_server.resources.shared.relationship import Relationship
 from shared_helpers.display_fields import LabelConfig, get_display_fields
@@ -14,7 +13,9 @@ from shared_helpers.solr_connection import SolrResult
 
 
 class ReferencesNotesSection(serpy.DictSerializer):
-    label = serpy.MethodField()
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     stype = serpy.StaticField(
         label="type",
         value="rism:ReferencesNotesSection"
@@ -27,7 +28,7 @@ class ReferencesNotesSection(serpy.DictSerializer):
         label="liturgicalFestivals"
     )
 
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -69,14 +70,16 @@ class ReferencesNotesSection(serpy.DictSerializer):
 
 
 class PerformanceLocationsSection(serpy.DictSerializer):
-    label = serpy.MethodField()
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     stype = serpy.StaticField(
         label="type",
         value="rism:PerformanceLocationsSection"
     )
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -91,14 +94,16 @@ class PerformanceLocationsSection(serpy.DictSerializer):
 
 
 class LiturgicalFestivalsSection(serpy.DictSerializer):
-    label = serpy.MethodField()
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     stype = serpy.StaticField(
         label="type",
         value="rism:LiturgicalFestivalsSection"
     )
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 

@@ -11,58 +11,17 @@ from shared_helpers.display_translators import (
     place_relationship_labels_translator, title_json_value_translator, source_relationship_labels_translator
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger("mp_server")
 
 
 class RelationshipsSection(serpy.DictSerializer):
-    # rid = serpy.MethodField(
-    #     label="id"
-    # )
-    # rtype = serpy.StaticField(
-    #     label="type",
-    #     value="rism:RelationshipsSection"
-    # )
-    label = serpy.MethodField()
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     items = serpy.MethodField()
 
-    def get_rid(self, obj: SolrResult) -> str:
-        req = self.context.get('request')
-        related_id_val = obj["id"]
-        related_id_type = obj["type"]
-        relationship_id: str = re.sub(ID_SUB, "", related_id_val)
-
-        uri_section: str = ""
-        kwargs: dict = {}
-
-        if related_id_type == "source":
-            uri_section = "sources.relationships"
-            kwargs = {"source_id": relationship_id}
-        elif related_id_type == "person":
-            uri_section = "people.relationships"
-            kwargs = {"person_id": relationship_id}
-        elif related_id_type == "institution":
-            uri_section = "institutions.relationships"
-            kwargs = {"institution_id": relationship_id}
-        elif related_id_type == "holding":
-            uri_section = "holdings.relationships"
-            holding_id_val: str = obj["holding_id_sni"]
-            if "-" in holding_id_val:
-                holding_id, source_id = holding_id_val.split("-")
-            else:
-                holding_id = relationship_id
-                source_id = relationship_id
-
-            kwargs = {"source_id": source_id, "holding_id": holding_id}
-        elif related_id_type == "material-group":
-            uri_section = "sources.material_group_relationships"
-            source_id = re.sub(ID_SUB, "", obj["source_id"])
-            kwargs = {"source_id": source_id, "mg_id": relationship_id}
-
-        return get_identifier(req, uri_section, **kwargs)
-
-    def get_label(self, obj: dict) -> dict:
+    def get_section_label(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -73,22 +32,18 @@ class RelationshipsSection(serpy.DictSerializer):
         institutions: list = obj.get("related_institutions_json", [])
         places: list = obj.get("related_places_json", [])
         now_in: list = obj.get("now_in_json", [])
+        contains: list = obj.get("contains_json", [])
         sources: list = obj.get("related_sources_json", [])
 
-        all_relationships = itertools.chain(people, institutions, places, now_in, sources)
+        all_relationships = itertools.chain(people, institutions, places, now_in, contains, sources)
 
         return Relationship(all_relationships,
                             many=True,
-                            context={"request": self.context.get("request")}).data
+                            context={"request": self.context.get("request"),
+                                     "session": self.context.get("session")}).data
 
 
 class Relationship(serpy.DictSerializer):
-    # sid = serpy.MethodField(
-    #     label="id"
-    # )
-    # stype = serpy.MethodField(
-    #     label="type"
-    # )
     role = serpy.MethodField()
     qualifier = serpy.MethodField()
     related_to = serpy.MethodField(
@@ -96,47 +51,6 @@ class Relationship(serpy.DictSerializer):
     )
     name = serpy.MethodField()
     note = serpy.MethodField()
-
-    # def get_sid(self, obj: dict) -> str:
-    #     ctx: dict = self.context
-    #     req = ctx.get("request")
-    #     this_id: str = re.sub(ID_SUB, "", obj["this_id"])
-    #     this_type: str = obj["this_type"]
-    #     rel_type: str = obj["type"]
-    #
-    #     if "reltype" in ctx and ctx["reltype"] == "rism:Creator":
-    #         # There is only one creator so we don't need to qualify this more.
-    #         return get_identifier(req, "sources.creator", source_id=this_id)
-    #
-    #     relationship_id = f"{rel_type}-{obj['id']}"
-    #
-    #     if this_type == "source":
-    #         return get_identifier(req, "sources.relationship", source_id=this_id, relationship_id=relationship_id)
-    #     elif this_type == "institution":
-    #         return get_identifier(req, "institutions.relationship", institution_id=this_id, relationship_id=relationship_id)
-    #     elif this_type == "place":
-    #         return get_identifier(req, "places.relationship", place_id=this_id, relationship_id=relationship_id)
-    #     elif this_type == "person":
-    #         return get_identifier(req, "people.relationship", person_id=this_id, relationship_id=relationship_id)
-    #     else:
-    #         return ""
-    #
-    # def get_stype(self, obj: dict) -> str:
-    #     ctx: dict = self.context
-    #     if "reltype" in ctx:
-    #         return ctx["reltype"]
-    #
-    #     this_type = obj["this_type"]
-    #     if this_type == "source":
-    #         return "rism:SourceRelationship"
-    #     elif this_type == "person":
-    #         return "rism:PersonRelationship"
-    #     elif this_type == "institution":
-    #         return "rism:InstitutionRelationship"
-    #     elif this_type == "place":
-    #         return "rism:PlaceRelationship"
-    #
-    #     return "rism:Relationship"
 
     def get_role(self, obj: dict) -> Optional[dict]:
         if 'relationship' not in obj:
@@ -236,6 +150,12 @@ def _related_to_institution(req, obj: dict) -> dict:
         name = f"{obj.get('name')}, {obj.get('department')}"
     else:
         name = f"{obj.get('name')}"
+
+    if "place" in obj:
+        name = f"{name}, {obj['place']}"
+
+    if "siglum" in obj:
+        name = f"{name} ({obj.get('siglum')})"
 
     institution_id = re.sub(ID_SUB, "", obj["institution_id"])
 

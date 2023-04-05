@@ -207,7 +207,6 @@ class SourceSearchResult(serpy.DictSerializer):
 
         return {
             "label": transl.get("records.item_part_of"),
-            "type": "rism:PartOfSection",
             "source": {
                 "id": get_identifier(req, "sources.source", source_id=parent_source_id),
                 "type": "rism:Source",
@@ -596,8 +595,6 @@ def _render_with_highlighting(req, obj: SolrResult, query_pae_features: Optional
     for blk in used_blks:
         seq = document_interval_ids[blk.b:blk.b + blk.size]
         ids_to_highlight.extend(seq)
-
-    log.debug("IDs to highlight: %s", ids_to_highlight)
 
     highlight_stmts = []
     for noteids in ids_to_highlight:

@@ -2,7 +2,9 @@ import logging
 import re
 from typing import Optional
 
+import aiohttp
 import serpy
+from orjson import orjson
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.record_types import create_record_block
@@ -98,7 +100,9 @@ class IncipitsSection(serpy.AsyncDictSerializer):
     isid = serpy.MethodField(
         label="id"
     )
-    label = serpy.MethodField()
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     stype = serpy.StaticField(
         label="type",
         value="rism:IncipitsSection"
@@ -114,7 +118,7 @@ class IncipitsSection(serpy.AsyncDictSerializer):
 
         return get_identifier(req, "sources.incipits_list", source_id=source_id)
 
-    def get_label(self, obj: SolrResult):
+    def get_section_label(self, obj: SolrResult):
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -141,7 +145,6 @@ class IncipitsSection(serpy.AsyncDictSerializer):
 
         return {
             "label": transl.get("records.item_part_of"),
-            "type": "rism:PartOfSection",
             "source": {
                 "id": ident,
                 "type": "rism:Source",
@@ -155,10 +158,11 @@ class IncipitsSection(serpy.AsyncDictSerializer):
         fq: list = [f"source_id:{obj.get('id')}",
                     "type:incipit"]
         sort: str = "work_num_ans asc"
-
         results: Results = await SolrConnection.search({"query": "*:*",
                                                         "filter": fq,
-                                                        "sort": sort}, cursor=True)
+                                                        "sort": sort},
+                                                       cursor=True,
+                                                       session=self.context.get("session"))
 
         # It will be strange for this to happen, since we only
         # call this code if the record has said there are incipits
@@ -169,7 +173,8 @@ class IncipitsSection(serpy.AsyncDictSerializer):
 
         return await Incipit(results,
                              many=True,
-                             context={"request": self.context.get("request")}).data
+                             context={"request": self.context.get("request"),
+                                      "session": self.context.get("session")}).data
 
 
 class Incipit(serpy.AsyncDictSerializer):
@@ -187,6 +192,7 @@ class Incipit(serpy.AsyncDictSerializer):
     summary = serpy.MethodField()
     rendered = serpy.MethodField()
     encodings = serpy.MethodField()
+    properties = serpy.MethodField()
 
     def get_incip_id(self, obj: dict) -> str:
         req = self.context.get("request")
@@ -206,9 +212,23 @@ class Incipit(serpy.AsyncDictSerializer):
 
         return {
             "label": transl.get("records.item_part_of"),  # TODO: This should probably be changed to 'incipit part of'
-            "type": "rism:PartOfSection",
-            "source": await BaseSource(obj, context={"request": req}).data
+            "source": await BaseSource(obj, context={"request": req,
+                                                     "session": self.context.get("session")}).data
         }
+
+    def get_properties(self, obj: SolrResult) -> Optional[dict]:
+        # If no notation info in the Solr result, don't bother with this.
+        if {"clef_s", "timesig_s", "key_s", "music_incipit_s"}.isdisjoint(obj):
+            return None
+
+        d = {
+            "clef": obj.get("clef_s"),
+            "keysig": obj.get("key_s"),
+            "timesig": obj.get("timesig_s"),
+            "notation": obj.get("music_incipit_s")
+        }
+
+        return {k: v for k, v in d.items() if v}
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
@@ -301,9 +321,9 @@ class Incipit(serpy.AsyncDictSerializer):
         return [{
             "label": transl.get("records.plaine_and_easie"),
             "format": "application/json",
-            "data": pae_encoding
+            "data": pae_encoding,
         }, {
             "label": transl.get("records.unknown"),
             "format": "application/mei+xml",
-            "url": mei_download_url
+            "url": mei_download_url,
         }]

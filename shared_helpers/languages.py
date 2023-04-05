@@ -105,8 +105,6 @@ def load_translations(path: str) -> Optional[dict]:
             log.warning("%s could not be found; skipping", locale_file)
             continue
 
-        log.debug("Opening translations: %s", locale_file)
-
         with locale_file.open("r") as file_contents:
             locale_contents = yaml.safe_load(file_contents)
 

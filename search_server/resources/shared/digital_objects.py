@@ -16,7 +16,9 @@ class DigitalObjectsSection(serpy.AsyncDictSerializer):
     doid = serpy.MethodField(
         label="id"
     )
-    label = serpy.MethodField()
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     dotype = serpy.StaticField(
         label="type",
         value="rism:DigitalObjectsSection"
@@ -41,7 +43,7 @@ class DigitalObjectsSection(serpy.AsyncDictSerializer):
             log.error("Could not determine ID for %s", obj["id"])
             return "no-id"
 
-    def get_label(self, obj: SolrResult):
+    def get_section_label(self, obj: SolrResult):
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -52,14 +54,17 @@ class DigitalObjectsSection(serpy.AsyncDictSerializer):
                     "type:dobject"]
 
         results: Results = await SolrConnection.search({"query": "*:*",
-                                                        "filter": fq}, cursor=True)
+                                                        "filter": fq},
+                                                       cursor=True,
+                                                       session=self.context.get("session"))
 
         if results.hits == 0:
             return None
 
         return await DigitalObject(results,
                                    many=True,
-                                   context={"request": self.context.get("request")}).data
+                                   context={"request": self.context.get("request"),
+                                            "session": self.context.get("session")}).data
 
 
 class DigitalObject(serpy.AsyncDictSerializer):

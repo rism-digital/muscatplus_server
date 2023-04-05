@@ -19,23 +19,12 @@ log = logging.getLogger("mp_server")
 
 
 class MaterialGroupsSection(serpy.DictSerializer):
-    mgid = serpy.MethodField(
-        label="id"
-    )
-    label = serpy.MethodField()
-    stype = serpy.StaticField(
-        label="type",
-        value="rism:MaterialGroupsSection"
+    section_label = serpy.MethodField(
+        label="sectionLabel"
     )
     items = serpy.MethodField()
 
-    def get_mgid(self, obj: SolrResult) -> str:
-        req = self.context.get("request")
-        source_id: str = re.sub(ID_SUB, "", obj["id"])
-
-        return get_identifier(req, "sources.material_groups_list", source_id=source_id)
-
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -49,27 +38,13 @@ class MaterialGroupsSection(serpy.DictSerializer):
 
 
 class MaterialGroup(serpy.DictSerializer):
-    # mgid = serpy.MethodField(
-    #     label="id"
-    # )
     label = serpy.MethodField()
-    # mtype = serpy.StaticField(
-    #     label="type",
-    #     value="rism:MaterialGroup"
-    # )
     summary = serpy.MethodField()
     notes = serpy.MethodField()
     relationships = serpy.MethodField()
     external_resources = serpy.MethodField(
         label="externalResources"
     )
-
-    def get_mgid(self, obj: dict) -> str:
-        req = self.context.get("request")
-        source_id: str = re.sub(ID_SUB, "", obj["source_id"])
-        mg_id: str = obj["group_num"]
-
-        return get_identifier(req, "sources.material_group", source_id=source_id, mg_id=mg_id)
 
     def get_label(self, obj: dict) -> dict:
         # TODO: Translate this header into the languages

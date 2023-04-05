@@ -143,6 +143,7 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     None: "records.other",
     "xx": "records.associated_institution",
     "now-in": "records.now_in",
+    "contained-by": "records.related_institution",
     "brother of": "records.brother_of",
     "child of": "records.child_of",
     "confused with": "records.confused_with",
@@ -163,8 +164,8 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     "cmp": "records.composer",
     "cns": "records.censor",
     "cph": "records.copyright_holder",
-    "cre": "records.composer_author",
     # A special case, where the cre relator code is used to label the 100 main entry field.
+    "cre": "records.composer_author",
     "ctb": "records.contributor",
     "dnc": "records.dancer",
     "dnr": "records.donor",

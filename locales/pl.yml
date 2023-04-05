@@ -364,6 +364,7 @@ pl:
     conceptor: Autor koncepcji
     conductor: Dyrygent
     confused_with: Mylon(y/a) z …
+    congress: Kongres
     conjectural: Domyślny
     contact: Kontakt
     contact_area: Obszar kontaktu
@@ -745,7 +746,7 @@ pl:
     publishing_printing_production: Informacje o publikacji, druku i produkcji
     qualifying_information: Informacje kwalifikacyjne
     range_dates: Zakres dat
-    real_world_object_uri: Identyfikator URI obiektu świata rzeczywistego
+    real_world_object_uri: Identyfikator URI
     record_actions: Działania na rekordzie
     record_audit: Kontrola rekordu
     record_origin: Pochodzenie rekordu

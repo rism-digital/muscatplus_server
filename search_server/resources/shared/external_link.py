@@ -13,14 +13,12 @@ class ExternalResourcesSection(serpy.DictSerializer):
     in the Solr result before calling this, as we assume that if this is called there
     is at least one link!
     """
-    rtype = serpy.StaticField(
-        label="type",
-        value="rism:ExternalResourcesSection"
+    section_label = serpy.MethodField(
+        label="sectionLabel"
     )
-    label = serpy.MethodField()
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 

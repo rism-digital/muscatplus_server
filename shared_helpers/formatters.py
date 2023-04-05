@@ -3,6 +3,14 @@ from typing import Optional
 from shared_helpers.display_translators import title_json_value_translator
 
 
+def format_work_label(obj: dict) -> str:
+    title: str = obj.get("standard_title_s")
+    catalogue: str = f" {obj.get('catalogue_s', '')}."
+    catalogue_num: str = f" {obj.get('number_page_s')}"
+
+    return f"{title} {catalogue}{catalogue_num}"
+
+
 def format_source_label(std_title: list, translations: dict) -> dict:
     return title_json_value_translator(std_title, translations)
 

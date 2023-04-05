@@ -34,6 +34,7 @@ class Institution(BaseInstitution):
     external_resources = serpy.MethodField(
         label="externalResources"
     )
+    properties = serpy.MethodField()
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
         institution_id: str = obj.get("institution_id")
@@ -66,7 +67,7 @@ class Institution(BaseInstitution):
         if not self.context.get("direct_request"):
             return None
 
-        if {'related_people_json', 'related_places_json', 'related_institutions_json', 'now_in_json'}.isdisjoint(obj.keys()):
+        if {'related_people_json', 'related_places_json', 'related_institutions_json', 'now_in_json', 'contains_json'}.isdisjoint(obj.keys()):
             return None
 
         req = self.context.get("request")
@@ -85,6 +86,14 @@ class Institution(BaseInstitution):
             return None
 
         return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+
+    def get_properties(self, obj: SolrResult) -> Optional[dict]:
+        d = {
+            "siglum": obj.get("siglum_s"),
+            "countryCodes": obj.get("country_codes_sm", [])
+        }
+
+        return {k: v for k, v in d.items() if v} or None
 
 
 class LocationAddressSection(serpy.DictSerializer):

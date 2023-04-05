@@ -10,7 +10,7 @@ from shared_helpers.display_translators import (
     title_json_value_translator,
     scoring_json_value_translator,
     material_content_types_translator,
-    material_source_types_translator
+    material_source_types_translator, key_mode_value_translator
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.languages import languages_translator
@@ -18,25 +18,13 @@ from shared_helpers.solr_connection import SolrResult
 
 
 class ContentsSection(serpy.DictSerializer):
-    # csid = serpy.MethodField(
-    #     label="id"
-    # )
-    # cstype = serpy.StaticField(
-    #     label="type",
-    #     value="rism:ContentsSection"
-    # )
-    label = serpy.MethodField()
+    section_label = serpy.MethodField(
+        label="sectionLabel"
+    )
     summary = serpy.MethodField()
     subjects = serpy.MethodField()
 
-    def get_csid(self, obj: SolrResult) -> str:
-        req = self.context.get('request')
-        source_id_val = obj["id"]
-        source_id: str = re.sub(ID_SUB, "", source_id_val)
-
-        return get_identifier(req, "sources.contents", source_id=source_id)
-
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -49,6 +37,7 @@ class ContentsSection(serpy.DictSerializer):
         field_config: LabelConfig = {
             "material_source_types_sm": ("records.source_type", material_source_types_translator),
             "material_content_types_sm": ("records.content_type", material_content_types_translator),
+            "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
             "standard_title_s": ("records.standardized_title", None),
             "source_title_s": ("records.title_on_source", None),
             "variant_title_s": ("records.variant_source_title", None),
@@ -64,7 +53,8 @@ class ContentsSection(serpy.DictSerializer):
             "language_original_sm": ("records.language_original_text", languages_translator),
             "language_notes_sm": ("records.language_note", None),
             "rism_series_identifiers_sm": ("records.series_statement", None),
-            "rism_id": ("records.rism_id_number", None)
+            "rism_id": ("records.rism_id_number", None),
+            "source_fingerprint_s": ("records.fingerprint_identifier", None),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
@@ -73,18 +63,17 @@ class ContentsSection(serpy.DictSerializer):
         if 'subjects_json' not in obj:
             return None
 
-        return SourceSubjectsSection(obj, context={"request": self.context.get("request")}).data
+        return SourceSubjectsSection(obj, context={"request": self.context.get("request"),
+                                                   "session": self.context.get("session")}).data
 
 
 class SourceSubjectsSection(serpy.DictSerializer):
-    stype = serpy.StaticField(
-        label="type",
-        value="rism:SourceSubjectSection"
+    section_label = serpy.MethodField(
+        label="sectionLabel"
     )
-    label = serpy.MethodField()
     items = serpy.MethodField()
 
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -93,7 +82,8 @@ class SourceSubjectsSection(serpy.DictSerializer):
     def get_items(self, obj: SolrResult) -> list:
         return SourceSubject(obj['subjects_json'],
                              many=True,
-                             context={"request": self.context.get("request")}).data
+                             context={"request": self.context.get("request"),
+                                      "session": self.context.get("session")}).data
 
 
 # A minimal subject serializer. This is because the data for the subjects
