@@ -5,6 +5,7 @@ from sanic import Sanic
 
 from data_export_server.routes.sitemap import sitemap_blueprint
 from data_export_server.routes.opengraph import opengraph_blueprint
+from data_export_server.routes.sigla import sigla_blueprint
 
 app = Sanic("mp_dataexport")
 config: dict = yaml.safe_load(open('configuration.yml', 'r'))
@@ -33,3 +34,4 @@ app.ctx.template_env = template_env
 # register routes with their blueprints
 app.blueprint(sitemap_blueprint)
 app.blueprint(opengraph_blueprint)
+app.blueprint(sigla_blueprint)
