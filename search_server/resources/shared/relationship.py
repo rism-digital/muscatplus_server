@@ -8,7 +8,9 @@ import serpy
 from shared_helpers.display_translators import (
     person_institution_relationship_labels_translator,
     qualifier_labels_translator,
-    place_relationship_labels_translator, title_json_value_translator, source_relationship_labels_translator
+    place_relationship_labels_translator,
+    title_json_value_translator,
+    source_relationship_labels_translator
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
 

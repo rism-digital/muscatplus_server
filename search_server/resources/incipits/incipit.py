@@ -2,9 +2,7 @@ import logging
 import re
 from typing import Optional
 
-import aiohttp
 import serpy
-from orjson import orjson
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.record_types import create_record_block
