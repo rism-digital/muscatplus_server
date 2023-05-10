@@ -4,7 +4,7 @@ from typing import Optional
 from sanic import Blueprint, response
 from small_asc.client import Results
 
-from shared_helpers.identifiers import ID_SUB, get_identifier
+from shared_helpers.identifiers import ID_SUB
 from shared_helpers.solr_connection import SolrConnection
 
 sigla_blueprint: Blueprint = Blueprint("sigla", url_prefix="/sigla")
