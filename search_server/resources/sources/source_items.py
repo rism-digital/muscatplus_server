@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Optional
 
-import serpy
+import ypres
 from small_asc.client import Results
 
 from search_server.resources.sources.base_source import BaseSource
@@ -12,15 +12,15 @@ from shared_helpers.solr_connection import SolrResult, SolrConnection
 log = logging.getLogger("mp_server")
 
 
-class SourceItemsSection(serpy.AsyncDictSerializer):
-    section_label = serpy.MethodField(
+class SourceItemsSection(ypres.AsyncDictSerializer):
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    url = serpy.MethodField()
-    total_items = serpy.MethodField(
+    url = ypres.MethodField()
+    total_items = ypres.MethodField(
         label="totalItems"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")

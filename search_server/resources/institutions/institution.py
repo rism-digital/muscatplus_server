@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-import serpy
+import ypres
 
 from search_server.resources.institutions.base_institution import BaseInstitution
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
@@ -24,17 +24,17 @@ async def handle_institution_request(req, institution_id: str) -> Optional[dict]
 
 
 class Institution(BaseInstitution):
-    location = serpy.MethodField()
-    sources = serpy.MethodField()
-    external_authorities = serpy.MethodField(
+    location = ypres.MethodField()
+    sources = ypres.MethodField()
+    external_authorities = ypres.MethodField(
         label="externalAuthorities"
     )
-    relationships = serpy.MethodField()
-    notes = serpy.MethodField()
-    external_resources = serpy.MethodField(
+    relationships = ypres.MethodField()
+    notes = ypres.MethodField()
+    external_resources = ypres.MethodField(
         label="externalResources"
     )
-    properties = serpy.MethodField()
+    properties = ypres.MethodField()
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
         institution_id: str = obj.get("institution_id")
@@ -96,18 +96,18 @@ class Institution(BaseInstitution):
         return {k: v for k, v in d.items() if v} or None
 
 
-class LocationAddressSection(serpy.DictSerializer):
-    ltype = serpy.StaticField(
+class LocationAddressSection(ypres.DictSerializer):
+    ltype = ypres.StaticField(
         label="type",
         value="rism:LocationAddressSection"
     )
-    label = serpy.MethodField()
-    mailing_address = serpy.MethodField(
+    label = ypres.MethodField()
+    mailing_address = ypres.MethodField(
         label="mailingAddress"
     )
-    website = serpy.MethodField()
-    email = serpy.MethodField()
-    coordinates = serpy.MethodField()
+    website = ypres.MethodField()
+    email = ypres.MethodField()
+    coordinates = ypres.MethodField()
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")

@@ -3,7 +3,7 @@ import logging
 import re
 from typing import Optional
 
-import serpy
+import ypres
 from small_asc.client import Results
 
 from search_server.helpers.record_types import create_record_block
@@ -123,23 +123,23 @@ class SearchResults(BaseSearchResults):
         return results
 
 
-class SourceSearchResult(serpy.DictSerializer):
-    srid = serpy.MethodField(
+class SourceSearchResult(ypres.DictSerializer):
+    srid = ypres.MethodField(
         label="id"
     )
-    label = serpy.MethodField()
-    result_type = serpy.StaticField(
+    label = ypres.MethodField()
+    result_type = ypres.StaticField(
         label="type",
         value="rism:Source"
     )
-    type_label = serpy.MethodField(
+    type_label = ypres.MethodField(
         label="typeLabel"
     )
-    summary = serpy.MethodField()
-    part_of = serpy.MethodField(
+    summary = ypres.MethodField()
+    part_of = ypres.MethodField(
         label="partOf"
     )
-    flags = serpy.MethodField()
+    flags = ypres.MethodField()
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
@@ -249,20 +249,20 @@ class SourceSearchResult(serpy.DictSerializer):
         return flags or None
 
 
-class PersonSearchResult(serpy.DictSerializer):
-    srid = serpy.MethodField(
+class PersonSearchResult(ypres.DictSerializer):
+    srid = ypres.MethodField(
         label="id"
     )
-    label = serpy.MethodField()
-    result_type = serpy.StaticField(
+    label = ypres.MethodField()
+    result_type = ypres.StaticField(
         label="type",
         value="rism:Person"
     )
-    type_label = serpy.MethodField(
+    type_label = ypres.MethodField(
         label="typeLabel"
     )
-    summary = serpy.MethodField()
-    flags = serpy.MethodField()
+    summary = ypres.MethodField()
+    flags = ypres.MethodField()
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
@@ -302,20 +302,20 @@ class PersonSearchResult(serpy.DictSerializer):
         return flags or None
 
 
-class InstitutionSearchResult(serpy.DictSerializer):
-    srid = serpy.MethodField(
+class InstitutionSearchResult(ypres.DictSerializer):
+    srid = ypres.MethodField(
         label="id"
     )
-    label = serpy.MethodField()
-    result_type = serpy.StaticField(
+    label = ypres.MethodField()
+    result_type = ypres.StaticField(
         label="type",
         value="rism:Institution"
     )
-    type_label = serpy.MethodField(
+    type_label = ypres.MethodField(
         label="typeLabel"
     )
-    summary = serpy.MethodField()
-    flags = serpy.MethodField()
+    summary = ypres.MethodField()
+    flags = ypres.MethodField()
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
@@ -355,16 +355,16 @@ class InstitutionSearchResult(serpy.DictSerializer):
         return flags or None
 
 
-class PlaceSearchResult(serpy.DictSerializer):
-    srid = serpy.MethodField(
+class PlaceSearchResult(ypres.DictSerializer):
+    srid = ypres.MethodField(
         label="id"
     )
-    label = serpy.MethodField()
-    result_type = serpy.StaticField(
+    label = ypres.MethodField()
+    result_type = ypres.StaticField(
         label="type",
         value="rism:Place"
     )
-    type_label = serpy.MethodField(
+    type_label = ypres.MethodField(
         label="typeLabel"
     )
 
@@ -386,16 +386,16 @@ class PlaceSearchResult(serpy.DictSerializer):
         return transl.get("records.place")
 
 
-class LiturgicalFestivalSearchResult(serpy.DictSerializer):
-    srid = serpy.MethodField(
+class LiturgicalFestivalSearchResult(ypres.DictSerializer):
+    srid = ypres.MethodField(
         label="id"
     )
-    label = serpy.MethodField()
-    result_type = serpy.StaticField(
+    label = ypres.MethodField()
+    result_type = ypres.StaticField(
         label="type",
         value="rism:LiturgicalFestival"
     )
-    type_label = serpy.MethodField(
+    type_label = ypres.MethodField(
         label="typeLabel"
     )
 
@@ -417,24 +417,24 @@ class LiturgicalFestivalSearchResult(serpy.DictSerializer):
         return transl.get("records.liturgical_festival")
 
 
-class IncipitSearchResult(serpy.DictSerializer):
-    srid = serpy.MethodField(
+class IncipitSearchResult(ypres.DictSerializer):
+    srid = ypres.MethodField(
         label="id"
     )
-    label = serpy.MethodField()
-    result_type = serpy.StaticField(
+    label = ypres.MethodField()
+    result_type = ypres.StaticField(
         label="type",
         value="rism:Incipit"
     )
-    type_label = serpy.MethodField(
+    type_label = ypres.MethodField(
         label="typeLabel"
     )
-    part_of = serpy.MethodField(
+    part_of = ypres.MethodField(
         label="partOf"
     )
-    summary = serpy.MethodField()
-    rendered = serpy.MethodField()
-    score = serpy.MethodField()
+    summary = ypres.MethodField()
+    rendered = ypres.MethodField()
+    score = ypres.MethodField()
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')

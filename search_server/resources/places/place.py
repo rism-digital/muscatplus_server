@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Optional
 
-import serpy
+import ypres
 from small_asc.client import Results, JsonAPIRequest
 
 from search_server.resources.institutions.base_institution import BaseInstitution, SOLR_FIELDS_FOR_BASE_INSTITUTION
@@ -26,22 +26,22 @@ async def handle_place_request(req, place_id: str) -> Optional[dict]:
                                         "direct_request": True}).data
 
 
-class Place(serpy.AsyncDictSerializer):
-    pid = serpy.MethodField(
+class Place(ypres.AsyncDictSerializer):
+    pid = ypres.MethodField(
         label="id"
     )
-    ptype = serpy.StaticField(
+    ptype = ypres.StaticField(
         label="type",
         value="rism:Place"
     )
-    type_label = serpy.MethodField(
+    type_label = ypres.MethodField(
         label="typeLabel"
     )
-    label = serpy.MethodField()
-    summary = serpy.MethodField()
-    sources = serpy.MethodField()
-    people = serpy.MethodField()
-    institutions = serpy.MethodField()
+    label = ypres.MethodField()
+    summary = ypres.MethodField()
+    sources = ypres.MethodField()
+    people = ypres.MethodField()
+    institutions = ypres.MethodField()
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context.get("request")

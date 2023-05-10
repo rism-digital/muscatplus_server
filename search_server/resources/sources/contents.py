@@ -2,7 +2,7 @@ import re
 import urllib.parse
 from typing import Optional
 
-import serpy
+import ypres
 
 from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.display_translators import (
@@ -17,12 +17,12 @@ from shared_helpers.languages import languages_translator
 from shared_helpers.solr_connection import SolrResult
 
 
-class ContentsSection(serpy.DictSerializer):
-    section_label = serpy.MethodField(
+class ContentsSection(ypres.DictSerializer):
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    summary = serpy.MethodField()
-    subjects = serpy.MethodField()
+    summary = ypres.MethodField()
+    subjects = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -67,11 +67,11 @@ class ContentsSection(serpy.DictSerializer):
                                                    "session": self.context.get("session")}).data
 
 
-class SourceSubjectsSection(serpy.DictSerializer):
-    section_label = serpy.MethodField(
+class SourceSubjectsSection(ypres.DictSerializer):
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -89,16 +89,16 @@ class SourceSubjectsSection(serpy.DictSerializer):
 # A minimal subject serializer. This is because the data for the subjects
 # comes from the JSON field on the source, rather than from the Solr records
 # for subjects.
-class SourceSubject(serpy.DictSerializer):
-    sid = serpy.MethodField(
+class SourceSubject(ypres.DictSerializer):
+    sid = ypres.MethodField(
         label="id"
     )
-    stype = serpy.StaticField(
+    stype = ypres.StaticField(
         label="type",
         value="rism:Subject"
     )
-    label = serpy.MethodField()
-    value = serpy.MethodField()
+    label = ypres.MethodField()
+    value = ypres.MethodField()
 
     def get_sid(self, obj: dict) -> str:
         req = self.context.get("request")

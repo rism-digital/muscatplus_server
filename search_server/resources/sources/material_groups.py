@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Optional
 
-import serpy
+import ypres
 
 from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.display_translators import (
@@ -18,11 +18,11 @@ from search_server.resources.shared.relationship import RelationshipsSection
 log = logging.getLogger("mp_server")
 
 
-class MaterialGroupsSection(serpy.DictSerializer):
-    section_label = serpy.MethodField(
+class MaterialGroupsSection(ypres.DictSerializer):
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -37,12 +37,12 @@ class MaterialGroupsSection(serpy.DictSerializer):
                              context={"request": self.context.get("request")}).data
 
 
-class MaterialGroup(serpy.DictSerializer):
-    label = serpy.MethodField()
-    summary = serpy.MethodField()
-    notes = serpy.MethodField()
-    relationships = serpy.MethodField()
-    external_resources = serpy.MethodField(
+class MaterialGroup(ypres.DictSerializer):
+    label = ypres.MethodField()
+    summary = ypres.MethodField()
+    notes = ypres.MethodField()
+    relationships = ypres.MethodField()
+    external_resources = ypres.MethodField(
         label="externalResources"
     )
 

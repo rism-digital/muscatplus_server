@@ -3,7 +3,7 @@ import math
 from typing import Optional
 
 from small_asc.client import Results
-import serpy
+import ypres
 
 from search_server.exceptions import PaginationParseException
 from search_server.helpers.urls import replace_query_param, remove_query_param
@@ -14,7 +14,7 @@ PAGE_QUERY_PARAM = "page"
 ROWS_QUERY_PARAM = "rows"
 
 
-class Pagination(serpy.DictSerializer):
+class Pagination(ypres.DictSerializer):
     """
     The PaginationSerializer will return a list of pagination links to assist
     consuming applications with navigation of the results. It is created as a
@@ -23,18 +23,18 @@ class Pagination(serpy.DictSerializer):
     details.)
     """
 
-    pagination_type = serpy.StaticField(
+    pagination_type = ypres.StaticField(
         label="type",
         value="PartialCollectionView"
     )
-    first = serpy.MethodField()
-    next = serpy.MethodField()
-    previous = serpy.MethodField()
-    last = serpy.MethodField()
-    total_pages = serpy.MethodField(
+    first = ypres.MethodField()
+    next = ypres.MethodField()
+    previous = ypres.MethodField()
+    last = ypres.MethodField()
+    total_pages = ypres.MethodField(
         label="totalPages"
     )
-    this_page = serpy.MethodField(
+    this_page = ypres.MethodField(
         label="thisPage"
     )
 

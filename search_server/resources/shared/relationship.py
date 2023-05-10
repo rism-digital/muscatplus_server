@@ -3,7 +3,7 @@ import logging
 import re
 from typing import Optional, Callable
 
-import serpy
+import ypres
 
 from shared_helpers.display_translators import (
     person_institution_relationship_labels_translator,
@@ -17,11 +17,11 @@ from shared_helpers.identifiers import ID_SUB, get_identifier
 log = logging.getLogger("mp_server")
 
 
-class RelationshipsSection(serpy.DictSerializer):
-    section_label = serpy.MethodField(
+class RelationshipsSection(ypres.DictSerializer):
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_section_label(self, obj: dict) -> dict:
         req = self.context.get("request")
@@ -45,14 +45,14 @@ class RelationshipsSection(serpy.DictSerializer):
                                      "session": self.context.get("session")}).data
 
 
-class Relationship(serpy.DictSerializer):
-    role = serpy.MethodField()
-    qualifier = serpy.MethodField()
-    related_to = serpy.MethodField(
+class Relationship(ypres.DictSerializer):
+    role = ypres.MethodField()
+    qualifier = ypres.MethodField()
+    related_to = ypres.MethodField(
         label="relatedTo"
     )
-    name = serpy.MethodField()
-    note = serpy.MethodField()
+    name = ypres.MethodField()
+    note = ypres.MethodField()
 
     def get_role(self, obj: dict) -> Optional[dict]:
         if 'relationship' not in obj:

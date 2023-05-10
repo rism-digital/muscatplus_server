@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Optional
 
-import serpy
+import ypres
 
 from search_server.helpers.record_types import create_record_block
 from search_server.resources.shared.record_history import get_record_history
@@ -24,30 +24,30 @@ SOLR_FIELDS_FOR_BASE_SOURCE: list = [
 log = logging.getLogger("mp_server")
 
 
-class BaseSource(serpy.AsyncDictSerializer):
+class BaseSource(ypres.AsyncDictSerializer):
     """
     A base source serializer for providing a basic set of information for
     a RISM Source. A full record of the source is provided by the full source
     serializer, which adds additional information to this
     """
-    sid = serpy.MethodField(
+    sid = ypres.MethodField(
         label="id"
     )
-    stype = serpy.StaticField(
+    stype = ypres.StaticField(
         label="type",
         value="rism:Source"
     )
-    type_label = serpy.MethodField(
+    type_label = ypres.MethodField(
         label="typeLabel"
     )
-    label = serpy.MethodField()
-    creator = serpy.MethodField()
-    part_of = serpy.MethodField(
+    label = ypres.MethodField()
+    creator = ypres.MethodField()
+    part_of = ypres.MethodField(
         label="partOf"
     )
-    summary = serpy.MethodField()
-    record = serpy.MethodField()
-    record_history = serpy.MethodField(
+    summary = ypres.MethodField()
+    record = ypres.MethodField()
+    record_history = ypres.MethodField(
         label="recordHistory"
     )
 

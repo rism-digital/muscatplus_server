@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-import serpy
+import ypres
 from small_asc.client import Results
 
 from search_server.resources.shared.external_link import ExternalResourcesSection
@@ -13,11 +13,11 @@ from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 
-class ExemplarsSection(serpy.AsyncDictSerializer):
-    section_label = serpy.MethodField(
+class ExemplarsSection(ypres.AsyncDictSerializer):
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -56,26 +56,26 @@ class ExemplarsSection(serpy.AsyncDictSerializer):
                                        "session": self.context.get("session")}).data
 
 
-class Exemplar(serpy.AsyncDictSerializer):
-    sid = serpy.MethodField(
+class Exemplar(ypres.AsyncDictSerializer):
+    sid = ypres.MethodField(
         label="id"
     )
-    stype = serpy.StaticField(
+    stype = ypres.StaticField(
         label="type",
         value="rism:Exemplar"
     )
-    section_label = serpy.MethodField(
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    summary = serpy.MethodField()
-    notes = serpy.MethodField()
-    held_by = serpy.MethodField(
+    summary = ypres.MethodField()
+    notes = ypres.MethodField()
+    held_by = ypres.MethodField(
         label="heldBy"
     )
-    external_resources = serpy.MethodField(
+    external_resources = ypres.MethodField(
         label="externalResources"
     )
-    relationships = serpy.MethodField()
+    relationships = ypres.MethodField()
 
     def get_sid(self, obj: dict) -> str:
         req = self.context.get('request')

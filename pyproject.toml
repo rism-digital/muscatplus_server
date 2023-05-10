@@ -7,8 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-uvicorn = "^0.21.0"
-serpy = {git = "https://github.com/rism-digital/serpy.git", rev = "main"}
+uvicorn = "^0.22.0"
 pyyaml = "^6.0.0"
 rdflib = "^6.0.0"
 sentry-sdk = "^1.10.1"
@@ -18,7 +17,8 @@ verovio = { version = "^3.14.0", allow-prereleases = true }
 aiohttp = {extras = ["speedups"], version = "^3.8.4"}
 small-asc = {git = "https://github.com/rism-digital/small-asc.git", rev = "main"}
 #small-asc = {path = "../small-asc", develop = true }
-sanic = "^22.12.0"
+ypres = {git = "https://github.com/rism-digital/ypres.git", rev = "main"}
+sanic = "^23.3.0"
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.0.0"

@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-import serpy
+import ypres
 
 from search_server.resources.shared.record_history import get_record_history
 from shared_helpers.display_fields import get_display_fields
@@ -15,20 +15,20 @@ SOLR_FIELDS_FOR_BASE_INSTITUTION: list = [
 ]
 
 
-class BaseInstitution(serpy.AsyncDictSerializer):
-    iid = serpy.MethodField(
+class BaseInstitution(ypres.AsyncDictSerializer):
+    iid = ypres.MethodField(
         label="id"
     )
-    itype = serpy.StaticField(
+    itype = ypres.StaticField(
         label="type",
         value="rism:Institution"
     )
-    type_label = serpy.MethodField(
+    type_label = ypres.MethodField(
         label="typeLabel"
     )
-    label = serpy.MethodField()
-    summary = serpy.MethodField()
-    record_history = serpy.MethodField(
+    label = ypres.MethodField()
+    summary = ypres.MethodField()
+    record_history = ypres.MethodField(
         label="recordHistory"
     )
 

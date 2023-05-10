@@ -1,18 +1,18 @@
 from typing import Optional
 
-import serpy
+import ypres
 
 from shared_helpers.display_fields import get_display_fields, LabelConfig
 from shared_helpers.solr_connection import SolrResult
 
 
-class NotesSection(serpy.AsyncDictSerializer):
-    label = serpy.MethodField()
-    ntype = serpy.StaticField(
+class NotesSection(ypres.AsyncDictSerializer):
+    label = ypres.MethodField()
+    ntype = ypres.StaticField(
         label="type",
         value="rism:NotesSection"
     )
-    notes = serpy.MethodField()
+    notes = ypres.MethodField()
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")

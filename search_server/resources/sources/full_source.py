@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Optional
 
-import serpy
+import ypres
 
 from search_server.resources.incipits.incipit import IncipitsSection
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
@@ -20,11 +20,11 @@ from shared_helpers.solr_connection import SolrResult
 log = logging.getLogger("mp_server")
 
 
-class SourceItemList(serpy.DictSerializer):
-    sid = serpy.MethodField(
+class SourceItemList(ypres.DictSerializer):
+    sid = ypres.MethodField(
         label="id"
     )
-    label = serpy.MethodField()
+    label = ypres.MethodField()
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
@@ -40,27 +40,27 @@ class SourceItemList(serpy.DictSerializer):
 
 
 class FullSource(BaseSource):
-    contents = serpy.MethodField()
-    material_groups = serpy.MethodField(
+    contents = ypres.MethodField()
+    material_groups = ypres.MethodField(
         label="materialGroups"
     )
-    relationships = serpy.MethodField()
-    incipits = serpy.MethodField()
-    references_notes = serpy.MethodField(
+    relationships = ypres.MethodField()
+    incipits = ypres.MethodField()
+    references_notes = ypres.MethodField(
         label="referencesNotes"
     )
-    exemplars = serpy.MethodField()
-    source_items = serpy.MethodField(
+    exemplars = ypres.MethodField()
+    source_items = ypres.MethodField(
         label="sourceItems"
     )
-    external_resources = serpy.MethodField(
+    external_resources = ypres.MethodField(
         label="externalResources"
     )
-    digital_objects = serpy.MethodField(
+    digital_objects = ypres.MethodField(
         label="digitalObjects"
     )
-    dates = serpy.MethodField()
-    properties = serpy.MethodField()
+    dates = ypres.MethodField()
+    properties = ypres.MethodField()
 
     # In the full class view we don't want to display the summary as a top-level field
     # so we'll always return None.
