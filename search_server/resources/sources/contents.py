@@ -110,4 +110,6 @@ class SourceSubject(ypres.DictSerializer):
         return {"none": [obj.get("subject")]}
 
     def get_value(self, obj: dict) -> str:
-        return urllib.parse.quote_plus(obj.get("subject"))
+        if "subject" not in obj:
+            return ""
+        return urllib.parse.quote_plus(obj["subject"])
