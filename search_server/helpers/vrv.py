@@ -89,7 +89,6 @@ def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensu
     return svg, b64midi
 
 
-@lru_cache(maxsize=128)
 async def render_url(url: str) -> Optional[str]:
     """
     Takes a URL to an MEI file and returns the SVG for it.

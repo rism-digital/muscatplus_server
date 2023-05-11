@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Optional
 
-import serpy
+import ypres
 from small_asc.client import Results
 
 from search_server.helpers.vrv import render_url
@@ -12,18 +12,18 @@ from shared_helpers.solr_connection import SolrResult, SolrConnection
 log = logging.getLogger("mp_server")
 
 
-class DigitalObjectsSection(serpy.AsyncDictSerializer):
-    doid = serpy.MethodField(
+class DigitalObjectsSection(ypres.AsyncDictSerializer):
+    doid = ypres.MethodField(
         label="id"
     )
-    section_label = serpy.MethodField(
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    dotype = serpy.StaticField(
+    dotype = ypres.StaticField(
         label="type",
         value="rism:DigitalObjectsSection"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_doid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
@@ -67,20 +67,20 @@ class DigitalObjectsSection(serpy.AsyncDictSerializer):
                                             "session": self.context.get("session")}).data
 
 
-class DigitalObject(serpy.AsyncDictSerializer):
-    doid = serpy.MethodField(
+class DigitalObject(ypres.AsyncDictSerializer):
+    doid = ypres.MethodField(
         label="id"
     )
-    dotype = serpy.StaticField(
+    dotype = ypres.StaticField(
         label="type",
         value="rism:DigitalObject"
     )
-    # part_of = serpy.MethodField(
+    # part_of = ypres.MethodField(
     #     label="partOf"
     # )
-    label = serpy.MethodField()
-    format = serpy.MethodField()
-    body = serpy.MethodField()
+    label = ypres.MethodField()
+    format = ypres.MethodField()
+    body = ypres.MethodField()
 
     def get_doid(self, obj: SolrResult) -> str:
         req = self.context.get("request")

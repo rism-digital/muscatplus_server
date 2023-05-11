@@ -1,16 +1,16 @@
-import serpy
+import ypres
 
 from shared_helpers.display_translators import person_name_variant_labels_translator
 from shared_helpers.solr_connection import SolrResult
 
 
-class VariantNamesSection(serpy.DictSerializer):
-    ntype = serpy.StaticField(
+class VariantNamesSection(ypres.DictSerializer):
+    ntype = ypres.StaticField(
         label="type",
         value="rism:VariantNamesSection"
     )
-    label = serpy.MethodField()
-    items = serpy.MethodField()
+    label = ypres.MethodField()
+    items = ypres.MethodField()
 
     def get_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -24,13 +24,13 @@ class VariantNamesSection(serpy.DictSerializer):
                            context={"request": self.context.get("request")}).data
 
 
-class NameVariant(serpy.DictSerializer):
-    vtype = serpy.StaticField(
+class NameVariant(ypres.DictSerializer):
+    vtype = ypres.StaticField(
         label="type",
         value="rism:VariantName"
     )
-    label = serpy.MethodField()
-    value = serpy.MethodField()
+    label = ypres.MethodField()
+    value = ypres.MethodField()
 
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")

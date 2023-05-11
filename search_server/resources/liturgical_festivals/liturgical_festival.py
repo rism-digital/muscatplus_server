@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-import serpy
+import ypres
 
 from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.identifiers import ID_SUB, get_identifier
@@ -18,16 +18,16 @@ async def handle_festival_request(req, festival_id: str) -> Optional[dict]:
                                                "direct_request": True}).data
 
 
-class LiturgicalFestival(serpy.DictSerializer):
-    fid = serpy.MethodField(
+class LiturgicalFestival(ypres.DictSerializer):
+    fid = ypres.MethodField(
         label="id"
     )
-    ftype = serpy.StaticField(
+    ftype = ypres.StaticField(
         label="type",
         value="rism:LiturgicalFestival"
     )
-    label = serpy.MethodField()
-    summary = serpy.MethodField()
+    label = ypres.MethodField()
+    summary = ypres.MethodField()
 
     def get_fid(self, obj: dict) -> str:
         req = self.context.get("request")

@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from typing import Optional
 
-import serpy
+import ypres
 from sanic import request, response
 from small_asc.client import SolrError
 
@@ -15,16 +15,16 @@ from shared_helpers.solr_connection import SolrConnection
 log = logging.getLogger("mp_server")
 
 
-class SuggestionResults(serpy.DictSerializer):
-    sid = serpy.MethodField(
+class SuggestionResults(ypres.DictSerializer):
+    sid = ypres.MethodField(
         label="id"
     )
-    typ = serpy.StaticField(
+    typ = ypres.StaticField(
         label="type",
         value="rism:SuggestionResults"
     )
-    alias = serpy.MethodField()
-    items = serpy.MethodField()
+    alias = ypres.MethodField()
+    items = ypres.MethodField()
 
     def get_sid(self, obj: dict) -> str:
         req = self.context.get("request")

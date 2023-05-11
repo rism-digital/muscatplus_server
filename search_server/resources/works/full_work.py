@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-import serpy
+import ypres
 from small_asc.client import Results
 
 from search_server.resources.sources.base_source import BaseSource, SOLR_FIELDS_FOR_BASE_SOURCE
@@ -11,7 +11,7 @@ from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 
 class FullWork(BaseWork):
-    sources = serpy.MethodField()
+    sources = ypres.MethodField()
 
     async def get_sources(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")

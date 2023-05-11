@@ -1,5 +1,5 @@
 import orjson
-import serpy
+import ypres
 from sanic import response
 from small_asc.client import Results
 
@@ -33,16 +33,16 @@ async def handle_front_request(req) -> response.HTTPResponse:
     )
 
 
-class Front(serpy.DictSerializer):
-    fid = serpy.MethodField(
+class Front(ypres.DictSerializer):
+    fid = ypres.MethodField(
         label="id"
     )
-    ftype = serpy.StaticField(
+    ftype = ypres.StaticField(
         label="type",
         value="rism:Front"
     )
-    endpoints = serpy.MethodField()
-    facets = serpy.MethodField()
+    endpoints = ypres.MethodField()
+    facets = ypres.MethodField()
 
     def get_fid(self, obj: Results) -> str:
         req = self.context.get("request")

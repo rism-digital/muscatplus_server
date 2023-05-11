@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-import serpy
+import ypres
 
 from search_server.resources.shared.record_history import get_record_history
 from shared_helpers.formatters import format_person_label
@@ -13,19 +13,19 @@ SOLR_FIELDS_FOR_BASE_PERSON: list = [
 ]
 
 
-class BasePerson(serpy.AsyncDictSerializer):
-    pid = serpy.MethodField(
+class BasePerson(ypres.AsyncDictSerializer):
+    pid = ypres.MethodField(
         label="id"
     )
-    stype = serpy.StaticField(
+    stype = ypres.StaticField(
         label="type",
         value="rism:Person"
     )
-    type_label = serpy.MethodField(
+    type_label = ypres.MethodField(
         label="typeLabel"
     )
-    label = serpy.MethodField()
-    record_history = serpy.MethodField(
+    label = ypres.MethodField()
+    record_history = ypres.MethodField(
         label="recordHistory"
     )
 

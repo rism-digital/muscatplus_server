@@ -1,11 +1,11 @@
 from typing import Optional
 
-import serpy
+import ypres
 
 from shared_helpers.solr_connection import SolrResult
 
 
-class ExternalResourcesSection(serpy.DictSerializer):
+class ExternalResourcesSection(ypres.DictSerializer):
     """
     Returns a formatted object of external links.
 
@@ -13,10 +13,10 @@ class ExternalResourcesSection(serpy.DictSerializer):
     in the Solr result before calling this, as we assume that if this is called there
     is at least one link!
     """
-    section_label = serpy.MethodField(
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -36,14 +36,14 @@ class ExternalResourcesSection(serpy.DictSerializer):
                                 context={"request": self.context.get("request")}).data
 
 
-class ExternalResource(serpy.DictSerializer):
-    rtype = serpy.StaticField(
+class ExternalResource(ypres.DictSerializer):
+    rtype = ypres.StaticField(
         label="type",
         value="rism:ExternalResource"
     )
-    url = serpy.MethodField()
-    label = serpy.MethodField()
-    resource_type = serpy.MethodField(
+    url = ypres.MethodField()
+    label = ypres.MethodField()
+    resource_type = ypres.MethodField(
         label="resourceType"
     )
 

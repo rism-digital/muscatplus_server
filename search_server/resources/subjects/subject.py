@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-import serpy
+import ypres
 
 from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.solr_connection import SolrConnection, SolrResult, result_count
@@ -14,21 +14,21 @@ async def handle_subject_request(req, subject_id: str) -> Optional[dict]:
                                                   "direct_request": True}).data
 
 
-class Subject(serpy.AsyncDictSerializer):
-    sid = serpy.MethodField(
+class Subject(ypres.AsyncDictSerializer):
+    sid = ypres.MethodField(
         label="id"
     )
-    stype = serpy.StaticField(
+    stype = ypres.StaticField(
         label="type",
         value="rism:Subject"
     )
-    label = serpy.MethodField()
-    term = serpy.MethodField()
-    notes = serpy.MethodField()
-    alternate_terms = serpy.MethodField(
+    label = ypres.MethodField()
+    term = ypres.MethodField()
+    notes = ypres.MethodField()
+    alternate_terms = ypres.MethodField(
         label="alternateTerms"
     )
-    sources = serpy.MethodField()
+    sources = ypres.MethodField()
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context.get("request")

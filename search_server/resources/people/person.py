@@ -2,7 +2,7 @@ import logging
 import re
 from typing import Optional
 
-import serpy
+import ypres
 
 from shared_helpers.display_fields import get_display_fields
 from shared_helpers.identifiers import get_identifier, ID_SUB
@@ -29,19 +29,19 @@ async def handle_person_request(req, person_id: str) -> Optional[dict]:
 
 
 class Person(BasePerson):
-    external_authorities = serpy.MethodField(
+    external_authorities = ypres.MethodField(
         label="externalAuthorities"
     )
-    summary = serpy.MethodField()
-    name_variants = serpy.MethodField(
+    summary = ypres.MethodField()
+    name_variants = ypres.MethodField(
         label="nameVariants"
     )
-    relationships = serpy.MethodField()
-    notes = serpy.MethodField(
+    relationships = ypres.MethodField()
+    notes = ypres.MethodField(
         label="notes"
     )
-    sources = serpy.MethodField()
-    external_resources = serpy.MethodField(
+    sources = ypres.MethodField()
+    external_resources = ypres.MethodField(
         label="externalResources"
     )
 

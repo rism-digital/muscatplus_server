@@ -1,17 +1,17 @@
 from typing import Optional
 
-import serpy
+import ypres
 
 from shared_helpers.identifiers import EXTERNAL_IDS
 
 
-class ExternalAuthoritiesSection(serpy.DictSerializer):
-    label = serpy.MethodField()
-    etype = serpy.StaticField(
+class ExternalAuthoritiesSection(ypres.DictSerializer):
+    label = ypres.MethodField()
+    etype = ypres.StaticField(
         label="type",
         value="rism:ExternalAuthoritiesSection"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_label(self, obj: list) -> dict:
         req = self.context.get("request")  # type: ignore

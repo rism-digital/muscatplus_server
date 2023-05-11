@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Optional, Type
 
-import serpy
+import ypres
 from small_asc.client import Results, SolrError
 
 from search_server.resources.search.facets import get_facets
@@ -10,7 +10,7 @@ from search_server.resources.search.sorting import get_sorting
 from shared_helpers.solr_connection import execute_query
 
 
-class BaseSearchResults(serpy.AsyncSerializer):
+class BaseSearchResults(ypres.AsyncSerializer):
     """
     A Base Search Results serializer. Consumes a Solr response directly, and will manage the pagination
     data structures, but the actual serialization of the results is left to the classes derived from this
@@ -19,22 +19,22 @@ class BaseSearchResults(serpy.AsyncSerializer):
 
     Implementing classes must implement the `get_items` method.
     """
-    sid = serpy.MethodField(
+    sid = ypres.MethodField(
         label="id"
     )
-    stype = serpy.StaticField(
+    stype = ypres.StaticField(
         label="type",
         value="Collection"
     )
-    total_items = serpy.MethodField(
+    total_items = ypres.MethodField(
         label="totalItems"
     )
-    view = serpy.MethodField()
-    items = serpy.MethodField()
-    facets = serpy.MethodField()
-    modes = serpy.MethodField()
-    sorts = serpy.MethodField()
-    page_sizes = serpy.MethodField(
+    view = ypres.MethodField()
+    items = ypres.MethodField()
+    facets = ypres.MethodField()
+    modes = ypres.MethodField()
+    sorts = ypres.MethodField()
+    page_sizes = ypres.MethodField(
         label="pageSizes"
     )
 

@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-import serpy
+import ypres
 
 from search_server.resources.shared.relationship import Relationship
 from shared_helpers.formatters import format_work_label
@@ -9,17 +9,17 @@ from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 
 
-class BaseWork(serpy.AsyncDictSerializer):
-    wid = serpy.MethodField(
+class BaseWork(ypres.AsyncDictSerializer):
+    wid = ypres.MethodField(
         label="id"
     )
-    wtype = serpy.StaticField(
+    wtype = ypres.StaticField(
         label="type",
         value="rism:Work"
     )
-    label = serpy.MethodField()
-    creator = serpy.MethodField()
-    sources = serpy.MethodField()
+    label = ypres.MethodField()
+    creator = ypres.MethodField()
+    sources = ypres.MethodField()
 
     def get_wid(self, obj: SolrResult) -> str:
         req = self.context.get("request")

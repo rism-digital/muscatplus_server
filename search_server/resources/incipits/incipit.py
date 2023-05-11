@@ -2,9 +2,7 @@ import logging
 import re
 from typing import Optional
 
-import aiohttp
-import serpy
-from orjson import orjson
+import ypres
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.record_types import create_record_block
@@ -96,21 +94,21 @@ async def handle_mei_download(req, source_id: str, work_num: str) -> Optional[di
     }
 
 
-class IncipitsSection(serpy.AsyncDictSerializer):
-    isid = serpy.MethodField(
+class IncipitsSection(ypres.AsyncDictSerializer):
+    isid = ypres.MethodField(
         label="id"
     )
-    section_label = serpy.MethodField(
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    stype = serpy.StaticField(
+    stype = ypres.StaticField(
         label="type",
         value="rism:IncipitsSection"
     )
-    part_of = serpy.MethodField(
+    part_of = ypres.MethodField(
         label="partOf"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_isid(self, obj: SolrResult):
         source_id = re.sub(ID_SUB, "", obj.get("id"))
@@ -177,22 +175,22 @@ class IncipitsSection(serpy.AsyncDictSerializer):
                                       "session": self.context.get("session")}).data
 
 
-class Incipit(serpy.AsyncDictSerializer):
-    incip_id = serpy.MethodField(
+class Incipit(ypres.AsyncDictSerializer):
+    incip_id = ypres.MethodField(
         label="id"
     )
-    itype = serpy.StaticField(
+    itype = ypres.StaticField(
         label="type",
         value="rism:Incipit"
     )
-    label = serpy.MethodField()
-    part_of = serpy.MethodField(
+    label = ypres.MethodField()
+    part_of = ypres.MethodField(
         label="partOf"
     )
-    summary = serpy.MethodField()
-    rendered = serpy.MethodField()
-    encodings = serpy.MethodField()
-    properties = serpy.MethodField()
+    summary = ypres.MethodField()
+    rendered = ypres.MethodField()
+    encodings = ypres.MethodField()
+    properties = ypres.MethodField()
 
     def get_incip_id(self, obj: dict) -> str:
         req = self.context.get("request")

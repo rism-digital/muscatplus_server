@@ -1,6 +1,6 @@
 from typing import Optional
 
-import serpy
+import ypres
 
 from search_server.resources.liturgical_festivals.liturgical_festival import LiturgicalFestival
 from search_server.resources.shared.relationship import Relationship
@@ -12,19 +12,19 @@ from shared_helpers.display_translators import (
 from shared_helpers.solr_connection import SolrResult
 
 
-class ReferencesNotesSection(serpy.DictSerializer):
-    section_label = serpy.MethodField(
+class ReferencesNotesSection(ypres.DictSerializer):
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    stype = serpy.StaticField(
+    stype = ypres.StaticField(
         label="type",
         value="rism:ReferencesNotesSection"
     )
-    notes = serpy.MethodField()
-    performance_locations = serpy.MethodField(
+    notes = ypres.MethodField()
+    performance_locations = ypres.MethodField(
         label="performanceLocations"
     )
-    liturgical_festivals = serpy.MethodField(
+    liturgical_festivals = ypres.MethodField(
         label="liturgicalFestivals"
     )
 
@@ -69,15 +69,15 @@ class ReferencesNotesSection(serpy.DictSerializer):
                                           context={"request": self.context.get("request")}).data
 
 
-class PerformanceLocationsSection(serpy.DictSerializer):
-    section_label = serpy.MethodField(
+class PerformanceLocationsSection(ypres.DictSerializer):
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    stype = serpy.StaticField(
+    stype = ypres.StaticField(
         label="type",
         value="rism:PerformanceLocationsSection"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -93,15 +93,15 @@ class PerformanceLocationsSection(serpy.DictSerializer):
                             context={"request": self.context.get("request")}).data
 
 
-class LiturgicalFestivalsSection(serpy.DictSerializer):
-    section_label = serpy.MethodField(
+class LiturgicalFestivalsSection(ypres.DictSerializer):
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    stype = serpy.StaticField(
+    stype = ypres.StaticField(
         label="type",
         value="rism:LiturgicalFestivalsSection"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")

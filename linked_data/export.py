@@ -106,7 +106,7 @@ async def run_serializer(docid: str, serializer, ctx_val: dict, semaphore, sessi
         try:
             this_doc = await solr_conn.get(docid)
         except Exception as e:
-            log.critical("=========== Exception raised in get request for source %s", docid)
+            log.critical("=========== Exception raised in get request for source %s: %s", docid, e)
             return None
 
         if this_doc is None:
@@ -117,7 +117,7 @@ async def run_serializer(docid: str, serializer, ctx_val: dict, semaphore, sessi
                                                              "direct_request": True,
                                                              "session": session}).data
         except Exception as e:
-            log.critical("=========== Exception raised in serializer for source %s", docid)
+            log.critical("=========== Exception raised in serializer for source %s: %s", docid, e)
             return None
 
         serialized.update(ctx_val)

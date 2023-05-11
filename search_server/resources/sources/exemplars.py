@@ -1,9 +1,10 @@
 import re
 from typing import Optional
 
-import serpy
+import ypres
 from small_asc.client import Results
 
+from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from shared_helpers.display_fields import get_display_fields, LabelConfig
@@ -13,11 +14,11 @@ from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 
-class ExemplarsSection(serpy.AsyncDictSerializer):
-    section_label = serpy.MethodField(
+class ExemplarsSection(ypres.AsyncDictSerializer):
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -56,26 +57,29 @@ class ExemplarsSection(serpy.AsyncDictSerializer):
                                        "session": self.context.get("session")}).data
 
 
-class Exemplar(serpy.AsyncDictSerializer):
-    sid = serpy.MethodField(
+class Exemplar(ypres.AsyncDictSerializer):
+    sid = ypres.MethodField(
         label="id"
     )
-    stype = serpy.StaticField(
+    stype = ypres.StaticField(
         label="type",
         value="rism:Exemplar"
     )
-    section_label = serpy.MethodField(
+    section_label = ypres.MethodField(
         label="sectionLabel"
     )
-    summary = serpy.MethodField()
-    notes = serpy.MethodField()
-    held_by = serpy.MethodField(
+    summary = ypres.MethodField()
+    notes = ypres.MethodField()
+    held_by = ypres.MethodField(
         label="heldBy"
     )
-    external_resources = serpy.MethodField(
+    external_resources = ypres.MethodField(
         label="externalResources"
     )
-    relationships = serpy.MethodField()
+    relationships = ypres.MethodField()
+    bound_with = ypres.MethodField(
+        label="boundWith"
+    )
 
     def get_sid(self, obj: dict) -> str:
         req = self.context.get('request')
@@ -165,3 +169,20 @@ class Exemplar(serpy.AsyncDictSerializer):
 
         return ExternalResourcesSection(obj, context={"request": self.context.get("request"),
                                                       "session": self.context.get("session")}).data
+
+    async def get_bound_with(self, obj: SolrResult) -> Optional[dict]:
+        if "composite_parent_id" not in obj:
+            return None
+
+        composite_parent: str = obj["composite_parent_id"]
+        source: Optional[SolrResult] = await SolrConnection.get(composite_parent)
+        if not source:
+            return None
+
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
+        return {
+            "sectionLabel": transl.get("records.bound_with"),
+            "source": await BaseSource(source, context={"request": self.context.get("request")}).data
+        }

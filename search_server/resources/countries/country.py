@@ -1,6 +1,6 @@
 from typing import Optional
 
-import serpy
+import ypres
 
 from shared_helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP, country_code_labels_translator
 
@@ -16,16 +16,16 @@ async def handle_country_list_request(req) -> Optional[dict]:  # type: ignore
                                                           "direct_request": True}).data
 
 
-class CountryList(serpy.DictSerializer):
-    clid = serpy.MethodField(
+class CountryList(ypres.DictSerializer):
+    clid = ypres.MethodField(
         label="id"
     )
-    cltype = serpy.StaticField(
+    cltype = ypres.StaticField(
         label="type",
         value="rism:CountryListResults"
     )
 
-    items = serpy.MethodField()
+    items = ypres.MethodField()
 
     def get_clid(self, _) -> str:
         req = self.context.get("request")  # type: ignore
