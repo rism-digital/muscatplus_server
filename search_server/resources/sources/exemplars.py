@@ -4,6 +4,7 @@ from typing import Optional
 import ypres
 from small_asc.client import Results
 
+from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.shared.external_link import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from shared_helpers.display_fields import get_display_fields, LabelConfig
@@ -76,6 +77,9 @@ class Exemplar(ypres.AsyncDictSerializer):
         label="externalResources"
     )
     relationships = ypres.MethodField()
+    bound_with = ypres.MethodField(
+        label="boundWith"
+    )
 
     def get_sid(self, obj: dict) -> str:
         req = self.context.get('request')
@@ -165,3 +169,20 @@ class Exemplar(ypres.AsyncDictSerializer):
 
         return ExternalResourcesSection(obj, context={"request": self.context.get("request"),
                                                       "session": self.context.get("session")}).data
+
+    async def get_bound_with(self, obj: SolrResult) -> Optional[dict]:
+        if "composite_parent_id" not in obj:
+            return None
+
+        composite_parent: str = obj["composite_parent_id"]
+        source: Optional[SolrResult] = await SolrConnection.get(composite_parent)
+        if not source:
+            return None
+
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
+        return {
+            "sectionLabel": transl.get("records.bound_with"),
+            "source": await BaseSource(source, context={"request": self.context.get("request")}).data
+        }
