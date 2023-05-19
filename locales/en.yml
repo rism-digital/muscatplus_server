@@ -884,6 +884,12 @@ en:
     woodwinds: Woodwinds
     work: Work
     work_number: Work number
+    work_tag: Work revision tag
+    work_tag_incipit_needs_revision: incipit-needs-revision
+    work_tag_incipit_replace: incipit-replace
+    work_tag_needs_revision: needs-revision
+    work_tag_note: Tag note
+    work_tag_type: Tag type
     year: Year
     years_birth_death: Years of birth and death
   relations:
