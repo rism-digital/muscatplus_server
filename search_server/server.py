@@ -10,6 +10,7 @@ from small_asc.client import Results
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.api import api_blueprint
 from search_server.routes.countries import countries_blueprint
+from search_server.routes.external import external_blueprint
 from search_server.routes.festivals import festivals_blueprint
 from search_server.routes.holdings import holdings_blueprint
 from search_server.routes.incipits import incipits_blueprint
@@ -60,6 +61,7 @@ app.blueprint(countries_blueprint)
 app.blueprint(works_blueprint)
 app.blueprint(query_blueprint)
 app.blueprint(api_blueprint)
+app.blueprint(external_blueprint)
 
 app.config.FORWARDED_SECRET = config['common']['secret']
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive

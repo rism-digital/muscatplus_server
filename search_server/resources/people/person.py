@@ -11,7 +11,7 @@ from shared_helpers.display_translators import person_gender_translator
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.people.variant_name import VariantNamesSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
-from search_server.resources.shared.external_link import ExternalResourcesSection
+from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 
@@ -111,8 +111,8 @@ class Person(BasePerson):
 
         return None
 
-    def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
+    async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:
             return None
 
-        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+        return await ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data

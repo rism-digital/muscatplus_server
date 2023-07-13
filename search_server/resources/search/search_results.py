@@ -22,7 +22,7 @@ from shared_helpers.formatters import (
 )
 from shared_helpers.identifiers import (
     get_identifier,
-    ID_SUB
+    ID_SUB, PROJECT_ID_SUB
 )
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
@@ -143,9 +143,22 @@ class SourceSearchResult(ypres.DictSerializer):
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
-        id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "sources.source", source_id=id_value)
+        # Formulate a different ID if we have an external project
+        # resource.
+        if "project_s" not in obj:
+            id_value: str = re.sub(ID_SUB, "", obj.get("id"))
+            return get_identifier(req, "sources.source", source_id=id_value)
+
+        project: str = obj["project_s"]
+        srtype: str = obj["type"]
+        id_value: str = re.sub(PROJECT_ID_SUB, "", obj.get("id"))
+        return get_identifier(req,
+                              "external.external",
+                              project=project,
+                              resource_type=srtype,
+                              ext_id=id_value)
+
 
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
@@ -224,6 +237,8 @@ class SourceSearchResult(ypres.DictSerializer):
         is_collection_record: bool = obj.get("source_members_sm", None) is not None
         has_incipits: bool = obj.get("has_incipits_b", False)
         has_iiif: bool = obj.get("has_iiif_manifest_b", False)
+        has_diamm_record: bool = obj.get("has_external_record_b", False)
+        is_diamm_record: bool = obj.get("project_s") == "diamm"
         number_of_exemplars: int = obj.get("num_holdings_i", 0)
         flags: dict = {}
 
@@ -244,6 +259,12 @@ class SourceSearchResult(ypres.DictSerializer):
 
         if number_of_exemplars > 0:
             flags.update({"numberOfExemplars": number_of_exemplars})
+
+        if has_diamm_record:
+            flags.update({"hasDIAMMRecord": has_diamm_record})
+
+        if is_diamm_record:
+            flags.update({"isDIAMMRecord": is_diamm_record})
 
         # return None if flags are empty.
         return flags or None

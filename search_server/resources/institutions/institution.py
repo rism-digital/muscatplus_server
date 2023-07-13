@@ -5,7 +5,7 @@ import ypres
 
 from search_server.resources.institutions.base_institution import BaseInstitution
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
-from search_server.resources.shared.external_link import ExternalResourcesSection
+from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from shared_helpers.display_fields import get_display_fields
@@ -85,7 +85,7 @@ class Institution(BaseInstitution):
         if 'external_resources_json' not in obj:
             return None
 
-        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+        return await ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
 
     def get_properties(self, obj: SolrResult) -> Optional[dict]:
         d = {

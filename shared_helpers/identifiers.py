@@ -2,6 +2,14 @@ import re
 from typing import Pattern, Optional
 
 ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_|work_")
+PROJECT_ID_SUB: Pattern = re.compile(r"diamm_source_|diamm_person_|diamm_holding_|diamm_institution_|diamm_archive_")
+
+
+PROJECT_IDENTIFIERS = {
+    "diamm": "https://www.diamm.ac.uk/",
+    "cantus": "https://cantusdatabase.org/",
+    "rism": "https://rism.online/"
+}
 
 EXTERNAL_IDS: dict = {
     "viaf": {"label": "Virtual Internet Authority File (VIAF)",
@@ -25,6 +33,10 @@ EXTERNAL_IDS: dict = {
     "moc": {"label": "MARC Organization Code"},  # No URI possible.
     "orcid": {"label": "Open Researcher and Contributor ID (ORCiD)",
               "ident": "https://orcid.org/{ident}"},
+    "diamm": {"label": "Digital Image Archive of Medieval Music",
+              "ident": "https://www.diamm.ac.uk/{ident}"},
+    "cantus": {"label": "Cantus: A Database for Latin Ecclesiastical Chant",
+               "ident": "https://cantusdatabase.org/{ident}"}
 }
 
 

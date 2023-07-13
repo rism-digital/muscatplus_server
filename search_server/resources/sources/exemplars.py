@@ -5,12 +5,12 @@ import ypres
 from small_asc.client import Results
 
 from search_server.resources.sources.base_source import BaseSource
-from search_server.resources.shared.external_link import ExternalResourcesSection
+from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from shared_helpers.display_fields import get_display_fields, LabelConfig
 from shared_helpers.display_translators import url_detecting_translator, secondary_literature_json_value_translator
 from shared_helpers.formatters import format_institution_label
-from shared_helpers.identifiers import get_identifier, ID_SUB
+from shared_helpers.identifiers import get_identifier, ID_SUB, PROJECT_ID_SUB, EXTERNAL_IDS
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 
@@ -84,6 +84,18 @@ class Exemplar(ypres.AsyncDictSerializer):
     def get_sid(self, obj: dict) -> str:
         req = self.context.get('request')
 
+        if "project_s" in obj and (proj := obj['project_s']) == "diamm":
+            institution_id_val = obj['institution_id']
+            source_id_val = obj['source_id']
+
+            institution_id = re.sub(PROJECT_ID_SUB, "", institution_id_val)
+            source_id = re.sub(PROJECT_ID_SUB, "", source_id_val)
+
+            return get_identifier(req, "external.external_holding",
+                                  project=proj,
+                                  source_id=source_id,
+                                  institution_id=institution_id)
+
         source_holding_id_val: str = obj['id']
         if "-" in source_holding_id_val:
             holding_id_val, source_id_val = source_holding_id_val.split("-")
@@ -143,12 +155,20 @@ class Exemplar(ypres.AsyncDictSerializer):
             return None
 
         req = self.context.get('request')
-        institution_id: str = re.sub(ID_SUB, "", obj.get("institution_id"))
+        institution_id: str
+        obj_ident: str
 
+        if "project_s" in obj and (proj := obj['project_s']) == "diamm":
+            institution_id = re.sub(PROJECT_ID_SUB, "", obj.get("institution_id", ""))
+            pfx = EXTERNAL_IDS[proj]["ident"]
+            obj_ident = pfx.format(ident=f"archives/{institution_id}")
+        else:
+            institution_id = re.sub(ID_SUB, "", obj.get("institution_id", ""))
+            obj_ident = get_identifier(req, "institutions.institution", institution_id=institution_id)
         institution_name: str = format_institution_label(obj)
 
         return {
-            "id": get_identifier(req, "institutions.institution", institution_id=institution_id),
+            "id": obj_ident,
             "type": "rism:Institution",
             "label": {
                 "none": [f"{institution_name}"]
@@ -163,12 +183,12 @@ class Exemplar(ypres.AsyncDictSerializer):
         return RelationshipsSection(obj, context={"request": req,
                                                   "session": self.context.get("session")}).data
 
-    def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
+    async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:
             return None
 
-        return ExternalResourcesSection(obj, context={"request": self.context.get("request"),
-                                                      "session": self.context.get("session")}).data
+        return await ExternalResourcesSection(obj, context={"request": self.context.get("request"),
+                                                            "session": self.context.get("session")}).data
 
     async def get_bound_with(self, obj: SolrResult) -> Optional[dict]:
         if "composite_parent_id" not in obj:

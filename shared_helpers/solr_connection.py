@@ -19,8 +19,10 @@ log = logging.getLogger("mp_server")
 config: dict = yaml.safe_load(open('configuration.yml', 'r'))
 
 solr_url = config['solr']['server']
+diamm_solr_url = config['solr']['diamm_server']
 
 SolrConnection: Solr = Solr(solr_url)
+DiammCoreSolrConnection: Solr = Solr(diamm_solr_url)
 
 log.debug('Solr connection set to %s', solr_url)
 

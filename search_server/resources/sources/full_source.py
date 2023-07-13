@@ -6,7 +6,7 @@ import ypres
 
 from search_server.resources.incipits.incipit import IncipitsSection
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
-from search_server.resources.shared.external_link import ExternalResourcesSection
+from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.contents import ContentsSection
@@ -72,13 +72,13 @@ class FullSource(BaseSource):
         return ContentsSection(obj, context={"request": req,
                                              "session": self.context.get("session")}).data
 
-    def get_material_groups(self, obj: SolrResult) -> Optional[dict]:
+    async def get_material_groups(self, obj: SolrResult) -> Optional[dict]:
         if 'material_groups_json' not in obj:
             return None
 
         req = self.context.get("request")
-        return MaterialGroupsSection(obj, context={"request": req,
-                                                   "session": self.context.get("session")}).data
+        return await MaterialGroupsSection(obj, context={"request": req,
+                                                         "session": self.context.get("session")}).data
 
     def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         # sets are cool; two sets are disjoint if they have no keys in common. We
@@ -121,12 +121,12 @@ class FullSource(BaseSource):
         return await ExemplarsSection(obj, context={"request": self.context.get("request"),
                                                     "session": self.context.get("session")}).data
 
-    def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
-        if 'external_resources_json' not in obj:
+    async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
+        if 'external_resources_json' not in obj and not obj.get("diamm_b", False):
             return None
 
-        return ExternalResourcesSection(obj, context={"request": self.context.get("request"),
-                                                      "session": self.context.get("session")}).data
+        return await ExternalResourcesSection(obj, context={"request": self.context.get("request"),
+                                                            "session": self.context.get("session")}).data
 
     async def get_source_items(self, obj: SolrResult) -> Optional[dict]:
         if "num_source_members_i" not in obj:
