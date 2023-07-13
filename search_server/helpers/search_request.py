@@ -452,7 +452,7 @@ class SearchRequest:
 
                 # Else, if it isn't a contents search, and it's marked as default, use this configuration. Likewise,
                 # break afterwards.
-                elif not self._is_contents and s.get("default", False) is True:
+                elif not self._is_contents and s.get("only_contents", False) is False and s.get("default", False) is True:
                     configuration_sorts = [", ".join(s["solr_sort"])]
                     break
 
