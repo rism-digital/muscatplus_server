@@ -5,7 +5,7 @@ import ypres
 
 from search_server.helpers.record_types import create_record_block
 from shared_helpers.identifiers import EXTERNAL_IDS, PROJECT_IDENTIFIERS
-from shared_helpers.solr_connection import SolrResult, DiammCoreSolrConnection
+from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger("mp_server")
 
