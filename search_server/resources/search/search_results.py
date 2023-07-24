@@ -159,7 +159,6 @@ class SourceSearchResult(ypres.DictSerializer):
                               resource_type=srtype,
                               ext_id=id_value)
 
-
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations

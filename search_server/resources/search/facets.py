@@ -93,8 +93,10 @@ def get_facets(req, obj: Results) -> Optional[dict]:
         # there is not enough information coming from solr to construct
         # a facet response. This happens, for example, when Solr
         # does not respond with a value for the facet because all
-        # values have been filtered out.
-        if res.keys() == {"count"}:
+        # values have been filtered out. The exception to this is those which
+        # use a function query, where it only returns the count of documents
+        # that would occur after applying the function query.
+        if res.keys() == {"count"} and 'function_query' not in facet_config_map[alias]:
             log.debug(f"Bailing with facet type of {facet_type}")
             continue
 

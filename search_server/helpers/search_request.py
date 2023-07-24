@@ -315,7 +315,12 @@ class SearchRequest:
 
             filter_config: dict = self._alias_config_map[field]
             filter_type: str = filter_config['type']
-            solr_field_name: str = filter_config['field']
+            solr_field_name: str
+
+            if 'function_query' in filter_config:
+                solr_field_name = filter_config['function_query']
+            else:
+                solr_field_name = filter_config['field']
 
             # do some processing and normalization on the value. First ensure we have a non-entity string.
             # This should convert the URL-encoded parameters back to 'normal' characters
@@ -360,7 +365,7 @@ class SearchRequest:
 
                 # uses the 'active value' to map a 'true' toggle to the actual field value
                 # in solr. This means we can say 'foo=true' maps to 'foo_s:false'.
-                value = filter_config['active_value']
+                value = filter_config['active_value'] if 'active_value' in filter_config else ""
                 tag = ""
             elif filter_type == FacetTypeValues.QUERY:
                 # The complexphrase query parser is also very sensitive to character escaping, so
@@ -382,7 +387,13 @@ class SearchRequest:
                 value = join_op.join([f"{val.translate(translation_table)}" for val in quoted_values])
                 tag = f"{{!tag={SolrQueryTags.SELECT_FILTER_TAG}}}" if behaviour == FacetBehaviourValues.UNION else ""
 
-            query_string: str = f"{tag}{solr_field_name}:({value})"
+            query_string: str
+            # A function query can be used in the filter query, but
+            # then it needs to take over the whole query string.
+            if 'function_query' in filter_config:
+                query_string = filter_config['function_query']
+            else:
+                query_string = f"{tag}{solr_field_name}:({value})"
             filter_statements.append(query_string)
 
         return filter_statements
@@ -614,13 +625,19 @@ def _create_range_facet(facet_cfg: dict) -> dict:
 
 
 def _create_toggle_facet(facet_cfg: dict) -> dict:
-    field_name: str = facet_cfg["field"]
-
+    field_name: str
     cfg: dict = {
-        "type": "terms",
-        "field": f"{field_name}",
         "limit": 2
     }
+
+    if "function_query" in facet_cfg:
+        field_name = facet_cfg["function_query"]
+        cfg["type"] = "query"
+        cfg["q"] = field_name
+    else:
+        field_name = facet_cfg["field"]
+        cfg["type"] = "terms"
+        cfg["field"] = f"{field_name}"
 
     return cfg
 
