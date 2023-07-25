@@ -85,10 +85,10 @@ class Exemplar(ypres.AsyncDictSerializer):
         req = self.context.get('request')
 
         if "project_s" in obj and (proj := obj['project_s']) == "diamm":
-            institution_id_val = obj['institution_id']
+            external_inst_val = obj["external_institution_id"]
             source_id_val = obj['source_id']
 
-            institution_id = re.sub(PROJECT_ID_SUB, "", institution_id_val)
+            institution_id = re.sub(PROJECT_ID_SUB, "", external_inst_val)
             source_id = re.sub(PROJECT_ID_SUB, "", source_id_val)
 
             return get_identifier(req, "external.external_holding",
@@ -158,13 +158,8 @@ class Exemplar(ypres.AsyncDictSerializer):
         institution_id: str
         obj_ident: str
 
-        if "project_s" in obj and (proj := obj['project_s']) == "diamm":
-            institution_id = re.sub(PROJECT_ID_SUB, "", obj.get("institution_id", ""))
-            pfx = EXTERNAL_IDS[proj]["ident"]
-            obj_ident = pfx.format(ident=f"archives/{institution_id}")
-        else:
-            institution_id = re.sub(ID_SUB, "", obj.get("institution_id", ""))
-            obj_ident = get_identifier(req, "institutions.institution", institution_id=institution_id)
+        institution_id = re.sub(ID_SUB, "", obj.get("institution_id", ""))
+        obj_ident = get_identifier(req, "institutions.institution", institution_id=institution_id)
         institution_name: str = format_institution_label(obj)
 
         return {
