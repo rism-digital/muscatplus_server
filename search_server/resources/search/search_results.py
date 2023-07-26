@@ -286,9 +286,19 @@ class PersonSearchResult(ypres.DictSerializer):
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
-        id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "people.person", person_id=id_value)
+        if "project_s" not in obj:
+            id_value: str = re.sub(ID_SUB, "", obj.get("id"))
+            return get_identifier(req, "people.person", person_id=id_value)
+
+        project: str = obj["project_s"]
+        srtype: str = obj["type"]
+        id_value: str = re.sub(PROJECT_ID_SUB, "", obj.get("id"))
+        return get_identifier(req,
+                              "external.external",
+                              project=project,
+                              resource_type=srtype,
+                              ext_id=id_value)
 
     def get_label(self, obj: dict) -> dict:
         label: str = format_person_label(obj)
@@ -315,9 +325,17 @@ class PersonSearchResult(ypres.DictSerializer):
     def get_flags(self, obj: dict) -> Optional[dict]:
         flags: dict = {}
         number_of_sources: int = obj.get("source_count_i", 0)
+        has_diamm_record: bool = obj.get("has_external_record_b", False)
+        is_diamm_record: bool = obj.get("project_s") == "diamm"
 
         if number_of_sources > 0:
             flags.update({"numberOfSources": number_of_sources})
+
+        if has_diamm_record:
+            flags.update({"hasDIAMMRecord": has_diamm_record})
+
+        if is_diamm_record:
+            flags.update({"isDIAMMRecord": is_diamm_record})
 
         return flags or None
 
