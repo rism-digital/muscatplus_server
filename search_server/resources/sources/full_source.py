@@ -122,7 +122,7 @@ class FullSource(BaseSource):
                                                     "session": self.context.get("session")}).data
 
     async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
-        if 'external_resources_json' not in obj and not obj.get("diamm_b", False):
+        if 'external_resources_json' not in obj and not obj.get("has_external_record_b", False):
             return None
 
         return await ExternalResourcesSection(obj, context={"request": self.context.get("request"),

@@ -22,7 +22,9 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
         label="sectionLabel"
     )
     items = ypres.MethodField()
-    records = ypres.MethodField()
+    external_records = ypres.MethodField(
+        label="externalRecords"
+    )
     # sites = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
@@ -44,7 +46,7 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
         return ExternalResource(res, many=True,
                                 context={"request": self.context.get("request")}).data
 
-    def get_records(self, obj: dict) -> Optional[list[dict]]:
+    def get_external_records(self, obj: dict) -> Optional[list[dict]]:
         if not obj.get("has_external_record_b", False):
             return None
 
