@@ -147,11 +147,9 @@ def _related_to_person(req, obj: dict) -> dict:
 
 
 def _related_to_institution(req, obj: dict) -> dict:
-    name: str
+    name: str = f"{obj['name']}"
     if 'department' in obj:
-        name = f"{obj.get('name')}, {obj.get('department')}"
-    else:
-        name = f"{obj.get('name')}"
+        name = f"{name}, {obj.get('department')}"
 
     if "place" in obj:
         name = f"{name}, {obj['place']}"
