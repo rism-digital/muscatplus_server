@@ -357,9 +357,22 @@ class InstitutionSearchResult(ypres.DictSerializer):
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
-        id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "institutions.institution", institution_id=id_value)
+        if "project_s" not in obj:
+            id_value: str = re.sub(ID_SUB, "", obj.get("id"))
+            return get_identifier(req, "institutions.institution", institution_id=id_value)
+
+        project: str = obj["project_s"]
+        if "project_type_s" in obj:
+            srtype = obj["project_type_s"]
+        else:
+            srtype = obj["type"]
+        id_value: str = re.sub(PROJECT_ID_SUB, "", obj.get("id"))
+        return get_identifier(req,
+                              "external.external",
+                              project=project,
+                              resource_type=srtype,
+                              ext_id=id_value)
 
     def get_label(self, obj: dict) -> dict:
         label = format_institution_label(obj)
@@ -386,9 +399,17 @@ class InstitutionSearchResult(ypres.DictSerializer):
     def get_flags(self, obj: dict) -> Optional[dict]:
         flags: dict = {}
         number_of_sources: int = obj.get("total_sources_i", 0)
+        has_diamm_record: bool = obj.get("has_external_record_b", False)
+        is_diamm_record: bool = obj.get("project_s") == "diamm"
 
         if number_of_sources > 0:
             flags.update({"numberOfSources": number_of_sources})
+
+        if has_diamm_record:
+            flags.update({"hasDIAMMRecord": has_diamm_record})
+
+        if is_diamm_record:
+            flags.update({"isDIAMMRecord": is_diamm_record})
 
         return flags or None
 

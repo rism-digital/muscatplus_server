@@ -2,7 +2,7 @@ import re
 from typing import Pattern, Optional
 
 ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_|work_")
-PROJECT_ID_SUB: Pattern = re.compile(r"diamm_source_|diamm_person_|diamm_holding_|diamm_institution_|diamm_archive_")
+PROJECT_ID_SUB: Pattern = re.compile(r"diamm_source_|diamm_person_|diamm_holding_|diamm_institution_|diamm_organization_|diamm_archive_")
 
 
 PROJECT_IDENTIFIERS = {
