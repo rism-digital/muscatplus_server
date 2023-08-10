@@ -4,13 +4,18 @@ from typing import Optional
 import ypres
 from small_asc.client import Results
 
-from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
+from search_server.resources.sources.base_source import BaseSource
 from shared_helpers.display_fields import get_display_fields, LabelConfig
-from shared_helpers.display_translators import url_detecting_translator, secondary_literature_json_value_translator
+from shared_helpers.display_translators import (
+    url_detecting_translator,
+    secondary_literature_json_value_translator,
+    material_source_types_translator,
+    material_content_types_translator
+)
 from shared_helpers.formatters import format_institution_label
-from shared_helpers.identifiers import get_identifier, ID_SUB, PROJECT_ID_SUB, EXTERNAL_IDS
+from shared_helpers.identifiers import get_identifier, ID_SUB, PROJECT_ID_SUB
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 
@@ -119,11 +124,16 @@ class Exemplar(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
+            "material_source_types_sm": ("records.source_type", material_source_types_translator),
+            "material_content_types_sm": ("records.content_type", material_content_types_translator),
             "shelfmark_s": ("records.shelfmark", None),
             "former_shelfmarks_sm": ("records.shelfmark_olim", None),
             "provenance_sm": ("records.provenance", None),
             "material_held_sm": ("records.material_held", None),
             "local_numbers_sm": ("records.local_number", None),
+            "format_extent_sm": ("records.format_extent", None),
+            "physical_details_sm": ("records.other_physical_details", None),
+            "physical_dimensions_sm": ("records.dimensions", None),
             "acquisition_note_s": ("records.source_of_acquisition_note", None),
             "acquisition_date_s": ("records.date_of_acquisition", None),
             "acquisition_method_s": ("records.method_of_acquisition", None),
