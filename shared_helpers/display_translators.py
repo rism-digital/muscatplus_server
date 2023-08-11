@@ -535,7 +535,8 @@ def secondary_literature_json_value_translator(values: list, translations: dict)
     for _, fmtwks in all_works.items():
         number_page: str = "; ".join(fmtwks.get("pages", []))
         reference: str = fmtwks.get("formatted", "")
-        ref = f"{reference} {number_page}{'' if number_page.endswith('.') else '.'}"
+        ref = f"{reference} {number_page}"
+        ref += f"{'' if ref.strip().endswith('.') else '.'}"
         works.append(ref)
 
     return {"none": works}
