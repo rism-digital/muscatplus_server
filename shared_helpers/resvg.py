@@ -4,7 +4,7 @@ import logging
 log = logging.getLogger("mp_server")
 
 
-def render_svg(svginput: str, outpath: str, resvg_path: str, font_path: str) -> bool:
+def render_svg(svginput: str, outpath: str, resvg_path: str, font_path: str, zoom_factor: str = "1") -> bool:
     """
     Uses resvg to render an SVG string to a PNG file.
 
@@ -17,6 +17,7 @@ def render_svg(svginput: str, outpath: str, resvg_path: str, font_path: str) -> 
     command = [
         resvg_path,
         "--background", "white",
+        "--zoom", zoom_factor,
         "--skip-system-fonts",
         "--use-fonts-dir", f"{font_path}",
         "--monospace-family", "Noto Sans Mono",

@@ -1,13 +1,15 @@
 import logging
+import os
 import re
+import tempfile
 import urllib.parse
-from functools import lru_cache
 from typing import Optional
 
 import aiohttp
 import verovio
 from orjson import orjson
 
+from shared_helpers.resvg import render_svg
 from shared_helpers.identifiers import ID_SUB, get_identifier
 
 log = logging.getLogger("mp_server")
@@ -140,7 +142,7 @@ def render_mei(req, incipit: dict) -> Optional[str]:
     work_num: str = incipit["work_num_s"]
 
     source_url: str = get_identifier(req, "sources.source", source_id=source_id)
-    incipit_url: str = get_identifier(req, "sources.incipit_encoding", source_id=source_id, work_num=work_num)
+    incipit_url: str = get_identifier(req, "sources.incipit_mei_encoding", source_id=source_id, work_num=work_num)
 
     metadata_header: dict = {
         "source_url": source_url,
@@ -178,6 +180,31 @@ def render_mei(req, incipit: dict) -> Optional[str]:
 
     mei: str = vrv_tk.getMEI()
     return mei
+
+
+def render_png(req, incipit: str) -> Optional[bytes]:
+    rendered_svg, _ = render_pae(incipit)
+    cfg: dict = req.app.ctx.config
+    # Create the temporary image file
+    fd, tmpfile = tempfile.mkstemp()
+
+    render_success: bool = render_svg(rendered_svg,
+                                      tmpfile,
+                                      cfg["social"]["resvg"],
+                                      cfg["social"]["font_path"],
+                                      zoom_factor="2")
+    if not render_success:
+        log.error("There was a problem rendering an SVG!")
+        return None
+
+    # The tempfile should have the PNG data in it now.
+    with os.fdopen(fd, 'rb') as t:
+        pngdata: bytes = t.read()
+
+    # we need to manually remove the temporary file.
+    os.unlink(tmpfile)
+
+    return pngdata
 
 
 def create_pae_from_request(req) -> str:

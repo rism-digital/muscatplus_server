@@ -6,7 +6,7 @@ from search_server.request_handlers import handle_request, handle_search
 from search_server.resources.incipits.incipit import (
     handle_incipits_list_request,
     handle_incipit_request,
-    handle_mei_download
+    handle_mei_download, handle_png_download
 )
 from search_server.resources.sources.contents_search import (
     handle_contents_search_request,
@@ -49,7 +49,6 @@ async def incipit(req, source_id: str, work_num: str):
 
     """
     accept: Optional[str] = req.headers.get("Accept")
-    print(accept)
 
     if accept and "application/mei+xml" in accept:
         # Handle the request differently if the Accept type is MEI
@@ -57,6 +56,11 @@ async def incipit(req, source_id: str, work_num: str):
         if not resp:
             return response.text("The requested resource could not be found", status=404)
         return response.text(resp["content"], headers=resp["headers"])
+    elif accept and "image/png" in accept:
+        resp: Optional[dict] = await handle_png_download(req, source_id=source_id, work_num=work_num)
+        if not resp:
+            return response.text("An error occurred when downloading this PNG", status=400)
+        return response.raw(resp['content'], headers=resp["headers"])
 
     return await handle_request(req,
                                 handle_incipit_request,
@@ -65,7 +69,7 @@ async def incipit(req, source_id: str, work_num: str):
 
 
 @sources_blueprint.route("/<source_id:str>/incipits/<work_num:str>/mei")
-async def incipit_encoding(req, source_id: str, work_num: str):
+async def incipit_mei_encoding(req, source_id: str, work_num: str):
     """
     Retrieve an individual incipit encoded as MEI, based on the suffix.
     It is also possible to pass an `Accept:` header for a content-negotiated
@@ -77,6 +81,22 @@ async def incipit_encoding(req, source_id: str, work_num: str):
         return response.text("The requested resource could not be found", status=404)
 
     return response.text(resp["content"], headers=resp["headers"])
+
+
+@sources_blueprint.route("/<source_id:str>/incipits/<work_num:str>/png")
+async def incipit_png_rendering(req, source_id: str, work_num: str):
+    """
+    Retrieve an individual incipit encoded as MEI, based on the suffix.
+    It is also possible to pass an `Accept:` header for a content-negotiated
+    response to the main incipit retrieve function, so we use the same handler
+    for both.
+    """
+    resp: Optional[dict] = await handle_png_download(req, source_id=source_id, work_num=work_num)
+    if not resp:
+        return response.text("The requested resource could not be found", status=404)
+
+    return response.raw(resp["content"], headers=resp["headers"])
+
 
 
 @sources_blueprint.route("/<source_id:str>/contents/")
