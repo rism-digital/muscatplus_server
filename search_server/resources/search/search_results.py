@@ -13,6 +13,7 @@ from search_server.resources.search.base_search import BaseSearchResults
 from shared_helpers.display_fields import get_search_result_summary
 from shared_helpers.display_translators import (
     gnd_country_code_labels_translator, material_content_types_translator, material_source_types_translator,
+    title_json_value_translator,
 )
 from shared_helpers.formatters import (
     format_institution_label,
@@ -515,6 +516,7 @@ class IncipitSearchResult(ypres.DictSerializer):
     def get_summary(self, obj: dict) -> Optional[dict]:
         field_config: dict = {
             "creator_name_s": ("incipitComposer", "records.composer_author", None),
+            "standard_titles_json": ("sourceTitle", "records.source", title_json_value_translator),
             "text_incipit_sm": ("textIncipit", "records.text_incipit", None),
             "voice_instrument_s": ("voiceInstrument", "records.voice_instrument", None)
         }
