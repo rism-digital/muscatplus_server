@@ -11,6 +11,7 @@ from search_server.resources.shared.relationship import RelationshipsSection
 from shared_helpers.display_fields import get_display_fields
 from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.solr_connection import SolrResult, SolrConnection
+from shared_helpers.utilities import is_number
 
 
 async def handle_institution_request(req, institution_id: str) -> Optional[dict]:
@@ -139,12 +140,24 @@ class LocationAddressSection(ypres.DictSerializer):
         transl: dict = req.ctx.translations
 
         loc: str = obj.get("location_loc")
+        lat, lon = loc.split(",")
+
+        if not is_number(lat) or not is_number(lon):
+            return None
+        institution_id: str = obj['id']
+        ident: str = re.sub(ID_SUB, "", institution_id)
+
+        geojson_uri: str = get_identifier(req,
+                                          "institutions.geo_coordinates",
+                                          institution_id=ident)
 
         return {
+            "id": geojson_uri,
             "label": transl.get("records.location"),
+            "type": "geojson:Feature",
             "geometry": {
                 "type": "geojson:Point",
-                "coordinates": loc.split(",")
+                "coordinates": [float(lon), float(lat)]
             }
         }
 
@@ -171,4 +184,3 @@ class LocationAddressSection(ypres.DictSerializer):
             "label": transl.get("general.e_mail"),
             "value": obj.get("email_address_sm")[0]
         }
-

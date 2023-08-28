@@ -25,7 +25,10 @@ async def send_json_response(serialized_results: dict, debug_response: bool) -> 
     )
 
 
-async def handle_request(req: request.Request, handler: Callable, **kwargs) -> response.HTTPResponse:
+async def handle_request(req: request.Request,
+                         handler: Callable,
+                         suppress_context: bool = False,
+                         **kwargs) -> response.HTTPResponse:
     """
     Takes in a request object and a function for handling the request. This function should return
     a Dictionary object for the result of the request, or None if the requested object was not found.
@@ -75,7 +78,9 @@ async def handle_request(req: request.Request, handler: Callable, **kwargs) -> r
 
         # We can control the embedding of the context either globally, in the configuration, or
         # per-request, with the X-Embed-Context header.
-        if req.app.ctx.context_uri and "X-Embed-Context" not in req.headers:
+        if suppress_context:
+            ctx_val = {}
+        elif req.app.ctx.context_uri and "X-Embed-Context" not in req.headers:
             ctx_val = {"@context": get_identifier(req, ctx_options.route)}
         else:
             ctx_val = {"@context": ctx_options.context}

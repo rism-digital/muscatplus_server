@@ -1,6 +1,7 @@
 from sanic import Blueprint, response
 
 from search_server.request_handlers import handle_request, handle_search
+from search_server.resources.institutions.geojson import handle_institution_geojson_request
 from search_server.resources.institutions.institution import handle_institution_request
 from search_server.resources.institutions.institution_search import (
     handle_institution_search_request,
@@ -62,3 +63,11 @@ async def digital_object_list(req, institution_id: str):
 @institutions_blueprint.route("/<institution_id:str>/digital-objects/<dobject_id:str>")
 async def digital_object(req, institution_id: str, dobject_id: str):
     return response.text("Not implemented", status=501)
+
+
+@institutions_blueprint.route("/<institution_id:str>/location.geojson")
+async def geo_coordinates(req, institution_id: str):
+    return await handle_request(req,
+                                handle_institution_geojson_request,
+                                suppress_context=True,
+                                institution_id=institution_id)
