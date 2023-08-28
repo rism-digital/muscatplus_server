@@ -1,7 +1,9 @@
+import re
 from typing import Optional
 
 import ypres
 
+from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.formatters import format_institution_label
 from shared_helpers.solr_connection import SolrConnection
 from shared_helpers.utilities import is_number
@@ -38,12 +40,13 @@ class InstitutionGeoJson(ypres.AsyncDictSerializer):
         if not main_org:
             return None
 
-        all_features: list[dict] = await get_nearby_orgs([lat, lon], primary_obj_id)
+        req = self.context.get("request")
+        all_features: list[dict] = await get_nearby_orgs(req, [lat, lon], primary_obj_id)
         all_features.insert(0, main_org)
         return all_features
 
 
-async def get_nearby_orgs(coordinates: list, pimary_obj_id: str) -> Optional[list]:
+async def get_nearby_orgs(req, coordinates: list, pimary_obj_id: str) -> Optional[list]:
     locval = ",".join(coordinates)
     nearby_orgs_query = {
         "query": "*:*",
@@ -60,7 +63,8 @@ async def get_nearby_orgs(coordinates: list, pimary_obj_id: str) -> Optional[lis
     if not results:
         return None
 
-    return await GeoJsonFeature(results, many=True, context={"is_primary": False}).data
+    return await GeoJsonFeature(results, many=True, context={"is_primary": False,
+                                                             "request": req}).data
 
 
 class GeoJsonFeature(ypres.AsyncDictSerializer):
@@ -77,11 +81,21 @@ class GeoJsonFeature(ypres.AsyncDictSerializer):
         orgtypes: list = obj.get("institution_types_sm")
         is_primary: bool = self.context.get("is_primary", False)
 
-        return {
+        props = {
             "name": label,
             "organizationTypes": orgtypes,
             "primary": is_primary
         }
+
+        if not is_primary:
+            req = self.context.get("request")
+            org_ident = obj['id']
+            ident = re.sub(ID_SUB, "", org_ident)
+            props["url"] = get_identifier(req,
+                                          "institutions.institution",
+                                          institution_id=ident)
+
+        return props
 
     def get_geometry(self, obj: dict) -> dict:
         location: Optional[str] = obj.get("location_loc")
