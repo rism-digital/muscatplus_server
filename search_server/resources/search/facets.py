@@ -344,7 +344,7 @@ def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations
         if isinstance(solr_value, bool):
             value = str(solr_value).lower()
         else:
-            value = urllib.parse.quote_plus(str(solr_value))
+            value = urllib.parse.quote(str(solr_value), safe="")
 
         label: dict
         default_label: dict = {"none": [str(solr_value)]}

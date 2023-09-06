@@ -324,7 +324,7 @@ class SearchRequest:
 
             # do some processing and normalization on the value. First ensure we have a non-entity string.
             # This should convert the URL-encoded parameters back to 'normal' characters
-            unencoded_values: list[str] = [urllib.parse.unquote_plus(s) for s in values]
+            unencoded_values: list[str] = [urllib.parse.unquote(s) for s in values]
             # Then remove any quotes (single or double) to ensure we control how the values actually get
             # to Solr.
             unquoted_values: list[str] = [s.replace("\"", "") for s in unencoded_values]
