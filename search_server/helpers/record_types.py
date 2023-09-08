@@ -7,6 +7,7 @@ SOURCE_TYPE_MAP: dict = {
 
 RECORD_TYPE_MAP: dict = {
     "item": "rism:ItemRecord",
+    "single_item": "rism:SingleItemRecord",
     "collection": "rism:CollectionRecord",
     "composite": "rism:CompositeRecord"
 }
