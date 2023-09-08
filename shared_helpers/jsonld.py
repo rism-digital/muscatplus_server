@@ -198,6 +198,10 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     "properties": "@nest",
     "keyMode": {
         "@id": "rism:hasKeyMode",
+    },
+    "physicalDimensions": {
+        "@id": "rism:hasPhysicalDimensions",
+        "@type": "@list"
     }
 }
 

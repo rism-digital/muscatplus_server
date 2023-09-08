@@ -158,7 +158,8 @@ class FullSource(BaseSource):
 
     def get_properties(self, obj: SolrResult) -> Optional[dict]:
         d: dict = {
-            "keyMode": obj.get("key_mode_s")
+            "keyMode": obj.get("key_mode_s"),
+            "physicalDimensions": obj.get("physical_dimensions_sm")
         }
 
         return {k: v for k, v in d.items() if v} or None
