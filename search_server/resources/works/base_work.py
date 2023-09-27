@@ -30,13 +30,13 @@ class BaseWork(ypres.AsyncDictSerializer):
     def get_label(self, obj: SolrResult) -> dict:
         return {"none": [format_work_label(obj)]}
 
-    def get_creator(self, obj: SolrResult) -> Optional[dict]:
+    async def get_creator(self, obj: SolrResult) -> Optional[dict]:
         if 'creator_json' not in obj:
             return None
 
-        return Relationship(obj["creator_json"][0],
-                            context={"request": self.context.get('request'),
-                                     "reltype": "rism:Creator"}).data
+        return await Relationship(obj["creator_json"][0],
+                                  context={"request": self.context.get('request'),
+                                           "reltype": "rism:Creator"}).data
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")

@@ -89,7 +89,7 @@ class Person(BasePerson):
 
         return get_display_fields(obj, transl, field_config)
 
-    def get_relationships(self, obj: SolrResult) -> Optional[dict]:
+    async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         if not self.context.get("direct_request"):
             return None
 
@@ -100,7 +100,7 @@ class Person(BasePerson):
             return None
 
         req = self.context.get("request")
-        return RelationshipsSection(obj, context={"request": req}).data
+        return await RelationshipsSection(obj, context={"request": req}).data
 
     async def get_notes(self, obj: SolrResult) -> Optional[dict]:
         notelist: dict = await NotesSection(obj, context={"request": self.context.get("request")}).data

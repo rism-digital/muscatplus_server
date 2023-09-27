@@ -74,14 +74,14 @@ class BaseSource(ypres.AsyncDictSerializer):
 
         return transl.get("records.source")
 
-    def get_creator(self, obj: SolrResult) -> Optional[dict]:
+    async def get_creator(self, obj: SolrResult) -> Optional[dict]:
         if 'creator_json' not in obj:
             return None
 
-        return Relationship(obj["creator_json"][0],
-                            context={"request": self.context.get('request'),
-                                     "reltype": "rism:Creator",
-                                     "session": self.context.get("session")}).data
+        return await Relationship(obj["creator_json"][0],
+                                  context={"request": self.context.get('request'),
+                                           "reltype": "rism:Creator",
+                                           "session": self.context.get("session")}).data
 
     def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         # This source is not part of another source; return None

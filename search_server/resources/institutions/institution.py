@@ -73,7 +73,7 @@ class Institution(BaseInstitution):
 
         req = self.context.get("request")
 
-        return RelationshipsSection(obj, context={"request": req}).data
+        return await RelationshipsSection(obj, context={"request": req}).data
 
     async def get_notes(self, obj: SolrResult) -> Optional[dict]:
         notes: dict = await NotesSection(obj, context={"request": self.context.get("request")}).data

@@ -17,7 +17,7 @@ from shared_helpers.identifiers import ID_SUB, get_identifier
 log = logging.getLogger("mp_server")
 
 
-class RelationshipsSection(ypres.DictSerializer):
+class RelationshipsSection(ypres.AsyncDictSerializer):
     section_label = ypres.MethodField(
         label="sectionLabel"
     )
@@ -29,7 +29,7 @@ class RelationshipsSection(ypres.DictSerializer):
 
         return transl.get("records.relations", {})
 
-    def get_items(self, obj: dict) -> list[dict]:
+    async def get_items(self, obj: dict) -> list[dict]:
         people: list = obj.get("related_people_json", [])
         institutions: list = obj.get("related_institutions_json", [])
         places: list = obj.get("related_places_json", [])
@@ -39,13 +39,13 @@ class RelationshipsSection(ypres.DictSerializer):
 
         all_relationships = itertools.chain(people, institutions, places, now_in, contains, sources)
 
-        return Relationship(all_relationships,
-                            many=True,
-                            context={"request": self.context.get("request"),
-                                     "session": self.context.get("session")}).data
+        return await Relationship(all_relationships,
+                                  many=True,
+                                  context={"request": self.context.get("request"),
+                                           "session": self.context.get("session")}).data
 
 
-class Relationship(ypres.DictSerializer):
+class Relationship(ypres.AsyncDictSerializer):
     role = ypres.MethodField()
     qualifier = ypres.MethodField()
     related_to = ypres.MethodField(

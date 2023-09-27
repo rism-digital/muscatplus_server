@@ -106,7 +106,7 @@ class Place(ypres.AsyncDictSerializer):
             "sort": "name_ans desc"
         }
         person_results: Results = await SolrConnection.search(q, cursor=True)
-        person_list: list = Relationship(person_results, context={"request": req}, many=True).data
+        person_list: list = await Relationship(person_results, context={"request": req}, many=True).data
 
         return {
             "type": "rism:PlacePersonList",

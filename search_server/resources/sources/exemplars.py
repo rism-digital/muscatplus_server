@@ -180,13 +180,13 @@ class Exemplar(ypres.AsyncDictSerializer):
             },
         }
 
-    def get_relationships(self, obj: SolrResult) -> Optional[dict]:
+    async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         if {'related_people_json', 'related_places_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
             return None
 
         req = self.context.get("request")
-        return RelationshipsSection(obj, context={"request": req,
-                                                  "session": self.context.get("session")}).data
+        return await RelationshipsSection(obj, context={"request": req,
+                                                        "session": self.context.get("session")}).data
 
     async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if 'external_resources_json' not in obj:

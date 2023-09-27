@@ -91,13 +91,13 @@ class MaterialGroup(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_relationships(self, obj: dict) -> Optional[dict]:
+    async def get_relationships(self, obj: dict) -> Optional[dict]:
         # a set is disjoint if there are no keys in common. Check if these keys exist in the
         # record; if they are disjoint, then we don't need to process them.
         if {'related_people_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
             return None
 
-        return RelationshipsSection(obj, context={"request": self.context.get("request")}).data
+        return await RelationshipsSection(obj, context={"request": self.context.get("request")}).data
 
     async def get_external_resources(self, obj: dict) -> Optional[dict]:
         if "external_resources" not in obj:
