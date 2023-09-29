@@ -13,6 +13,7 @@ from shared_helpers.display_translators import (
     source_relationship_labels_translator
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
+from shared_helpers.utilities import to_aiter
 
 log = logging.getLogger("mp_server")
 
@@ -37,7 +38,12 @@ class RelationshipsSection(ypres.AsyncDictSerializer):
         contains: list = obj.get("contains_json", [])
         sources: list = obj.get("related_sources_json", [])
 
-        all_relationships = itertools.chain(people, institutions, places, now_in, contains, sources)
+        all_relationships = to_aiter(itertools.chain(people,
+                                                     institutions,
+                                                     places,
+                                                     now_in,
+                                                     contains,
+                                                     sources))
 
         return await Relationship(all_relationships,
                                   many=True,
