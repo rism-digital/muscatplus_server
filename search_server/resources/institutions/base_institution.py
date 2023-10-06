@@ -27,7 +27,9 @@ class BaseInstitution(ypres.AsyncDictSerializer):
         label="typeLabel"
     )
     label = ypres.MethodField()
-    summary = ypres.MethodField()
+    organization_details = ypres.MethodField(
+        label="organizationDetails"
+    )
     record_history = ypres.MethodField(
         label="recordHistory"
     )
@@ -49,6 +51,33 @@ class BaseInstitution(ypres.AsyncDictSerializer):
 
         return transl.get("records.institution")
 
+    def get_organization_details(self, obj: SolrResult) -> Optional[dict]:
+        org_deets: dict = OrganizationDetails(obj, context={"request": self.context.get("request")}).data
+
+        if not org_deets.get("summary"):
+            return None
+
+        return org_deets
+
+    def get_record_history(self, obj: dict) -> dict:
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
+        return get_record_history(obj, transl)
+
+
+class OrganizationDetails(ypres.DictSerializer):
+    section_label = ypres.MethodField(
+        label="sectionLabel"
+    )
+    summary = ypres.MethodField()
+
+    def get_section_label(self, obj: SolrResult) -> dict:
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
+        return transl.get("records.summary")
+
     def get_summary(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
@@ -64,8 +93,3 @@ class BaseInstitution(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config)
 
-    def get_record_history(self, obj: dict) -> dict:
-        req = self.context.get("request")
-        transl: dict = req.ctx.translations
-
-        return get_record_history(obj, transl)

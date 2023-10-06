@@ -29,10 +29,12 @@ async def handle_person_request(req, person_id: str) -> Optional[dict]:
 
 
 class Person(BasePerson):
+    biographical_details = ypres.MethodField(
+        label="biographicalDetails"
+    )
     external_authorities = ypres.MethodField(
         label="externalAuthorities"
     )
-    summary = ypres.MethodField()
     name_variants = ypres.MethodField(
         label="nameVariants"
     )
@@ -44,6 +46,14 @@ class Person(BasePerson):
     external_resources = ypres.MethodField(
         label="externalResources"
     )
+
+    def get_biographical_details(self, obj: SolrResult) -> Optional[dict]:
+        bio_details: dict = BiographicalDetails(obj, context={"request": self.context.get("request")}).data
+
+        if not bio_details.get("summary"):
+            return None
+
+        return bio_details
 
     def get_external_authorities(self, obj: SolrResult) -> Optional[list[dict]]:
         if 'external_ids' not in obj:
@@ -76,19 +86,6 @@ class Person(BasePerson):
             "totalItems": source_count
         }
 
-    def get_summary(self, obj: SolrResult) -> list[dict]:
-        req = self.context.get("request")
-        transl: dict = req.ctx.translations
-
-        field_config: dict = {
-            "date_statement_s": ("records.years_birth_death", None),
-            "other_dates_s": ("records.other_life_dates", None),
-            "gender_s": ("records.gender", person_gender_translator),
-            "profession_function_sm": ("records.profession_or_function", None)
-        }
-
-        return get_display_fields(obj, transl, field_config)
-
     async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         if not self.context.get("direct_request"):
             return None
@@ -116,3 +113,29 @@ class Person(BasePerson):
             return None
 
         return await ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+
+
+class BiographicalDetails(ypres.DictSerializer):
+    section_label = ypres.MethodField(
+        label="sectionLabel"
+    )
+    summary = ypres.MethodField()
+
+    def get_section_label(self, obj: SolrResult) -> dict:
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
+        return transl.get("rism_online.biographical_details")
+
+    def get_summary(self, obj: SolrResult) -> list[dict]:
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
+        field_config: dict = {
+            "date_statement_s": ("records.years_birth_death", None),
+            "other_dates_s": ("records.other_life_dates", None),
+            "gender_s": ("records.gender", person_gender_translator),
+            "profession_function_sm": ("records.profession_or_function", None)
+        }
+
+        return get_display_fields(obj, transl, field_config)
