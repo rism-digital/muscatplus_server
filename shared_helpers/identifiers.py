@@ -18,8 +18,7 @@ EXTERNAL_IDS: dict = {
             "ident": "http://d-nb.info/gnd/{ident}"},
     "wkp": {"label": "Wikidata",
             "ident": "https://www.wikidata.org/wiki/{ident}"},
-    "isil": {"label": "International Standard Identifier for Libraries and Related Organizations (ISIL)",
-             "ident": "https://ld.zdb-services.de/resource/organisations/{ident}"},
+    "isil": {"label": "International Standard Identifier for Libraries and Related Organizations (ISIL)"},
     "bne": {"label": "Biblioteca Nacional de España"},
     "bnf": {"label": "Bibliothèque Nationale de France"},
     "iccu": {"label": "Istituto Centrale per il Catalogo Unico"},  # No stable URI for authorities
