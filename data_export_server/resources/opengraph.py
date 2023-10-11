@@ -2,7 +2,7 @@ import re
 import textwrap
 from typing import Optional
 from urllib.parse import urljoin
-import serpy
+import ypres
 
 from shared_helpers.formatters import (
     format_person_label,
@@ -14,11 +14,11 @@ from shared_helpers.formatters import (
 from shared_helpers.identifiers import ID_SUB, get_url_from_type, get_site
 
 
-class OpenGraph(serpy.DictSerializer):
-    record_url = serpy.MethodField()
-    record_title = serpy.MethodField()
-    record_description = serpy.MethodField()
-    record_image_url = serpy.MethodField()
+class OpenGraph(ypres.DictSerializer):
+    record_url = ypres.MethodField()
+    record_title = ypres.MethodField()
+    record_description = ypres.MethodField()
+    record_image_url = ypres.MethodField()
 
     def get_record_url(self, obj: dict) -> str:
         req = self.context.get("request")
@@ -88,12 +88,12 @@ class CardIcons:
     SOURCE = "source"
 
 
-class OpenGraphSvg(serpy.DictSerializer):
-    record_type = serpy.MethodField()
-    record_title = serpy.MethodField()
-    record_first_line = serpy.MethodField()
-    record_second_line = serpy.MethodField()
-    record_third_line = serpy.MethodField()
+class OpenGraphSvg(ypres.DictSerializer):
+    record_type = ypres.MethodField()
+    record_title = ypres.MethodField()
+    record_first_line = ypres.MethodField()
+    record_second_line = ypres.MethodField()
+    record_third_line = ypres.MethodField()
 
     def get_record_type(self, obj: dict) -> str:
         return obj["type"]
