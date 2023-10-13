@@ -11,7 +11,7 @@ from search_server.resources.shared.relationship import RelationshipsSection
 from shared_helpers.display_fields import get_display_fields
 from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.solr_connection import SolrResult, SolrConnection
-from shared_helpers.utilities import is_number
+from shared_helpers.utilities import is_number, merge_language_maps
 
 
 async def handle_institution_request(req, institution_id: str) -> Optional[dict]:
@@ -38,14 +38,13 @@ class Institution(BaseInstitution):
     properties = ypres.MethodField()
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
-        institution_id: str = obj.get("institution_id")
+        institution_id = obj["institution_id"]
+        ident: str = re.sub(ID_SUB, "", institution_id)
         source_count: int = obj.get("total_sources_i", 0)
 
         # if no sources are attached OR this is the 's.n.' record, return 0 sources attached.
-        if source_count == 0 or institution_id == "40009305":
+        if source_count == 0 or ident == "40009305":
             return None
-
-        ident: str = re.sub(ID_SUB, "", institution_id)
 
         return {
             "url": get_identifier(self.context.get("request"), "institutions.institution_sources", institution_id=ident),
@@ -150,12 +149,17 @@ class LocationAddressSection(ypres.DictSerializer):
         geojson_uri: str = get_identifier(req,
                                           "institutions.geo_coordinates",
                                           institution_id=ident)
+        long_label: dict = transl.get("records.longitude")
+        lat_label: dict = transl.get("records.latitude")
+
+        lon_lat_label = merge_language_maps(long_label, lat_label)
 
         return {
             "id": geojson_uri,
-            "label": transl.get("records.location"),
+            "sectionLabel": transl.get("records.location"),
             "type": "geojson:Feature",
             "geometry": {
+                "label": lon_lat_label,
                 "type": "geojson:Point",
                 "coordinates": [float(lon), float(lat)]
             }

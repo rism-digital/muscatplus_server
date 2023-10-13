@@ -5,6 +5,7 @@ import ypres
 
 from search_server.resources.shared.record_history import get_record_history
 from shared_helpers.display_fields import get_display_fields
+from shared_helpers.display_translators import gnd_country_code_labels_translator
 from shared_helpers.formatters import format_institution_label
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
@@ -88,7 +89,8 @@ class OrganizationDetails(ypres.DictSerializer):
             "countries_sm": ("records.country", None),
             "alternate_names_sm": ("records.other_form_of_name", None),
             "parallel_names_sm": ("records.parallel_form", None),
-            "institution_types_sm": ("records.type_institution", None)
+            "institution_types_sm": ("records.type_institution", None),
+            "gnd_country_codes_sm": ("records.country", gnd_country_code_labels_translator)
         }
 
         return get_display_fields(obj, transl, field_config)
