@@ -163,7 +163,7 @@ class Exemplar(ypres.AsyncDictSerializer):
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
-        return transl.get("records.institution")
+        return transl.get("records.exemplar")
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
