@@ -2,6 +2,7 @@ from typing import Optional
 
 from sanic import Blueprint, response
 
+from search_server.resources.sources.exemplars import handle_exemplar_section_request, handle_exemplar_request
 from search_server.request_handlers import handle_request, handle_search
 from search_server.resources.incipits.incipit import (
     handle_incipits_list_request,
@@ -161,3 +162,22 @@ async def digital_object_list(req, source_id: str):
 async def digital_object(req, source_id: str, digital_object_id: str):
     return response.text("Not implemented", status=501)
 
+
+@sources_blueprint.route("/<source_id:str>/holdings/")
+async def holdings(req, source_id: str):
+    return await handle_request(req,
+                                handle_exemplar_section_request,
+                                source_id=source_id)
+
+
+@sources_blueprint.route("/<source_id:str>/holdings/<holding_id:str>/")
+async def holding(req, source_id:str, holding_id: str):
+    return await handle_request(req,
+                                handle_exemplar_request,
+                                source_id=source_id,
+                                holding_id=holding_id)
+
+
+@sources_blueprint.route("/<source_id:str>/holdings/<holding_id:str>/relationships/")
+async def holding_relationships(req, source_id: str, holding_id: str):
+    return response.text("Not implemented", status=501)

@@ -12,7 +12,6 @@ from search_server.routes.api import api_blueprint
 from search_server.routes.countries import countries_blueprint
 from search_server.routes.external import external_blueprint
 from search_server.routes.festivals import festivals_blueprint
-from search_server.routes.holdings import holdings_blueprint
 from search_server.routes.incipits import incipits_blueprint
 from search_server.routes.institutions import institutions_blueprint
 from search_server.routes.people import people_blueprint
@@ -50,7 +49,6 @@ app = Sanic("mp_server", dumps=orjson.dumps)
 
 # register routes with their blueprints
 app.blueprint(sources_blueprint)
-app.blueprint(holdings_blueprint)
 app.blueprint(people_blueprint)
 app.blueprint(places_blueprint)
 app.blueprint(institutions_blueprint)

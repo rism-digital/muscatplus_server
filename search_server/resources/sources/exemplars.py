@@ -19,11 +19,57 @@ from shared_helpers.identifiers import get_identifier, ID_SUB, PROJECT_ID_SUB
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
 
+async def handle_exemplar_section_request(req, source_id: str) -> Optional[dict]:
+    source_record: Optional[dict] = await SolrConnection.get(f"source_{source_id}")
+
+    if not source_record:
+        return None
+
+    return await ExemplarsSection(source_record, context={"request": req,
+                                                          "direct_request": True}).data
+
+
+async def handle_exemplar_request(req, source_id: str, holding_id: str) -> Optional[dict]:
+    holding_record: Optional[dict] = await SolrConnection.get(f"holding_{holding_id}")
+
+    if not holding_record:
+        # MSS records are assigned a holding ID comprised of the institution ID and the source ID. If
+        # a direct lookup doesn't find anything, check to see if it's a MSS holding we're looking for.
+        holding_record = await SolrConnection.get(f"holding_{holding_id}-source_{source_id}")
+
+    if not holding_record:
+        # It really doesn't exist.
+        return None
+
+    return await Exemplar(holding_record, context={"request": req,
+                                                   "direct_request": True}).data
+
+
 class ExemplarsSection(ypres.AsyncDictSerializer):
+    eid = ypres.MethodField(
+        label="id"
+    )
+    etype = ypres.StaticField(
+        label="type",
+        value="rism:ExemplarsSection"
+    )
     section_label = ypres.MethodField(
         label="sectionLabel"
     )
     items = ypres.MethodField()
+
+    def get_eid(self, obj: SolrResult) -> str:
+        req = self.context.get("request")
+        source_holding_id_val: str = obj['id']
+
+        if "-" in source_holding_id_val:
+            source_id_val = source_holding_id_val.split("-")[1]
+        else:
+            source_id_val = source_holding_id_val
+
+        source_id = re.sub(ID_SUB, "", source_id_val)
+
+        return get_identifier(req, "sources.holdings", source_id=source_id)
 
     def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
@@ -32,13 +78,13 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
         return transl.get("records.exemplars", {})
 
     async def get_items(self, obj: SolrResult) -> Optional[dict]:
-        # Only select holdings where the institution ID is set. This is due to a buggy import; hopefully we'll
-        # be able to remove the institution_id filter clause later...
         if obj.get("is_contents_record_b", False):
             source_qstmt = f"source_id:{obj.get('source_membership_id')}"
         else:
             source_qstmt = f"source_id:{obj.get('id')}"
 
+        # Only select holdings where the institution ID is set. This is due to a buggy import; hopefully we'll
+        # be able to remove the institution_id filter clause later...
         fq: list = [source_qstmt,
                     "type:holding",
                     "institution_id:[* TO *]"]
@@ -111,7 +157,7 @@ class Exemplar(ypres.AsyncDictSerializer):
         holding_id = re.sub(ID_SUB, "", holding_id_val)
         source_id = re.sub(ID_SUB, "", source_id_val)
 
-        return get_identifier(req, "holdings.holding", source_id=source_id, holding_id=holding_id)
+        return get_identifier(req, "sources.holding", source_id=source_id, holding_id=holding_id)
 
     def get_section_label(self, obj: dict) -> dict:
         req = self.context.get("request")
