@@ -281,6 +281,11 @@ class SearchRequest:
         except PaginationParseException as e:
             raise InvalidQueryException(e)
 
+        for filt in self._req.args.getlist("fq", []):
+            if ":" not in filt:
+                raise InvalidQueryException("Malformed filter query %s. A colon was not found to separate \
+                the field and value. The correct format is fq=field:value.", filt)
+
     def _modes_to_filter(self) -> str:
         """
         Turns the incoming 'mode' request to a string suitable for use in a Solr `fq` query.
