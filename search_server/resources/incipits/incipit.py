@@ -162,7 +162,7 @@ class IncipitsSection(ypres.AsyncDictSerializer):
         content_identifiers: list[str] = obj.get("content_types_sm", [])
         record_type: str = obj.get("record_type_s", "item")
 
-        record_block = create_record_block(record_type, source_type, content_identifiers)
+        record_block = create_record_block(record_type, source_type, content_identifiers, transl)
 
         return {
             "label": transl.get("records.item_part_of"),

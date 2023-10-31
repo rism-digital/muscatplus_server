@@ -27,6 +27,29 @@ _MATERIAL_CONTENT_TYPE_MAP: dict = {
     "Mixed": "records.mixed"
 }
 
+_RECORD_TYPE_TRANSLATION_MAP: dict = {
+    "single_item": None,
+    "item": None,
+    "collection": "rism_online.collection",
+    "composite": "records.composite",
+    "work": "records.work"
+}
+
+_SOURCE_TYPE_TRANSLATION_MAP: dict = {
+    "printed": "rism_online.printed",
+    "manuscript": "rism_online.manuscript",
+    "composite": "rism_online.composite",
+    "unspecified": "records.other"
+}
+
+_CONTENT_TYPE_TRANSLATION_MAP: dict = {
+    "libretto": "records.libretto",
+    "treatise": "records.treatise",
+    "musical": "records.notated_music",
+    "mixed": "records.mixed",
+    "other": "records.other"
+}
+
 _KEY_MODE_MAP: dict = {
     "A": "records.a_major",
     "a": "records.a_minor",
@@ -473,6 +496,18 @@ def __lookup_translations_list(values: list, available_translations: dict, trans
                 result[lcode].extend([trans_itm])
 
     return dict(result)
+
+def record_type_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, _RECORD_TYPE_TRANSLATION_MAP)
+
+
+def source_type_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, _SOURCE_TYPE_TRANSLATION_MAP)
+
+
+def content_type_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, _CONTENT_TYPE_TRANSLATION_MAP)
+
 
 def material_source_types_translator(values: list, translations: dict) -> dict:
     return __lookup_translations_list(values, translations, _MATERIAL_SOURCE_TYPE_MAP)

@@ -54,7 +54,7 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         external_records = obj.get("external_records_jsonm", [])
-        record_block = create_record_block("collection", "manuscript", ["musical"])
+        record_block = create_record_block("collection", "manuscript", ["musical"], transl)
         ret = []
         for r in external_records:
             proj: str = r["project"]

@@ -6,7 +6,7 @@ from typing import Optional
 import ypres
 from small_asc.client import Results
 
-from search_server.helpers.record_types import create_record_block
+from search_server.helpers.record_types import create_record_block, SOURCE_TYPE_MAP, CONTENT_TYPE_MAP, RECORD_TYPE_MAP
 from search_server.helpers.search_request import IncipitModeValues
 from search_server.helpers.vrv import render_pae
 from search_server.resources.search.base_search import BaseSearchResults
@@ -203,6 +203,7 @@ class SourceSearchResult(ypres.DictSerializer):
             return None
 
         req = self.context.get("request")
+        transl: dict = req.ctx.translations
 
         parent_title: str
         parent_source_id: str
@@ -215,8 +216,7 @@ class SourceSearchResult(ypres.DictSerializer):
         source_type: str = source_membership.get("source_type", "unspecified")
         content_types: list[str] = source_membership.get("content_types", [])
 
-        record_block: dict = create_record_block(record_type, source_type, content_types)
-        transl: dict = req.ctx.translations
+        record_block: dict = create_record_block(record_type, source_type, content_types, transl)
 
         return {
             "label": transl.get("records.item_part_of"),
@@ -230,6 +230,9 @@ class SourceSearchResult(ypres.DictSerializer):
         }
 
     def get_flags(self, obj: dict) -> Optional[dict]:
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
         has_digitization: bool = obj.get("has_digitization_b", False)
         is_contents_record: bool = obj.get("is_contents_record_b", False)
         # A record is collection record if it has the 'source_members_sm' key. If
@@ -240,34 +243,42 @@ class SourceSearchResult(ypres.DictSerializer):
         has_diamm_record: bool = obj.get("has_external_record_b", False)
         is_diamm_record: bool = obj.get("project_s") == "diamm"
         number_of_exemplars: int = obj.get("num_holdings_i", 0)
-        flags: dict = {}
+        result_flags: dict = {}
+
+        source_type: str = obj.get("source_type_s", "unspecified")
+        content_identifiers: list[str] = obj.get("content_types_sm", [])
+        record_type: str = obj.get("record_type_s", "item")
+
+        record_block: dict = create_record_block(record_type, source_type, content_identifiers, transl)
+
+        result_flags.update(record_block)
 
         if has_digitization:
-            flags.update({"hasDigitization": has_digitization})
+            result_flags.update({"hasDigitization": has_digitization})
 
         if is_contents_record:
-            flags.update({"isContentsRecord": is_contents_record})
+            result_flags.update({"isContentsRecord": is_contents_record})
 
         if is_collection_record:
-            flags.update({"isCollectionRecord": is_collection_record})
+            result_flags.update({"isCollectionRecord": is_collection_record})
 
         if has_incipits:
-            flags.update({"hasIncipits": has_incipits})
+            result_flags.update({"hasIncipits": has_incipits})
 
         if has_iiif:
-            flags.update({"hasIIIFManifest": has_iiif})
+            result_flags.update({"hasIIIFManifest": has_iiif})
 
         if number_of_exemplars > 0:
-            flags.update({"numberOfExemplars": number_of_exemplars})
+            result_flags.update({"numberOfExemplars": number_of_exemplars})
 
         if has_diamm_record:
-            flags.update({"hasDIAMMRecord": has_diamm_record})
+            result_flags.update({"hasDIAMMRecord": has_diamm_record})
 
         if is_diamm_record:
-            flags.update({"isDIAMMRecord": is_diamm_record})
+            result_flags.update({"isDIAMMRecord": is_diamm_record})
 
         # return None if flags are empty.
-        return flags or None
+        return result_flags or None
 
 
 class PersonSearchResult(ypres.DictSerializer):
@@ -398,21 +409,21 @@ class InstitutionSearchResult(ypres.DictSerializer):
         return get_search_result_summary(field_config, transl, obj)
 
     def get_flags(self, obj: dict) -> Optional[dict]:
-        flags: dict = {}
+        result_flags: dict = {}
         number_of_sources: int = obj.get("total_sources_i", 0)
         has_diamm_record: bool = obj.get("has_external_record_b", False)
         is_diamm_record: bool = obj.get("project_s") == "diamm"
 
         if number_of_sources > 0:
-            flags.update({"numberOfSources": number_of_sources})
+            result_flags.update({"numberOfSources": number_of_sources})
 
         if has_diamm_record:
-            flags.update({"hasDIAMMRecord": has_diamm_record})
+            result_flags.update({"hasDIAMMRecord": has_diamm_record})
 
         if is_diamm_record:
-            flags.update({"isDIAMMRecord": is_diamm_record})
+            result_flags.update({"isDIAMMRecord": is_diamm_record})
 
-        return flags or None
+        return result_flags or None
 
 
 class PlaceSearchResult(ypres.DictSerializer):

@@ -112,7 +112,7 @@ class BaseSource(ypres.AsyncDictSerializer):
         source_type: str = source_membership.get("source_type", "unspecified")
         content_types: list[str] = source_membership.get("content_types", [])
 
-        record_block: dict = create_record_block(record_type, source_type, content_types)
+        record_block: dict = create_record_block(record_type, source_type, content_types, transl)
 
         return {
             "sectionLabel": transl.get("records.item_part_of"),
@@ -146,11 +146,13 @@ class BaseSource(ypres.AsyncDictSerializer):
         return get_display_fields(obj, transl, field_config=field_config)
 
     def get_record(self, obj: SolrResult) -> dict:
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
         source_type: str = obj.get("source_type_s", "unspecified")
         content_identifiers: list[str] = obj.get("content_types_sm", [])
         record_type: str = obj.get("record_type_s", "item")
 
-        return create_record_block(record_type, source_type, content_identifiers)
+        return create_record_block(record_type, source_type, content_identifiers, transl)
 
     def get_record_history(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
