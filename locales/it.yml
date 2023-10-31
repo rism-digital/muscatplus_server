@@ -600,7 +600,7 @@ it:
     material_group: Gruppo di materiale
     material_held: Materiale conservato
     material_not_examined: Materiale non esaminato
-    material_type: Material type
+    material_type: Tipo di materiale
     media_type: Mezzo fisico
     mensural_clefs: Chiavi mensurali
     method_of_acquisition: Metodo d'acquisto
@@ -977,6 +977,9 @@ it:
     manuscript: "Manoscritto"
     printed: "A stampa"
     composite: "Volume composito"
+    collection: "Collection"
+    item: "Item"
+    single_item: "Single item"
     apply_filters: "Applica i filtri"
     error_loading_results: "Errore nel caricamento dei risultati"
     global_collection: "Collezione mondiale"

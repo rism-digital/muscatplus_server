@@ -28,8 +28,8 @@ _MATERIAL_CONTENT_TYPE_MAP: dict = {
 }
 
 _RECORD_TYPE_TRANSLATION_MAP: dict = {
-    "single_item": None,
-    "item": None,
+    "single_item": "rism_online.single_item",
+    "item": "rism_online.item",
     "collection": "rism_online.collection",
     "composite": "records.composite",
     "work": "records.work"

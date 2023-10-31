@@ -600,7 +600,7 @@ pt:
     material_group: Grupo de materiais
     material_held: Material existente
     material_not_examined: Material não examinado
-    material_type: Material type
+    material_type: Tipo de Material
     media_type: Tipo de mídia
     mensural_clefs: Claves mensurais
     method_of_acquisition: Método de aquisição
@@ -977,6 +977,9 @@ pt:
     manuscript: "Manuscrito"
     printed: "Impresso"
     composite: "Volume composto"
+    collection: "Collection"
+    item: "Item"
+    single_item: "Single item"
     apply_filters: "Aplicar filtros"
     error_loading_results: "Erro ao carregar os resultados"
     global_collection: "Coleção global"
