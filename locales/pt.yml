@@ -597,8 +597,10 @@ pt:
     married_with: Casado/a
     material_description: Descrição de material
     material_examined: Material examinado
+    material_group: Grupo de materiais
     material_held: Material existente
     material_not_examined: Material não examinado
+    material_type: Material type
     media_type: Tipo de mídia
     mensural_clefs: Claves mensurais
     method_of_acquisition: Método de aquisição
@@ -789,7 +791,6 @@ pt:
     series: Séries
     series_added_entry: Informação secundária sobre título superordenado
     series_statement: Campos de declaração da série
-    material_group: Grupo de materiais
     shelfmark: Código
     shelfmark_olim: Código antiguo (olim)
     short_title: Título abreviado

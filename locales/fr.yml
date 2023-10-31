@@ -597,8 +597,10 @@ fr:
     married_with: Marié/e avec
     material_description: Description du matériel
     material_examined: Matériaux examinés
+    material_group: Groupe de matériaux
     material_held: Matériaux préservées
     material_not_examined: Matériaux non examinés
+    material_type: Material type
     media_type: Moyen physique
     mensural_clefs: Clés anciennes
     method_of_acquisition: Méthode d'acquisition
@@ -789,7 +791,6 @@ fr:
     series: Série
     series_added_entry: Champs de collection
     series_statement: Mentions de collection
-    material_group: Groupe de matériaux
     shelfmark: Cote
     shelfmark_olim: Ancienne cote (olim)
     short_title: Titre abrégé
