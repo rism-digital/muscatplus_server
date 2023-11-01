@@ -240,7 +240,7 @@ class SourceSearchResult(ypres.DictSerializer):
         is_collection_record: bool = obj.get("source_members_sm", None) is not None
         has_incipits: bool = obj.get("has_incipits_b", False)
         has_iiif: bool = obj.get("has_iiif_manifest_b", False)
-        has_diamm_record: bool = obj.get("has_external_record_b", False)
+        linked_with_external_record: bool = obj.get("has_external_record_b", False)
         is_diamm_record: bool = obj.get("project_s") == "diamm"
         number_of_exemplars: int = obj.get("num_holdings_i", 0)
         result_flags: dict = {}
@@ -271,8 +271,8 @@ class SourceSearchResult(ypres.DictSerializer):
         if number_of_exemplars > 0:
             result_flags.update({"numberOfExemplars": number_of_exemplars})
 
-        if has_diamm_record:
-            result_flags.update({"hasDIAMMRecord": has_diamm_record})
+        if linked_with_external_record:
+            result_flags.update({"linkedWithExternalRecord": linked_with_external_record})
 
         if is_diamm_record:
             result_flags.update({"isDIAMMRecord": is_diamm_record})
@@ -335,21 +335,21 @@ class PersonSearchResult(ypres.DictSerializer):
         return get_search_result_summary(field_config, transl, obj)
 
     def get_flags(self, obj: dict) -> Optional[dict]:
-        flags: dict = {}
+        result_flags: dict = {}
         number_of_sources: int = obj.get("source_count_i", 0)
-        has_diamm_record: bool = obj.get("has_external_record_b", False)
+        linked_with_external_record: bool = obj.get("has_external_record_b", False)
         is_diamm_record: bool = obj.get("project_s") == "diamm"
 
         if number_of_sources > 0:
-            flags.update({"numberOfSources": number_of_sources})
+            result_flags.update({"numberOfSources": number_of_sources})
 
-        if has_diamm_record:
-            flags.update({"hasDIAMMRecord": has_diamm_record})
+        if linked_with_external_record:
+            result_flags.update({"linkedWithExternalRecord": linked_with_external_record})
 
         if is_diamm_record:
-            flags.update({"isDIAMMRecord": is_diamm_record})
+            result_flags.update({"isDIAMMRecord": is_diamm_record})
 
-        return flags or None
+        return result_flags or None
 
 
 class InstitutionSearchResult(ypres.DictSerializer):
@@ -411,14 +411,14 @@ class InstitutionSearchResult(ypres.DictSerializer):
     def get_flags(self, obj: dict) -> Optional[dict]:
         result_flags: dict = {}
         number_of_sources: int = obj.get("total_sources_i", 0)
-        has_diamm_record: bool = obj.get("has_external_record_b", False)
+        linked_with_external_record: bool = obj.get("has_external_record_b", False)
         is_diamm_record: bool = obj.get("project_s") == "diamm"
 
         if number_of_sources > 0:
             result_flags.update({"numberOfSources": number_of_sources})
 
-        if has_diamm_record:
-            result_flags.update({"hasDIAMMRecord": has_diamm_record})
+        if linked_with_external_record:
+            result_flags.update({"linkedWithExternalRecord": linked_with_external_record})
 
         if is_diamm_record:
             result_flags.update({"isDIAMMRecord": is_diamm_record})

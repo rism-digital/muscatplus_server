@@ -54,34 +54,58 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         external_records = obj.get("external_records_jsonm", [])
-        record_block = create_record_block("collection", "manuscript", ["musical"], transl)
         ret = []
+
         for r in external_records:
             proj: str = r["project"]
             ident: Optional[str] = EXTERNAL_IDS.get(proj, {}).get("ident")
             if not ident:
                 continue
 
-            sfx = f"sources/{r['id']}"
-
-            # See the `ExternalRecord` class for the general structure of this block.
-            # The "id" of this external record is not resolvable, so we use a urn to assign a
-            # unique ID to be consistent with the resolvable form of the ExternalRecord..
-            ret.append({
-                "id": f"urn:rism:{proj}:{r['type']}:{r['id']}",
-                "type": "rism:ExternalRecord",
-                "project": PROJECT_IDENTIFIERS[proj],
-                "record": {
-                    "id": ident.format(ident=sfx),
-                    "type": "rism:Source",
-                    "typeLabel": transl.get("records.source"),
-                    "record": record_block,
-                    "label": {"none": [f"{r.get('label')}"]}
-                }
-            })
+            if r["type"] == "source":
+                rec = _create_external_source_link(r, proj, ident, transl)
+                ret.append(rec)
+            elif r["type"] == "institution":
+                rec = _create_external_institution_link(r, proj, ident, transl)
+                ret.append(rec)
 
         return ret
 
+
+def _create_external_source_link(record: dict, project: str, ident: str, translations: dict) -> dict:
+    sfx = f"sources/{record['id']}"
+
+    # See the `ExternalRecord` class for the general structure of this block.
+    # The "id" of this external record is not resolvable, so we use a urn to assign a
+    # unique ID to be consistent with the resolvable form of the ExternalRecord..
+    return {
+        "id": f"urn:rism:{project}:{record['type']}:{record['id']}",
+        "type": "rism:ExternalRecord",
+        "project": PROJECT_IDENTIFIERS[project],
+        "record": {
+            "id": ident.format(ident=sfx),
+            "type": "rism:Source",
+            "typeLabel": translations.get("records.source"),
+            "record": create_record_block("collection", "manuscript", ["musical"], translations),
+            "label": {"none": [f"{record.get('label')}"]}
+        }
+    }
+
+
+def _create_external_institution_link(record: dict, project: str, ident: str, translations: dict) -> dict:
+    sfx = f"institutions/{record['id']}"
+
+    return {
+        "id": f"urn:rism:{project}:{record['type']}:{record['id']}",
+        "type": "rism:ExternalRecord",
+        "project": PROJECT_IDENTIFIERS[project],
+        "record": {
+            "id": ident.format(ident=sfx),
+            "type": "rism:Institution",
+            "typeLabel": translations.get("records.institution"),
+            "label": {"none": [f"{record.get('label')}"]}
+        }
+    }
 
 class ExternalResource(ypres.DictSerializer):
     rtype = ypres.StaticField(
