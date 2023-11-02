@@ -23,14 +23,14 @@ CONTENT_TYPE_MAP: dict = {
 }
 
 
-def create_record_block(record_type: str, source_type: str, content_types: list[str], translations: dict) -> dict:
+def create_source_types_block(record_type: str, source_type: str, content_types: list[str], translations: dict) -> dict:
     type_identifier: str = SOURCE_TYPE_MAP[source_type]
     content_type_block: list = []
 
     for c in content_types:
         label = content_type_translator(c, translations)
         content_type_block.append({
-            "label": label,  # TODO translate!
+            "label": label,
             "type": CONTENT_TYPE_MAP.get(c, "rism:MusicalSource")
         })
 
@@ -39,11 +39,11 @@ def create_record_block(record_type: str, source_type: str, content_types: list[
     source_type_label = source_type_translator(source_type, translations)
     return {
         "recordType": {
-            "label": record_type_label,  # TODO: Translate!
+            "label": record_type_label,
             "type": record_type_identifier
         },
         "sourceType": {
-            "label": source_type_label,  # TODO: Translate!
+            "label": source_type_label,
             "type": type_identifier
         },
         "contentTypes": content_type_block,

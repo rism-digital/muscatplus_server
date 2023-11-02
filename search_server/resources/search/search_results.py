@@ -6,7 +6,7 @@ from typing import Optional
 import ypres
 from small_asc.client import Results
 
-from search_server.helpers.record_types import create_record_block, SOURCE_TYPE_MAP, CONTENT_TYPE_MAP, RECORD_TYPE_MAP
+from search_server.helpers.record_types import create_source_types_block, SOURCE_TYPE_MAP, CONTENT_TYPE_MAP, RECORD_TYPE_MAP
 from search_server.helpers.search_request import IncipitModeValues
 from search_server.helpers.vrv import render_pae
 from search_server.resources.search.base_search import BaseSearchResults
@@ -216,7 +216,7 @@ class SourceSearchResult(ypres.DictSerializer):
         source_type: str = source_membership.get("source_type", "unspecified")
         content_types: list[str] = source_membership.get("content_types", [])
 
-        record_block: dict = create_record_block(record_type, source_type, content_types, transl)
+        source_types_block: dict = create_source_types_block(record_type, source_type, content_types, transl)
 
         return {
             "label": transl.get("records.item_part_of"),
@@ -224,7 +224,7 @@ class SourceSearchResult(ypres.DictSerializer):
                 "id": get_identifier(req, "sources.source", source_id=parent_source_id),
                 "type": "rism:Source",
                 "typeLabel": transl.get("records.source"),
-                "record": record_block,
+                "sourceTypes": source_types_block,
                 "label": {"none": [parent_title]}
             }
         }
@@ -249,9 +249,9 @@ class SourceSearchResult(ypres.DictSerializer):
         content_identifiers: list[str] = obj.get("content_types_sm", [])
         record_type: str = obj.get("record_type_s", "item")
 
-        record_block: dict = create_record_block(record_type, source_type, content_identifiers, transl)
+        source_types_block: dict = create_source_types_block(record_type, source_type, content_identifiers, transl)
 
-        result_flags.update(record_block)
+        result_flags.update(source_types_block)
 
         if has_digitization:
             result_flags.update({"hasDigitization": has_digitization})

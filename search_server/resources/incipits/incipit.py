@@ -5,7 +5,7 @@ from typing import Optional
 import ypres
 from small_asc.client import JsonAPIRequest, Results
 
-from search_server.helpers.record_types import create_record_block
+from search_server.helpers.record_types import create_source_types_block
 from search_server.helpers.vrv import render_pae, render_mei, render_png
 from search_server.resources.sources.base_source import BaseSource
 from shared_helpers.display_fields import (
@@ -162,7 +162,7 @@ class IncipitsSection(ypres.AsyncDictSerializer):
         content_identifiers: list[str] = obj.get("content_types_sm", [])
         record_type: str = obj.get("record_type_s", "item")
 
-        record_block = create_record_block(record_type, source_type, content_identifiers, transl)
+        source_types_block = create_source_types_block(record_type, source_type, content_identifiers, transl)
 
         return {
             "label": transl.get("records.item_part_of"),
@@ -170,7 +170,7 @@ class IncipitsSection(ypres.AsyncDictSerializer):
                 "id": ident,
                 "type": "rism:Source",
                 "typeLabel": transl.get("records.source"),
-                "record": record_block,
+                "sourceTypes": source_types_block,
                 "label": {"none": [label]}
             }
         }
