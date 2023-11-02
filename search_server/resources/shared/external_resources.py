@@ -3,7 +3,7 @@ from typing import Optional
 
 import ypres
 
-from search_server.helpers.record_types import create_record_block
+from search_server.helpers.record_types import create_source_types_block
 from shared_helpers.identifiers import EXTERNAL_IDS, PROJECT_IDENTIFIERS
 from shared_helpers.solr_connection import SolrResult
 
@@ -57,55 +57,55 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
         ret = []
 
         for r in external_records:
-            proj: str = r["project"]
-            ident: Optional[str] = EXTERNAL_IDS.get(proj, {}).get("ident")
-            if not ident:
+            rec: Optional[dict] = _create_external_record_link(r, transl)
+            if not rec:
                 continue
 
-            if r["type"] == "source":
-                rec = _create_external_source_link(r, proj, ident, transl)
-                ret.append(rec)
-            elif r["type"] == "institution":
-                rec = _create_external_institution_link(r, proj, ident, transl)
-                ret.append(rec)
+            ret.append(rec)
 
         return ret
 
 
-def _create_external_source_link(record: dict, project: str, ident: str, translations: dict) -> dict:
-    sfx = f"sources/{record['id']}"
+def _create_external_record_link(record: dict, translations: dict) -> Optional[dict]:
+    project: str = record["project"]
+    ident: Optional[str] = EXTERNAL_IDS.get(project, {}).get("ident")
+    if not ident:
+        return None
 
-    # See the `ExternalRecord` class for the general structure of this block.
-    # The "id" of this external record is not resolvable, so we use a urn to assign a
-    # unique ID to be consistent with the resolvable form of the ExternalRecord..
-    return {
-        "id": f"urn:rism:{project}:{record['type']}:{record['id']}",
-        "type": "rism:ExternalRecord",
-        "project": PROJECT_IDENTIFIERS[project],
-        "record": {
-            "id": ident.format(ident=sfx),
-            "type": "rism:Source",
-            "typeLabel": translations.get("records.source"),
-            "record": create_record_block("collection", "manuscript", ["musical"], translations),
-            "label": {"none": [f"{record.get('label')}"]}
-        }
+    project_type: str = record.get("project_type")
+    sfx = f"{project_type}/{record['id']}"
+    record_type = record['type']
+
+    if record_type == "source":
+        resource_type = "rism:Source"
+        type_label = translations.get("records.source")
+    elif record_type == "institution":
+        resource_type = "rism:Institution"
+        type_label = translations.get("records.institution")
+    elif record_type == "person":
+        resource_type = "rism:Person"
+        type_label = translations.get("records.person")
+    else:
+        resource_type = "rism:Unknown"
+        type_label = translations.get("records.unknown")
+
+    resource_record = {
+        "id": ident.format(ident=sfx),
+        "type": resource_type,
+        "typeLabel": type_label,
+        "label": {"none": [f"{record.get('label')}"]}
     }
 
-
-def _create_external_institution_link(record: dict, project: str, ident: str, translations: dict) -> dict:
-    sfx = f"institutions/{record['id']}"
+    if record_type == "source":
+        resource_record["sourceTypes"] = create_source_types_block("collection", "manuscript", ["musical"], translations),
 
     return {
-        "id": f"urn:rism:{project}:{record['type']}:{record['id']}",
+        "id": f"urn:rism:{project}:{record_type}:{record['id']}",
         "type": "rism:ExternalRecord",
         "project": PROJECT_IDENTIFIERS[project],
-        "record": {
-            "id": ident.format(ident=sfx),
-            "type": "rism:Institution",
-            "typeLabel": translations.get("records.institution"),
-            "label": {"none": [f"{record.get('label')}"]}
-        }
+        "record": resource_record
     }
+
 
 class ExternalResource(ypres.DictSerializer):
     rtype = ypres.StaticField(
