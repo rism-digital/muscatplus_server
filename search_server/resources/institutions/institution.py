@@ -10,8 +10,9 @@ from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from shared_helpers.display_fields import get_display_fields
 from shared_helpers.identifiers import get_identifier, ID_SUB
+from shared_helpers.languages import merge_language_maps
 from shared_helpers.solr_connection import SolrResult, SolrConnection
-from shared_helpers.utilities import is_number, merge_language_maps
+from shared_helpers.utilities import is_number
 
 
 async def handle_institution_request(req, institution_id: str) -> Optional[dict]:
@@ -143,6 +144,7 @@ class LocationAddressSection(ypres.DictSerializer):
 
         if not is_number(lat) or not is_number(lon):
             return None
+
         institution_id: str = obj['id']
         ident: str = re.sub(ID_SUB, "", institution_id)
 

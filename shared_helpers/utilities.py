@@ -12,7 +12,3 @@ def is_number(num: str) -> bool:
     except ValueError:
         return False
     return True
-
-
-def merge_language_maps(d1: dict[str, list], d2: dict[str, list]) -> dict[str, list]:
-    return {key: [", ".join(value + d2[key])] for key, value in d1.items()}
