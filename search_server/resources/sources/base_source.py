@@ -46,7 +46,9 @@ class BaseSource(ypres.AsyncDictSerializer):
         label="partOf"
     )
     summary = ypres.MethodField()
-    record = ypres.MethodField()
+    source_types = ypres.MethodField(
+        label="sourceTypes"
+    )
     record_history = ypres.MethodField(
         label="recordHistory"
     )
@@ -145,7 +147,7 @@ class BaseSource(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_record(self, obj: SolrResult) -> dict:
+    def get_source_types(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
         source_type: str = obj.get("source_type_s", "unspecified")
