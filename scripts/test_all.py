@@ -2,8 +2,7 @@ import asyncio
 import re
 import timeit
 
-# import aiohttp
-import httpx
+import aiohttp
 import uvloop
 from small_asc.client import Solr
 
@@ -12,24 +11,31 @@ asyncio.set_event_loop(uvloop.new_event_loop())
 
 async def fetch(url: str, session, num: int) -> bool:
     print(f"{num}. fetching {url}")
-    r = await session.get(url)
-    # txt = r.text
-    # print(txt)
-    if r.status_code == 200:
-        return True
-    return False
+    async with session.get(url) as r:
+        txt = await r.json()
+        # print(txt)
+        if r.status == 200:
+            return True
+
+        print(f"Error fetching {url}")
+        return False
 
 
 async def get_ids():
     s = Solr("http://localhost:8983/solr/muscatplus_live")
     # fq = ["type:source", "country_code_s:CH"]
-    fq = ["type:institution"]
+    # fq = ["type:source", "project_s:diamm"]
+    # fq = ["type:institution", "project_s:diamm"]
+    fq = ["type:institution", "!project_s:diamm"]
+    # fq = ["type:person", "project_s:diamm"]
+    # fq = ["type:person", "!project_s:diamm"]
+    # fq = ["type:institution"]
     # fq = ["type:person"]
     sort = "id asc"
     fl: list = ["id"]
 
     res = await s.search({"query": "*:*", "filter": fq, "fields": fl, "sort": sort, "limit": 500}, cursor=True)
-    id_sub = re.compile(r"source_|person_|institution_")
+    id_sub = re.compile(r"source_|person_|institution_|diamm_source_|diamm_organization_|diamm_person_")
     print(f"Assembling {res.hits} IDs")
     ids: list = []
     async for s in res:
@@ -43,9 +49,10 @@ async def run() -> (int, int):
     item_ids: list = await get_ids()
     responses: list = []
 
-    async with httpx.AsyncClient(timeout=None, headers={"Accept": "text/turtle", "X-API-Accept-Language": "en"}) as session:
+    async with aiohttp.ClientSession(headers={"Accept": "application/ld+json", "X-API-Accept-Language": "en"}) as session:
         for num, itm in enumerate(item_ids):
             url: str = f"http://dev.rism.offline/institutions/{itm}"
+            # url: str = f"http://dev.rism.offline/external/diamm/person/{itm}"
             res: bool = await fetch(url, session, num)
             responses.append(res)
 
