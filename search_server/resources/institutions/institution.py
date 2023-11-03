@@ -68,7 +68,12 @@ class Institution(BaseInstitution):
         if not self.context.get("direct_request"):
             return None
 
-        if {'related_people_json', 'related_places_json', 'related_institutions_json', 'now_in_json', 'contains_json'}.isdisjoint(obj.keys()):
+        if {'related_people_json',
+            'related_places_json',
+            'related_institutions_json',
+            'related_sources_json',
+            'now_in_json',
+            'contains_json'}.isdisjoint(obj.keys()):
             return None
 
         req = self.context.get("request")

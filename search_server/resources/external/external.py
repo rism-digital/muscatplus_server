@@ -83,7 +83,8 @@ async def _record_type_router(req, obj: dict) -> dict:
 
     elif obj_type == "institution":
         institution: dict = await Institution(obj,
-                                              context={"request": req}).data
+                                              context={"request": req,
+                                                       "direct_request": True}).data
         institution["id"] = obj["record_uri_sni"]
         return institution
 

@@ -12,7 +12,7 @@ from shared_helpers.display_translators import (
     title_json_value_translator,
     source_relationship_labels_translator
 )
-from shared_helpers.identifiers import ID_SUB, get_identifier
+from shared_helpers.identifiers import ID_SUB, get_identifier, PROJECT_ID_SUB, EXTERNAL_IDS
 from shared_helpers.utilities import to_aiter
 
 log = logging.getLogger("mp_server")
@@ -185,11 +185,25 @@ def _related_to_place(req, obj: dict) -> dict:
 def _related_to_source(req, obj: dict) -> dict:
     transl: dict = req.ctx.translations
 
-    source_id: str = re.sub(ID_SUB, "", obj["source_id"])
+    source_id: str
+    ident: str
+    if "project" in obj and obj['project'] == "diamm":
+        source_id = re.sub(PROJECT_ID_SUB, "", obj["source_id"])
+        prefix: Optional[str] = EXTERNAL_IDS.get("diamm", {}).get("ident")
+        if not prefix:
+            # If, for some reason this isn't found, return the empty dict.
+            log.error("A URI prefix was not found for project %s", obj["project"])
+            return {}
+        suffix = f"sources/{source_id}"
+        ident = prefix.format(ident=suffix)
+    else:
+        source_id = re.sub(ID_SUB, "", obj["source_id"])
+        ident = get_identifier(req, "sources.source", source_id=source_id)
+
     source_title: dict = title_json_value_translator(obj.get("title", []), transl)
 
     return {
-        "id": get_identifier(req, "sources.source", source_id=source_id),
+        "id": ident,
         "label": source_title,
         "type": "rism:Source"
     }
@@ -206,7 +220,10 @@ def _relationship_translator(obj: dict) -> Optional[Callable]:
 
     """
     relationship_translator: Callable
-    if 'person_id' in obj or 'institution_id' in obj:
+    if obj.get("project") == "diamm":
+        # DIAMM uses the person / institution relator codes for its source relationships
+        return person_institution_relationship_labels_translator
+    elif 'person_id' in obj or 'institution_id' in obj:
         return person_institution_relationship_labels_translator
     elif 'place_id' in obj:
         return place_relationship_labels_translator
