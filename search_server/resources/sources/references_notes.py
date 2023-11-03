@@ -10,6 +10,7 @@ from shared_helpers.display_translators import (
     url_detecting_translator
 )
 from shared_helpers.solr_connection import SolrResult
+from shared_helpers.utilities import to_aiter
 
 
 class ReferencesNotesSection(ypres.AsyncDictSerializer):
@@ -88,7 +89,7 @@ class PerformanceLocationsSection(ypres.AsyncDictSerializer):
     async def get_items(self, obj: dict) -> list[dict]:
         performance_locations = obj.get("location_of_performance_json", [])
 
-        return await Relationship(performance_locations,
+        return await Relationship(to_aiter(performance_locations),
                                   many=True,
                                   context={"request": self.context.get("request")}).data
 
