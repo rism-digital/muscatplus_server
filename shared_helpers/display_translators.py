@@ -205,6 +205,7 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     "ltg": "records.lithographer",
     "lyr": "records.lyricist",
     "oth": "records.other",
+    "pat": "records.patron",
     "pbl": "records.publisher",
     "ppm": "records.papermaker",
     "prf": "records.performer",
@@ -525,6 +526,9 @@ def country_code_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _FULL_COUNTRY_SIGLA_MAP)
 
 
+def country_codes_labels_translator(values: list, translations: dict) -> dict:
+    return __lookup_translations_list(values, translations, _FULL_COUNTRY_SIGLA_MAP)
+
 def person_name_variant_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _PERSON_NAME_VARIANT_TYPES_MAP)
 
@@ -547,7 +551,6 @@ def qualifier_labels_translator(value: str, translations: dict) -> dict:
 
 def person_institution_relationship_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP)
-
 
 def printing_techniques_translator(values: list, translations: dict) -> dict:
     return __lookup_translations_list(values, translations, _PRINTING_TECHNIQUE_MAP)
