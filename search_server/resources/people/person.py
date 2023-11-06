@@ -69,7 +69,7 @@ class Person(BasePerson):
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
         # Do not show a link to sources if this serializer is used for embedded results
-        if not self.context.get("direct_request"):
+        if not self.context.get("direct_request") or obj.get("project_s") == "diamm":
             return None
 
         # if no sources are attached to this organization, don't show this section. NB: This will
@@ -93,7 +93,10 @@ class Person(BasePerson):
         # sets are cool; two sets are disjoint if they have no keys in common. We
         # can use this to check whether these keys are in the solr result; if not,
         # we have no relationships to render, so we can return None.
-        if {'related_people_json', 'related_places_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
+        if {'related_people_json',
+            'related_places_json',
+            'related_institutions_json',
+            'related_sources_json'}.isdisjoint(obj.keys()):
             return None
 
         req = self.context.get("request")

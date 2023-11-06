@@ -4,8 +4,8 @@ from typing import Optional
 
 import ypres
 
+from search_server.resources.people.person import Person
 from search_server.resources.institutions.institution import Institution
-from search_server.resources.people.base_person import BasePerson
 from search_server.resources.sources.full_source import FullSource
 from shared_helpers.identifiers import get_identifier, PROJECT_ID_SUB, PROJECT_IDENTIFIERS
 from shared_helpers.solr_connection import SolrConnection
@@ -76,8 +76,9 @@ async def _record_type_router(req, obj: dict) -> dict:
         return source
 
     elif obj_type == "person":
-        person: dict = await BasePerson(obj,
-                                        context={"request": req}).data
+        person: dict = await Person(obj,
+                                    context={"request": req,
+                                             "direct_request": True}).data
         person["id"] = obj["record_uri_sni"]
         return person
 

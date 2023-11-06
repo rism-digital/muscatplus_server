@@ -44,7 +44,7 @@ class Institution(BaseInstitution):
         source_count: int = obj.get("total_sources_i", 0)
 
         # if no sources are attached OR this is the 's.n.' record, return 0 sources attached.
-        if source_count == 0 or ident == "40009305":
+        if source_count == 0 or ident == "40009305" or obj.get("project_s") == "diamm":
             return None
 
         return {
