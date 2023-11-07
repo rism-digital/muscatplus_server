@@ -62,7 +62,8 @@ class Institution(BaseInstitution):
         if 'external_ids' not in obj:
             return None
 
-        return ExternalAuthoritiesSection(obj['external_ids'], context={"request": self.context.get("request")}).data
+        return ExternalAuthoritiesSection(obj['external_ids'],
+                                          context={"request": self.context.get("request")}).data
 
     async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         if not self.context.get("direct_request"):
@@ -91,7 +92,8 @@ class Institution(BaseInstitution):
         if 'external_resources_json' not in obj and not obj.get("has_external_record_b", False):
             return None
 
-        return await ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+        return await ExternalResourcesSection(obj,
+                                              context={"request": self.context.get("request")}).data
 
     def get_properties(self, obj: SolrResult) -> Optional[dict]:
         d = {

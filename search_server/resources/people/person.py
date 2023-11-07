@@ -112,7 +112,7 @@ class Person(BasePerson):
         return None
 
     async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
-        if 'external_resources_json' not in obj:
+        if 'external_resources_json' not in obj and not obj.get("has_external_record_b", False):
             return None
 
         return await ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
