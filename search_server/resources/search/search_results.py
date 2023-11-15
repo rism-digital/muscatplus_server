@@ -6,13 +6,14 @@ from typing import Optional
 import ypres
 from small_asc.client import Results
 
-from search_server.helpers.record_types import create_record_block
+from search_server.helpers.record_types import create_source_types_block, SOURCE_TYPE_MAP, CONTENT_TYPE_MAP, RECORD_TYPE_MAP
 from search_server.helpers.search_request import IncipitModeValues
 from search_server.helpers.vrv import render_pae
 from search_server.resources.search.base_search import BaseSearchResults
 from shared_helpers.display_fields import get_search_result_summary
 from shared_helpers.display_translators import (
     gnd_country_code_labels_translator, material_content_types_translator, material_source_types_translator,
+    title_json_value_translator,
 )
 from shared_helpers.formatters import (
     format_institution_label,
@@ -22,7 +23,7 @@ from shared_helpers.formatters import (
 )
 from shared_helpers.identifiers import (
     get_identifier,
-    ID_SUB
+    ID_SUB, PROJECT_ID_SUB
 )
 from shared_helpers.solr_connection import SolrResult, SolrConnection
 
@@ -143,9 +144,21 @@ class SourceSearchResult(ypres.DictSerializer):
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
-        id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "sources.source", source_id=id_value)
+        # Formulate a different ID if we have an external project
+        # resource.
+        if "project_s" not in obj:
+            id_value: str = re.sub(ID_SUB, "", obj.get("id"))
+            return get_identifier(req, "sources.source", source_id=id_value)
+
+        project: str = obj["project_s"]
+        srtype: str = obj["type"]
+        id_value: str = re.sub(PROJECT_ID_SUB, "", obj.get("id"))
+        return get_identifier(req,
+                              "external.external",
+                              project=project,
+                              resource_type=srtype,
+                              ext_id=id_value)
 
     def get_label(self, obj: dict) -> dict:
         req = self.context.get("request")
@@ -190,6 +203,7 @@ class SourceSearchResult(ypres.DictSerializer):
             return None
 
         req = self.context.get("request")
+        transl: dict = req.ctx.translations
 
         parent_title: str
         parent_source_id: str
@@ -202,8 +216,7 @@ class SourceSearchResult(ypres.DictSerializer):
         source_type: str = source_membership.get("source_type", "unspecified")
         content_types: list[str] = source_membership.get("content_types", [])
 
-        record_block: dict = create_record_block(record_type, source_type, content_types)
-        transl: dict = req.ctx.translations
+        source_types_block: dict = create_source_types_block(record_type, source_type, content_types, transl)
 
         return {
             "label": transl.get("records.item_part_of"),
@@ -211,12 +224,15 @@ class SourceSearchResult(ypres.DictSerializer):
                 "id": get_identifier(req, "sources.source", source_id=parent_source_id),
                 "type": "rism:Source",
                 "typeLabel": transl.get("records.source"),
-                "record": record_block,
+                "sourceTypes": source_types_block,
                 "label": {"none": [parent_title]}
             }
         }
 
     def get_flags(self, obj: dict) -> Optional[dict]:
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
         has_digitization: bool = obj.get("has_digitization_b", False)
         is_contents_record: bool = obj.get("is_contents_record_b", False)
         # A record is collection record if it has the 'source_members_sm' key. If
@@ -224,29 +240,45 @@ class SourceSearchResult(ypres.DictSerializer):
         is_collection_record: bool = obj.get("source_members_sm", None) is not None
         has_incipits: bool = obj.get("has_incipits_b", False)
         has_iiif: bool = obj.get("has_iiif_manifest_b", False)
+        linked_with_external_record: bool = obj.get("has_external_record_b", False)
+        is_diamm_record: bool = obj.get("project_s") == "diamm"
         number_of_exemplars: int = obj.get("num_holdings_i", 0)
-        flags: dict = {}
+        result_flags: dict = {}
+
+        source_type: str = obj.get("source_type_s", "unspecified")
+        content_identifiers: list[str] = obj.get("content_types_sm", [])
+        record_type: str = obj.get("record_type_s", "item")
+
+        source_types_block: dict = create_source_types_block(record_type, source_type, content_identifiers, transl)
+
+        result_flags.update(source_types_block)
 
         if has_digitization:
-            flags.update({"hasDigitization": has_digitization})
+            result_flags.update({"hasDigitization": has_digitization})
 
         if is_contents_record:
-            flags.update({"isContentsRecord": is_contents_record})
+            result_flags.update({"isContentsRecord": is_contents_record})
 
         if is_collection_record:
-            flags.update({"isCollectionRecord": is_collection_record})
+            result_flags.update({"isCollectionRecord": is_collection_record})
 
         if has_incipits:
-            flags.update({"hasIncipits": has_incipits})
+            result_flags.update({"hasIncipits": has_incipits})
 
         if has_iiif:
-            flags.update({"hasIIIFManifest": has_iiif})
+            result_flags.update({"hasIIIFManifest": has_iiif})
 
         if number_of_exemplars > 0:
-            flags.update({"numberOfExemplars": number_of_exemplars})
+            result_flags.update({"numberOfExemplars": number_of_exemplars})
+
+        if linked_with_external_record:
+            result_flags.update({"linkedWithExternalRecord": linked_with_external_record})
+
+        if is_diamm_record:
+            result_flags.update({"isDIAMMRecord": is_diamm_record})
 
         # return None if flags are empty.
-        return flags or None
+        return result_flags or None
 
 
 class PersonSearchResult(ypres.DictSerializer):
@@ -266,9 +298,19 @@ class PersonSearchResult(ypres.DictSerializer):
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
-        id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "people.person", person_id=id_value)
+        if "project_s" not in obj:
+            id_value: str = re.sub(ID_SUB, "", obj.get("id"))
+            return get_identifier(req, "people.person", person_id=id_value)
+
+        project: str = obj["project_s"]
+        srtype: str = obj["type"]
+        id_value: str = re.sub(PROJECT_ID_SUB, "", obj.get("id"))
+        return get_identifier(req,
+                              "external.external",
+                              project=project,
+                              resource_type=srtype,
+                              ext_id=id_value)
 
     def get_label(self, obj: dict) -> dict:
         label: str = format_person_label(obj)
@@ -293,13 +335,21 @@ class PersonSearchResult(ypres.DictSerializer):
         return get_search_result_summary(field_config, transl, obj)
 
     def get_flags(self, obj: dict) -> Optional[dict]:
-        flags: dict = {}
+        result_flags: dict = {}
         number_of_sources: int = obj.get("source_count_i", 0)
+        linked_with_external_record: bool = obj.get("has_external_record_b", False)
+        is_diamm_record: bool = obj.get("project_s") == "diamm"
 
         if number_of_sources > 0:
-            flags.update({"numberOfSources": number_of_sources})
+            result_flags.update({"numberOfSources": number_of_sources})
 
-        return flags or None
+        if linked_with_external_record:
+            result_flags.update({"linkedWithExternalRecord": linked_with_external_record})
+
+        if is_diamm_record:
+            result_flags.update({"isDIAMMRecord": is_diamm_record})
+
+        return result_flags or None
 
 
 class InstitutionSearchResult(ypres.DictSerializer):
@@ -319,9 +369,22 @@ class InstitutionSearchResult(ypres.DictSerializer):
 
     def get_srid(self, obj: dict) -> str:
         req = self.context.get('request')
-        id_value: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "institutions.institution", institution_id=id_value)
+        if "project_s" not in obj:
+            id_value: str = re.sub(ID_SUB, "", obj.get("id"))
+            return get_identifier(req, "institutions.institution", institution_id=id_value)
+
+        project: str = obj["project_s"]
+        if "project_type_s" in obj:
+            srtype = obj["project_type_s"]
+        else:
+            srtype = obj["type"]
+        id_value: str = re.sub(PROJECT_ID_SUB, "", obj.get("id"))
+        return get_identifier(req,
+                              "external.external",
+                              project=project,
+                              resource_type=srtype,
+                              ext_id=id_value)
 
     def get_label(self, obj: dict) -> dict:
         label = format_institution_label(obj)
@@ -346,13 +409,21 @@ class InstitutionSearchResult(ypres.DictSerializer):
         return get_search_result_summary(field_config, transl, obj)
 
     def get_flags(self, obj: dict) -> Optional[dict]:
-        flags: dict = {}
+        result_flags: dict = {}
         number_of_sources: int = obj.get("total_sources_i", 0)
+        linked_with_external_record: bool = obj.get("has_external_record_b", False)
+        is_diamm_record: bool = obj.get("project_s") == "diamm"
 
         if number_of_sources > 0:
-            flags.update({"numberOfSources": number_of_sources})
+            result_flags.update({"numberOfSources": number_of_sources})
 
-        return flags or None
+        if linked_with_external_record:
+            result_flags.update({"linkedWithExternalRecord": linked_with_external_record})
+
+        if is_diamm_record:
+            result_flags.update({"isDIAMMRecord": is_diamm_record})
+
+        return result_flags or None
 
 
 class PlaceSearchResult(ypres.DictSerializer):
@@ -456,6 +527,7 @@ class IncipitSearchResult(ypres.DictSerializer):
     def get_summary(self, obj: dict) -> Optional[dict]:
         field_config: dict = {
             "creator_name_s": ("incipitComposer", "records.composer_author", None),
+            "standard_titles_json": ("sourceTitle", "records.source", title_json_value_translator),
             "text_incipit_sm": ("textIncipit", "records.text_incipit", None),
             "voice_instrument_s": ("voiceInstrument", "records.voice_instrument", None)
         }

@@ -4,7 +4,7 @@ from typing import Optional
 
 import ypres
 
-from search_server.helpers.record_types import create_record_block
+from search_server.helpers.record_types import create_source_types_block
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import Relationship
 from shared_helpers.display_fields import LabelConfig, get_display_fields
@@ -46,7 +46,9 @@ class BaseSource(ypres.AsyncDictSerializer):
         label="partOf"
     )
     summary = ypres.MethodField()
-    record = ypres.MethodField()
+    source_types = ypres.MethodField(
+        label="sourceTypes"
+    )
     record_history = ypres.MethodField(
         label="recordHistory"
     )
@@ -74,14 +76,14 @@ class BaseSource(ypres.AsyncDictSerializer):
 
         return transl.get("records.source")
 
-    def get_creator(self, obj: SolrResult) -> Optional[dict]:
+    async def get_creator(self, obj: SolrResult) -> Optional[dict]:
         if 'creator_json' not in obj:
             return None
 
-        return Relationship(obj["creator_json"][0],
-                            context={"request": self.context.get('request'),
-                                     "reltype": "rism:Creator",
-                                     "session": self.context.get("session")}).data
+        return await Relationship(obj["creator_json"][0],
+                                  context={"request": self.context.get('request'),
+                                           "reltype": "rism:Creator",
+                                           "session": self.context.get("session")}).data
 
     def get_part_of(self, obj: SolrResult) -> Optional[dict]:
         # This source is not part of another source; return None
@@ -112,7 +114,7 @@ class BaseSource(ypres.AsyncDictSerializer):
         source_type: str = source_membership.get("source_type", "unspecified")
         content_types: list[str] = source_membership.get("content_types", [])
 
-        record_block: dict = create_record_block(record_type, source_type, content_types)
+        source_types_block: dict = create_source_types_block(record_type, source_type, content_types, transl)
 
         return {
             "sectionLabel": transl.get("records.item_part_of"),
@@ -120,7 +122,7 @@ class BaseSource(ypres.AsyncDictSerializer):
                 "id": ident,
                 "type": "rism:Source",
                 "typeLabel": transl.get("records.source"),
-                "record": record_block,
+                "sourceTypes": source_types_block,
                 "label": {"none": [label]}
             }
         }
@@ -145,12 +147,14 @@ class BaseSource(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_record(self, obj: SolrResult) -> dict:
+    def get_source_types(self, obj: SolrResult) -> dict:
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
         source_type: str = obj.get("source_type_s", "unspecified")
         content_identifiers: list[str] = obj.get("content_types_sm", [])
         record_type: str = obj.get("record_type_s", "item")
 
-        return create_record_block(record_type, source_type, content_identifiers)
+        return create_source_types_block(record_type, source_type, content_identifiers, transl)
 
     def get_record_history(self, obj: SolrResult) -> dict:
         req = self.context.get("request")

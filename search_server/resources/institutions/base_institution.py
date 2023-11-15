@@ -5,6 +5,7 @@ import ypres
 
 from search_server.resources.shared.record_history import get_record_history
 from shared_helpers.display_fields import get_display_fields
+from shared_helpers.display_translators import country_codes_labels_translator
 from shared_helpers.formatters import format_institution_label
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
@@ -27,7 +28,9 @@ class BaseInstitution(ypres.AsyncDictSerializer):
         label="typeLabel"
     )
     label = ypres.MethodField()
-    summary = ypres.MethodField()
+    organization_details = ypres.MethodField(
+        label="organizationDetails"
+    )
     record_history = ypres.MethodField(
         label="recordHistory"
     )
@@ -49,6 +52,33 @@ class BaseInstitution(ypres.AsyncDictSerializer):
 
         return transl.get("records.institution")
 
+    def get_organization_details(self, obj: SolrResult) -> Optional[dict]:
+        org_deets: dict = OrganizationDetails(obj, context={"request": self.context.get("request")}).data
+
+        if not org_deets.get("summary"):
+            return None
+
+        return org_deets
+
+    def get_record_history(self, obj: dict) -> dict:
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
+        return get_record_history(obj, transl)
+
+
+class OrganizationDetails(ypres.DictSerializer):
+    section_label = ypres.MethodField(
+        label="sectionLabel"
+    )
+    summary = ypres.MethodField()
+
+    def get_section_label(self, obj: SolrResult) -> dict:
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
+        return transl.get("records.summary")
+
     def get_summary(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
@@ -56,16 +86,11 @@ class BaseInstitution(ypres.AsyncDictSerializer):
         field_config: dict = {
             "siglum_s": ("records.siglum", None),
             "city_s": ("records.city", None),
-            "countries_sm": ("records.country", None),
             "alternate_names_sm": ("records.other_form_of_name", None),
             "parallel_names_sm": ("records.parallel_form", None),
-            "institution_types_sm": ("records.type_institution", None)
+            "institution_types_sm": ("records.type_institution", None),
+            "country_codes_sm": ("records.country", country_codes_labels_translator),
         }
 
         return get_display_fields(obj, transl, field_config)
 
-    def get_record_history(self, obj: dict) -> dict:
-        req = self.context.get("request")
-        transl: dict = req.ctx.translations
-
-        return get_record_history(obj, transl)

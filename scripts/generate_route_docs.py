@@ -1,3 +1,4 @@
+import argparse
 import textwrap
 import yaml
 
@@ -134,7 +135,7 @@ Alias
 def main():
     all_routes: dict = app.router.routes_all
     sorted_routes = sorted(all_routes.items(), key=lambda tup: tup[1].path)
-    with open("docs/api/routes.md", "w") as opn:
+    with open("routes.md", "w") as opn:
         for rt, fn in sorted_routes:
             print(f"Route: {fn.path}")
             if fn.path not in INCLUDE_ROUTES:
@@ -147,7 +148,7 @@ def main():
             tpl = route_template.format(route_name=route_name, docstring=docstring)
             opn.writelines(tpl)
 
-    with open("docs/api/modes.md", "w") as opn:
+    with open("modes.md", "w") as opn:
         config: dict = yaml.safe_load(open('configuration.yml', 'r'))
         for section, sectcfg in config["search"]["modes"].items():
             sname = section.capitalize()

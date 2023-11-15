@@ -5,12 +5,14 @@ import ypres
 
 from search_server.resources.institutions.base_institution import BaseInstitution
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
-from search_server.resources.shared.external_link import ExternalResourcesSection
+from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from shared_helpers.display_fields import get_display_fields
 from shared_helpers.identifiers import get_identifier, ID_SUB
+from shared_helpers.languages import merge_language_maps
 from shared_helpers.solr_connection import SolrResult, SolrConnection
+from shared_helpers.utilities import is_number
 
 
 async def handle_institution_request(req, institution_id: str) -> Optional[dict]:
@@ -37,14 +39,13 @@ class Institution(BaseInstitution):
     properties = ypres.MethodField()
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
-        institution_id: str = obj.get("institution_id")
+        institution_id = obj["institution_id"]
+        ident: str = re.sub(ID_SUB, "", institution_id)
         source_count: int = obj.get("total_sources_i", 0)
 
         # if no sources are attached OR this is the 's.n.' record, return 0 sources attached.
-        if source_count == 0 or institution_id == "40009305":
+        if source_count == 0 or ident == "40009305" or obj.get("project_s") == "diamm":
             return None
-
-        ident: str = re.sub(ID_SUB, "", institution_id)
 
         return {
             "url": get_identifier(self.context.get("request"), "institutions.institution_sources", institution_id=ident),
@@ -61,18 +62,24 @@ class Institution(BaseInstitution):
         if 'external_ids' not in obj:
             return None
 
-        return ExternalAuthoritiesSection(obj['external_ids'], context={"request": self.context.get("request")}).data
+        return ExternalAuthoritiesSection(obj['external_ids'],
+                                          context={"request": self.context.get("request")}).data
 
     async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         if not self.context.get("direct_request"):
             return None
 
-        if {'related_people_json', 'related_places_json', 'related_institutions_json', 'now_in_json', 'contains_json'}.isdisjoint(obj.keys()):
+        if {'related_people_json',
+            'related_places_json',
+            'related_institutions_json',
+            'related_sources_json',
+            'now_in_json',
+            'contains_json'}.isdisjoint(obj.keys()):
             return None
 
         req = self.context.get("request")
 
-        return RelationshipsSection(obj, context={"request": req}).data
+        return await RelationshipsSection(obj, context={"request": req}).data
 
     async def get_notes(self, obj: SolrResult) -> Optional[dict]:
         notes: dict = await NotesSection(obj, context={"request": self.context.get("request")}).data
@@ -82,10 +89,11 @@ class Institution(BaseInstitution):
         return None
 
     async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
-        if 'external_resources_json' not in obj:
+        if 'external_resources_json' not in obj and not obj.get("has_external_record_b", False):
             return None
 
-        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+        return await ExternalResourcesSection(obj,
+                                              context={"request": self.context.get("request")}).data
 
     def get_properties(self, obj: SolrResult) -> Optional[dict]:
         d = {
@@ -139,12 +147,30 @@ class LocationAddressSection(ypres.DictSerializer):
         transl: dict = req.ctx.translations
 
         loc: str = obj.get("location_loc")
+        lat, lon = loc.split(",")
+
+        if not is_number(lat) or not is_number(lon):
+            return None
+
+        institution_id: str = obj['id']
+        ident: str = re.sub(ID_SUB, "", institution_id)
+
+        geojson_uri: str = get_identifier(req,
+                                          "institutions.geo_coordinates",
+                                          institution_id=ident)
+        long_label: dict = transl.get("records.longitude")
+        lat_label: dict = transl.get("records.latitude")
+
+        lon_lat_label = merge_language_maps(long_label, lat_label)
 
         return {
-            "label": transl.get("records.location"),
+            "id": geojson_uri,
+            "sectionLabel": transl.get("records.location"),
+            "type": "geojson:Feature",
             "geometry": {
+                "label": lon_lat_label,
                 "type": "geojson:Point",
-                "coordinates": loc.split(",")
+                "coordinates": [float(lon), float(lat)]
             }
         }
 
@@ -171,4 +197,3 @@ class LocationAddressSection(ypres.DictSerializer):
             "label": transl.get("general.e_mail"),
             "value": obj.get("email_address_sm")[0]
         }
-

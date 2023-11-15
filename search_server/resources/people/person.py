@@ -11,7 +11,7 @@ from shared_helpers.display_translators import person_gender_translator
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.people.variant_name import VariantNamesSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
-from search_server.resources.shared.external_link import ExternalResourcesSection
+from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 
@@ -29,10 +29,12 @@ async def handle_person_request(req, person_id: str) -> Optional[dict]:
 
 
 class Person(BasePerson):
+    biographical_details = ypres.MethodField(
+        label="biographicalDetails"
+    )
     external_authorities = ypres.MethodField(
         label="externalAuthorities"
     )
-    summary = ypres.MethodField()
     name_variants = ypres.MethodField(
         label="nameVariants"
     )
@@ -44,6 +46,14 @@ class Person(BasePerson):
     external_resources = ypres.MethodField(
         label="externalResources"
     )
+
+    def get_biographical_details(self, obj: SolrResult) -> Optional[dict]:
+        bio_details: dict = BiographicalDetails(obj, context={"request": self.context.get("request")}).data
+
+        if not bio_details.get("summary"):
+            return None
+
+        return bio_details
 
     def get_external_authorities(self, obj: SolrResult) -> Optional[list[dict]]:
         if 'external_ids' not in obj:
@@ -59,7 +69,7 @@ class Person(BasePerson):
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
         # Do not show a link to sources if this serializer is used for embedded results
-        if not self.context.get("direct_request"):
+        if not self.context.get("direct_request") or obj.get("project_s") == "diamm":
             return None
 
         # if no sources are attached to this organization, don't show this section. NB: This will
@@ -76,6 +86,50 @@ class Person(BasePerson):
             "totalItems": source_count
         }
 
+    async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
+        if not self.context.get("direct_request"):
+            return None
+
+        # sets are cool; two sets are disjoint if they have no keys in common. We
+        # can use this to check whether these keys are in the solr result; if not,
+        # we have no relationships to render, so we can return None.
+        if {'related_people_json',
+            'related_places_json',
+            'related_institutions_json',
+            'related_sources_json'}.isdisjoint(obj.keys()):
+            return None
+
+        req = self.context.get("request")
+        return await RelationshipsSection(obj, context={"request": req}).data
+
+    async def get_notes(self, obj: SolrResult) -> Optional[dict]:
+        notelist: dict = await NotesSection(obj, context={"request": self.context.get("request")}).data
+
+        # Check that the items is not empty; if not, return the note list object.
+        if "notes" in notelist:
+            return notelist
+
+        return None
+
+    async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
+        if 'external_resources_json' not in obj and not obj.get("has_external_record_b", False):
+            return None
+
+        return await ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+
+
+class BiographicalDetails(ypres.DictSerializer):
+    section_label = ypres.MethodField(
+        label="sectionLabel"
+    )
+    summary = ypres.MethodField()
+
+    def get_section_label(self, obj: SolrResult) -> dict:
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
+        return transl.get("rism_online.biographical_details")
+
     def get_summary(self, obj: SolrResult) -> list[dict]:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
@@ -88,31 +142,3 @@ class Person(BasePerson):
         }
 
         return get_display_fields(obj, transl, field_config)
-
-    def get_relationships(self, obj: SolrResult) -> Optional[dict]:
-        if not self.context.get("direct_request"):
-            return None
-
-        # sets are cool; two sets are disjoint if they have no keys in common. We
-        # can use this to check whether these keys are in the solr result; if not,
-        # we have no relationships to render, so we can return None.
-        if {'related_people_json', 'related_places_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
-            return None
-
-        req = self.context.get("request")
-        return RelationshipsSection(obj, context={"request": req}).data
-
-    async def get_notes(self, obj: SolrResult) -> Optional[dict]:
-        notelist: dict = await NotesSection(obj, context={"request": self.context.get("request")}).data
-
-        # Check that the items is not empty; if not, return the note list object.
-        if "notes" in notelist:
-            return notelist
-
-        return None
-
-    def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
-        if 'external_resources_json' not in obj:
-            return None
-
-        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data

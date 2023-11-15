@@ -3,6 +3,7 @@ from typing import Optional
 import ypres
 
 from shared_helpers.display_fields import get_display_fields, LabelConfig
+from shared_helpers.display_translators import secondary_literature_json_value_translator
 from shared_helpers.solr_connection import SolrResult
 
 
@@ -27,7 +28,10 @@ class NotesSection(ypres.AsyncDictSerializer):
 
         field_config: LabelConfig = {
             "general_notes_sm": ("records.general_note", None),
-            "additional_biography_sm": ("records.additional_biographical_information", None)
+            "additional_biography_sm": ("records.additional_biographical_information", None),
+            "institution_history_sm": ("records.history_institution", None),
+            "bibliographic_references_json": ("records.bibliographic_reference",
+                                              secondary_literature_json_value_translator),
         }
 
         return get_display_fields(obj, transl, field_config)

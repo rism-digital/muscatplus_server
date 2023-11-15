@@ -12,12 +12,13 @@ from shared_helpers.display_translators import (
     title_json_value_translator,
     source_relationship_labels_translator
 )
-from shared_helpers.identifiers import ID_SUB, get_identifier
+from shared_helpers.identifiers import ID_SUB, get_identifier, PROJECT_ID_SUB, EXTERNAL_IDS
+from shared_helpers.utilities import to_aiter
 
 log = logging.getLogger("mp_server")
 
 
-class RelationshipsSection(ypres.DictSerializer):
+class RelationshipsSection(ypres.AsyncDictSerializer):
     section_label = ypres.MethodField(
         label="sectionLabel"
     )
@@ -29,7 +30,7 @@ class RelationshipsSection(ypres.DictSerializer):
 
         return transl.get("records.relations", {})
 
-    def get_items(self, obj: dict) -> list[dict]:
+    async def get_items(self, obj: dict) -> list[dict]:
         people: list = obj.get("related_people_json", [])
         institutions: list = obj.get("related_institutions_json", [])
         places: list = obj.get("related_places_json", [])
@@ -37,15 +38,20 @@ class RelationshipsSection(ypres.DictSerializer):
         contains: list = obj.get("contains_json", [])
         sources: list = obj.get("related_sources_json", [])
 
-        all_relationships = itertools.chain(people, institutions, places, now_in, contains, sources)
+        all_relationships = to_aiter(itertools.chain(people,
+                                                     institutions,
+                                                     places,
+                                                     now_in,
+                                                     contains,
+                                                     sources))
 
-        return Relationship(all_relationships,
-                            many=True,
-                            context={"request": self.context.get("request"),
-                                     "session": self.context.get("session")}).data
+        return await Relationship(all_relationships,
+                                  many=True,
+                                  context={"request": self.context.get("request"),
+                                           "session": self.context.get("session")}).data
 
 
-class Relationship(ypres.DictSerializer):
+class Relationship(ypres.AsyncDictSerializer):
     role = ypres.MethodField()
     qualifier = ypres.MethodField()
     related_to = ypres.MethodField(
@@ -147,11 +153,9 @@ def _related_to_person(req, obj: dict) -> dict:
 
 
 def _related_to_institution(req, obj: dict) -> dict:
-    name: str
+    name: str = f"{obj['name']}"
     if 'department' in obj:
-        name = f"{obj.get('name')}, {obj.get('department')}"
-    else:
-        name = f"{obj.get('name')}"
+        name = f"{name}, {obj.get('department')}"
 
     if "place" in obj:
         name = f"{name}, {obj['place']}"
@@ -181,11 +185,25 @@ def _related_to_place(req, obj: dict) -> dict:
 def _related_to_source(req, obj: dict) -> dict:
     transl: dict = req.ctx.translations
 
-    source_id: str = re.sub(ID_SUB, "", obj["source_id"])
+    source_id: str
+    ident: str
+    if "project" in obj and obj['project'] == "diamm":
+        source_id = re.sub(PROJECT_ID_SUB, "", obj["source_id"])
+        prefix: Optional[str] = EXTERNAL_IDS.get("diamm", {}).get("ident")
+        if not prefix:
+            # If, for some reason this isn't found, return the empty dict.
+            log.error("A URI prefix was not found for project %s", obj["project"])
+            return {}
+        suffix = f"sources/{source_id}"
+        ident = prefix.format(ident=suffix)
+    else:
+        source_id = re.sub(ID_SUB, "", obj["source_id"])
+        ident = get_identifier(req, "sources.source", source_id=source_id)
+
     source_title: dict = title_json_value_translator(obj.get("title", []), transl)
 
     return {
-        "id": get_identifier(req, "sources.source", source_id=source_id),
+        "id": ident,
         "label": source_title,
         "type": "rism:Source"
     }
@@ -202,7 +220,10 @@ def _relationship_translator(obj: dict) -> Optional[Callable]:
 
     """
     relationship_translator: Callable
-    if 'person_id' in obj or 'institution_id' in obj:
+    if obj.get("project") == "diamm":
+        # DIAMM uses the person / institution relator codes for its source relationships
+        return person_institution_relationship_labels_translator
+    elif 'person_id' in obj or 'institution_id' in obj:
         return person_institution_relationship_labels_translator
     elif 'place_id' in obj:
         return place_relationship_labels_translator

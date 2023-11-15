@@ -10,8 +10,8 @@ from small_asc.client import Results
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.api import api_blueprint
 from search_server.routes.countries import countries_blueprint
+from search_server.routes.external import external_blueprint
 from search_server.routes.festivals import festivals_blueprint
-from search_server.routes.holdings import holdings_blueprint
 from search_server.routes.incipits import incipits_blueprint
 from search_server.routes.institutions import institutions_blueprint
 from search_server.routes.people import people_blueprint
@@ -42,14 +42,15 @@ if debug_mode is False:
         dsn=config["sentry"]["dsn"],
         integrations=[SanicIntegration()],
         environment=config["sentry"]["environment"],
-        release=f"muscatplus_server@{release}"
+        release=f"muscatplus_server@{release}",
+        traces_sample_rate=1.0,
+        profiles_sample_rate=1.0
     )
 
 app = Sanic("mp_server", dumps=orjson.dumps)
 
 # register routes with their blueprints
 app.blueprint(sources_blueprint)
-app.blueprint(holdings_blueprint)
 app.blueprint(people_blueprint)
 app.blueprint(places_blueprint)
 app.blueprint(institutions_blueprint)
@@ -60,6 +61,7 @@ app.blueprint(countries_blueprint)
 app.blueprint(works_blueprint)
 app.blueprint(query_blueprint)
 app.blueprint(api_blueprint)
+app.blueprint(external_blueprint)
 
 app.config.FORWARDED_SECRET = config['common']['secret']
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive

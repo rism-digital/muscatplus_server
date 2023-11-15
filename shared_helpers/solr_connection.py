@@ -5,7 +5,7 @@
     they can then use to perform searches.
 
       >>> from shared_helpers.solr_connection import SolrConnection
-      >>> res = SolrConnection.search("Some Query")
+      >>> res = SolrConnection.search({"query": "Some query"})
 
 """
 import logging

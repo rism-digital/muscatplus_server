@@ -5,8 +5,8 @@ from typing import Optional
 import ypres
 from small_asc.client import JsonAPIRequest, Results
 
-from search_server.helpers.record_types import create_record_block
-from search_server.helpers.vrv import render_pae, render_mei
+from search_server.helpers.record_types import create_source_types_block
+from search_server.helpers.vrv import render_pae, render_mei, render_png
 from search_server.resources.sources.base_source import BaseSource
 from shared_helpers.display_fields import (
     get_display_fields,
@@ -94,6 +94,29 @@ async def handle_mei_download(req, source_id: str, work_num: str) -> Optional[di
     }
 
 
+async def handle_png_download(req, source_id: str, work_num: str) -> Optional[dict]:
+    incipit_record: Optional[SolrResult] = await _fetch_incipit(source_id, work_num)
+
+    if not incipit_record:
+        return None
+
+    if "original_pae_sni" not in incipit_record:
+        return None
+
+    filename: str = f"rism-source-{source_id}-{work_num}.png"
+    response_headers: dict = {"Content-Disposition": f"attachment; filename={filename}",
+                              "Content-Type": "image/png"}
+
+    png_content: Optional[bytes] = render_png(req, incipit_record["original_pae_sni"])
+    if not png_content:
+        return None
+
+    return {
+        "headers": response_headers,
+        "content": png_content
+    }
+
+
 class IncipitsSection(ypres.AsyncDictSerializer):
     isid = ypres.MethodField(
         label="id"
@@ -139,7 +162,7 @@ class IncipitsSection(ypres.AsyncDictSerializer):
         content_identifiers: list[str] = obj.get("content_types_sm", [])
         record_type: str = obj.get("record_type_s", "item")
 
-        record_block = create_record_block(record_type, source_type, content_identifiers)
+        source_types_block = create_source_types_block(record_type, source_type, content_identifiers, transl)
 
         return {
             "label": transl.get("records.item_part_of"),
@@ -147,7 +170,7 @@ class IncipitsSection(ypres.AsyncDictSerializer):
                 "id": ident,
                 "type": "rism:Source",
                 "typeLabel": transl.get("records.source"),
-                "record": record_block,
+                "sourceTypes": source_types_block,
                 "label": {"none": [label]}
             }
         }
@@ -266,6 +289,7 @@ class Incipit(ypres.AsyncDictSerializer):
         if not pae_code:
             return None
 
+        req = self.context.get("request")
         is_mensural: bool = obj.get("is_mensural_b", False)
 
         # Set Verovio to render random IDs for this so that we don't have any ID collisions with
@@ -278,16 +302,22 @@ class Incipit(ypres.AsyncDictSerializer):
 
         svg, b64midi = rendered_pae
 
-        # return [{
-        #     "format": "image/svg+xml",
-        #     "data": svg
-        # }, {
-        #     "format": "audio/midi",
-        #     "data": b64midi
-        # }]
+        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+        work_num: str = obj.get('work_num_s', "")
+        png_download_url: str = get_identifier(req,
+                                               "sources.incipit_png_rendering",
+                                               source_id=source_id,
+                                               work_num=work_num)
+
         return [{
             "format": "image/svg+xml",
             "data": svg
+        }, {
+            "format": "audio/midi",
+            "data": b64midi
+        }, {
+            "format": "image/png",
+            "url": png_download_url
         }]
 
     def get_encodings(self, obj: SolrResult) -> Optional[list]:
@@ -301,7 +331,7 @@ class Incipit(ypres.AsyncDictSerializer):
         source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
         work_num: str = obj.get('work_num_s', "")
         mei_download_url: str = get_identifier(req,
-                                               "sources.incipit_encoding",
+                                               "sources.incipit_mei_encoding",
                                                source_id=source_id,
                                                work_num=work_num)
 

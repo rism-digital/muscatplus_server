@@ -12,13 +12,14 @@ from shared_helpers.display_translators import (
 )
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
-from search_server.resources.shared.external_link import ExternalResourcesSection
+from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
+from shared_helpers.utilities import to_aiter
 
 log = logging.getLogger("mp_server")
 
 
-class MaterialGroupsSection(ypres.DictSerializer):
+class MaterialGroupsSection(ypres.AsyncDictSerializer):
     section_label = ypres.MethodField(
         label="sectionLabel"
     )
@@ -30,14 +31,15 @@ class MaterialGroupsSection(ypres.DictSerializer):
 
         return transl.get("records.material_description", {})
 
-    def get_items(self, obj: SolrResult) -> list[dict]:
+    async def get_items(self, obj: SolrResult) -> list[dict]:
         mgdata: list = obj.get("material_groups_json", [])
-        return MaterialGroup(mgdata,
-                             many=True,
-                             context={"request": self.context.get("request")}).data
+        # NB: The regular list needs to be converted to an async iterator
+        return await MaterialGroup(to_aiter(mgdata),
+                                   many=True,
+                                   context={"request": self.context.get("request")}).data
 
 
-class MaterialGroup(ypres.DictSerializer):
+class MaterialGroup(ypres.AsyncDictSerializer):
     label = ypres.MethodField()
     summary = ypres.MethodField()
     notes = ypres.MethodField()
@@ -89,16 +91,16 @@ class MaterialGroup(ypres.DictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_relationships(self, obj: dict) -> Optional[dict]:
+    async def get_relationships(self, obj: dict) -> Optional[dict]:
         # a set is disjoint if there are no keys in common. Check if these keys exist in the
         # record; if they are disjoint, then we don't need to process them.
         if {'related_people_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
             return None
 
-        return RelationshipsSection(obj, context={"request": self.context.get("request")}).data
+        return await RelationshipsSection(obj, context={"request": self.context.get("request")}).data
 
-    def get_external_resources(self, obj: dict) -> Optional[dict]:
+    async def get_external_resources(self, obj: dict) -> Optional[dict]:
         if "external_resources" not in obj:
             return None
 
-        return ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+        return await ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data

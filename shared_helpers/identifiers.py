@@ -2,6 +2,14 @@ import re
 from typing import Pattern, Optional
 
 ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_|work_")
+PROJECT_ID_SUB: Pattern = re.compile(r"diamm_source_|diamm_person_|diamm_holding_|diamm_institution_|diamm_organization_|diamm_archive_")
+
+
+PROJECT_IDENTIFIERS = {
+    "diamm": "https://www.diamm.ac.uk/",
+    "cantus": "https://cantusdatabase.org/",
+    "rism": "https://rism.online/"
+}
 
 EXTERNAL_IDS: dict = {
     "viaf": {"label": "Virtual Internet Authority File (VIAF)",
@@ -10,8 +18,7 @@ EXTERNAL_IDS: dict = {
             "ident": "http://d-nb.info/gnd/{ident}"},
     "wkp": {"label": "Wikidata",
             "ident": "https://www.wikidata.org/wiki/{ident}"},
-    "isil": {"label": "International Standard Identifier for Libraries and Related Organizations (ISIL)",
-             "ident": "https://ld.zdb-services.de/resource/organisations/{ident}"},
+    "isil": {"label": "International Standard Identifier for Libraries and Related Organizations (ISIL)"},
     "bne": {"label": "Biblioteca Nacional de España"},
     "bnf": {"label": "Bibliothèque Nationale de France"},
     "iccu": {"label": "Istituto Centrale per il Catalogo Unico"},  # No stable URI for authorities
@@ -25,6 +32,10 @@ EXTERNAL_IDS: dict = {
     "moc": {"label": "MARC Organization Code"},  # No URI possible.
     "orcid": {"label": "Open Researcher and Contributor ID (ORCiD)",
               "ident": "https://orcid.org/{ident}"},
+    "diamm": {"label": "Digital Image Archive of Medieval Music",
+              "ident": "https://www.diamm.ac.uk/{ident}"},
+    "cantus": {"label": "Cantus: A Database for Latin Ecclesiastical Chant",
+               "ident": "https://cantusdatabase.org/{ident}"}
 }
 
 
@@ -89,6 +100,7 @@ FieldDataType = dict[str, list[str]]
 
 
 SOLR_FIELD_DATA_TYPES: FieldDataType = {
+    "standard_title_s": ["dcterms:title", "rism:StandardizedTitle"],
     "source_title_s": ["dcterms:title"],
     "variant_title_s": ["dcterms:alternate"],
     "additional_titles_json": ["dcterms:alternate"],

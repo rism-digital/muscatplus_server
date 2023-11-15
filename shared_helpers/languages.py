@@ -1,6 +1,5 @@
 import collections
 import errno
-import glob
 import logging
 import os
 import re
@@ -206,3 +205,7 @@ def negotiate_languages(req, translations: dict) -> dict:
 
     log.debug("filtering languages %s", acceptable_vals)
     return filter_languages(acceptable_vals, translations)
+
+
+def merge_language_maps(d1: dict[str, list], d2: dict[str, list]) -> dict[str, list]:
+    return {key: [", ".join(value + d2[key])] for key, value in d1.items()}

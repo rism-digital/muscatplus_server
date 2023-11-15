@@ -2,7 +2,6 @@ import argparse
 import asyncio
 import concurrent.futures
 import logging.config
-import os
 import sqlite3
 import subprocess
 import timeit
@@ -75,8 +74,7 @@ def to_turtle(data: dict) -> str:
 
 
 async def create_id_groups(num_groups: int, record_type: str, country_code: Optional[str]) -> list:
-    log.debug("Creating ID groups")
-    fq = [f"type:{record_type}"]
+    fq = [f"type:{record_type}", "!project_s:[* TO *]"]
 
     if record_type == "source" and country_code:
         fq.append(f"country_codes_sm:{country_code}")
@@ -283,9 +281,9 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--output", default="../ttl", type=Path)
+    parser.add_argument("-o", "--output", default="../ttl", type=Path, help="Output directory")
     parser.add_argument("-f", "--refresh-fuseki", dest="refresh_fuseki", action="store_true",
-                        help="URL to fuseki server")
+                        help="Refresh data in the fuseki server")
     parser.add_argument("-e", "--empty", dest="empty", action="store_true",
                         help="Empty the output directory before starting")
     parser.add_argument("-c", "--country", help="Optional country code for sources")

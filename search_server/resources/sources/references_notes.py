@@ -10,9 +10,10 @@ from shared_helpers.display_translators import (
     url_detecting_translator
 )
 from shared_helpers.solr_connection import SolrResult
+from shared_helpers.utilities import to_aiter
 
 
-class ReferencesNotesSection(ypres.DictSerializer):
+class ReferencesNotesSection(ypres.AsyncDictSerializer):
     section_label = ypres.MethodField(
         label="sectionLabel"
     )
@@ -52,13 +53,13 @@ class ReferencesNotesSection(ypres.DictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_performance_locations(self, obj: SolrResult) -> Optional[dict]:
+    async def get_performance_locations(self, obj: SolrResult) -> Optional[dict]:
         # 651
         if 'location_of_performance_json' not in obj:
             return None
 
-        return PerformanceLocationsSection(obj,
-                                           context={"request": self.context.get('request')}).data
+        return await PerformanceLocationsSection(obj,
+                                                 context={"request": self.context.get('request')}).data
 
     def get_liturgical_festivals(self, obj: SolrResult) -> Optional[dict]:
         # 657
@@ -69,7 +70,7 @@ class ReferencesNotesSection(ypres.DictSerializer):
                                           context={"request": self.context.get("request")}).data
 
 
-class PerformanceLocationsSection(ypres.DictSerializer):
+class PerformanceLocationsSection(ypres.AsyncDictSerializer):
     section_label = ypres.MethodField(
         label="sectionLabel"
     )
@@ -85,12 +86,12 @@ class PerformanceLocationsSection(ypres.DictSerializer):
 
         return transl.get("records.location_performance")
 
-    def get_items(self, obj: dict) -> list[dict]:
+    async def get_items(self, obj: dict) -> list[dict]:
         performance_locations = obj.get("location_of_performance_json", [])
 
-        return Relationship(performance_locations,
-                            many=True,
-                            context={"request": self.context.get("request")}).data
+        return await Relationship(to_aiter(performance_locations),
+                                  many=True,
+                                  context={"request": self.context.get("request")}).data
 
 
 class LiturgicalFestivalsSection(ypres.DictSerializer):
