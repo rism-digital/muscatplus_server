@@ -8,7 +8,7 @@ from small_asc.client import SolrError
 from shared_helpers.identifiers import get_identifier
 from shared_helpers.jsonld import RouteContextMap
 from search_server.exceptions import InvalidQueryException
-from search_server.helpers.linked_data import to_turtle, to_expanded_jsonld
+from search_server.helpers.linked_data import to_turtle, to_expanded_jsonld, to_ntriples
 
 log = logging.getLogger("mp_server")
 
@@ -39,6 +39,7 @@ async def handle_request(req: request.Request,
 
     :param req: A Sanic request object
     :param handler: A function for handling the request
+    :param suppress_context: Whether or not to suppress the @context when delivering
     :param kwargs: A set of options to be passed to the
     :return: A JSON Response, or an error if not successful.
     """
@@ -66,8 +67,11 @@ async def handle_request(req: request.Request,
         res: dict = {**ctx_val, **data_obj}
         ttl = to_turtle(res)
         return response.text(ttl, headers={"Content-Type": "text/turtle"})
-    elif accept and "application/n-quads" in accept:
-        return response.text("N-Quad responses will be implemented in the future", status=501)
+    elif accept and "application/n-triples" in accept:
+        ctx_val = {"@context": ctx_options.context}
+        res: dict = {**ctx_val, **data_obj}
+        nt: str = to_ntriples(res)
+        return response.text(nt, headers={"Content-Type": "application/n-triples"})
     elif accept and ";profile=expanded" in accept:
         ctx_val = {"@context": ctx_options.context}
         res: dict = {**ctx_val, **data_obj}

@@ -16,22 +16,21 @@ def _to_graph_object(data: dict) -> rdflib.Graph:
     :return: An rdflib.Graph object.
     """
     json_serialized: str = orjson.dumps(data).decode("utf8")
-    g = rdflib.Graph().parse(data=json_serialized, format="application/ld+json")
-
-    return g
+    return rdflib.Graph().parse(data=json_serialized, format="application/ld+json")
 
 
 def to_turtle(data: dict) -> str:
     log.debug("Creating graph from data")
     graph_object: rdflib.Graph = _to_graph_object(data)
     log.debug("Created graph object")
-    turtle: str = graph_object.serialize(format="turtle")
-
-    return turtle
+    return graph_object.serialize(format="turtle")
 
 
 def to_expanded_jsonld(data: dict) -> str:
     graph_object: rdflib.Graph = _to_graph_object(data)
-    expanded_ld: str = graph_object.serialize(format="json-ld")
+    return graph_object.serialize(format="json-ld")
 
-    return expanded_ld
+
+def to_ntriples(data: dict) -> str:
+    graph_object: rdflib.Graph = _to_graph_object(data)
+    return graph_object.serialize(format="nt")
