@@ -46,7 +46,7 @@ class InstitutionGeoJson(ypres.AsyncDictSerializer):
         return all_features
 
 
-async def get_nearby_orgs(req, coordinates: list, pimary_obj_id: str) -> Optional[list]:
+async def get_nearby_orgs(req, coordinates: list, pimary_obj_id: str) -> list[dict]:
     locval = ",".join(coordinates)
     nearby_orgs_query = {
         "query": "*:*",
@@ -61,7 +61,7 @@ async def get_nearby_orgs(req, coordinates: list, pimary_obj_id: str) -> Optiona
 
     results = await SolrConnection.search(nearby_orgs_query, cursor=True, handler="/query")
     if not results:
-        return None
+        return []
 
     return await GeoJsonFeature(results, many=True, context={"is_primary": False,
                                                              "request": req}).data
