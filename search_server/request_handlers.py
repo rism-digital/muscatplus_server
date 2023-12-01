@@ -104,6 +104,12 @@ async def handle_search(req: request.Request, handler: Callable, **kwargs) -> re
     #     return response.text("Supported content types for search interfaces are 'application/json' and
     #     application/ld+json'", status=406)
 
+    accept: Optional[str] = req.headers.get("Accept")
+    if accept and "application/ld+json" not in accept:
+        status_msg = f"""Accept header {accept} is not available for this resource. 
+        Only application/ld+json is available"""
+        return response.text(status_msg, status=406)
+
     try:
         data_obj: dict = await handler(req, **kwargs)
     except InvalidQueryException as e:
