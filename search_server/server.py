@@ -43,8 +43,6 @@ if debug_mode is False:
         integrations=[SanicIntegration()],
         environment=config["sentry"]["environment"],
         release=f"muscatplus_server@{release}",
-        traces_sample_rate=1.0,
-        profiles_sample_rate=1.0
     )
 
 app = Sanic("mp_server", dumps=orjson.dumps)
