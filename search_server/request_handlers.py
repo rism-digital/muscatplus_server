@@ -1,6 +1,7 @@
 import logging
 from typing import Callable, Optional
 
+import aiohttp
 import orjson.orjson
 from sanic import request, response
 from small_asc.client import SolrError
@@ -72,6 +73,26 @@ async def handle_request(req: request.Request,
         res: dict = {**ctx_val, **data_obj}
         nt: str = to_ntriples(res)
         return response.text(nt, headers={"Content-Type": "application/n-triples"})
+    elif accept and "application/marcxml+xml" in accept:
+        if sid := req.match_info.get("source_id"):
+            rtype = "sources"
+            rid = sid
+        elif iid := req.match_info.get("institution_id"):
+            rtype = "institutions"
+            rid = iid
+        elif pid := req.match_info.get("person_id"):
+            rtype = "people"
+            rid = pid
+        else:
+            return response.text("Cannot retrieve MARCXML for this resource.", status=406)
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://muscat.rism.info/sru/{rtype}?operation=searchRetrieve&version=1.1&query=id={rid}") as muscat_req:
+                muscat_resp = await muscat_req.text()
+                if muscat_req.status != 200:
+                    return response.text("Could not retrieve MARCXML from upstream", status=500)
+
+        return response.text(muscat_resp, headers={"Content-Type": "application/marcxml+xml"})
     elif accept and ";profile=expanded" in accept:
         ctx_val = {"@context": ctx_options.context}
         res: dict = {**ctx_val, **data_obj}
