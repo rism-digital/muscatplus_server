@@ -351,7 +351,7 @@ class Incipit(ypres.AsyncDictSerializer):
             "format": "application/json",
             "data": pae_encoding,
         }, {
-            "label": transl.get("records.unknown"),
+            "label": {"none": ["MEI"]},
             "format": "application/mei+xml",
             "url": mei_download_url,
         }]
