@@ -22,7 +22,8 @@ from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
 from search_server.resources.sources.full_source import FullSource
 from search_server.server import app
-from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT
+from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT, RISM_JSONLD_PERSON_CONTEXT, \
+    RISM_JSONLD_INSTITUTION_CONTEXT, RISM_JSONLD_DEFAULT_CONTEXT
 from shared_helpers.languages import load_translations, filter_languages
 
 logging.config.dictConfig({'disable_existing_loggers': True, 'version': 1})
@@ -68,7 +69,7 @@ serializer_map: dict = {
 def to_turtle(data: dict) -> str:
     json_serialized: str = orjson.dumps(data)
     graph_object: rdflib.Graph = rdflib.Graph().parse(data=json_serialized, format="application/ld+json")
-    turtle: str = graph_object.serialize(format="turtle")
+    turtle: str = graph_object.serialize(format="nt")
 
     return turtle
 
@@ -81,8 +82,8 @@ async def create_id_groups(num_groups: int, record_type: str, country_code: Opti
 
     fl = ["id"]
 
-    res = await solr_conn.search({"query": "*:*", "filter": fq, "fields": fl, "sort": "id asc", "limit": 1000},
-                                 cursor=True)
+    res = await solr_conn.search({"query": "*:*", "filter": fq, "fields": fl, "sort": "id asc",
+                                  "limit": 1000}, cursor=True)
     log.debug("Gathering groups")
     id_list: list = [sdoc["id"] async for sdoc in res]
 
@@ -132,7 +133,16 @@ async def run_serializer(docid: str, serializer, ctx_val: dict, semaphore, sessi
 
 async def serialize(id_group: list, record_type: str, semaphore, dbname: str) -> None:
     log.debug("Actually serializing! Processing %s IDs", len(id_group))
-    ctx_val = {"@context": RISM_JSONLD_SOURCE_CONTEXT}
+    if record_type == "source":
+        ctx_val = {"@context": RISM_JSONLD_SOURCE_CONTEXT}
+    elif record_type == "person":
+        ctx_val = {"@context": RISM_JSONLD_PERSON_CONTEXT}
+    elif record_type == "institution":
+        ctx_val = {"@context": RISM_JSONLD_INSTITUTION_CONTEXT}
+    else:
+        log.warning("Could not determine context for %s. Using the default context", record_type)
+        ctx_val = {"@context": RISM_JSONLD_DEFAULT_CONTEXT}
+
     tasks = set()
     sqlconn = sqlite3.connect(dbname)
 
@@ -166,52 +176,6 @@ def do_serialize(id_group: list, resource_type: str, dbname: str):
     asyncio.run(serialize(id_group, resource_type, semaphore, dbname))
 
 
-async def empty_fuseki(fuseki_url: str) -> bool:
-    log.info("Emptying Fuseki")
-    timeout = aiohttp.ClientTimeout(total=None)
-    async with aiohttp.ClientSession(timeout=timeout) as session:
-        res = await session.delete(fuseki_url)
-        if res.status == 204:
-            return True
-
-    return False
-
-
-async def upload_to_fuseki(fuseki_url: str, ttl_file: Path) -> bool:
-    data: str = ttl_file.read_text("utf-8")
-    upload_headers: dict = {"Content-Type": "text/turtle"}
-    timeout = aiohttp.ClientTimeout(total=None)
-
-    async with aiohttp.ClientSession(headers=upload_headers, timeout=timeout) as session:
-        log.info("Uploading %s", ttl_file)
-        res = await session.post(fuseki_url, data=data)
-        if res.status == 200:
-            return True
-    return False
-
-
-async def refresh_fuseki(fuseki_url: str, num_files: int, output_path: Path) -> bool:
-    res = True
-    res |= await empty_fuseki(fuseki_url)
-    for i in range(num_files):
-        ttl_file: Path = Path(output_path, f"output_{i}.ttl")
-        res |= await upload_to_fuseki(fuseki_url, ttl_file)
-
-    return res
-
-
-def run_refresh_fuseki(args, parallel_processes: int):
-    url: str = "http://localhost:3030/rism-online?default"
-    log.info("Uploading to Fuseki at %s", url)
-    fuseki_res: bool = asyncio.run(refresh_fuseki(url, parallel_processes, args.output))
-    if fuseki_res:
-        log.info("Successfully refreshed Fuseki")
-    else:
-        log.error("Could not refresh Fuseki")
-
-    return fuseki_res
-
-
 def main(args: argparse.Namespace, parallel_processes: int) -> bool:
     types_to_serialize: list
     if not args.include:
@@ -227,8 +191,9 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
     if args.empty:
         for i in range(parallel_processes):
             db_file = Path(args.output, f"output_{i}.db")
-            log.info("Removing %s", str(db_file))
-            db_file.unlink(missing_ok=True)
+            if db_file.exists():
+                log.info("Removing %s", str(db_file))
+                db_file.unlink(missing_ok=True)
 
     for rec_type in types_to_serialize:
         id_groups: list = asyncio.run(create_id_groups(parallel_processes, rec_type, args.country))
@@ -261,7 +226,7 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
     for i in range(parallel_processes):
         db_name = Path(args.output, f"output_{i}.db")
 
-        ttl_path = Path(args.output, f"output_{i}.ttl")
+        ttl_path = Path(args.output, f"output_{i}.nt")
         if args.empty:
             log.info("Removing %s", str(ttl_path))
             ttl_path.unlink(missing_ok=True)
@@ -273,24 +238,18 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
             subprocess.run(["sqlite3", str(db_name), sql_stmt],
                            stdout=ttl_out)
 
-    if args.refresh_fuseki:
-        res = run_refresh_fuseki(args, parallel_processes)
-
     return True
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output", default="../ttl", type=Path, help="Output directory")
-    parser.add_argument("-f", "--refresh-fuseki", dest="refresh_fuseki", action="store_true",
-                        help="Refresh data in the fuseki server")
     parser.add_argument("-e", "--empty", dest="empty", action="store_true",
                         help="Empty the output directory before starting")
     parser.add_argument("-c", "--country", help="Optional country code for sources")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output (log level DEBUG)")
     parser.add_argument("-q", "--quiet", action="store_true", help="Quiet output (log level WARNING)")
     parser.add_argument("--include", action="extend", nargs="*")
-    parser.add_argument("--only-fuseki", action="store_true")
 
     incoming_args = parser.parse_args()
 
@@ -305,10 +264,7 @@ if __name__ == "__main__":
     # num_procs: int = os.cpu_count()
     num_procs: int = 6
 
-    if incoming_args.only_fuseki:
-        result: bool = run_refresh_fuseki(incoming_args, num_procs)
-    else:
-        result: bool = main(incoming_args, num_procs)
+    result: bool = main(incoming_args, num_procs)
 
     end = timeit.default_timer()
     elapsed: float = end - start
