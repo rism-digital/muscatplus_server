@@ -26,7 +26,10 @@ from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT, RISM_JSONLD_PERSON
     RISM_JSONLD_INSTITUTION_CONTEXT, RISM_JSONLD_DEFAULT_CONTEXT
 from shared_helpers.languages import load_translations, filter_languages
 
-logging.config.dictConfig({'disable_existing_loggers': True, 'version': 1})
+
+log_config: dict = yaml.safe_load(open('linked_data/logging.yml', 'r'))
+logging.config.dictConfig(log_config)
+
 log = logging.getLogger("ld_export")
 
 config: dict = yaml.safe_load(open('configuration.yml', 'r'))
@@ -122,7 +125,7 @@ async def run_serializer(docid: str, serializer, ctx_val: dict, semaphore, sessi
         serialized.update(ctx_val)
         turtle: str = to_turtle(serialized)
         if not turtle:
-            log.critical("No turtle output! %s", docid)
+            log.critical("No output! %s", docid)
 
         with sqlconn:
             sqlconn.execute("INSERT INTO serialized VALUES (?, ?, ?)", (docid, this_doc['type'], turtle))
@@ -156,7 +159,8 @@ async def serialize(id_group: list, record_type: str, semaphore, dbname: str) ->
 
     async with aiohttp.ClientSession(json_serialize=lambda x: orjson.dumps(x).decode("utf-8")) as session:
         for docid in id_group:
-            task = asyncio.create_task(run_serializer(docid, serializer, ctx_val, semaphore, session, sqlconn))
+            task = asyncio.create_task(
+                run_serializer(docid, serializer, ctx_val, semaphore, session, sqlconn))
             tasks.add(task)
             task.add_done_callback(tasks.discard)
 
@@ -225,8 +229,8 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
 
     for i in range(parallel_processes):
         db_name = Path(args.output, f"output_{i}.db")
-
         ttl_path = Path(args.output, f"output_{i}.nt")
+
         if args.empty:
             log.info("Removing %s", str(ttl_path))
             ttl_path.unlink(missing_ok=True)
@@ -235,8 +239,7 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
             log.info("Writing TTL output to %s", str(ttl_path))
             sql_stmt = f"SELECT ttl FROM serialized"
 
-            subprocess.run(["sqlite3", str(db_name), sql_stmt],
-                           stdout=ttl_out)
+            subprocess.run(["sqlite3", str(db_name), sql_stmt], stdout=ttl_out)
 
     return True
 
