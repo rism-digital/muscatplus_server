@@ -7,3 +7,4 @@ scripts/node_modules
 
 scripts/package.json
 scripts/yarn.lock
+logs/*.log
