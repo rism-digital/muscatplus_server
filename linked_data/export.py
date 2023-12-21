@@ -78,6 +78,7 @@ def to_turtle(data: dict) -> str:
 
 
 async def create_id_groups(num_groups: int, record_type: str, country_code: Optional[str]) -> list:
+    log.info("Creating ID groups")
     fq = [f"type:{record_type}", "!project_s:[* TO *]"]
 
     if record_type == "source" and country_code:
@@ -93,8 +94,9 @@ async def create_id_groups(num_groups: int, record_type: str, country_code: Opti
     log.debug("Gathering done, found %s total IDs", res.hits)
     split_groups: list = [id_list[g::num_groups] for g in range(num_groups)]
 
-    log.debug("Created %s groups, first has %s IDs, last has %s IDs",
-              len(split_groups),
+    log.info("Created %s groups from %s documents, first has %s IDs, last has %s IDs",
+        len(split_groups),
+              res.hits,
               len(split_groups[0]),
               len(split_groups[-1]))
 
@@ -147,16 +149,12 @@ async def serialize(id_group: list, record_type: str, semaphore, dbname: str) ->
         ctx_val = {"@context": RISM_JSONLD_DEFAULT_CONTEXT}
 
     tasks = set()
-    sqlconn = sqlite3.connect(dbname)
-
-    sql_stmt: str = f"CREATE TABLE IF NOT EXISTS serialized(id TEXT PRIMARY KEY, type TEXT, ttl TEXT)"
-    sqlconn.execute(sql_stmt)
-
     serializer = serializer_map.get(record_type)
     if not serializer:
         log.critical("There was a problem retrieving the serializer class for %s", record_type)
         return None
 
+    sqlconn = sqlite3.connect(dbname)
     async with aiohttp.ClientSession(json_serialize=lambda x: orjson.dumps(x).decode("utf-8")) as session:
         for docid in id_group:
             task = asyncio.create_task(
@@ -166,7 +164,7 @@ async def serialize(id_group: list, record_type: str, semaphore, dbname: str) ->
 
         for coro in asyncio.as_completed(tasks):
             try:
-                results = await coro
+                _ = await coro
             except Exception as e:
                 log.critical("===========================================   Exception raised! %s", e)
 
@@ -199,10 +197,22 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
                 log.info("Removing %s", str(db_file))
                 db_file.unlink(missing_ok=True)
 
+    for i in range(parallel_processes):
+        db_file = Path(args.output, f"output_{i}.db")
+        db_name = str(db_file)
+
+        sqlconn = sqlite3.connect(db_name)
+        sql_stmt: str = f"CREATE TABLE IF NOT EXISTS serialized(id TEXT PRIMARY KEY, type TEXT, ttl TEXT)"
+        sqlconn.execute(sql_stmt)
+        sqlconn.commit()
+        sqlconn.close()
+
     for rec_type in types_to_serialize:
+        log.info("Running serializer for %s", rec_type)
         id_groups: list = asyncio.run(create_id_groups(parallel_processes, rec_type, args.country))
         log.debug("Got %s id groups, for %s parallel processes", len(id_groups), parallel_processes)
         num_results: int = sum([len(x) for x in id_groups])
+        log.info("The number of results we will process is %s", num_results)
         start_serialize = timeit.default_timer()
 
         futures = []
@@ -214,6 +224,7 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
 
                 db_file = Path(args.output, f"output_{i}.db")
                 db_name = str(db_file)
+
                 new_future = executor.submit(do_serialize, id_groups[i], rec_type, db_name)
                 futures.append(new_future)
 
