@@ -32,9 +32,7 @@ async def handle_incipit_render(req) -> response.HTTPResponse:
     svg, _ = rendered_pae
     response_headers = {'Content-Type':  "image/svg+xml;charset=utf8"}
 
-    return response.text(
-        svg,
-        headers=response_headers
+    return response.text(svg, headers=response_headers
     )
 
 
