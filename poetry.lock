@@ -1439,7 +1439,7 @@ files = [
 
 [[package]]
 name = "small-asc"
-version = "0.12.7"
+version = "0.12.8"
 description = "A small asynchronous Solr client"
 optional = false
 python-versions = "^3.9"
@@ -1448,13 +1448,13 @@ develop = false
 
 [package.dependencies]
 aiohttp = {version = "^3.8.4", extras = ["speedups"]}
-orjson = "^3.8.5"
+orjson = "3.9.10"
 
 [package.source]
 type = "git"
 url = "https://github.com/rism-digital/small-asc.git"
 reference = "main"
-resolved_reference = "4037fe0407a2de9c386d67412863459d70fccb45"
+resolved_reference = "93b3f6d39a5b19434c03ed9f9708fb467c0b3ee2"
 
 [[package]]
 name = "stack-data"
