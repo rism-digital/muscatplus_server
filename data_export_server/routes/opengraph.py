@@ -56,7 +56,7 @@ def render_og_tmpl(req, record_obj: dict) -> str:
         "bot": bot
     })
     source_tmpl = req.app.ctx.template_env.get_template("opengraph/card.html.j2")
-    rendered_template = source_tmpl.render_async(**tmpl_vars)
+    rendered_template = source_tmpl.render(**tmpl_vars)
 
     return rendered_template
 
@@ -121,7 +121,7 @@ async def og_image(req, image_name: str):
     tmpl_data: dict = OpenGraphSvg(record, context={"request": req}).data
 
     svg_tmpl = req.app.ctx.template_env.get_template("opengraph/card_image_template.svg.j2")
-    rendered_svg: str = await svg_tmpl.render_async(**tmpl_data)
+    rendered_svg: str = svg_tmpl.render(**tmpl_data)
 
     # Create the temporary image file
     fd, tmpfile = tempfile.mkstemp()

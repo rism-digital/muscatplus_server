@@ -30,7 +30,7 @@ async def sitemap_root(req):
     }
 
     sitemap_root_tmpl = req.app.ctx.template_env.get_template("sitemaps/root.xml.j2")
-    rendered_template = sitemap_root_tmpl.render_async(**tmpl_vars)
+    rendered_template = sitemap_root_tmpl.render(**tmpl_vars)
 
     return response.text(rendered_template, content_type="application/xml")
 
@@ -80,6 +80,6 @@ async def sitemap_page(req, page_num: str):
     }
 
     sitemap_tmpl = req.app.ctx.template_env.get_template("sitemaps/sitemap.xml.j2")
-    rendered_template = sitemap_tmpl.render_async(**tmpl_vars)
+    rendered_template = sitemap_tmpl.render(**tmpl_vars)
 
     return response.text(rendered_template, content_type="application/xml")
