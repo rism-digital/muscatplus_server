@@ -18,15 +18,15 @@ debug_mode: bool = config["common"]["debug"]
 if debug_mode is False:
     from sentry_sdk.integrations.sanic import SanicIntegration
     sentry_sdk.init(
-        dsn=config["sentry"]["dsn"],
+        dsn=config["sentry"]["export"]["dsn"],
         integrations=[SanicIntegration()],
-        environment=config["sentry"]["environment"]
+        environment=config["sentry"]["environment"],
+        release=f"muscatplus_server@{release}",
     )
 
 template_env = Environment(
     loader=FileSystemLoader('data_export_server/templates'),
-    autoescape=select_autoescape(['xml']),
-    enable_async=True
+    autoescape=select_autoescape(['xml'])
 )
 
 app.ctx.template_env = template_env
