@@ -39,7 +39,7 @@ else:
 if debug_mode is False:
     from sentry_sdk.integrations.sanic import SanicIntegration
     sentry_sdk.init(
-        dsn=config["sentry"]["dsn"],
+        dsn=config["sentry"]["api"]["dsn"],
         integrations=[SanicIntegration()],
         environment=config["sentry"]["environment"],
         release=f"muscatplus_server@{release}",
