@@ -7,6 +7,7 @@ import yaml
 from sanic import Sanic, response
 from small_asc.client import Results
 
+from search_server.routes.sigla import sigla_blueprint
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.api import api_blueprint
 from search_server.routes.countries import countries_blueprint
@@ -60,6 +61,7 @@ app.blueprint(works_blueprint)
 app.blueprint(query_blueprint)
 app.blueprint(api_blueprint)
 app.blueprint(external_blueprint)
+app.blueprint(sigla_blueprint)
 
 app.config.FORWARDED_SECRET = config['common']['secret']
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
