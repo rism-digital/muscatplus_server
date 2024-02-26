@@ -18,9 +18,8 @@ async def sitemap_root(req):
 
     solr_query = {
         "query": "*:*",
-        "filter": ["type:person OR type:source OR type:institution"],
-        "limit": 0,
-        "params": {"q.op": "OR"},
+        "filter": ["type:person OR type:source OR type:institution", "!project_s:[* TO *]"],
+        "limit": 0
     }
     res: Results = await SolrConnection.search(solr_query, handler="/query")
     num_pages: int = math.ceil(res.hits / page_size)
@@ -31,7 +30,7 @@ async def sitemap_root(req):
     }
 
     sitemap_root_tmpl = req.app.ctx.template_env.get_template("sitemaps/root.xml.j2")
-    rendered_template = await sitemap_root_tmpl.render_async(**tmpl_vars)
+    rendered_template = sitemap_root_tmpl.render(**tmpl_vars)
 
     return response.text(rendered_template, content_type="application/xml")
 
@@ -53,10 +52,9 @@ async def sitemap_page(req, page_num: str):
 
     solr_query = {
         "query": "*:*",
-        "filter": ["type:person OR type:source OR type:institution"],
+        "filter": ["type:person OR type:source OR type:institution", "!project_s:[* TO *]"],
         "limit": page_size,
         "offset": offset,
-        "params": {"q.op": "OR"},
         "fields": ["id", "type", "created", "updated"],
         "sort": "created asc"
     }
@@ -65,8 +63,8 @@ async def sitemap_page(req, page_num: str):
 
     urlentries: list = []
     for result in res.docs:
-        restype: str = result.get("type")
-        resid: str = re.sub(ID_SUB, "", result.get("id"))
+        restype: str = result["type"]
+        resid: str = re.sub(ID_SUB, "", result["id"])
 
         url: Optional[str] = get_url_from_type(req, restype, resid)
         if not url:
@@ -82,6 +80,6 @@ async def sitemap_page(req, page_num: str):
     }
 
     sitemap_tmpl = req.app.ctx.template_env.get_template("sitemaps/sitemap.xml.j2")
-    rendered_template = await sitemap_tmpl.render_async(**tmpl_vars)
+    rendered_template = sitemap_tmpl.render(**tmpl_vars)
 
     return response.text(rendered_template, content_type="application/xml")

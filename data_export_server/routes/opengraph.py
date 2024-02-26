@@ -46,7 +46,7 @@ SOLR_FIELDS: list = [
 ]
 
 
-async def render_og_tmpl(req, record_obj: dict) -> str:
+def render_og_tmpl(req, record_obj: dict) -> str:
     # The front-end server should have set this header. If it arrives here and it is
     # not set, then assume it's Google.
     bot: str = req.headers.get("X-RO-BotIdentifier", BotIdentifiers.GOOGLE)
@@ -56,7 +56,7 @@ async def render_og_tmpl(req, record_obj: dict) -> str:
         "bot": bot
     })
     source_tmpl = req.app.ctx.template_env.get_template("opengraph/card.html.j2")
-    rendered_template = await source_tmpl.render_async(**tmpl_vars)
+    rendered_template = source_tmpl.render(**tmpl_vars)
 
     return rendered_template
 
@@ -68,7 +68,7 @@ async def og_source(req, source_id: str) -> response.HTTPResponse:
     if not source_record:
         return response.text("Not Found.", status=404)
 
-    resp: str = await render_og_tmpl(req, source_record)
+    resp: str = render_og_tmpl(req, source_record)
 
     return response.html(resp)
 
@@ -80,7 +80,7 @@ async def og_person(req, person_id: str):
     if not person_record:
         return response.text("Not Found.", status=404)
 
-    resp: str = await render_og_tmpl(req, person_record)
+    resp: str = render_og_tmpl(req, person_record)
 
     return response.html(resp)
 
@@ -92,7 +92,7 @@ async def og_institution(req, institution_id: str):
     if not institution_record:
         return response.text("Not Found.", status=404)
 
-    resp: str = await render_og_tmpl(req, institution_record)
+    resp: str = render_og_tmpl(req, institution_record)
 
     return response.html(resp)
 
@@ -121,7 +121,7 @@ async def og_image(req, image_name: str):
     tmpl_data: dict = OpenGraphSvg(record, context={"request": req}).data
 
     svg_tmpl = req.app.ctx.template_env.get_template("opengraph/card_image_template.svg.j2")
-    rendered_svg: str = await svg_tmpl.render_async(**tmpl_data)
+    rendered_svg: str = svg_tmpl.render(**tmpl_data)
 
     # Create the temporary image file
     fd, tmpfile = tempfile.mkstemp()

@@ -162,11 +162,10 @@ class OpenGraphSvg(ypres.DictSerializer):
         objtype: str = obj["type"]
 
         if (t := obj.get("num_source_members_i")) and objtype == "source":
-            itm: str = "items" if t > 1 else "item"
-            label: str = f"{t} {itm} in this source"
+            label: str = f"{t} item{'s'[:t^1]} in this source"
             return CardIcons.CONTENT, label
         elif (t := obj.get("num_holdings_i")) and objtype == "source":
-            cpy: str = "copies" if t > 1 else "copy"
+            cpy: str = "copy" if t == 1 else "copies"
             label: str = f"{t} {cpy} of this print"
             return CardIcons.CONTENT, label
         return None
