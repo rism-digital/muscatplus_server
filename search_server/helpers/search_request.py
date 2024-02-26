@@ -573,7 +573,7 @@ class SearchRequest:
         page_num: int = parse_page_number(self._page)
         return_rows: int = parse_row_number(self._req, self._return_rows)
         # Results are 0-indexed, so a request for 'start 0 + 20 rows' will return the first through the 20th result.
-        # Then we simply take the page number and multiple it by the rows:
+        # Then we simply take the page number and multiply it by the rows:
         #  start: page:1 = start:0
         #  start: page:2 = ((2 - 1) * 20) = start:20
         #  start: page:3 = ((3 - 1) * 20) = start:40
