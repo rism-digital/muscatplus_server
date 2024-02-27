@@ -6,7 +6,7 @@ from typing import Optional
 import ypres
 from small_asc.client import Results
 
-from search_server.helpers.record_types import create_source_types_block, SOURCE_TYPE_MAP, CONTENT_TYPE_MAP, RECORD_TYPE_MAP
+from search_server.helpers.record_types import create_source_types_block
 from search_server.helpers.search_request import IncipitModeValues
 from search_server.helpers.vrv import render_pae
 from search_server.resources.search.base_search import BaseSearchResults
