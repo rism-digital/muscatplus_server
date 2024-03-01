@@ -400,6 +400,7 @@ class InstitutionSearchResult(ypres.DictSerializer):
     def get_summary(self, obj: dict) -> dict:
         field_config: dict = {
             "gnd_country_codes_sm": ("countryName", "records.country", gnd_country_code_labels_translator),
+            "alternate_names_sm": ("otherNames", "records.other_form_of_name", None),
             "total_sources_i": ("totalSources", "records.sources", None)  # TODO: Find a better label
         }
 

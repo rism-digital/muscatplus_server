@@ -64,7 +64,7 @@ async def handle_siglum_search_request(req) -> Optional[dict]:
     if query_type not in query_solr_fields.keys():
         return None
 
-    fq: list[str] = ["type:institution", "!project_s:[* TO *]"]
+    fq: list[str] = ["type:institution", "!project_s:[* TO *]", "has_siglum_b:true"]
 
     query_field: str = query_solr_fields[query_type]
     if query_type == "all":

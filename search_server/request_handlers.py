@@ -86,8 +86,12 @@ async def handle_request(req: request.Request,
         else:
             return response.text("Cannot retrieve MARCXML for this resource.", status=406)
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://muscat.rism.info/sru/{rtype}?operation=searchRetrieve&version=1.1&query=id={rid}") as muscat_req:
+        auth_headers: dict = {
+            "Authorization": f"Token {req.app.ctx.config['common']['muscat_auth']}"
+        }
+
+        async with aiohttp.ClientSession(headers=auth_headers) as session:
+            async with session.get(f"https://muscat.rism.info/data/{rtype}/{rid}") as muscat_req:
                 muscat_resp = await muscat_req.text()
                 if muscat_req.status != 200:
                     return response.text("Could not retrieve MARCXML from upstream", status=500)

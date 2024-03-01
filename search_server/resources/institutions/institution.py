@@ -133,6 +133,7 @@ class LocationAddressSection(ypres.DictSerializer):
         mailing_address_field_config: dict = {
             "street_address_sm": ("records.street_address", None),
             "city_address_sm": ("records.city", None),
+            "county_province_sm": ("records.county_province", None),
             "country_address_sm": ("records.country", None),
             "postcode_address_sm": ("records.postal_code", None),
             "public_note_address_sm": ("records.public_note", None)
@@ -183,7 +184,7 @@ class LocationAddressSection(ypres.DictSerializer):
 
         return {
             "label": transl.get("general.url"),
-            "value": obj.get("website_address_sm")[0]
+            "value": {"none": obj.get("website_address_sm", [])}
         }
 
     def get_email(self, obj: SolrResult) -> Optional[dict]:
@@ -195,5 +196,5 @@ class LocationAddressSection(ypres.DictSerializer):
 
         return {
             "label": transl.get("general.e_mail"),
-            "value": obj.get("email_address_sm")[0]
+            "value": {"none": obj.get("email_address_sm", [])}
         }
