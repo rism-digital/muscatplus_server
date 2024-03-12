@@ -88,7 +88,7 @@ async def handle_siglum_search_request(req) -> Optional[dict]:
         }
     }
 
-    results: Results = await SolrConnection.search(solr_query_obj, handler="/queryBasic")
+    results: Results = await SolrConnection.search(solr_query_obj, handler="/siglaQuery")
     search_res: dict = await SearchResults(results, context={"request": req}).data
 
     return search_res
