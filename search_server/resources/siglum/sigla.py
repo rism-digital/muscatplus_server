@@ -64,7 +64,9 @@ async def handle_siglum_search_request(req) -> Optional[dict]:
     if query_type not in query_solr_fields.keys():
         return None
 
-    fq: list[str] = ["type:institution", "!project_s:[* TO *]", "has_siglum_b:true"]
+    fq: list[str] = ["type:institution",
+                     "!project_s:*",
+                     "has_siglum_b:true"]
 
     query_field: str = query_solr_fields[query_type]
     if query_type == "all":
@@ -80,12 +82,13 @@ async def handle_siglum_search_request(req) -> Optional[dict]:
         "filter": fq,
         "offset": start_row,
         "limit": rows,
+        "sort": "score desc",
         "params": {
             "boost": ["scale(field(total_sources_i), 1, 100)"]
         }
     }
 
-    results: Results = await SolrConnection.search(solr_query_obj, handler="/queryBasic")
+    results: Results = await SolrConnection.search(solr_query_obj, handler="/siglaQuery")
     search_res: dict = await SearchResults(results, context={"request": req}).data
 
     return search_res
