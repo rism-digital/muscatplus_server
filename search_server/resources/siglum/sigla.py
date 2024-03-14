@@ -55,7 +55,7 @@ async def handle_siglum_search_request(req) -> Optional[dict]:
     if not query:
         return None
 
-    query_solr_fields: dict[str, str] = {"name": "name_ft",
+    query_solr_fields: dict[str, str] = {"name": "names_ft",
                                          "siglum": "siglum_lookup_kwa",
                                          "city": "city_ft",
                                          "country": "country_names_ft",
