@@ -16,6 +16,33 @@
     <meta property="og:title" content="{{ record_title }}" />
     <meta property="og:description" content="{{ record_description }}" />
 
+    {%- if bot in ("gg", "bb") %}
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "url": "{{ record_url }}",
+            "headline": "{{ record_title }}",
+            "description": "{{ record_description }}",
+            "author": {
+              "@type": "Organization",
+              "name": "RISM Cataloguers and Contributors",
+              "url": "https://rism.info"
+            },
+            "publisher": [{
+              "@type": "Organization",
+              "name": "The RISM Editorial Center, Frankfurt am Main, Germany",
+              "url": "https://rism.info"
+            }, {
+              "@type": "Organization",
+              "name": "The RISM Digital Center, Bern, Switzerland",
+              "url": "https://rism.digital"
+            }],
+            "datePublished": "{{ record_created }}",
+            "dateModified": "{{ record_updated }}"
+        }
+    </script>
+    {% endif %}
 </head>
 <body>
     <h1>{{ record_title }}</h1>

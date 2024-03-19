@@ -19,6 +19,8 @@ class OpenGraph(ypres.DictSerializer):
     record_title = ypres.MethodField()
     record_description = ypres.MethodField()
     record_image_url = ypres.MethodField()
+    record_created = ypres.StrField("created")
+    record_updated = ypres.StrField("updated")
 
     def get_record_url(self, obj: dict) -> str:
         req = self.context.get("request")
@@ -89,14 +91,11 @@ class CardIcons:
 
 
 class OpenGraphSvg(ypres.DictSerializer):
-    record_type = ypres.MethodField()
+    record_type = ypres.StrField("type")
     record_title = ypres.MethodField()
     record_first_line = ypres.MethodField()
     record_second_line = ypres.MethodField()
     record_third_line = ypres.MethodField()
-
-    def get_record_type(self, obj: dict) -> str:
-        return obj["type"]
 
     def get_record_title(self, obj: dict) -> list[str]:
         # Returns a list that can be iterated on in the template. Must be

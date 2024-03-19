@@ -15,6 +15,7 @@ class BotIdentifiers:
     TWITTER = "tw"
     FACEBOOK = "fb"
     GOOGLE = "gg"
+    BING = "bb"
 
 
 SOLR_FIELDS: list = [
@@ -43,6 +44,8 @@ SOLR_FIELDS: list = [
     "street_address_sm",
     "holding_institutions_sm",
     "related_institutions_sm",
+    "created",
+    "updated"
 ]
 
 
