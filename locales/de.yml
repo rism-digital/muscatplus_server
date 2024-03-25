@@ -330,7 +330,6 @@ de:
     c_plus_4: C+4
     c_plus_5: C+5
     catalog: Katalog
-    catalog_contribution: Katalogbeitrag
     catalog_opus_number: Werkverzeichnis/Opus
     catalog_works: Werkverzeichnis
     cataloging_agency: Katalogisierungsagentur
@@ -358,6 +357,7 @@ de:
     collaborator: Mitverfasser
     collective_catalog: Sammelkatalog
     colophon: Kolophon
+    contributing_project: Beitrag zum Projekt
     common_clefs: Common clefs
     compiler: Kompilator
     composer: Komponist
@@ -429,6 +429,7 @@ de:
     ds_major: Dis-Dur
     ds_minor: dis-Moll
     dubious: Zweifelhaft
+    duplicated_from: Dupliziert von
     e_major: E-Dur
     e_minor: e-Moll
     earlier_heading: Frühere Überschrift
@@ -684,6 +685,7 @@ de:
     order_name: Ordensname
     origin: Herkunft
     original_cataloging_agency: Original-Katalogisierungsstelle
+    original_record: Originaleintrag
     other: Sonstige Funktion
     other_associated_place: Anderer zugehöriger Ort
     other_designation: Andere Bezeichnung
