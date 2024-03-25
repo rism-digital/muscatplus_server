@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>{{ record_title }}</title>
+    <title>{{ record_title|e }}</title>
     <meta name="description" content="{{ record_description|e }}" />
 
     {%- if bot == "tw" %}
