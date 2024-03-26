@@ -330,7 +330,6 @@ it:
     c_plus_4: C+4
     c_plus_5: C+5
     catalog: Catalogo
-    catalog_contribution: Contributo alla catalogazione
     catalog_opus_number: Catalogo/Numero d'opera
     catalog_works: Catalogo delle opere
     cataloging_agency: Agenzia di catalogazione
@@ -358,6 +357,7 @@ it:
     collaborator: Collaboratore
     collective_catalog: Catalogo collettivo
     colophon: Colofone
+    contributing_project: Progetto contribuente
     common_clefs: Chiavi comuni
     compiler: Compilatore
     composer: Compositore
@@ -429,6 +429,7 @@ it:
     ds_major: Re♯ maggiore
     ds_minor: Re♯ minore
     dubious: Dubbio
+    duplicated_from: Duplicato di
     e_major: Mi maggiore
     e_minor: Mi minore
     earlier_heading: Intestazione precedente
@@ -684,6 +685,7 @@ it:
     order_name: Nome dell'ordine religioso
     origin: Origine
     original_cataloging_agency: Agenzia catalografica originale
+    original_record: Scheda originaria
     other: Altro
     other_associated_place: Altro luogo associato
     other_designation: Altra designazione
@@ -716,7 +718,7 @@ it:
     person_name: Nome di persona
     personal_name: Nome di persona
     personal_names: Nomi di persona
-    photoreproductive_process: Cianografia
+    photoreproductive_process: Processo fotoriproduttivo (cianografia)
     physical_description: Descrizione fisica
     physical_description_fields: Campi per la descrizione fisica
     place: Luogo

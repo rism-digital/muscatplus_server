@@ -330,7 +330,6 @@ fr:
     c_plus_4: C+4
     c_plus_5: C+5
     catalog: Catalogue
-    catalog_contribution: Contribution au catalogue
     catalog_opus_number: No. de catalogue thématique/Opus
     catalog_works: Catalogue des oeuvres
     cataloging_agency: Agence de catalogation
@@ -358,6 +357,7 @@ fr:
     collaborator: Collaborateur
     collective_catalog: Catalogue collectif
     colophon: Colophon
+    contributing_project: Contributing project
     common_clefs: Clés communes
     compiler: Compilateur
     composer: Compositeur
@@ -429,6 +429,7 @@ fr:
     ds_major: Ré♯ majeur
     ds_minor: Ré♯ mineur
     dubious: Douteux
+    duplicated_from: Dupliqué de
     e_major: Mi majeur
     e_minor: Mi mineur
     earlier_heading: Rubrique précédente
@@ -684,6 +685,7 @@ fr:
     order_name: Nom d'ordre
     origin: Origine
     original_cataloging_agency: Organisme du catalogage original
+    original_record: Dossier original
     other: Autre function
     other_associated_place: Autre lieu associé
     other_designation: Autre désignation
@@ -716,7 +718,7 @@ fr:
     person_name: Nom de la personne
     personal_name: Nom de la personne
     personal_names: Noms de personne
-    photoreproductive_process: Reproduction photo (blueprint)
+    photoreproductive_process: Photoreproductive process (blueprint)
     physical_description: Description matérielle
     physical_description_fields: Champs pour la description matérielle
     place: Lieu

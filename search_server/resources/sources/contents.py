@@ -52,7 +52,6 @@ class ContentsSection(ypres.DictSerializer):
             "scoring_json": ("records.total_scoring", scoring_json_value_translator),
             "colophon_notes_sm": ("records.colophon", None),
             "language_text_sm": ("records.language_text", languages_translator),
-            "language_libretto_sm": ("records.language_libretto", languages_translator),
             "language_original_sm": ("records.language_original_text", languages_translator),
             "language_notes_sm": ("records.language_note", None),
             "rism_series_identifiers_sm": ("records.series_statement", None),

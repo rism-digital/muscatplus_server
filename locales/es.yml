@@ -330,7 +330,6 @@ es:
     c_plus_4: C+4
     c_plus_5: C+5
     catalog: Catálogo
-    catalog_contribution: Contribución del catálogo
     catalog_opus_number: Catalog number/Opus number
     catalog_works: Catálogo de obras
     cataloging_agency: Agencia catalogadora
@@ -358,6 +357,7 @@ es:
     collaborator: Colaborador
     collective_catalog: Catálogo colectivo
     colophon: Colofón
+    contributing_project: Contributing project
     common_clefs: Claves comunes
     compiler: Compilador
     composer: Compositor
@@ -429,6 +429,7 @@ es:
     ds_major: Re sostenido Mayor
     ds_minor: Re sostenido menor
     dubious: Dudoso
+    duplicated_from: Duplicado de
     e_major: Mi Mayor
     e_minor: Mi menor
     earlier_heading: El encabezamiento anterior
@@ -684,6 +685,7 @@ es:
     order_name: Nombre religioso
     origin: Origen
     original_cataloging_agency: Agencia de catalogación original
+    original_record: Registro original
     other: Otra función
     other_associated_place: Otro lugar asociado
     other_designation: Otra designación
@@ -716,7 +718,7 @@ es:
     person_name: Nombre personal
     personal_name: Nombre de pila
     personal_names: Nombres personales
-    photoreproductive_process: Proceso fotoreproductivo
+    photoreproductive_process: Proceso foto reproductivo
     physical_description: Descripción física
     physical_description_fields: Campos para la descripción Material
     place: Lugar

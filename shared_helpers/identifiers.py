@@ -106,7 +106,6 @@ SOLR_FIELD_DATA_TYPES: FieldDataType = {
     "additional_titles_json": ["dcterms:alternate"],
     "description_summary_sm": ["dcterms:description"],
     "language_text_sm": ["dcterms:language"],
-    "language_libretto_sm": ["dcterms:language"],
     "language_original_sm": ["dcterms:language"],
     "rism_id": ["dcterms:identifier", "pmo:RismNumber"],
     "opus_numbers_sm": ["dcterms:identifier", "pmo:OpusNumberStatement"],
