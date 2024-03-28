@@ -17,35 +17,89 @@
     <meta property="og:description" content="{{ record_description|e }}" />
 
     {%- if bot in ("gg", "bb") %}
-    <script type="application/ld+json">
-        {
-            "@context": "https://schema.org",
-            "@type": "Article",
-            "url": "{{ record_url }}",
-            "headline": "{{ record_title|e }}",
-            "description": "{{ record_description|e }}",
-            "author": {
-              "@type": "Organization",
-              "name": "RISM Cataloguers and Contributors",
-              "url": "https://rism.info"
-            },
-            "publisher": [{
-              "@type": "Organization",
-              "name": "The RISM Editorial Center, Frankfurt am Main, Germany",
-              "url": "https://rism.info"
-            }, {
-              "@type": "Organization",
-              "name": "The RISM Digital Center, Bern, Switzerland",
-              "url": "https://rism.digital"
-            }],
-            "datePublished": "{{ record_created }}",
-            "dateModified": "{{ record_updated }}"
-        }
-    </script>
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@type": "Article",
+                "url": "{{ record_url }}",
+                "headline": "{{ record_title|e }}",
+                "description": "{{ record_description|e }}",
+                "author": {
+                  "@type": "Organization",
+                  "name": "RISM Cataloguers and Contributors",
+                  "url": "https://rism.info"
+                },
+                "publisher": [{
+                  "@type": "Organization",
+                  "name": "The RISM Editorial Center, Frankfurt am Main, Germany",
+                  "url": "https://rism.info"
+                }, {
+                  "@type": "Organization",
+                  "name": "The RISM Digital Center, Bern, Switzerland",
+                  "url": "https://rism.digital"
+                }],
+                "datePublished": "{{ record_created }}",
+                "dateModified": "{{ record_updated }}"
+            }
+        </script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Noto+Sans+Mono&display=swap">
+        <style>
+            body { padding: 0; margin: 0; }
+            /*
+                Fixes a bug with Safari where SVG has to have an explicit
+                width and height set. This selects the browser based on the
+                support for a safari-only attribute, and then sets the w/h
+                of any rendered SVG incipit.
+             */
+            @supports (-webkit-backdrop-filter: blur(1px)) {
+                .svg-rendered-incipit svg {
+                    height: 100%;
+                    width: 100%;
+                }
+            }
+
+            .result-selected .svg-rendered-incipit svg g {
+                fill: white;
+                stroke: white;
+                color: white;
+            }
+
+        </style>
+        <script defer src="http://dev.rism.offline/static/app.js"></script>
+        <script type="text/javascript">
+
+            function getStoredLanguage()
+            {
+                return localStorage.getItem("language");
+            }
+
+            const detectLanguage = () =>
+            {
+                return getStoredLanguage() || navigator.language.split("-")[0];
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const app = Elm.Main.init({
+                    node: document.getElementById('elm'),
+                    flags: {
+                        locale: detectLanguage(),
+                        windowWidth: window.innerWidth,
+                        windowHeight: window.innerHeight,
+                        showMuscatLinks: false,
+                        nationalCollection: null,
+                        searchPreferences: {},
+                        isFramed: true
+                    }
+                });
+            });
+        </script>
     {% endif %}
 </head>
 <body>
     <h1>{{ record_title|e }}</h1>
     <p>{{ record_description|e }}</p>
+    <div id="elm"></div>
 </body>
 </html>
