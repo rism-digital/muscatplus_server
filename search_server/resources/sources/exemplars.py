@@ -119,6 +119,7 @@ class Exemplar(ypres.AsyncDictSerializer):
     section_label = ypres.MethodField(
         label="sectionLabel"
     )
+    label = ypres.MethodField()
     summary = ypres.MethodField()
     notes = ypres.MethodField()
     held_by = ypres.MethodField(
@@ -164,6 +165,24 @@ class Exemplar(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         return transl.get("records.exemplar")
+
+    def get_label(self, obj: SolrResult) -> dict:
+        if "holding_titles_json" not in obj:
+            return {"none": [obj.get("main_title_s")]}
+
+        holding_titles = obj["holding_titles_json"]
+
+        holding_inst = holding_titles.get("holding_institution")
+        holding_siglum = holding_titles.get("holding_siglum")
+        holding_shelfmark = holding_titles.get("holding_shelfmark")
+
+        fhinst = f"{holding_inst}" if holding_inst else ""
+        fhsigl = f" ({holding_siglum})" if holding_siglum else ""
+        fhshel = f", {holding_shelfmark}" if holding_shelfmark else ""
+
+        title = f"{fhinst}{fhsigl}{fhshel}"
+
+        return {"none": [title]}
 
     def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
         req = self.context.get("request")
