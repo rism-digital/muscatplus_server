@@ -37,10 +37,13 @@ class ExternalAuthoritiesSection(ypres.DictSerializer):
             if uri_tmpl:
                 uri: str = uri_tmpl.format(ident=ident)
                 record["url"] = uri
+                # remove the {ident} placeholder to get the base URI
+                record["base"] = uri_tmpl[:-7]
 
             record.update({
                 "label": {"none": [full_label]},
-                "type": "rism:ExternalAuthority"
+                "value": f"{ident}",
+                "type": "rism:ExternalAuthority",
             })
 
             externals.append(record)
