@@ -3,7 +3,6 @@ import re
 from typing import Optional
 from urllib.parse import unquote
 
-from sanic import response
 from small_asc.client import Results
 
 from search_server.resources.search.pagination import parse_page_number
