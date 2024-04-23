@@ -1,4 +1,5 @@
 from typing import Optional
+from urllib.parse import unquote
 
 from sanic import Blueprint, response
 
@@ -12,7 +13,7 @@ async def siglum_redirect(req, siglum: str):
     resp: Optional[str] = await handle_institution_sigla_request(req, siglum)
 
     if not resp:
-        return response.text(f"An institution with the siglum {siglum} was not found.", status=404)
+        return response.text(f"An institution with the siglum {unquote(siglum)} was not found.", status=404)
 
     return response.redirect(resp, status=303)
 

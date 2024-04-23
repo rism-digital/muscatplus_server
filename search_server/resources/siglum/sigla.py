@@ -3,7 +3,6 @@ import re
 from typing import Optional
 from urllib.parse import unquote
 
-from sanic import response
 from small_asc.client import Results
 
 from search_server.resources.search.pagination import parse_page_number
@@ -56,7 +55,7 @@ async def handle_siglum_search_request(req) -> Optional[dict]:
         return None
 
     query_solr_fields: dict[str, str] = {"name": "names_ft",
-                                         "siglum": "siglum_lookup_kwa",
+                                         "siglum": "siglum_s",
                                          "city": "city_ft",
                                          "country": "country_names_ft",
                                          "all": ""}

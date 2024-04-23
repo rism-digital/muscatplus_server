@@ -98,8 +98,10 @@
     {% endif %}
 </head>
 <body>
-    <h1>{{ record_title|e }}</h1>
-    <p>{{ record_description|e }}</p>
+    <noscript>
+        <h1>{{ record_title|e }}</h1>
+        <p>{{ record_description|e }}</p>
+    </noscript>
     <div id="elm"></div>
 </body>
 </html>
