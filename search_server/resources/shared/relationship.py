@@ -31,18 +31,18 @@ class RelationshipsSection(ypres.AsyncDictSerializer):
         return transl.get("records.relations", {})
 
     async def get_items(self, obj: dict) -> list[dict]:
+        now_in: list = obj.get("now_in_json", [])
+        contains: list = obj.get("contains_json", [])
         people: list = obj.get("related_people_json", [])
         institutions: list = obj.get("related_institutions_json", [])
         places: list = obj.get("related_places_json", [])
-        now_in: list = obj.get("now_in_json", [])
-        contains: list = obj.get("contains_json", [])
         sources: list = obj.get("related_sources_json", [])
 
-        all_relationships = to_aiter(itertools.chain(people,
+        all_relationships = to_aiter(itertools.chain(now_in,
+                                                     contains,
+                                                     people,
                                                      institutions,
                                                      places,
-                                                     now_in,
-                                                     contains,
                                                      sources))
 
         return await Relationship(all_relationships,
