@@ -57,7 +57,7 @@ def _default_translator(value: Union[str, list], translations: dict) -> dict:
 # value will use the default translator function, returning a language key of "none".
 # The function for translating takes two arguments: The string to translate, and a dictionary of available translations.
 # This field config will be the default used if one is not provided.
-def _assemble_label_value(record: Union[SolrResult, dict], field_name: str, translation_map: tuple[str, Optional[Callable]], translations: dict) -> dict:
+def assemble_label_value(record: Union[SolrResult, dict], field_name: str, translation_map: tuple[str, Optional[Callable]], translations: dict) -> dict:
     # deconstruct the translation map tuple into the translation
     # key and the translator function
     label_translation, value_translator = translation_map
@@ -80,7 +80,9 @@ def _assemble_label_value(record: Union[SolrResult, dict], field_name: str, tran
     return label_value_map
 
 
-def get_display_fields(record: Union[SolrResult, dict], translations: dict, field_config: Optional[LabelConfig] = None) -> Optional[list]:
+def get_display_fields(record: Union[SolrResult, dict],
+                       translations: dict,
+                       field_config: Optional[LabelConfig] = None) -> Optional[list]:
     """
     Returns a list of translated display fields for a given record. Uses the metadata fields to configure
     the label, based on the Solr field. Supports direct value output, or a function for translating the values.
@@ -99,7 +101,7 @@ def get_display_fields(record: Union[SolrResult, dict], translations: dict, fiel
         if field not in record:
             continue
 
-        label_value: dict = _assemble_label_value(record, field, translation_map, translations)
+        label_value: dict = assemble_label_value(record, field, translation_map, translations)
 
         display.append(label_value)
 
@@ -120,7 +122,7 @@ def get_search_result_summary(field_config: dict, translations: dict, result: di
         output_fieldname: str = cfg[0]
         translation_key: str = cfg[1]
         translation_value_translator_fn: Optional[Callable] = cfg[2]
-        field_res: dict = _assemble_label_value(result, solr_fieldname, (translation_key, translation_value_translator_fn), translations)
+        field_res: dict = assemble_label_value(result, solr_fieldname, (translation_key, translation_value_translator_fn), translations)
         summary.update({output_fieldname: field_res})
 
     return summary or None

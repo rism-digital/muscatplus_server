@@ -8,7 +8,7 @@ from search_server.resources.shared.external_authority import ExternalAuthoritie
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
-from shared_helpers.display_fields import get_display_fields
+from shared_helpers.display_fields import get_display_fields, assemble_label_value
 from shared_helpers.identifiers import get_identifier, ID_SUB
 from shared_helpers.languages import merge_language_maps
 from shared_helpers.solr_connection import SolrResult, SolrConnection
@@ -110,9 +110,7 @@ class LocationAddressSection(ypres.DictSerializer):
         value="rism:LocationAddressSection"
     )
     label = ypres.MethodField()
-    mailing_address = ypres.MethodField(
-        label="mailingAddress"
-    )
+    addresses = ypres.MethodField()
     website = ypres.MethodField()
     email = ypres.MethodField()
     coordinates = ypres.MethodField()
@@ -123,22 +121,33 @@ class LocationAddressSection(ypres.DictSerializer):
 
         return transl.get("records.location_and_address")
 
-    def get_mailing_address(self, obj: SolrResult) -> Optional[dict]:
-        if "street_address_sm" not in obj:
+    def get_addresses(self, obj: SolrResult) -> Optional[list]:
+        if "addresses_json" not in obj:
             return None
 
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
+        all_addresses = []
         mailing_address_field_config: dict = {
-            "street_address_sm": ("records.street_address", None),
-            "city_address_sm": ("records.city", None),
-            "county_province_sm": ("records.county_province", None),
-            "country_address_sm": ("records.country", None),
-            "postcode_address_sm": ("records.postal_code", None),
-            "public_note_address_sm": ("records.public_note", None)
+            "street": ("records.street_address", None),
+            "city": ("records.city", None),
+            "county": ("records.county_province", None),
+            "country": ("records.country", None),
+            "postcode": ("records.postal_code", None),
+            "note": ("records.public_note", None)
         }
-        return get_display_fields(obj, transl, mailing_address_field_config)
+
+        for address in obj.get("addresses_json", []):
+            out_addr = {}
+            for k, v in address.items():
+                label: Optional[tuple] = mailing_address_field_config.get(k)
+                if not label:
+                    continue
+                out_addr[k] = assemble_label_value(address, k, label, transl)
+            all_addresses.append(out_addr)
+
+        return all_addresses
 
     def get_coordinates(self, obj: SolrResult) -> Optional[dict]:
         if "location_loc" not in obj:
