@@ -20,7 +20,8 @@ EXTERNAL_IDS: dict = {
             "ident": "https://www.wikidata.org/wiki/{ident}"},
     "isil": {"label": "International Standard Identifier for Libraries and Related Organizations (ISIL)"},
     "bne": {"label": "Biblioteca Nacional de España"},
-    "bnf": {"label": "Bibliothèque Nationale de France"},
+    "bnf": {"label": "Bibliothèque Nationale de France",
+            "ident": "https://ark.bnf.fr/{ident}"},
     "iccu": {"label": "Istituto Centrale per il Catalogo Unico"},  # No stable URI for authorities
     "isni": {"label": "International Standard Name Identifier",
              "ident": "https://isni.org/isni/{ident}"},
