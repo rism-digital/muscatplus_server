@@ -91,7 +91,8 @@
                         nationalCollection: null,
                         searchPreferences: {},
                         isFramed: true,
-                        cacheBuster: true
+                        {# Only bust the cache if we're dealing with Google. #}
+                        cacheBuster: {{ "true" if bot == "gg" else "false" }}
                     }
                 });
             });
