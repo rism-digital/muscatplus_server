@@ -414,6 +414,7 @@ class InstitutionSearchResult(ypres.DictSerializer):
         number_of_sources: int = obj.get("total_sources_i", 0)
         linked_with_external_record: bool = obj.get("has_external_record_b", False)
         is_diamm_record: bool = obj.get("project_s") == "diamm"
+        is_cantus_record: bool = obj.get("project_s") == "cantus"
 
         if number_of_sources > 0:
             result_flags.update({"numberOfSources": number_of_sources})
@@ -423,6 +424,9 @@ class InstitutionSearchResult(ypres.DictSerializer):
 
         if is_diamm_record:
             result_flags.update({"isDIAMMRecord": is_diamm_record})
+
+        if is_cantus_record:
+            result_flags.update({"isCantusRecord": is_cantus_record})
 
         return result_flags or None
 
