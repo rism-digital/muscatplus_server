@@ -242,6 +242,7 @@ class SourceSearchResult(ypres.DictSerializer):
         has_iiif: bool = obj.get("has_iiif_manifest_b", False)
         linked_with_external_record: bool = obj.get("has_external_record_b", False)
         is_diamm_record: bool = obj.get("project_s") == "diamm"
+        is_cantus_record: bool = obj.get("project_s") == "cantus"
         number_of_exemplars: int = obj.get("num_holdings_i", 0)
         result_flags: dict = {}
 
@@ -276,6 +277,9 @@ class SourceSearchResult(ypres.DictSerializer):
 
         if is_diamm_record:
             result_flags.update({"isDIAMMRecord": is_diamm_record})
+
+        if is_cantus_record:
+            result_flags.update({"isCantusRecord": is_cantus_record})
 
         # return None if flags are empty.
         return result_flags or None
@@ -339,6 +343,7 @@ class PersonSearchResult(ypres.DictSerializer):
         number_of_sources: int = obj.get("source_count_i", 0)
         linked_with_external_record: bool = obj.get("has_external_record_b", False)
         is_diamm_record: bool = obj.get("project_s") == "diamm"
+        is_cantus_record: bool = obj.get("project_s") == "cantus"
 
         if number_of_sources > 0:
             result_flags.update({"numberOfSources": number_of_sources})
@@ -348,6 +353,9 @@ class PersonSearchResult(ypres.DictSerializer):
 
         if is_diamm_record:
             result_flags.update({"isDIAMMRecord": is_diamm_record})
+
+        if is_cantus_record:
+            result_flags.update({"isDIAMMRecord": is_cantus_record})
 
         return result_flags or None
 

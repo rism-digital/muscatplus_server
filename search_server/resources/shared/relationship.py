@@ -187,14 +187,17 @@ def _related_to_source(req, obj: dict) -> dict:
 
     source_id: str
     ident: str
-    if "project" in obj and obj['project'] == "diamm":
+    proj: Optional[str] = obj.get("project")
+
+    if proj and proj in {"diamm", "cantus"}:
         source_id = re.sub(PROJECT_ID_SUB, "", obj["source_id"])
-        prefix: Optional[str] = EXTERNAL_IDS.get("diamm", {}).get("ident")
+        prefix: Optional[str] = EXTERNAL_IDS.get(obj['project'], {}).get("ident")
         if not prefix:
             # If, for some reason this isn't found, return the empty dict.
             log.error("A URI prefix was not found for project %s", obj["project"])
             return {}
-        suffix = f"sources/{source_id}"
+        spath = "source" if proj == "cantus" else "sources"
+        suffix = f"{spath}/{source_id}"
         ident = prefix.format(ident=suffix)
     else:
         source_id = re.sub(ID_SUB, "", obj["source_id"])
