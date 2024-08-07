@@ -758,7 +758,7 @@ def _wrap_addresses(inp: str) -> str:
     return re.sub(URL_DETECTOR, _repl_fn, inp)
 
 
-def url_detecting_translator(values: list, translations: dict) -> dict:
+def url_detecting_translator(values: list, translations: dict) -> Optional[dict]:
     """
     Detects `http://` and `https://` in a block of text and wraps them in `<a href>` tags
     so that they can be parsed and displayed without a lot of fuss on the front-end.
@@ -766,5 +766,8 @@ def url_detecting_translator(values: list, translations: dict) -> dict:
     The basic methodology of this is taken from https://stackoverflow.com/a/33399083
     """
     wrapped_blocks: list[str] = [_wrap_addresses(s) for s in values]
+    if not wrapped_blocks:
+        return None
+
     return {"none": wrapped_blocks}
 
