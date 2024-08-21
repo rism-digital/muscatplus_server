@@ -22,17 +22,21 @@ from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
 from search_server.resources.sources.full_source import FullSource
 from search_server.server import app
-from shared_helpers.jsonld import RISM_JSONLD_SOURCE_CONTEXT, RISM_JSONLD_PERSON_CONTEXT, \
-    RISM_JSONLD_INSTITUTION_CONTEXT, RISM_JSONLD_DEFAULT_CONTEXT
+from shared_helpers.jsonld import (
+    RISM_JSONLD_SOURCE_CONTEXT,
+    RISM_JSONLD_PERSON_CONTEXT,
+    RISM_JSONLD_INSTITUTION_CONTEXT,
+    RISM_JSONLD_DEFAULT_CONTEXT,
+)
 from shared_helpers.languages import load_translations, filter_languages
 
 
-log_config: dict = yaml.safe_load(open('linked_data/logging.yml', 'r'))
+log_config: dict = yaml.safe_load(open("linked_data/logging.yml", "r"))
 logging.config.dictConfig(log_config)
 
 log = logging.getLogger("ld_export")
 
-config: dict = yaml.safe_load(open('configuration.yml', 'r'))
+config: dict = yaml.safe_load(open("configuration.yml", "r"))
 SOLR_SERVER: str = config["solr"]["server"]
 
 solr_conn = Solr(SOLR_SERVER)
@@ -49,10 +53,12 @@ class Route:
 # Alters the response to make all the URIs appear to be coming from the production site.
 # Since every URL in the serializers runs through the `get_identifier` function, it will
 # pick up on this info for constructing the URI.
-headers: Header = Header({
-    "X-Forwarded-Proto": "https",
-    "X-Forwarded-Host": "rism.online",
-})
+headers: Header = Header(
+    {
+        "X-Forwarded-Proto": "https",
+        "X-Forwarded-Host": "rism.online",
+    }
+)
 translations: dict = load_translations("locales/")
 filt_translations: dict = filter_languages({"en"}, translations)
 
@@ -65,19 +71,23 @@ req.route = route
 serializer_map: dict = {
     "source": FullSource,
     "person": Person,
-    "institution": Institution
+    "institution": Institution,
 }
 
 
 def to_turtle(data: dict) -> str:
     json_serialized: str = orjson.dumps(data)
-    graph_object: rdflib.Graph = rdflib.Graph().parse(data=json_serialized, format="application/ld+json")
+    graph_object: rdflib.Graph = rdflib.Graph().parse(
+        data=json_serialized, format="application/ld+json"
+    )
     turtle: str = graph_object.serialize(format="nt")
 
     return turtle
 
 
-async def create_id_groups(num_groups: int, record_type: str, country_code: Optional[str]) -> list:
+async def create_id_groups(
+    num_groups: int, record_type: str, country_code: Optional[str]
+) -> list:
     log.info("Creating ID groups")
     fq = [f"type:{record_type}", "!project_s:[* TO *]"]
 
@@ -86,42 +96,55 @@ async def create_id_groups(num_groups: int, record_type: str, country_code: Opti
 
     fl = ["id"]
 
-    res = await solr_conn.search({"query": "*:*", "filter": fq, "fields": fl, "sort": "id asc",
-                                  "limit": 1000}, cursor=True)
+    res = await solr_conn.search(
+        {"query": "*:*", "filter": fq, "fields": fl, "sort": "id asc", "limit": 1000},
+        cursor=True,
+    )
     log.debug("Gathering groups")
     id_list: list = [sdoc["id"] async for sdoc in res]
 
     log.debug("Gathering done, found %s total IDs", res.hits)
     split_groups: list = [id_list[g::num_groups] for g in range(num_groups)]
 
-    log.info("Created %s groups from %s documents, first has %s IDs, last has %s IDs",
+    log.info(
+        "Created %s groups from %s documents, first has %s IDs, last has %s IDs",
         len(split_groups),
-              res.hits,
-              len(split_groups[0]),
-              len(split_groups[-1]))
+        res.hits,
+        len(split_groups[0]),
+        len(split_groups[-1]),
+    )
 
     return split_groups
 
 
-async def run_serializer(docid: str, serializer, ctx_val: dict, semaphore, session, sqlconn) -> None:
+async def run_serializer(
+    docid: str, serializer, ctx_val: dict, semaphore, session, sqlconn
+) -> None:
     async with semaphore:
         log.debug("Serializing %s", docid)
 
         try:
             this_doc = await solr_conn.get(docid)
         except Exception as e:
-            log.critical("=========== Exception raised in get request for source %s: %s", docid, e)
+            log.critical(
+                "=========== Exception raised in get request for source %s: %s",
+                docid,
+                e,
+            )
             return None
 
         if this_doc is None:
             log.error("No document for %s", docid)
 
         try:
-            serialized = await serializer(this_doc, context={"request": req,
-                                                             "direct_request": True,
-                                                             "session": session}).data
+            serialized = await serializer(
+                this_doc,
+                context={"request": req, "direct_request": True, "session": session},
+            ).data
         except Exception as e:
-            log.critical("=========== Exception raised in serializer for source %s: %s", docid, e)
+            log.critical(
+                "=========== Exception raised in serializer for source %s: %s", docid, e
+            )
             return None
 
         serialized.update(ctx_val)
@@ -130,7 +153,10 @@ async def run_serializer(docid: str, serializer, ctx_val: dict, semaphore, sessi
             log.critical("No output! %s", docid)
 
         with sqlconn:
-            sqlconn.execute("INSERT INTO serialized VALUES (?, ?, ?)", (docid, this_doc['type'], turtle))
+            sqlconn.execute(
+                "INSERT INTO serialized VALUES (?, ?, ?)",
+                (docid, this_doc["type"], turtle),
+            )
 
         sqlconn.commit()
         await asyncio.sleep(0.5)
@@ -145,20 +171,27 @@ async def serialize(id_group: list, record_type: str, semaphore, dbname: str) ->
     elif record_type == "institution":
         ctx_val = {"@context": RISM_JSONLD_INSTITUTION_CONTEXT}
     else:
-        log.warning("Could not determine context for %s. Using the default context", record_type)
+        log.warning(
+            "Could not determine context for %s. Using the default context", record_type
+        )
         ctx_val = {"@context": RISM_JSONLD_DEFAULT_CONTEXT}
 
     tasks = set()
     serializer = serializer_map.get(record_type)
     if not serializer:
-        log.critical("There was a problem retrieving the serializer class for %s", record_type)
+        log.critical(
+            "There was a problem retrieving the serializer class for %s", record_type
+        )
         return None
 
     sqlconn = sqlite3.connect(dbname)
-    async with aiohttp.ClientSession(json_serialize=lambda x: orjson.dumps(x).decode("utf-8")) as session:
+    async with aiohttp.ClientSession(
+        json_serialize=lambda x: orjson.dumps(x).decode("utf-8")
+    ) as session:
         for docid in id_group:
             task = asyncio.create_task(
-                run_serializer(docid, serializer, ctx_val, semaphore, session, sqlconn))
+                run_serializer(docid, serializer, ctx_val, semaphore, session, sqlconn)
+            )
             tasks.add(task)
             task.add_done_callback(tasks.discard)
 
@@ -166,7 +199,10 @@ async def serialize(id_group: list, record_type: str, semaphore, dbname: str) ->
             try:
                 _ = await coro
             except Exception as e:
-                log.critical("===========================================   Exception raised! %s", e)
+                log.critical(
+                    "===========================================   Exception raised! %s",
+                    e,
+                )
 
     sqlconn.commit()
     sqlconn.close()
@@ -209,8 +245,14 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
 
     for rec_type in types_to_serialize:
         log.info("Running serializer for %s", rec_type)
-        id_groups: list = asyncio.run(create_id_groups(parallel_processes, rec_type, args.country))
-        log.debug("Got %s id groups, for %s parallel processes", len(id_groups), parallel_processes)
+        id_groups: list = asyncio.run(
+            create_id_groups(parallel_processes, rec_type, args.country)
+        )
+        log.debug(
+            "Got %s id groups, for %s parallel processes",
+            len(id_groups),
+            parallel_processes,
+        )
         num_results: int = sum([len(x) for x in id_groups])
         log.info("The number of results we will process is %s", num_results)
         start_serialize = timeit.default_timer()
@@ -225,7 +267,9 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
                 db_file = Path(args.output, f"output_{i}.db")
                 db_name = str(db_file)
 
-                new_future = executor.submit(do_serialize, id_groups[i], rec_type, db_name)
+                new_future = executor.submit(
+                    do_serialize, id_groups[i], rec_type, db_name
+                )
                 futures.append(new_future)
 
         for f in concurrent.futures.as_completed(futures):
@@ -235,7 +279,9 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
         s_elapsed: float = end_serialize - start_serialize
         s_hours, s_remainder = divmod(s_elapsed, 60 * 60)
         s_minutes, s_seconds = divmod(s_remainder, 60)
-        log.info(f"Total time to serialize {rec_type}: {int(s_hours):02}:{int(s_minutes):02}:{round(s_seconds):02} (Total: {s_elapsed}s)")
+        log.info(
+            f"Total time to serialize {rec_type}: {int(s_hours):02}:{int(s_minutes):02}:{round(s_seconds):02} (Total: {s_elapsed}s)"
+        )
         log.info(f"Total processing rate: {num_results / s_elapsed} docs/s")
 
     for i in range(parallel_processes):
@@ -257,12 +303,23 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--output", default="../ttl", type=Path, help="Output directory")
-    parser.add_argument("-e", "--empty", dest="empty", action="store_true",
-                        help="Empty the output directory before starting")
+    parser.add_argument(
+        "-o", "--output", default="../ttl", type=Path, help="Output directory"
+    )
+    parser.add_argument(
+        "-e",
+        "--empty",
+        dest="empty",
+        action="store_true",
+        help="Empty the output directory before starting",
+    )
     parser.add_argument("-c", "--country", help="Optional country code for sources")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output (log level DEBUG)")
-    parser.add_argument("-q", "--quiet", action="store_true", help="Quiet output (log level WARNING)")
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Verbose output (log level DEBUG)"
+    )
+    parser.add_argument(
+        "-q", "--quiet", action="store_true", help="Quiet output (log level WARNING)"
+    )
     parser.add_argument("--include", action="extend", nargs="*")
 
     incoming_args = parser.parse_args()
@@ -284,4 +341,6 @@ if __name__ == "__main__":
     elapsed: float = end - start
     hours, remainder = divmod(elapsed, 60 * 60)
     minutes, seconds = divmod(remainder, 60)
-    log.info(f"Total time to run: {int(hours):02}:{int(minutes):02}:{round(seconds):02} (Total: {elapsed}s)")
+    log.info(
+        f"Total time to run: {int(hours):02}:{int(minutes):02}:{round(seconds):02} (Total: {elapsed}s)"
+    )

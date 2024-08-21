@@ -22,20 +22,8 @@ __BASE_CONTEXT = {
     "type": "@type",
     "id": "@id",
     # "none": "@none",
-    "label": {
-        "@id": "rdfs:label",
-        "@container": [
-            "@language",
-            "@set"
-        ]
-    },
-    "value": {
-        "@id": "rdf:value",
-        "@container": [
-            "@language",
-            "@set"
-        ]
-    },
+    "label": {"@id": "rdfs:label", "@container": ["@language", "@set"]},
+    "value": {"@id": "rdf:value", "@container": ["@language", "@set"]},
 }
 
 __RELATIONSHIPS = {
@@ -54,8 +42,8 @@ __RELATIONSHIPS = {
             },
             "relatedTo": {
                 "@id": "dcterms:relation",
-            }
-        }
+            },
+        },
     }
 }
 
@@ -66,47 +54,28 @@ __INCIPITS = {
         "@context": {
             "items": "@set",
             "properties": "@nest",
-            "clef": {
-                "@id": "rism:hasPAEClef"
-            },
-            "keysig": {
-                "@id": "rism:hasPAEKeysig"
-            },
-            "timesig": {
-                "@id": "rism:hasPAETimesig"
-            },
-            "notation": {
-                "@id": "rism:hasPAEData"
-            },
+            "clef": {"@id": "rism:hasPAEClef"},
+            "keysig": {"@id": "rism:hasPAEKeysig"},
+            "timesig": {"@id": "rism:hasPAETimesig"},
+            "notation": {"@id": "rism:hasPAEData"},
             "encodings": {
                 "@id": "rism:hasEncoding",
                 "@type": "@set",
                 "@context": {
-                    "data": {
-                        "@id": "rism:paeEncoding",
-                        "@type": "@json"
-                    },
-                    "url": {
-                        "@id": "rism:meiEncoding",
-                        "@type": "xsd:anyURI"
-                    }
-                }
+                    "data": {"@id": "rism:paeEncoding", "@type": "@json"},
+                    "url": {"@id": "rism:meiEncoding", "@type": "xsd:anyURI"},
+                },
             },
-            "partOf": {"@value": "null", "propagate": "false"}
+            "partOf": {"@value": "null", "propagate": "false"},
         },
     }
 }
 
 
-RISM_JSONLD_DEFAULT_CONTEXT: ContextDocument = {
-    **__BASE_CONTEXT
-}
+RISM_JSONLD_DEFAULT_CONTEXT: ContextDocument = {**__BASE_CONTEXT}
 
 
-RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
-    **__BASE_CONTEXT,
-    **__RELATIONSHIPS
-}
+RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {**__BASE_CONTEXT, **__RELATIONSHIPS}
 
 RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
@@ -114,15 +83,10 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     "siglum": {
         "@id": "rism:hasSiglum",
     },
-    "countryCodes": {
-        "@id": "rism:hasCountryCodes",
-        "@type": "@set"
-    }
+    "countryCodes": {"@id": "rism:hasCountryCodes", "@type": "@set"},
 }
 
-RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
-    **__BASE_CONTEXT
-}
+RISM_JSONLD_WORK_CONTEXT: ContextDocument = {**__BASE_CONTEXT}
 RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
     **__RELATIONSHIPS,
@@ -130,25 +94,17 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     "dates": {
         "@id": "rism:hasDates",
         "@context": {
-            "earliestDate": {
-                "@id": "rism:earliestDate",
-                "@type": "xsd:integer"
-            },
-            "latestDate": {
-                "@id": "rism:latestDate",
-                "@type": "xsd:integer"
-            },
+            "earliestDate": {"@id": "rism:earliestDate", "@type": "xsd:integer"},
+            "latestDate": {"@id": "rism:latestDate", "@type": "xsd:integer"},
             "dateStatement": {
                 "@id": "rism:dateStatement",
-            }
-        }
+            },
+        },
     },
     "creator": {
         "@id": "dcterms:creator",
         "@type": "@id",
-        "@context": {
-            "relatedTo": "@nest"
-        }
+        "@context": {"relatedTo": "@nest"},
     },
     "materialGroups": {
         "@id": "rism:hasMaterialGroup",
@@ -161,29 +117,16 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
             },
         },
     },
-    "partOf": {
-        "@id": "rism:isPartOf",
-        "@type": "@id",
-        "@context": {
-            "source": "@nest"
-        }
-    },
+    "partOf": {"@id": "rism:isPartOf", "@type": "@id", "@context": {"source": "@nest"}},
     "sourceItems": {
         "@id": "rism:hasSourceItem",
         "@type": "@id",
-        "@context": {
-            "items": "@set"
-        }
+        "@context": {"items": "@set"},
     },
     "exemplars": {
         "@id": "rism:hasHolding",
         "@type": "@id",
-        "@context": {
-            "items": "@set",
-            "heldBy": {
-                "@id": "rism:hasHoldingInstitution"
-            }
-        }
+        "@context": {"items": "@set", "heldBy": {"@id": "rism:hasHoldingInstitution"}},
     },
     "contents": {
         "@id": "@nest",
@@ -191,27 +134,28 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     "subjects": {
         "@id": "rism:hasSubject",
         "@type": "@id",
-        "@context": {
-            "items": "@set"
-        }
+        "@context": {"items": "@set"},
     },
     "properties": "@nest",
     "keyMode": {
         "@id": "rism:hasKeyMode",
     },
-    "physicalDimensions": {
-        "@id": "rism:hasPhysicalDimensions",
-        "@type": "@list"
-    }
+    "physicalDimensions": {"@id": "rism:hasPhysicalDimensions", "@type": "@list"},
 }
 
 
 RouteOptions = namedtuple("RouteOptions", ["route", "context"])
 
 RouteContextMap: dict[str, RouteOptions] = {
-    "mp_server.people.person": RouteOptions("api.person_context", RISM_JSONLD_PERSON_CONTEXT),
-    "mp_server.institutions.institution": RouteOptions("api.institution_context", RISM_JSONLD_INSTITUTION_CONTEXT),
-    "mp_server.sources.source": RouteOptions("api.source_context", RISM_JSONLD_SOURCE_CONTEXT),
+    "mp_server.people.person": RouteOptions(
+        "api.person_context", RISM_JSONLD_PERSON_CONTEXT
+    ),
+    "mp_server.institutions.institution": RouteOptions(
+        "api.institution_context", RISM_JSONLD_INSTITUTION_CONTEXT
+    ),
+    "mp_server.sources.source": RouteOptions(
+        "api.source_context", RISM_JSONLD_SOURCE_CONTEXT
+    ),
     "mp_server.works.work": RouteOptions("api.work_context", RISM_JSONLD_WORK_CONTEXT),
-    "__default": RouteOptions("api.default_context", RISM_JSONLD_DEFAULT_CONTEXT)
+    "__default": RouteOptions("api.default_context", RISM_JSONLD_DEFAULT_CONTEXT),
 }

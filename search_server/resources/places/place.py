@@ -3,15 +3,21 @@ import re
 from typing import Optional
 
 import ypres
-from small_asc.client import Results, JsonAPIRequest
+from small_asc.client import JsonAPIRequest, Results
 
-from search_server.resources.institutions.base_institution import BaseInstitution, SOLR_FIELDS_FOR_BASE_INSTITUTION
+from search_server.resources.institutions.base_institution import (
+    SOLR_FIELDS_FOR_BASE_INSTITUTION,
+    BaseInstitution,
+)
 from search_server.resources.people.base_person import SOLR_FIELDS_FOR_BASE_PERSON
 from search_server.resources.shared.relationship import Relationship
-from search_server.resources.sources.base_source import BaseSource, SOLR_FIELDS_FOR_BASE_SOURCE
+from search_server.resources.sources.base_source import (
+    SOLR_FIELDS_FOR_BASE_SOURCE,
+    BaseSource,
+)
 from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrResult, SolrConnection
+from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 log = logging.getLogger("mp_server")
 
@@ -22,21 +28,13 @@ async def handle_place_request(req, place_id: str) -> Optional[dict]:
     if not record:
         return None
 
-    return await Place(record, context={"request": req,
-                                        "direct_request": True}).data
+    return await Place(record, context={"request": req, "direct_request": True}).data
 
 
 class Place(ypres.AsyncDictSerializer):
-    pid = ypres.MethodField(
-        label="id"
-    )
-    ptype = ypres.StaticField(
-        label="type",
-        value="rism:Place"
-    )
-    type_label = ypres.MethodField(
-        label="typeLabel"
-    )
+    pid = ypres.MethodField(label="id")
+    ptype = ypres.StaticField(label="type", value="rism:Place")
+    type_label = ypres.MethodField(label="typeLabel")
     label = ypres.MethodField()
     summary = ypres.MethodField()
     sources = ypres.MethodField()
@@ -63,7 +61,7 @@ class Place(ypres.AsyncDictSerializer):
 
         field_config: LabelConfig = {
             "country_s": ("records.country", None),
-            "district_s": ("records.place", None)  # TODO: Should be district
+            "district_s": ("records.place", None),  # TODO: Should be district
         }
 
         return get_display_fields(obj, transl, field_config)
@@ -80,17 +78,15 @@ class Place(ypres.AsyncDictSerializer):
             "query": "*:*",
             "filter": ["type:source", f"location_of_performance_ids:{place_id}"],
             "fields": SOLR_FIELDS_FOR_BASE_SOURCE,
-            "sort": "main_title_ans asc"
+            "sort": "main_title_ans asc",
         }
         source_results: Results = await SolrConnection.search(q, cursor=True)
 
-        source_list: list = await BaseSource(source_results,
-                                             context={"request": req}, many=True).data
+        source_list: list = await BaseSource(
+            source_results, context={"request": req}, many=True
+        ).data
 
-        return {
-            "type": "rism:PlaceSourceList",
-            "items": source_list
-        }
+        return {"type": "rism:PlaceSourceList", "items": source_list}
 
     async def get_people(self, obj: SolrResult) -> Optional[dict]:
         people_count: int = obj.get("people_count_i", 0)
@@ -103,15 +99,14 @@ class Place(ypres.AsyncDictSerializer):
             "query": "*:*",
             "filter": ["type:person", f"place_ids:{place_id}"],
             "fields": SOLR_FIELDS_FOR_BASE_PERSON,
-            "sort": "name_ans desc"
+            "sort": "name_ans desc",
         }
         person_results: Results = await SolrConnection.search(q, cursor=True)
-        person_list: list = await Relationship(person_results, context={"request": req}, many=True).data
+        person_list: list = await Relationship(
+            person_results, context={"request": req}, many=True
+        ).data
 
-        return {
-            "type": "rism:PlacePersonList",
-            "items": person_list
-        }
+        return {"type": "rism:PlacePersonList", "items": person_list}
 
     async def get_institutions(self, obj: SolrResult) -> Optional[dict]:
         institution_count: int = obj.get("institutions_count_i", 0)
@@ -124,14 +119,11 @@ class Place(ypres.AsyncDictSerializer):
             "query": "*:*",
             "filter": ["type:institution", f"place_ids:{place_id}"],
             "fields": SOLR_FIELDS_FOR_BASE_INSTITUTION,
-            "sort": "name_ans asc"
+            "sort": "name_ans asc",
         }
         institution_results: Results = await SolrConnection.search(q, cursor=True)
-        institution_list: list = await BaseInstitution(institution_results,
-                                                       context={"request": req},
-                                                       many=True).data
+        institution_list: list = await BaseInstitution(
+            institution_results, context={"request": req}, many=True
+        ).data
 
-        return {
-            "type": "rism:PlaceInstitutionList",
-            "items": institution_list
-        }
+        return {"type": "rism:PlaceInstitutionList", "items": institution_list}

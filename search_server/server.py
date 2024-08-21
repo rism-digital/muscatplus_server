@@ -7,7 +7,6 @@ import yaml
 from sanic import Sanic, response
 from small_asc.client import Results
 
-from search_server.routes.sigla import sigla_blueprint
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.api import api_blueprint
 from search_server.routes.countries import countries_blueprint
@@ -18,27 +17,26 @@ from search_server.routes.institutions import institutions_blueprint
 from search_server.routes.people import people_blueprint
 from search_server.routes.places import places_blueprint
 from search_server.routes.query import query_blueprint
+from search_server.routes.sigla import sigla_blueprint
 from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
 from search_server.routes.works import works_blueprint
 from shared_helpers.languages import load_translations, negotiate_languages
 from shared_helpers.solr_connection import SolrConnection
 
-config: dict = yaml.safe_load(open('configuration.yml', 'r'))
-debug_mode: bool = config['common']['debug']
-version_string: str = config['common']['version']
+config: dict = yaml.safe_load(open("configuration.yml"))  # noqa: SIM115
+debug_mode: bool = config["common"]["debug"]
+version_string: str = config["common"]["version"]
 release: str = ""
 
 # If we have semver then remove the leading 'v', e.g., 'v1.1.1' -> '1.1.1'
 # The full release string would then be 'muscatplus_server@1.1.1'
 # Otherwise, use the version string verbatim, e.g., 'muscatplus_server@development'.
-if version_string.startswith("v"):
-    release = version_string[1:]
-else:
-    release = version_string
+release = version_string[1:] if version_string.startswith("v") else version_string
 
 if debug_mode is False:
     from sentry_sdk.integrations.sanic import SanicIntegration
+
     sentry_sdk.init(
         dsn=config["sentry"]["api"]["dsn"],
         integrations=[SanicIntegration()],
@@ -63,16 +61,15 @@ app.blueprint(api_blueprint)
 app.blueprint(external_blueprint)
 app.blueprint(sigla_blueprint)
 
-app.config.FORWARDED_SECRET = config['common']['secret']
+app.config.FORWARDED_SECRET = config["common"]["secret"]
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
 
-if debug_mode:
-    LOGLEVEL = logging.DEBUG
-else:
-    LOGLEVEL = logging.ERROR
+LOGLEVEL = logging.DEBUG if debug_mode else logging.ERROR
 
-logging.basicConfig(format="[%(asctime)s] [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
-                    level=LOGLEVEL)
+logging.basicConfig(
+    format="[%(asctime)s] [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
+    level=LOGLEVEL,
+)
 
 log = logging.getLogger("mp_server")
 
@@ -82,7 +79,7 @@ if not translations:
 
 app.ctx.translations = translations
 
-context_uri: bool = config['common']['context_uri']
+context_uri: bool = config["common"]["context_uri"]
 app.ctx.context_uri = context_uri
 
 # Make the application configuration object available in the app context
@@ -117,7 +114,15 @@ async def front(req):
 async def about(req):
     cfg: dict = req.app.ctx.config
     sort: str = "indexed desc"
-    idx_results: Results = await SolrConnection.search({"query": "*:*", "filter": ["type:indexer"], "sort": sort, "limit": 1, "fields": ["indexed", "indexer_version_sni"]})
+    idx_results: Results = await SolrConnection.search(
+        {
+            "query": "*:*",
+            "filter": ["type:indexer"],
+            "sort": sort,
+            "limit": 1,
+            "fields": ["indexed", "indexer_version_sni"],
+        }
+    )
 
     # If, for some reason, we don't have a result for the last indexed
     # value, then return Jan 1, 1970.
@@ -131,7 +136,7 @@ async def about(req):
     resp: dict = {
         "serverVersion": cfg["common"]["version"],
         "indexerVersion": idxversion,
-        "lastIndexed": lastidx
+        "lastIndexed": lastidx,
     }
 
     return response.json(resp)

@@ -34,8 +34,13 @@ async def get_ids():
     sort = "id asc"
     fl: list = ["id"]
 
-    res = await s.search({"query": "*:*", "filter": fq, "fields": fl, "sort": sort, "limit": 500}, cursor=True)
-    id_sub = re.compile(r"source_|person_|institution_|diamm_source_|diamm_organization_|diamm_person_")
+    res = await s.search(
+        {"query": "*:*", "filter": fq, "fields": fl, "sort": sort, "limit": 500},
+        cursor=True,
+    )
+    id_sub = re.compile(
+        r"source_|person_|institution_|diamm_source_|diamm_organization_|diamm_person_"
+    )
     print(f"Assembling {res.hits} IDs")
     ids: list = []
     async for s in res:
@@ -49,7 +54,9 @@ async def run() -> (int, int):
     item_ids: list = await get_ids()
     responses: list = []
 
-    async with aiohttp.ClientSession(headers={"Accept": "application/ld+json", "X-API-Accept-Language": "en"}) as session:
+    async with aiohttp.ClientSession(
+        headers={"Accept": "application/ld+json", "X-API-Accept-Language": "en"}
+    ) as session:
         for num, itm in enumerate(item_ids):
             url: str = f"http://dev.rism.offline/institutions/{itm}"
             # url: str = f"http://dev.rism.offline/external/diamm/person/{itm}"

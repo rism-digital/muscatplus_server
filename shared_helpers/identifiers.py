@@ -1,9 +1,13 @@
 import re
-from typing import Pattern, Optional
+from typing import Optional, Pattern
 
-ID_SUB: Pattern = re.compile(r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_|work_")
+ID_SUB: Pattern = re.compile(
+    r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_|work_"
+)
 
-PROJECT_PATT: str = r"(?:diamm|cantus)_(?:source|person|holding|institution|organization|archive)_"
+PROJECT_PATT: str = (
+    r"(?:diamm|cantus)_(?:source|person|holding|institution|organization|archive)_"
+)
 
 PROJECT_ID_SUB: Pattern = re.compile(PROJECT_PATT, re.VERBOSE)
 
@@ -11,39 +15,58 @@ PROJECT_ID_SUB: Pattern = re.compile(PROJECT_PATT, re.VERBOSE)
 PROJECT_IDENTIFIERS = {
     "diamm": "https://www.diamm.ac.uk/",
     "cantus": "https://cantusdatabase.org/",
-    "rism": "https://rism.online/"
+    "rism": "https://rism.online/",
 }
 
 EXTERNAL_IDS: dict = {
-    "viaf": {"label": "Virtual Internet Authority File (VIAF)",
-             "ident": "https://viaf.org/viaf/{ident}"},
-    "dnb": {"label": "Deutsche Nationalbibliothek (GND)",
-            "ident": "http://d-nb.info/gnd/{ident}"},
-    "wkp": {"label": "Wikidata",
-            "ident": "https://www.wikidata.org/wiki/{ident}"},
-    "isil": {"label": "International Standard Identifier for Libraries and Related Organizations (ISIL)"},
+    "viaf": {
+        "label": "Virtual Internet Authority File (VIAF)",
+        "ident": "https://viaf.org/viaf/{ident}",
+    },
+    "dnb": {
+        "label": "Deutsche Nationalbibliothek (GND)",
+        "ident": "http://d-nb.info/gnd/{ident}",
+    },
+    "wkp": {"label": "Wikidata", "ident": "https://www.wikidata.org/wiki/{ident}"},
+    "isil": {
+        "label": "International Standard Identifier for Libraries and Related Organizations (ISIL)"
+    },
     "bne": {"label": "Biblioteca Nacional de España"},
-    "bnf": {"label": "Bibliothèque Nationale de France",
-            "ident": "https://ark.bnf.fr/{ident}"},
-    "iccu": {"label": "Istituto Centrale per il Catalogo Unico"},  # No stable URI for authorities
-    "isni": {"label": "International Standard Name Identifier",
-             "ident": "https://isni.org/isni/{ident}"},
-    "lc": {"label": "Library of Congress",
-           "ident": "http://id.loc.gov/authorities/names/{ident}"},
+    "bnf": {
+        "label": "Bibliothèque Nationale de France",
+        "ident": "https://ark.bnf.fr/{ident}",
+    },
+    "iccu": {
+        "label": "Istituto Centrale per il Catalogo Unico"
+    },  # No stable URI for authorities
+    "isni": {
+        "label": "International Standard Name Identifier",
+        "ident": "https://isni.org/isni/{ident}",
+    },
+    "lc": {
+        "label": "Library of Congress",
+        "ident": "http://id.loc.gov/authorities/names/{ident}",
+    },
     "nlp": {"label": "Biblioteka Narodowa"},
     "nkc": {"label": "Národní knihovna České republiky"},
     "swnl": {"label": "Schweizerische Nationalbibliothek"},
     "moc": {"label": "MARC Organization Code"},  # No URI possible.
-    "orcid": {"label": "Open Researcher and Contributor ID (ORCiD)",
-              "ident": "https://orcid.org/{ident}"},
-    "diamm": {"label": "Digital Image Archive of Medieval Music",
-              "ident": "https://www.diamm.ac.uk/{ident}"},
-    "cantus": {"label": "Cantus: A Database for Latin Ecclesiastical Chant",
-               "ident": "https://cantusdatabase.org/{ident}"}
+    "orcid": {
+        "label": "Open Researcher and Contributor ID (ORCiD)",
+        "ident": "https://orcid.org/{ident}",
+    },
+    "diamm": {
+        "label": "Digital Image Archive of Medieval Music",
+        "ident": "https://www.diamm.ac.uk/{ident}",
+    },
+    "cantus": {
+        "label": "Cantus: A Database for Latin Ecclesiastical Chant",
+        "ident": "https://cantusdatabase.org/{ident}",
+    },
 }
 
 
-def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) -> str:
+def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) -> str:  # noqa: F821
     """
     Takes a request object, parses it out, and returns a templated identifier suitable
     for use in an "id" field, including the incoming request information on host and scheme (http/https).
@@ -53,13 +76,15 @@ def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) ->
     :param kwargs: A set of keywords matching the template formatting variables
     :return: A templated string
     """
-    fwd_scheme_header = request.headers.get('X-Forwarded-Proto')
-    fwd_host_header = request.headers.get('X-Forwarded-Host')
+    fwd_scheme_header = request.headers.get("X-Forwarded-Proto")
+    fwd_host_header = request.headers.get("X-Forwarded-Host")
 
     scheme: str = fwd_scheme_header if fwd_scheme_header else request.scheme
     server: str = fwd_host_header if fwd_host_header else request.host
 
-    return request.app.url_for(viewname, _external=True, _scheme=scheme, _server=server, **kwargs)
+    return request.app.url_for(
+        viewname, _external=True, _scheme=scheme, _server=server, **kwargs
+    )
 
 
 def get_site(req) -> str:
@@ -74,8 +99,8 @@ def get_site(req) -> str:
     :param req: A Sanic request object
     :return: A templated string
     """
-    fwd_scheme_header = req.headers.get('X-Forwarded-Proto')
-    fwd_host_header = req.headers.get('X-Forwarded-Host')
+    fwd_scheme_header = req.headers.get("X-Forwarded-Proto")
+    fwd_host_header = req.headers.get("X-Forwarded-Host")
 
     scheme: str = fwd_scheme_header if fwd_scheme_header else req.scheme
     server: str = fwd_host_header if fwd_host_header else req.host
@@ -116,6 +141,5 @@ SOLR_FIELD_DATA_TYPES: FieldDataType = {
     "material_source_types_sm": ["dcterms:type"],
     "material_source_types": ["dcterms:type"],
     "dramatic_roles_json": ["pmo:MediumOfPerformance"],
-    "scoring_json": ["pmo:MediumOfPerformance"]
+    "scoring_json": ["pmo:MediumOfPerformance"],
 }
-

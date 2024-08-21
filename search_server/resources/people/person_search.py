@@ -6,7 +6,10 @@ from small_asc.client import Results, SolrError
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.search_request import SearchRequest
 from search_server.resources.search.base_search import serialize_response
-from search_server.resources.search.search_results import BaseSearchResults, SourceSearchResult
+from search_server.resources.search.search_results import (
+    BaseSearchResults,
+    SourceSearchResult,
+)
 
 log = logging.getLogger("mp_server")
 
@@ -14,8 +17,10 @@ log = logging.getLogger("mp_server")
 def _prepare_query(req, person_id: str, probe: bool = False) -> dict:
     try:
         request_compiler = SearchRequest(req, probe=probe)
-        request_compiler.filters += ["type:source",
-                                     f"creator_id:person_{person_id} OR related_people_ids:person_{person_id}"]
+        request_compiler.filters += [
+            "type:source",
+            f"creator_id:person_{person_id} OR related_people_ids:person_{person_id}",
+        ]
         solr_params = request_compiler.compile()
     except InvalidQueryException as e:
         log.exception("Invalid query: %s", e)
@@ -45,7 +50,7 @@ async def handle_person_probe_request(req, person_id: str) -> dict:
         raise
 
     try:
-        result_data:dict = await serialize_response(req, solr_params, PersonResults)
+        result_data: dict = await serialize_response(req, solr_params, PersonResults)
     except SolrError:
         raise
 
@@ -60,6 +65,6 @@ class PersonResults(BaseSearchResults):
         if obj.hits == 0:
             return None
 
-        return SourceSearchResult(obj.docs,
-                                  many=True,
-                                  context={"request": self.context.get("request")}).data
+        return SourceSearchResult(
+            obj.docs, many=True, context={"request": self.context.get("request")}
+        ).data

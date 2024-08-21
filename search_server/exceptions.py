@@ -1,5 +1,3 @@
-
-
 class PaginationParseException(Exception):
     pass
 

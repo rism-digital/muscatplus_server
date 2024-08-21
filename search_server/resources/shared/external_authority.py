@@ -7,10 +7,7 @@ from shared_helpers.identifiers import EXTERNAL_IDS
 
 class ExternalAuthoritiesSection(ypres.DictSerializer):
     label = ypres.MethodField()
-    etype = ypres.StaticField(
-        label="type",
-        value="rism:ExternalAuthoritiesSection"
-    )
+    etype = ypres.StaticField(label="type", value="rism:ExternalAuthoritiesSection")
     items = ypres.MethodField()
 
     def get_label(self, obj: list) -> dict:
@@ -40,11 +37,13 @@ class ExternalAuthoritiesSection(ypres.DictSerializer):
                 # remove the {ident} placeholder to get the base URI
                 record["base"] = uri_tmpl[:-7]
 
-            record.update({
-                "label": {"none": [full_label]},
-                "value": f"{ident}",
-                "type": "rism:ExternalAuthority",
-            })
+            record.update(
+                {
+                    "label": {"none": [full_label]},
+                    "value": f"{ident}",
+                    "type": "rism:ExternalAuthority",
+                }
+            )
 
             externals.append(record)
 

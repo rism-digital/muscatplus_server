@@ -7,7 +7,7 @@ from data_export_server.routes.sitemap import sitemap_blueprint
 from data_export_server.routes.opengraph import opengraph_blueprint
 
 app = Sanic("mp_dataexport")
-config: dict = yaml.safe_load(open('configuration.yml', 'r'))
+config: dict = yaml.safe_load(open("configuration.yml", "r"))
 
 # Make the application configuration object available in the app context
 app.ctx.config = config
@@ -20,7 +20,7 @@ if debug_mode is False:
     # If we have semver then remove the leading 'v', e.g., 'v1.1.1' -> '1.1.1'
     # The full release string would then be 'muscatplus_server@1.1.1'
     # Otherwise, use the version string verbatim, e.g., 'muscatplus_server@development'.
-    version_string: str = config['common']['version']
+    version_string: str = config["common"]["version"]
     if version_string.startswith("v"):
         release = version_string[1:]
     else:
@@ -34,8 +34,8 @@ if debug_mode is False:
     )
 
 template_env = Environment(
-    loader=FileSystemLoader('data_export_server/templates'),
-    autoescape=select_autoescape(['xml'])
+    loader=FileSystemLoader("data_export_server/templates"),
+    autoescape=select_autoescape(["xml"]),
 )
 
 app.ctx.template_env = template_env

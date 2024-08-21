@@ -6,23 +6,25 @@ from typing import Optional
 
 from small_asc.client import Results
 
-from shared_helpers.identifiers import get_identifier
 from search_server.helpers.search_request import (
-    filters_for_mode,
-    alias_config_map,
-    FacetTypeValues,
     FacetBehaviourValues,
     FacetSortValues,
+    FacetTypeValues,
+    IncipitModeValues,
+    alias_config_map,
+    filters_for_mode,
     types_alias_map,
-    IncipitModeValues
 )
+from shared_helpers.identifiers import get_identifier
 
 log = logging.getLogger("mp_server")
-RANGE_PARSING_REGEX: Pattern = re.compile(r'\[(?P<start>-?\d{,4})\s?TO\s?(?P<end>-?\d{,4})\]')
+RANGE_PARSING_REGEX: Pattern = re.compile(
+    r"\[(?P<start>-?\d{,4})\s?TO\s?(?P<end>-?\d{,4})]"
+)
 
 
 def get_facets(req, obj: Results) -> Optional[dict]:
-    facet_result: Optional[dict] = obj.raw_response.get('facets')
+    facet_result: Optional[dict] = obj.raw_response.get("facets")
 
     if not facet_result:
         return None
@@ -41,20 +43,14 @@ def get_facets(req, obj: Results) -> Optional[dict]:
     # The purpose of the notation facet is to activate the keyboard interface in the search UI.
     notation_aliases: list = type_config_map.get(FacetTypeValues.NOTATION, [])
     for n_alias in notation_aliases:
-        n_translation_key: str = facet_config_map[n_alias]['label']
+        n_translation_key: str = facet_config_map[n_alias]["label"]
         n_translation: Optional[dict] = transl.get(n_translation_key)
-
-        n_label: dict
-        if n_translation:
-            n_label = n_translation
-        else:
-            n_label = {"none": [n_translation_key]}
+        n_label: dict = n_translation or {"none": [n_translation_key]}
 
         n_facet_cfg: dict = {
             "label": n_label,
             "alias": n_alias,
-            "type": _get_facet_type(FacetTypeValues.NOTATION)
-
+            "type": _get_facet_type(FacetTypeValues.NOTATION),
         }
         n_facet_cfg.update(_create_notation_facet(transl))
         facets[n_alias] = n_facet_cfg
@@ -63,19 +59,14 @@ def get_facets(req, obj: Results) -> Optional[dict]:
     # on a specific field to the server through a filter.
     query_aliases: list = type_config_map.get(FacetTypeValues.QUERY, [])
     for q_alias in query_aliases:
-        q_translation_key: str = facet_config_map[q_alias]['label']
+        q_translation_key: str = facet_config_map[q_alias]["label"]
         q_translation: Optional[dict] = transl.get(q_translation_key)
-
-        q_label: dict
-        if q_translation:
-            q_label = q_translation
-        else:
-            q_label = {"none": [q_translation_key]}
+        q_label: dict = q_translation or {"none": [q_translation_key]}
 
         q_facet_cfg: dict = {
             "label": q_label,
             "alias": q_alias,
-            "type": _get_facet_type(FacetTypeValues.QUERY)
+            "type": _get_facet_type(FacetTypeValues.QUERY),
         }
         q_facet_cfg.update(_create_query_facet(q_alias, req, facet_config_map[q_alias]))
         facets[q_alias] = q_facet_cfg
@@ -84,10 +75,10 @@ def get_facets(req, obj: Results) -> Optional[dict]:
     for alias, res in facet_result.items():
         # Skip these sections of the facet results since
         # we handle them separately.
-        if alias in ('count', 'mode'):
+        if alias in ("count", "mode"):
             continue
 
-        facet_type: str = facet_config_map[alias]['type']
+        facet_type: str = facet_config_map[alias]["type"]
         # Uses set logic to check whether the keys in the result
         # are equal to just the set of 'count'. This indicates that
         # there is not enough information coming from solr to construct
@@ -96,7 +87,7 @@ def get_facets(req, obj: Results) -> Optional[dict]:
         # values have been filtered out. The exception to this is those which
         # use a function query, where it only returns the count of documents
         # that would occur after applying the function query.
-        if res.keys() == {"count"} and 'function_query' not in facet_config_map[alias]:
+        if res.keys() == {"count"} and "function_query" not in facet_config_map[alias]:
             log.debug(f"Bailing with facet type of {facet_type}")
             continue
 
@@ -104,19 +95,14 @@ def get_facets(req, obj: Results) -> Optional[dict]:
         # available, simply wrap the supplied label up in a language
         # map. This lets us supply a label for a facet (in english) that doesn't
         # yet have a translation available.
-        translation_key: str = facet_config_map[alias]['label']
+        translation_key: str = facet_config_map[alias]["label"]
         translation: Optional[dict] = transl.get(translation_key)
-
-        label: dict
-        if translation:
-            label = translation
-        else:
-            label = {"none": [translation_key]}
+        label: dict = translation or {"none": [translation_key]}
 
         cfg: dict = {
             "alias": alias,
             "label": label,
-            "type": _get_facet_type(facet_type)
+            "type": _get_facet_type(facet_type),
         }
 
         if facet_type == "range":
@@ -124,7 +110,7 @@ def get_facets(req, obj: Results) -> Optional[dict]:
         elif facet_type == "toggle":
             cfg.update(_create_toggle_facet(res))
         elif facet_type == "select":
-            if 'buckets' not in res:
+            if "buckets" not in res:
                 continue
 
             fcfg: dict = facet_config_map[alias]
@@ -152,10 +138,7 @@ def _get_facet_type(val) -> str:
 
 def __get_key_signature(value: str) -> dict:
     if value == "n":
-        return {
-            "label": {"none": ["None"]},
-            "value": value
-        }
+        return {"label": {"none": ["None"]}, "value": value}
 
     symbol: str = ""
     if value.startswith("x"):
@@ -165,10 +148,8 @@ def __get_key_signature(value: str) -> dict:
 
     # The number of accidentals is the length of the string, subtract 1 for the initial character.
     num_accidentals: int = len(value) - 1
-    return {
-        "label": {"none": [f"{num_accidentals}{symbol}"]},
-        "value": value
-    }
+    return {"label": {"none": [f"{num_accidentals}{symbol}"]}, "value": value}
+
 
 KEY_SIGNATURES = [
     "n",
@@ -193,28 +174,13 @@ def __get_key_signature_options() -> list[dict]:
     return [__get_key_signature(v) for v in KEY_SIGNATURES]
 
 
-TIME_SIGNATURES = [
-    "-",
-    "4/4",
-    "3/4",
-    "6/8",
-    "c",
-    "c/",
-    "o",
-    "o."
-]
+TIME_SIGNATURES = ["-", "4/4", "3/4", "6/8", "c", "c/", "o", "o."]
 
 
 def __get_time_signature(value: str) -> dict:
-    if value == "-":
-        label = "None"
-    else:
-        label = value
+    label: str = "None" if value == "-" else value
 
-    return {
-        "label": {"none": [f"{label}"]},
-        "value": value
-    }
+    return {"label": {"none": [f"{label}"]}, "value": value}
 
 
 def __get_time_signature_options() -> list[dict]:
@@ -226,49 +192,53 @@ def _create_notation_facet(all_translations: dict) -> dict:
         "modes": {
             "label": {"none": ["Query mode"]},  # TODO: Translate
             "query": "im",
-            "options": [{
-                "label": {"none": ["Intervals"]},
-                "value": IncipitModeValues.INTERVALS
-            }, {
-                "label": {"none": ["Exact pitches"]},
-                "value": IncipitModeValues.EXACT_PITCHES
-            }, {
-                "label": {"none": ["Contour"]},
-                "value": IncipitModeValues.CONTOUR
-            }]
+            "options": [
+                {
+                    "label": {"none": ["Intervals"]},
+                    "value": IncipitModeValues.INTERVALS,
+                },
+                {
+                    "label": {"none": ["Exact pitches"]},
+                    "value": IncipitModeValues.EXACT_PITCHES,
+                },
+                {"label": {"none": ["Contour"]}, "value": IncipitModeValues.CONTOUR},
+            ],
         },
         "options": {
             "clef": {
                 "label": all_translations.get("records.clef"),
                 "query": "ic",
-                "options": [{
-                    "label": all_translations.get("records.g_minus_2_treble"),
-                    "value": "G-2"
-                }, {
-                    "label": all_translations.get("records.f_minus_4_bass"),
-                    "value": "F-4"
-                }, {
-                    "label": all_translations.get("records.c_minus_3"),
-                    "value": "C-3"
-                }, {
-                    "label": all_translations.get("records.c_minus_1"),
-                    "value": "C-1"
-                }, {
-                    "label": all_translations.get("records.c_plus_1"),
-                    "value": "C+1"
-                }]
+                "options": [
+                    {
+                        "label": all_translations.get("records.g_minus_2_treble"),
+                        "value": "G-2",
+                    },
+                    {
+                        "label": all_translations.get("records.f_minus_4_bass"),
+                        "value": "F-4",
+                    },
+                    {
+                        "label": all_translations.get("records.c_minus_3"),
+                        "value": "C-3",
+                    },
+                    {
+                        "label": all_translations.get("records.c_minus_1"),
+                        "value": "C-1",
+                    },
+                    {"label": all_translations.get("records.c_plus_1"), "value": "C+1"},
+                ],
             },
             "keysig": {
                 "label": all_translations.get("records.key_signature"),
                 "query": "ik",
-                "options": __get_key_signature_options()
+                "options": __get_key_signature_options(),
             },
             "timesig": {
                 "label": all_translations.get("records.time_signature"),
                 "query": "it",
-                "options": __get_time_signature_options()
+                "options": __get_time_signature_options(),
             },
-        }
+        },
     }
 
 
@@ -293,40 +263,30 @@ def _create_range_facet(alias: str, res, req) -> dict:
 
     range_fields: dict = {
         "range": {
-            "lower": {
-                "label": {"none": ["Lower"]},
-                "value": lower
-            },
-            "upper": {
-                "label": {"none": ["Upper"]},
-                "value": upper
-            },
-            "min": {
-                "label": {"none": ["Minimum"]},
-                "value": min_val
-            },
-            "max": {
-                "label": {"none": ["Maximum"]},
-                "value": max_val
-            },
+            "lower": {"label": {"none": ["Lower"]}, "value": lower},
+            "upper": {"label": {"none": ["Upper"]}, "value": upper},
+            "min": {"label": {"none": ["Minimum"]}, "value": min_val},
+            "max": {"label": {"none": ["Maximum"]}, "value": max_val},
         }
     }
     return range_fields
 
 
 def _create_toggle_facet(res) -> dict:
-    toggle_fields: dict = {
-        "value": "true"
-    }
+    toggle_fields: dict = {"value": "true"}
     return toggle_fields
 
 
-def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations: dict) -> dict:
+def _create_select_facet(
+    alias: str, res: dict, req, cfg: dict, all_translations: dict
+) -> dict:
     value_buckets = res["buckets"]
     translation_prefix: Optional[str] = cfg.get("translation_prefix")
     translation_values: Optional[dict] = cfg.get("translation_values")
 
-    default_behaviour: str = cfg.get("default_behaviour", FacetBehaviourValues.INTERSECTION)
+    default_behaviour: str = cfg.get(
+        "default_behaviour", FacetBehaviourValues.INTERSECTION
+    )
     current_behaviour: str = default_behaviour
     incoming_facet_behaviour: list = req.args.getlist("fb", [])
     for arg in incoming_facet_behaviour:
@@ -338,7 +298,7 @@ def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations
 
     items: list = []
     for bucket in value_buckets:
-        solr_value = bucket['val']
+        solr_value = bucket["val"]
         value: str
 
         if isinstance(solr_value, bool):
@@ -350,7 +310,9 @@ def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations
         default_label: dict = {"none": [str(solr_value)]}
 
         if translation_prefix:
-            label = all_translations.get(f"{translation_prefix}.{solr_value}", default_label)
+            label = all_translations.get(
+                f"{translation_prefix}.{solr_value}", default_label
+            )
         elif translation_values:
             # look up the Solr value in the translation values in the configuration
             trans_key: Optional[str] = translation_values.get(solr_value)
@@ -361,11 +323,7 @@ def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations
         else:
             label = default_label
 
-        items.append({
-            "value": value,
-            "label": label,
-            "count": bucket['count']
-        })
+        items.append({"value": value, "label": label, "count": bucket["count"]})
 
     # TODO: Translate these fields!
     selector_fields = {
@@ -373,23 +331,25 @@ def _create_select_facet(alias: str, res: dict, req, cfg: dict, all_translations
         "defaultSort": default_sort,
         "behaviours": {
             "label": {"none": ["Behaviour"]},
-            "items": [{
+            "items": [
+                {
                     "label": {"none": ["And"]},
-                    "value": FacetBehaviourValues.INTERSECTION
-                }, {
-                    "label": {"none": ["Or"]},
-                    "value": FacetBehaviourValues.UNION
-            }],
+                    "value": FacetBehaviourValues.INTERSECTION,
+                },
+                {"label": {"none": ["Or"]}, "value": FacetBehaviourValues.UNION},
+            ],
             "default": default_behaviour,
-            "current": current_behaviour
-        }
+            "current": current_behaviour,
+        },
     }
 
     return selector_fields
 
 
 def _create_query_facet(alias: str, req, cfg: dict) -> dict:
-    default_behaviour: str = cfg.get("default_behaviour", FacetBehaviourValues.INTERSECTION)
+    default_behaviour: str = cfg.get(
+        "default_behaviour", FacetBehaviourValues.INTERSECTION
+    )
     current_behaviour: str = default_behaviour
     incoming_facet_behaviour: list = req.args.getlist("fb", [])
     for arg in incoming_facet_behaviour:
@@ -403,14 +363,14 @@ def _create_query_facet(alias: str, req, cfg: dict) -> dict:
         "suggestions": f"{suggestion_uri}?alias={alias}&q=",
         "behaviours": {
             "label": {"none": ["Behaviour"]},
-            "items": [{
-                "label": {"none": ["And"]},
-                "value": FacetBehaviourValues.INTERSECTION
-            }, {
-                "label": {"none": ["Or"]},
-                "value": FacetBehaviourValues.UNION
-            }],
+            "items": [
+                {
+                    "label": {"none": ["And"]},
+                    "value": FacetBehaviourValues.INTERSECTION,
+                },
+                {"label": {"none": ["Or"]}, "value": FacetBehaviourValues.UNION},
+            ],
             "default": default_behaviour,
-            "current": current_behaviour
-        }
+            "current": current_behaviour,
+        },
     }

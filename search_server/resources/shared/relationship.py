@@ -1,27 +1,30 @@
 import itertools
 import logging
 import re
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 import ypres
 
 from shared_helpers.display_translators import (
     person_institution_relationship_labels_translator,
-    qualifier_labels_translator,
     place_relationship_labels_translator,
+    qualifier_labels_translator,
+    source_relationship_labels_translator,
     title_json_value_translator,
-    source_relationship_labels_translator
 )
-from shared_helpers.identifiers import ID_SUB, get_identifier, PROJECT_ID_SUB, EXTERNAL_IDS
+from shared_helpers.identifiers import (
+    EXTERNAL_IDS,
+    ID_SUB,
+    PROJECT_ID_SUB,
+    get_identifier,
+)
 from shared_helpers.utilities import to_aiter
 
 log = logging.getLogger("mp_server")
 
 
 class RelationshipsSection(ypres.AsyncDictSerializer):
-    section_label = ypres.MethodField(
-        label="sectionLabel"
-    )
+    section_label = ypres.MethodField(label="sectionLabel")
     items = ypres.MethodField()
 
     def get_section_label(self, obj: dict) -> dict:
@@ -38,30 +41,29 @@ class RelationshipsSection(ypres.AsyncDictSerializer):
         places: list = obj.get("related_places_json", [])
         sources: list = obj.get("related_sources_json", [])
 
-        all_relationships = to_aiter(itertools.chain(now_in,
-                                                     contains,
-                                                     people,
-                                                     institutions,
-                                                     places,
-                                                     sources))
+        all_relationships = to_aiter(
+            itertools.chain(now_in, contains, people, institutions, places, sources)
+        )
 
-        return await Relationship(all_relationships,
-                                  many=True,
-                                  context={"request": self.context.get("request"),
-                                           "session": self.context.get("session")}).data
+        return await Relationship(
+            all_relationships,
+            many=True,
+            context={
+                "request": self.context.get("request"),
+                "session": self.context.get("session"),
+            },
+        ).data
 
 
 class Relationship(ypres.AsyncDictSerializer):
     role = ypres.MethodField()
     qualifier = ypres.MethodField()
-    related_to = ypres.MethodField(
-        label="relatedTo"
-    )
+    related_to = ypres.MethodField(label="relatedTo")
     name = ypres.MethodField()
     note = ypres.MethodField()
 
     def get_role(self, obj: dict) -> Optional[dict]:
-        if 'relationship' not in obj:
+        if "relationship" not in obj:
             return None
 
         relationship_value: str = obj["relationship"]
@@ -81,31 +83,31 @@ class Relationship(ypres.AsyncDictSerializer):
         return {
             "label": relationship_translator(relationship_value, transl),
             "value": f"{rel}",
-            "id": f"{rel}"
+            "id": f"{rel}",
         }
 
     def get_qualifier(self, obj: dict) -> Optional[dict]:
-        if 'qualifier' not in obj:
+        if "qualifier" not in obj:
             return None
 
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
         return {
-            "label": qualifier_labels_translator(obj['qualifier'], transl),
+            "label": qualifier_labels_translator(obj["qualifier"], transl),
             "value": f"{obj.get('qualifier')}",
-            "id": f"rism:{obj.get('qualifier')}"
+            "id": f"rism:{obj.get('qualifier')}",
         }
 
     def get_related_to(self, obj: dict) -> Optional[dict]:
         req = self.context.get("request")
-        if 'person_id' in obj:
+        if "person_id" in obj:
             return _related_to_person(req, obj)
-        elif 'institution_id' in obj:
+        elif "institution_id" in obj:
             return _related_to_institution(req, obj)
-        elif 'place_id' in obj:
+        elif "place_id" in obj:
             return _related_to_place(req, obj)
-        elif 'source_id' in obj:
+        elif "source_id" in obj:
             return _related_to_source(req, obj)
         else:
             # Something is wrong, but we can't find out what to display.
@@ -117,13 +119,13 @@ class Relationship(ypres.AsyncDictSerializer):
         # if any of these keys are in the object, then we have a relationship and it should be handled
         # by the 'related_to' function. This is done by seeing if the set of expected keys, and the set
         # of actual keys, have any overlap. If they do, bail.
-        if not {'person_id', 'institution_id', 'place_id'}.isdisjoint(obj.keys()):
+        if not {"person_id", "institution_id", "place_id"}.isdisjoint(obj.keys()):
             return None
 
-        elif 'name' in obj:
+        elif "name" in obj:
             # This will be selected as a non-linked label object
             # if we can't find an id to create a linkable object.
-            return {"none": [obj['name']]}
+            return {"none": [obj["name"]]}
         else:
             # we have neither a related object, nor a name, so how could any reasonable person expect us
             # to do anything with this? Just bail, and hope someone fixes the data.
@@ -138,23 +140,23 @@ class Relationship(ypres.AsyncDictSerializer):
 
 def _related_to_person(req, obj: dict) -> dict:
     name: str
-    if 'date_statement' in obj:
+    if "date_statement" in obj:
         name = f"{obj.get('name')} ({obj.get('date_statement')})"
     else:
         name = f"{obj.get('name')}"
 
-    person_id = re.sub(ID_SUB, "", obj['person_id'])
+    person_id = re.sub(ID_SUB, "", obj["person_id"])
 
     return {
         "id": get_identifier(req, "people.person", person_id=person_id),
         "label": {"none": [name]},
-        "type": "rism:Person"
+        "type": "rism:Person",
     }
 
 
 def _related_to_institution(req, obj: dict) -> dict:
     name: str = f"{obj['name']}"
-    if 'department' in obj:
+    if "department" in obj:
         name = f"{name}, {obj.get('department')}"
 
     if "place" in obj:
@@ -166,9 +168,11 @@ def _related_to_institution(req, obj: dict) -> dict:
     institution_id = re.sub(ID_SUB, "", obj["institution_id"])
 
     return {
-        "id": get_identifier(req, "institutions.institution", institution_id=institution_id),
+        "id": get_identifier(
+            req, "institutions.institution", institution_id=institution_id
+        ),
         "label": {"none": [name]},
-        "type": "rism:Institution"
+        "type": "rism:Institution",
     }
 
 
@@ -178,7 +182,7 @@ def _related_to_place(req, obj: dict) -> dict:
     return {
         "id": get_identifier(req, "places.place", place_id=place_id),
         "label": {"none": [obj.get("name")]},
-        "type": "rism:Place"
+        "type": "rism:Place",
     }
 
 
@@ -191,7 +195,7 @@ def _related_to_source(req, obj: dict) -> dict:
 
     if proj and proj in {"diamm", "cantus"}:
         source_id = re.sub(PROJECT_ID_SUB, "", obj["source_id"])
-        prefix: Optional[str] = EXTERNAL_IDS.get(obj['project'], {}).get("ident")
+        prefix: Optional[str] = EXTERNAL_IDS.get(obj["project"], {}).get("ident")
         if not prefix:
             # If, for some reason this isn't found, return the empty dict.
             log.error("A URI prefix was not found for project %s", obj["project"])
@@ -205,11 +209,7 @@ def _related_to_source(req, obj: dict) -> dict:
 
     source_title: dict = title_json_value_translator(obj.get("title", []), transl)
 
-    return {
-        "id": ident,
-        "label": source_title,
-        "type": "rism:Source"
-    }
+    return {"id": ident, "label": source_title, "type": "rism:Source"}
 
 
 def _relationship_translator(obj: dict) -> Optional[Callable]:
@@ -222,17 +222,16 @@ def _relationship_translator(obj: dict) -> Optional[Callable]:
     If we can't figure it out, return None and handle it in the caller.
 
     """
-    relationship_translator: Callable
     if obj.get("project") == "diamm":
         # DIAMM uses the person / institution relator codes for its source relationships
         return person_institution_relationship_labels_translator
-    elif 'person_id' in obj or 'institution_id' in obj:
+    elif "person_id" in obj or "institution_id" in obj:
         return person_institution_relationship_labels_translator
-    elif 'place_id' in obj:
+    elif "place_id" in obj:
         return place_relationship_labels_translator
-    elif 'source_id' in obj:
+    elif "source_id" in obj:
         return source_relationship_labels_translator
-    elif 'relationship' in obj:
+    elif "relationship" in obj:
         # To get around a bug where place IDs are not stored in Muscat, but the relationship
         # to them is. TODO: Fix this when the Muscat bug is fixed.
         return place_relationship_labels_translator

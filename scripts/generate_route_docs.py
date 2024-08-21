@@ -14,7 +14,7 @@ INCLUDE_ROUTES: list = [
     "/<source_id:str>/incipits/<work_num:str>/",
     "search",
     "probe",
-    "suggest"
+    "suggest",
 ]
 
 
@@ -142,14 +142,16 @@ def main():
                 print(f"Skipping {fn.path}.")
                 continue
 
-            docstring: str = textwrap.dedent(fn.handler.__doc__) if fn.handler.__doc__ else ""
+            docstring: str = (
+                textwrap.dedent(fn.handler.__doc__) if fn.handler.__doc__ else ""
+            )
 
             route_name = fn.path
             tpl = route_template.format(route_name=route_name, docstring=docstring)
             opn.writelines(tpl)
 
     with open("modes.md", "w") as opn:
-        config: dict = yaml.safe_load(open('configuration.yml', 'r'))
+        config: dict = yaml.safe_load(open("configuration.yml", "r"))
         for section, sectcfg in config["search"]["modes"].items():
             sname = section.capitalize()
 
@@ -166,19 +168,37 @@ def main():
                 filttype = filt["type"]
 
                 if filttype == "select":
-                    default_behaviour = filt.get("default_behaviour") if "default_behaviour" in filt else "intersection"
-                    default_sort = filt.get("default_sort") if "default_sort" in filt else "count"
-                    filttpl = select_filter_description_tmpl.format(label=label, alias=filtalias, type=filttype,
-                                                                    default_behaviour=default_behaviour,
-                                                                    default_sort=default_sort)
+                    default_behaviour = (
+                        filt.get("default_behaviour")
+                        if "default_behaviour" in filt
+                        else "intersection"
+                    )
+                    default_sort = (
+                        filt.get("default_sort") if "default_sort" in filt else "count"
+                    )
+                    filttpl = select_filter_description_tmpl.format(
+                        label=label,
+                        alias=filtalias,
+                        type=filttype,
+                        default_behaviour=default_behaviour,
+                        default_sort=default_sort,
+                    )
                 elif filttype == "toggle":
                     active_value = str(filt.get("active_value")).lower()
-                    filttpl = toggle_filter_description_tmpl.format(label=label, alias=filtalias, type=filttype,
-                                                                    active_value=active_value)
+                    filttpl = toggle_filter_description_tmpl.format(
+                        label=label,
+                        alias=filtalias,
+                        type=filttype,
+                        active_value=active_value,
+                    )
                 elif filttype == "range":
-                    filttpl = range_filter_description_tmpl.format(label=label, alias=filtalias, type=filttype)
+                    filttpl = range_filter_description_tmpl.format(
+                        label=label, alias=filtalias, type=filttype
+                    )
                 elif filttype == "query":
-                    filttpl = query_filter_description_tmpl.format(label=label, alias=filtalias, type=filttype)
+                    filttpl = query_filter_description_tmpl.format(
+                        label=label, alias=filtalias, type=filttype
+                    )
                 else:
                     filttpl = ""
                 filterbody += f"{filttpl}\n"
@@ -189,7 +209,9 @@ def main():
                 sorttpl = sorting_tmpl.format(label=srt["label"], alias=srt["alias"])
                 sortbody += f"{sorttpl}\n"
 
-            tpl = filter_section_tmpl.format(mode=sname, filterbody=filterbody, sortbody=sortbody)
+            tpl = filter_section_tmpl.format(
+                mode=sname, filterbody=filterbody, sortbody=sortbody
+            )
             opn.writelines(tpl)
 
 

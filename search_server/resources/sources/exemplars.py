@@ -7,16 +7,16 @@ from small_asc.client import Results
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import BaseSource
-from shared_helpers.display_fields import get_display_fields, LabelConfig
+from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.display_translators import (
-    url_detecting_translator,
-    secondary_literature_json_value_translator,
+    material_content_types_translator,
     material_source_types_translator,
-    material_content_types_translator
+    secondary_literature_json_value_translator,
+    url_detecting_translator,
 )
 from shared_helpers.formatters import format_institution_label
-from shared_helpers.identifiers import get_identifier, ID_SUB, PROJECT_ID_SUB
-from shared_helpers.solr_connection import SolrResult, SolrConnection
+from shared_helpers.identifiers import ID_SUB, PROJECT_ID_SUB, get_identifier
+from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 
 async def handle_exemplar_section_request(req, source_id: str) -> Optional[dict]:
@@ -25,42 +25,41 @@ async def handle_exemplar_section_request(req, source_id: str) -> Optional[dict]
     if not source_record:
         return None
 
-    return await ExemplarsSection(source_record, context={"request": req,
-                                                          "direct_request": True}).data
+    return await ExemplarsSection(
+        source_record, context={"request": req, "direct_request": True}
+    ).data
 
 
-async def handle_exemplar_request(req, source_id: str, holding_id: str) -> Optional[dict]:
+async def handle_exemplar_request(
+    req, source_id: str, holding_id: str
+) -> Optional[dict]:
     holding_record: Optional[dict] = await SolrConnection.get(f"holding_{holding_id}")
 
     if not holding_record:
         # MSS records are assigned a holding ID comprised of the institution ID and the source ID. If
         # a direct lookup doesn't find anything, check to see if it's a MSS holding we're looking for.
-        holding_record = await SolrConnection.get(f"holding_{holding_id}-source_{source_id}")
+        holding_record = await SolrConnection.get(
+            f"holding_{holding_id}-source_{source_id}"
+        )
 
     if not holding_record:
         # It really doesn't exist.
         return None
 
-    return await Exemplar(holding_record, context={"request": req,
-                                                   "direct_request": True}).data
+    return await Exemplar(
+        holding_record, context={"request": req, "direct_request": True}
+    ).data
 
 
 class ExemplarsSection(ypres.AsyncDictSerializer):
-    eid = ypres.MethodField(
-        label="id"
-    )
-    etype = ypres.StaticField(
-        label="type",
-        value="rism:ExemplarsSection"
-    )
-    section_label = ypres.MethodField(
-        label="sectionLabel"
-    )
+    eid = ypres.MethodField(label="id")
+    etype = ypres.StaticField(label="type", value="rism:ExemplarsSection")
+    section_label = ypres.MethodField(label="sectionLabel")
     items = ypres.MethodField()
 
     def get_eid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
-        source_holding_id_val: str = obj['id']
+        source_holding_id_val: str = obj["id"]
 
         if "-" in source_holding_id_val:
             source_id_val = source_holding_id_val.split("-")[1]
@@ -85,80 +84,71 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
 
         # Only select holdings where the institution ID is set. This is due to a buggy import; hopefully we'll
         # be able to remove the institution_id filter clause later...
-        fq: list = [source_qstmt,
-                    "type:holding",
-                    "institution_id:[* TO *]"]
+        fq: list = [source_qstmt, "type:holding", "institution_id:[* TO *]"]
 
         sort: str = "siglum_s asc, shelfmark_ans asc"
-        results: Results = await SolrConnection.search({
-                "query": "*:*",
-                "filter": fq,
-                "sort": sort,
-                "limit": 100
-            },
+        results: Results = await SolrConnection.search(
+            {"query": "*:*", "filter": fq, "sort": sort, "limit": 100},
             cursor=True,
-            session=self.context.get("session"))
+            session=self.context.get("session"),
+        )
 
         if results.hits == 0:
             return None
 
-        return await Exemplar(results,
-                              many=True,
-                              context={"request": self.context.get("request"),
-                                       "session": self.context.get("session")}).data
+        return await Exemplar(
+            results,
+            many=True,
+            context={
+                "request": self.context.get("request"),
+                "session": self.context.get("session"),
+            },
+        ).data
 
 
 class Exemplar(ypres.AsyncDictSerializer):
-    sid = ypres.MethodField(
-        label="id"
-    )
-    stype = ypres.StaticField(
-        label="type",
-        value="rism:Exemplar"
-    )
-    section_label = ypres.MethodField(
-        label="sectionLabel"
-    )
+    sid = ypres.MethodField(label="id")
+    stype = ypres.StaticField(label="type", value="rism:Exemplar")
+    section_label = ypres.MethodField(label="sectionLabel")
     label = ypres.MethodField()
     summary = ypres.MethodField()
     notes = ypres.MethodField()
-    held_by = ypres.MethodField(
-        label="heldBy"
-    )
-    external_resources = ypres.MethodField(
-        label="externalResources"
-    )
+    held_by = ypres.MethodField(label="heldBy")
+    external_resources = ypres.MethodField(label="externalResources")
     relationships = ypres.MethodField()
-    bound_with = ypres.MethodField(
-        label="boundWith"
-    )
+    bound_with = ypres.MethodField(label="boundWith")
 
     def get_sid(self, obj: dict) -> str:
-        req = self.context.get('request')
+        req = self.context.get("request")
 
-        if "project_s" in obj and (proj := obj['project_s']) == "diamm":
+        if "project_s" in obj and (proj := obj["project_s"]) == "diamm":
             external_inst_val = obj["external_institution_id"]
-            source_id_val = obj['source_id']
+            source_id_val = obj["source_id"]
 
             institution_id = re.sub(PROJECT_ID_SUB, "", external_inst_val)
             source_id = re.sub(PROJECT_ID_SUB, "", source_id_val)
 
-            return get_identifier(req, "external.external_holding",
-                                  project=proj,
-                                  source_id=source_id,
-                                  institution_id=institution_id)
+            return get_identifier(
+                req,
+                "external.external_holding",
+                project=proj,
+                source_id=source_id,
+                institution_id=institution_id,
+            )
 
-        source_holding_id_val: str = obj['id']
+        source_holding_id_val: str = obj["id"]
         if "-" in source_holding_id_val:
             holding_id_val, source_id_val = source_holding_id_val.split("-")
         else:
-            holding_id_val = obj['id']
-            source_id_val = obj['source_id']
+            holding_id_val = obj["id"]
+            source_id_val = obj["source_id"]
 
         holding_id = re.sub(ID_SUB, "", holding_id_val)
         source_id = re.sub(ID_SUB, "", source_id_val)
 
-        return get_identifier(req, "sources.holding", source_id=source_id, holding_id=holding_id)
+        return get_identifier(
+            req, "sources.holding", source_id=source_id, holding_id=holding_id
+        )
 
     def get_section_label(self, obj: dict) -> dict:
         req = self.context.get("request")
@@ -189,8 +179,14 @@ class Exemplar(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
-            "material_source_types_sm": ("records.source_type", material_source_types_translator),
-            "material_content_types_sm": ("records.content_type", material_content_types_translator),
+            "material_source_types_sm": (
+                "records.source_type",
+                material_source_types_translator,
+            ),
+            "material_content_types_sm": (
+                "records.content_type",
+                material_content_types_translator,
+            ),
             "shelfmark_s": ("records.shelfmark", None),
             "former_shelfmarks_sm": ("records.shelfmark_olim", None),
             "provenance_sm": ("records.provenance", None),
@@ -204,8 +200,10 @@ class Exemplar(ypres.AsyncDictSerializer):
             "acquisition_method_s": ("records.method_of_acquisition", None),
             "accession_number_s": ("records.accession_number", None),
             "access_restrictions_sm": ("records.access_restrictions", None),
-            "bibliographic_references_json": ("records.bibliographic_reference",
-                                              secondary_literature_json_value_translator)
+            "bibliographic_references_json": (
+                "records.bibliographic_reference",
+                secondary_literature_json_value_translator,
+            ),
         }
 
         return get_display_fields(obj, transl, field_config)
@@ -219,7 +217,7 @@ class Exemplar(ypres.AsyncDictSerializer):
             "binding_notes_sm": ("records.binding_note", None),
             "bound_with_sm": ("records.bound_with", None),
             "watermark_notes_sm": ("records.watermark_description", None),
-            "provenance_notes_sm": ("records.provenance_notes", None)
+            "provenance_notes_sm": ("records.provenance_notes", None),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
@@ -229,36 +227,46 @@ class Exemplar(ypres.AsyncDictSerializer):
         if "institution_id" not in obj:
             return None
 
-        req = self.context.get('request')
+        req = self.context.get("request")
         institution_id: str
         obj_ident: str
 
         institution_id = re.sub(ID_SUB, "", obj.get("institution_id", ""))
-        obj_ident = get_identifier(req, "institutions.institution", institution_id=institution_id)
+        obj_ident = get_identifier(
+            req, "institutions.institution", institution_id=institution_id
+        )
         institution_name: str = format_institution_label(obj)
 
         return {
             "id": obj_ident,
             "type": "rism:Institution",
-            "label": {
-                "none": [f"{institution_name}"]
-            },
+            "label": {"none": [f"{institution_name}"]},
         }
 
     async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
-        if {'related_people_json', 'related_places_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
+        if {
+            "related_people_json",
+            "related_places_json",
+            "related_institutions_json",
+        }.isdisjoint(obj.keys()):
             return None
 
         req = self.context.get("request")
-        return await RelationshipsSection(obj, context={"request": req,
-                                                        "session": self.context.get("session")}).data
+        return await RelationshipsSection(
+            obj, context={"request": req, "session": self.context.get("session")}
+        ).data
 
     async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
-        if 'external_resources_json' not in obj:
+        if "external_resources_json" not in obj:
             return None
 
-        return await ExternalResourcesSection(obj, context={"request": self.context.get("request"),
-                                                            "session": self.context.get("session")}).data
+        return await ExternalResourcesSection(
+            obj,
+            context={
+                "request": self.context.get("request"),
+                "session": self.context.get("session"),
+            },
+        ).data
 
     async def get_bound_with(self, obj: SolrResult) -> Optional[dict]:
         if "composite_parent_id" not in obj:
@@ -274,5 +282,7 @@ class Exemplar(ypres.AsyncDictSerializer):
 
         return {
             "sectionLabel": transl.get("records.bound_with"),
-            "source": await BaseSource(source, context={"request": self.context.get("request")}).data
+            "source": await BaseSource(
+                source, context={"request": self.context.get("request")}
+            ).data,
         }

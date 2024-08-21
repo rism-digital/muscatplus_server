@@ -10,20 +10,15 @@ from shared_helpers.solr_connection import SolrResult
 
 
 class BaseWork(ypres.AsyncDictSerializer):
-    wid = ypres.MethodField(
-        label="id"
-    )
-    wtype = ypres.StaticField(
-        label="type",
-        value="rism:Work"
-    )
+    wid = ypres.MethodField(label="id")
+    wtype = ypres.StaticField(label="type", value="rism:Work")
     label = ypres.MethodField()
     creator = ypres.MethodField()
     sources = ypres.MethodField()
 
     def get_wid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
-        work_id: str = re.sub(ID_SUB, "", obj['id'])
+        work_id: str = re.sub(ID_SUB, "", obj["id"])
 
         return get_identifier(req, "works.work", work_id=work_id)
 
@@ -31,12 +26,13 @@ class BaseWork(ypres.AsyncDictSerializer):
         return {"none": [format_work_label(obj)]}
 
     async def get_creator(self, obj: SolrResult) -> Optional[dict]:
-        if 'creator_json' not in obj:
+        if "creator_json" not in obj:
             return None
 
-        return await Relationship(obj["creator_json"][0],
-                                  context={"request": self.context.get('request'),
-                                           "reltype": "rism:Creator"}).data
+        return await Relationship(
+            obj["creator_json"][0],
+            context={"request": self.context.get("request"), "reltype": "rism:Creator"},
+        ).data
 
     def get_sources(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
@@ -47,5 +43,5 @@ class BaseWork(ypres.AsyncDictSerializer):
 
         return {
             "url": get_identifier(req, "works.work_sources", work_id=ident),
-            "totalItems": source_count
+            "totalItems": source_count,
         }

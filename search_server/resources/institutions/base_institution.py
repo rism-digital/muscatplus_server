@@ -11,35 +11,36 @@ from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 
 SOLR_FIELDS_FOR_BASE_INSTITUTION: list = [
-    "id", "type", "created", "updated", "name_s", "city_s", "countries_sm",
-    "siglum_s", "alternate_names_sm", "parallel_names_sm", "institution_types_sm", "name_ans"
+    "id",
+    "type",
+    "created",
+    "updated",
+    "name_s",
+    "city_s",
+    "countries_sm",
+    "siglum_s",
+    "alternate_names_sm",
+    "parallel_names_sm",
+    "institution_types_sm",
+    "name_ans",
 ]
 
 
 class BaseInstitution(ypres.AsyncDictSerializer):
-    iid = ypres.MethodField(
-        label="id"
-    )
-    itype = ypres.StaticField(
-        label="type",
-        value="rism:Institution"
-    )
-    type_label = ypres.MethodField(
-        label="typeLabel"
-    )
+    iid = ypres.MethodField(label="id")
+    itype = ypres.StaticField(label="type", value="rism:Institution")
+    type_label = ypres.MethodField(label="typeLabel")
     label = ypres.MethodField()
-    organization_details = ypres.MethodField(
-        label="organizationDetails"
-    )
-    record_history = ypres.MethodField(
-        label="recordHistory"
-    )
+    organization_details = ypres.MethodField(label="organizationDetails")
+    record_history = ypres.MethodField(label="recordHistory")
 
     def get_iid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
         institution_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
-        return get_identifier(req, "institutions.institution", institution_id=institution_id)
+        return get_identifier(
+            req, "institutions.institution", institution_id=institution_id
+        )
 
     def get_label(self, obj: SolrResult) -> dict:
         label: str = format_institution_label(obj)
@@ -53,7 +54,9 @@ class BaseInstitution(ypres.AsyncDictSerializer):
         return transl.get("records.institution")
 
     def get_organization_details(self, obj: SolrResult) -> Optional[dict]:
-        org_deets: dict = OrganizationDetails(obj, context={"request": self.context.get("request")}).data
+        org_deets: dict = OrganizationDetails(
+            obj, context={"request": self.context.get("request")}
+        ).data
 
         if not org_deets.get("summary"):
             return None
@@ -68,9 +71,7 @@ class BaseInstitution(ypres.AsyncDictSerializer):
 
 
 class OrganizationDetails(ypres.DictSerializer):
-    section_label = ypres.MethodField(
-        label="sectionLabel"
-    )
+    section_label = ypres.MethodField(label="sectionLabel")
     summary = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
@@ -93,4 +94,3 @@ class OrganizationDetails(ypres.DictSerializer):
         }
 
         return get_display_fields(obj, transl, field_config)
-

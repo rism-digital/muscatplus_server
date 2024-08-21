@@ -25,11 +25,11 @@ def format_institution_label(obj: dict) -> str:
     if not name:
         name = obj.get("institution_name_s", "[No name]")
 
-    if 'department_s' in obj:
+    if "department_s" in obj:
         department = f", {obj['department_s']}"
-    if 'city_s' in obj:
+    if "city_s" in obj:
         city = f", {obj['city_s']}"
-    if 'siglum_s' in obj:
+    if "siglum_s" in obj:
         siglum = f" ({obj['siglum_s']})"
 
     return f"{name}{department}{city}{siglum}"
@@ -47,7 +47,7 @@ def format_incipit_label(obj: dict) -> str:
     :param obj: A Solr result object containing an incipit record
     :return: A string of the composite title
     """
-    work_num: str = obj['work_num_s']
+    work_num: str = obj["work_num_s"]
     title: str = f" {' '.join(d)}" if (d := obj.get("titles_sm", [])) else ""
 
     return f"{work_num}{title}"

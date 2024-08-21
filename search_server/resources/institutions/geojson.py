@@ -3,14 +3,18 @@ from typing import Optional
 
 import ypres
 
-from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.formatters import format_institution_label
+from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrConnection
 from shared_helpers.utilities import is_number
 
 
-async def handle_institution_geojson_request(req, institution_id: str) -> Optional[dict]:
-    institution_record: Optional[dict] = await SolrConnection.get(f"institution_{institution_id}")
+async def handle_institution_geojson_request(
+    req, institution_id: str
+) -> Optional[dict]:
+    institution_record: Optional[dict] = await SolrConnection.get(
+        f"institution_{institution_id}"
+    )
 
     if not institution_record:
         return None
@@ -19,10 +23,7 @@ async def handle_institution_geojson_request(req, institution_id: str) -> Option
 
 
 class InstitutionGeoJson(ypres.AsyncDictSerializer):
-    gtype = ypres.StaticField(
-        label="type",
-        value="FeatureCollection"
-    )
+    gtype = ypres.StaticField(label="type", value="FeatureCollection")
 
     features = ypres.MethodField()
 
@@ -41,7 +42,9 @@ class InstitutionGeoJson(ypres.AsyncDictSerializer):
             return None
 
         req = self.context.get("request")
-        all_features: list[dict] = await get_nearby_orgs(req, [lat, lon], primary_obj_id)
+        all_features: list[dict] = await get_nearby_orgs(
+            req, [lat, lon], primary_obj_id
+        )
         all_features.insert(0, main_org)
         return all_features
 
@@ -50,28 +53,27 @@ async def get_nearby_orgs(req, coordinates: list, pimary_obj_id: str) -> list[di
     locval = ",".join(coordinates)
     nearby_orgs_query = {
         "query": "*:*",
-        "filter": ["type:institution",
-                   "{!geofilt sfield=location_loc}",
-                   f"!id:{pimary_obj_id}"],
-        "params": {
-            "pt": locval,
-            "d": 10
-        }
+        "filter": [
+            "type:institution",
+            "{!geofilt sfield=location_loc}",
+            f"!id:{pimary_obj_id}",
+        ],
+        "params": {"pt": locval, "d": 10},
     }
 
-    results = await SolrConnection.search(nearby_orgs_query, cursor=True, handler="/query")
+    results = await SolrConnection.search(
+        nearby_orgs_query, cursor=True, handler="/query"
+    )
     if not results:
         return []
 
-    return await GeoJsonFeature(results, many=True, context={"is_primary": False,
-                                                             "request": req}).data
+    return await GeoJsonFeature(
+        results, many=True, context={"is_primary": False, "request": req}
+    ).data
 
 
 class GeoJsonFeature(ypres.AsyncDictSerializer):
-    ftype = ypres.StaticField(
-        label="type",
-        value="Feature"
-    )
+    ftype = ypres.StaticField(label="type", value="Feature")
 
     properties = ypres.MethodField()
     geometry = ypres.MethodField()
@@ -81,19 +83,15 @@ class GeoJsonFeature(ypres.AsyncDictSerializer):
         orgtypes: list = obj.get("institution_types_sm")
         is_primary: bool = self.context.get("is_primary", False)
 
-        props = {
-            "name": label,
-            "organizationTypes": orgtypes,
-            "primary": is_primary
-        }
+        props = {"name": label, "organizationTypes": orgtypes, "primary": is_primary}
 
         if not is_primary:
             req = self.context.get("request")
-            org_ident = obj['id']
+            org_ident = obj["id"]
             ident = re.sub(ID_SUB, "", org_ident)
-            props["url"] = get_identifier(req,
-                                          "institutions.institution",
-                                          institution_id=ident)
+            props["url"] = get_identifier(
+                req, "institutions.institution", institution_id=ident
+            )
 
         return props
 
@@ -106,7 +104,4 @@ class GeoJsonFeature(ypres.AsyncDictSerializer):
         if not is_number(lat) or not is_number(lon):
             return {}
 
-        return {
-            "type": "Point",
-            "coordinates": [float(lon), float(lat)]
-        }
+        return {"type": "Point", "coordinates": [float(lon), float(lat)]}

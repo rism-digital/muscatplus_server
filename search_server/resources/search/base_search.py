@@ -19,44 +19,36 @@ class BaseSearchResults(ypres.AsyncSerializer):
 
     Implementing classes must implement the `get_items` method.
     """
-    sid = ypres.MethodField(
-        label="id"
-    )
-    stype = ypres.StaticField(
-        label="type",
-        value="Collection"
-    )
-    total_items = ypres.MethodField(
-        label="totalItems"
-    )
+
+    sid = ypres.MethodField(label="id")
+    stype = ypres.StaticField(label="type", value="Collection")
+    total_items = ypres.MethodField(label="totalItems")
     view = ypres.MethodField()
     items = ypres.MethodField()
     facets = ypres.MethodField()
     modes = ypres.MethodField()
     sorts = ypres.MethodField()
-    page_sizes = ypres.MethodField(
-        label="pageSizes"
-    )
+    page_sizes = ypres.MethodField(label="pageSizes")
 
     def get_sid(self, obj: Results) -> str:
         """
         Simply reflects the incoming URL wholesale.
         """
-        req = self.context.get('request')
+        req = self.context.get("request")
         return req.url
 
     def get_total_items(self, obj: Results) -> int:
         return obj.hits
 
     def get_view(self, obj: Results) -> dict:
-        return Pagination(obj, context={"request": self.context.get('request')}).data
+        return Pagination(obj, context={"request": self.context.get("request")}).data
 
     def get_facets(self, obj: Results) -> Optional[dict]:
-        return get_facets(self.context.get('request'), obj)
+        return get_facets(self.context.get("request"), obj)
 
     def get_sorts(self, obj: Results) -> Optional[list]:
         is_contents: bool = self.context.get("is_contents", False)
-        return get_sorting(self.context.get("request"), obj, is_contents)
+        return get_sorting(self.context.get("request"), is_contents)
 
     def get_page_sizes(self, obj: Results) -> list[str]:
         req = self.context.get("request")
@@ -74,9 +66,12 @@ class BaseSearchResults(ypres.AsyncSerializer):
         pass
 
 
-async def serialize_response(req, solr_params: dict,
-                             serializer_cls: Type[BaseSearchResults],
-                             extra_context: Optional[dict] = None) -> dict:
+async def serialize_response(
+    req,
+    solr_params: dict,
+    serializer_cls: Type[BaseSearchResults],
+    extra_context: Optional[dict] = None,
+) -> dict:
     """
     Takes an incoming search request, performs a Solr query, and serializes
     the response to a dict object suitable for sending as JSON-LD.
@@ -98,4 +93,3 @@ async def serialize_response(req, solr_params: dict,
         ctx.update(extra_context)
 
     return await serializer_cls(solr_res, context=ctx).data
-

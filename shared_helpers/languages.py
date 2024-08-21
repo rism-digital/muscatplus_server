@@ -11,7 +11,9 @@ import yaml
 log = logging.getLogger("mp_server")
 
 # Removes ruby crud in the YML files.
-REMOVE_ACTIVESUPPORT: Pattern = re.compile(r"!map:ActiveSupport::HashWithIndifferentAccess")
+REMOVE_ACTIVESUPPORT: Pattern = re.compile(
+    r"!map:ActiveSupport::HashWithIndifferentAccess"
+)
 # A list of the languages we support
 SUPPORTED_LANGUAGES: list = ["de", "en", "es", "fr", "it", "pl", "pt"]
 
@@ -41,15 +43,13 @@ def language_labels(translations: dict) -> dict:
     if not os.path.exists(fn):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), fn)
 
-    with open(fn, "r") as input_yaml:
+    with open(fn) as input_yaml:
         # stripping the ruby-specific tags out with regex is easier than trying to get pyyaml to ignore it. Trust me.
         yml: str = input_yaml.read()
         cleaned_yml: str = re.sub(REMOVE_ACTIVESUPPORT, "", yml)
 
         try:
-            lang_contents: dict = yaml.safe_load(
-                cleaned_yml
-            )
+            lang_contents: dict = yaml.safe_load(cleaned_yml)
         except yaml.YAMLError:
             log.error("Problem loading language labels %s; It was skipped.", fn)
             raise
@@ -71,7 +71,7 @@ def __flatten(d: dict) -> dict:
         if isinstance(val, list):
             for subdict in val:
                 deeper = __flatten(subdict).items()
-                out.update({key + '.' + key2: val2 for key2, val2 in deeper})
+                out.update({key + "." + key2: val2 for key2, val2 in deeper})
         else:
             out[key] = val
     return out
@@ -79,17 +79,17 @@ def __flatten(d: dict) -> dict:
 
 def load_translations(path: str) -> Optional[dict]:
     """Takes a path to a set of locale yml files, and returns a dictionary of translations, with each unique key
-        pointing to all available translations of that key. For example:
+     pointing to all available translations of that key. For example:
 
-       {"general.editor_help": {
-            "en": ["Editor Help"],
-            "de": ["Editor Hilfe"],
-            "fr": ["Aide pour l'editor"].
-            ...
-       }}
+    {"general.editor_help": {
+         "en": ["Editor Help"],
+         "de": ["Editor Hilfe"],
+         "fr": ["Aide pour l'editor"].
+         ...
+    }}
 
-       The translations are wrapped in a list so that they can be used directly as part of a JSON-LD language map
-       structure.
+    The translations are wrapped in a list so that they can be used directly as part of a JSON-LD language map
+    structure.
     """
     if not os.path.exists(path):
         log.error("The path for loading the language files does not exist: %s", path)
@@ -108,7 +108,10 @@ def load_translations(path: str) -> Optional[dict]:
             locale_contents = yaml.safe_load(file_contents)
 
         if langcode not in locale_contents:
-            log.error("The locale in the filename does not match the contents of the file: %s", locale_file)
+            log.error(
+                "The locale in the filename does not match the contents of the file: %s",
+                locale_file,
+            )
             continue
 
         translations: dict = locale_contents[langcode]
@@ -132,27 +135,24 @@ def load_translations(path: str) -> Optional[dict]:
 
 def languages_translator(value: Union[str, list], translations: dict) -> dict:
     """
-        A value translator that takes a language code and returns
-        the translated value for that language, e.g., "ger" -> "German" for
-        English, "Deutsch" for German, etc. Used particularly for the 'LabelConfig' field configurations.
-        (see helpers/display_fields.py for more examples of how this is used.)
+    A value translator that takes a language code and returns
+    the translated value for that language, e.g., "ger" -> "German" for
+    English, "Deutsch" for German, etc. Used particularly for the 'LabelConfig' field configurations.
+    (see helpers/display_fields.py for more examples of how this is used.)
 
-        Performs a lookup on the translations with a prefixed translation key. See the functions above for
-        the special way in which translations for language codes are handled. The above example is
-        actually "langcodes.ger", for example.
+    Performs a lookup on the translations with a prefixed translation key. See the functions above for
+    the special way in which translations for language codes are handled. The above example is
+    actually "langcodes.ger", for example.
 
-        Since there could be multiple values, takes a list of language code values and produces a dictionary
-        with the values merged. So if the language codes was ["eng", "ger"], the result dictionary would be
+    Since there could be multiple values, takes a list of language code values and produces a dictionary
+    with the values merged. So if the language codes was ["eng", "ger"], the result dictionary would be
 
-        {"en": ["English", "German"],
-         "de": ["Englisch", "Deutsch"],
-         ...}
+    {"en": ["English", "German"],
+     "de": ["Englisch", "Deutsch"],
+     ...}
     """
     # normalize the incoming value to a list
-    if isinstance(value, str):
-        trans_value = [value]
-    else:
-        trans_value = value
+    trans_value = [value] if isinstance(value, str) else value
 
     all_values: list[dict] = []
     for v in trans_value:
@@ -175,9 +175,14 @@ def languages_translator(value: Union[str, list], translations: dict) -> dict:
 
 
 def filter_languages(langcodes: set, translations: dict) -> dict:
-    return {trans_key:
-            {lcode: lvalues for lcode, lvalues in trans_value.items() if lcode in langcodes}
-            for trans_key, trans_value in translations.items()}
+    return {
+        trans_key: {
+            lcode: lvalues
+            for lcode, lvalues in trans_value.items()
+            if lcode in langcodes
+        }
+        for trans_key, trans_value in translations.items()
+    }
 
 
 def negotiate_languages(req, translations: dict) -> dict:

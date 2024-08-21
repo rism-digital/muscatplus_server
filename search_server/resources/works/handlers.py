@@ -10,5 +10,6 @@ async def handle_work_request(req, work_id: str) -> Optional[dict]:
     if not work_record:
         return None
 
-    return await FullWork(work_record, context={"request": req,
-                                                "direct_request": True}).data
+    return await FullWork(
+        work_record, context={"request": req, "direct_request": True}
+    ).data

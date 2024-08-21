@@ -12,10 +12,12 @@ async def handle_search_request(req) -> dict:
     try:
         request_compiler: SearchRequest = SearchRequest(req)
         solr_params: dict = request_compiler.compile()
-    except InvalidQueryException as e:
+    except InvalidQueryException:
         raise
 
-    extra_context: dict = {"query_pae_features": request_compiler.pae_features,
-                           "direct_request": True}
+    extra_context: dict = {
+        "query_pae_features": request_compiler.pae_features,
+        "direct_request": True,
+    }
 
     return await serialize_response(req, solr_params, SearchResults, extra_context)

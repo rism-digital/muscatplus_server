@@ -21,9 +21,7 @@ log = logging.getLogger("mp_server")
 
 
 class SourceItemList(ypres.DictSerializer):
-    sid = ypres.MethodField(
-        label="id"
-    )
+    sid = ypres.MethodField(label="id")
     label = ypres.MethodField()
 
     def get_sid(self, obj: SolrResult) -> str:
@@ -41,24 +39,14 @@ class SourceItemList(ypres.DictSerializer):
 
 class FullSource(BaseSource):
     contents = ypres.MethodField()
-    material_groups = ypres.MethodField(
-        label="materialGroups"
-    )
+    material_groups = ypres.MethodField(label="materialGroups")
     relationships = ypres.MethodField()
     incipits = ypres.MethodField()
-    references_notes = ypres.MethodField(
-        label="referencesNotes"
-    )
+    references_notes = ypres.MethodField(label="referencesNotes")
     exemplars = ypres.MethodField()
-    source_items = ypres.MethodField(
-        label="sourceItems"
-    )
-    external_resources = ypres.MethodField(
-        label="externalResources"
-    )
-    digital_objects = ypres.MethodField(
-        label="digitalObjects"
-    )
+    source_items = ypres.MethodField(label="sourceItems")
+    external_resources = ypres.MethodField(label="externalResources")
+    digital_objects = ypres.MethodField(label="digitalObjects")
     dates = ypres.MethodField()
     properties = ypres.MethodField()
 
@@ -69,44 +57,57 @@ class FullSource(BaseSource):
 
     def get_contents(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
-        return ContentsSection(obj, context={"request": req,
-                                             "session": self.context.get("session")}).data
+        return ContentsSection(
+            obj, context={"request": req, "session": self.context.get("session")}
+        ).data
 
     async def get_material_groups(self, obj: SolrResult) -> Optional[dict]:
-        if 'material_groups_json' not in obj:
+        if "material_groups_json" not in obj:
             return None
 
         req = self.context.get("request")
-        return await MaterialGroupsSection(obj, context={"request": req,
-                                                         "session": self.context.get("session")}).data
+        return await MaterialGroupsSection(
+            obj, context={"request": req, "session": self.context.get("session")}
+        ).data
 
     async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
         # sets are cool; two sets are disjoint if they have no keys in common. We
         # can use this to check whether these keys are in the solr result; if not,
         # we have no relationships to render, so we can return.
-        if {'related_people_json', 'related_places_json', 'related_institutions_json', 'now_in_json', 'related_sources_json'}.isdisjoint(obj.keys()):
+        if {
+            "related_people_json",
+            "related_places_json",
+            "related_institutions_json",
+            "now_in_json",
+            "related_sources_json",
+        }.isdisjoint(obj.keys()):
             return None
 
         req = self.context.get("request")
-        return await RelationshipsSection(obj, context={"request": req,
-                                                        "session": self.context.get("session")}).data
+        return await RelationshipsSection(
+            obj, context={"request": req, "session": self.context.get("session")}
+        ).data
 
     async def get_incipits(self, obj: SolrResult) -> Optional[dict]:
         if not obj.get("has_incipits_b", False):
             return None
 
         req = self.context.get("request")
-        return await IncipitsSection(obj, context={"request": req,
-                                                   "session": self.context.get("session")}).data
+        return await IncipitsSection(
+            obj, context={"request": req, "session": self.context.get("session")}
+        ).data
 
     async def get_references_notes(self, obj: SolrResult) -> Optional[dict]:
         req = self.context.get("request")
-        refnotes: dict = await ReferencesNotesSection(obj, context={"request": req,
-                                                                    "session": self.context.get("session")}).data
+        refnotes: dict = await ReferencesNotesSection(
+            obj, context={"request": req, "session": self.context.get("session")}
+        ).data
 
         # if the only two keys in the references and notes section is 'label' and 'type'
         # then there is no content and we can hide this section.
-        if {'notes', 'performanceLocations', 'liturgicalFestivals'}.isdisjoint(refnotes.keys()):
+        if {"notes", "performanceLocations", "liturgicalFestivals"}.isdisjoint(
+            refnotes.keys()
+        ):
             return None
 
         return refnotes
@@ -118,29 +119,51 @@ class FullSource(BaseSource):
         if "num_physical_copies_i" not in obj:
             return None
 
-        return await ExemplarsSection(obj, context={"request": self.context.get("request"),
-                                                    "session": self.context.get("session")}).data
+        return await ExemplarsSection(
+            obj,
+            context={
+                "request": self.context.get("request"),
+                "session": self.context.get("session"),
+            },
+        ).data
 
     async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
-        if 'external_resources_json' not in obj and not obj.get("has_external_record_b", False):
+        if "external_resources_json" not in obj and not obj.get(
+            "has_external_record_b", False
+        ):
             return None
 
-        return await ExternalResourcesSection(obj, context={"request": self.context.get("request"),
-                                                            "session": self.context.get("session")}).data
+        return await ExternalResourcesSection(
+            obj,
+            context={
+                "request": self.context.get("request"),
+                "session": self.context.get("session"),
+            },
+        ).data
 
     async def get_source_items(self, obj: SolrResult) -> Optional[dict]:
         if "num_source_members_i" not in obj:
             return None
 
-        return await SourceItemsSection(obj, context={"request": self.context.get("request"),
-                                                      "session": self.context.get("session")}).data
+        return await SourceItemsSection(
+            obj,
+            context={
+                "request": self.context.get("request"),
+                "session": self.context.get("session"),
+            },
+        ).data
 
     async def get_digital_objects(self, obj: SolrResult) -> Optional[dict]:
         if not obj.get("has_digital_objects_b", False):
             return None
 
-        return await DigitalObjectsSection(obj, context={"request": self.context.get("request"),
-                                                         "session": self.context.get("session")}).data
+        return await DigitalObjectsSection(
+            obj,
+            context={
+                "request": self.context.get("request"),
+                "session": self.context.get("session"),
+            },
+        ).data
 
     def get_dates(self, obj: SolrResult) -> Optional[dict]:
         if "date_ranges_im" not in obj:
@@ -151,7 +174,7 @@ class FullSource(BaseSource):
         d: dict = {
             "earliestDate": earliest,
             "latestDate": latest,
-            "dateStatement": ", ".join(obj.get("date_statements_sm", []))
+            "dateStatement": ", ".join(obj.get("date_statements_sm", [])),
         }
 
         return {k: v for k, v in d.items() if v}
@@ -159,7 +182,7 @@ class FullSource(BaseSource):
     def get_properties(self, obj: SolrResult) -> Optional[dict]:
         d: dict = {
             "keyMode": obj.get("key_mode_s"),
-            "physicalDimensions": obj.get("physical_dimensions_sm")
+            "physicalDimensions": obj.get("physical_dimensions_sm"),
         }
 
         return {k: v for k, v in d.items() if v} or None

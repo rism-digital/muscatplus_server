@@ -42,11 +42,14 @@ async def gather_with_concurrency(n, *tasks):
     async def sem_task(task):
         async with semaphore:
             return await task
-    return await asyncio.gather(*(sem_task(task) for task in tasks), return_exceptions=True)
+
+    return await asyncio.gather(
+        *(sem_task(task) for task in tasks), return_exceptions=True
+    )
 
 
 async def fetch_all(sources: list) -> tuple[int, int]:
-    """ Gather many HTTP call made async
+    """Gather many HTTP call made async
     Args:
         sources: a list of string
     Return:
@@ -57,9 +60,7 @@ async def fetch_all(sources: list) -> tuple[int, int]:
         tasks = []
 
         for source in sources:
-            tasks.append(
-                fetch(f"http://dev.rism.offline/sources/{source}", session)
-            )
+            tasks.append(fetch(f"http://dev.rism.offline/sources/{source}", session))
 
         responses = await gather_with_concurrency(100, *tasks)
 
@@ -70,7 +71,7 @@ async def fetch_all(sources: list) -> tuple[int, int]:
 
 
 async def download_all(sources: list) -> tuple[int, int]:
-    """ Gather many HTTP call made async
+    """Gather many HTTP call made async
     Args:
         sources: a list of string
     Return:
@@ -106,7 +107,10 @@ async def get_ids():
     sort = "id asc"
     fl: list = ["id"]
 
-    res = await s.search({"query": "*:*", "filter": fq, "fields": fl, "sort": sort, "limit": 500}, cursor=True)
+    res = await s.search(
+        {"query": "*:*", "filter": fq, "fields": fl, "sort": sort, "limit": 500},
+        cursor=True,
+    )
     id_sub = re.compile(r"source_|person_")
     print(f"Assembling {res.hits} IDs")
     ids: list = [re.sub(id_sub, "", s.get("id")) for s in res.docs]

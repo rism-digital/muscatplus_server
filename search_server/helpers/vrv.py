@@ -15,9 +15,9 @@ from shared_helpers.identifiers import ID_SUB, get_identifier
 log = logging.getLogger("mp_server")
 verovio.enableLog(False)
 VEROVIO_BASE_OPTIONS: dict = {
-    "footer": 'none',
-    "header": 'none',
-    "breaks": 'auto',
+    "footer": "none",
+    "header": "none",
+    "breaks": "auto",
     "pageMarginTop": 15,
     "pageMarginBottom": 15,
     "spacingSystem": 2,
@@ -33,14 +33,16 @@ VEROVIO_BASE_OPTIONS: dict = {
     "svgRemoveXlink": True,
     "svgViewBox": True,
     "paeFeatures": True,
-    "xmlIdSeed": 1
+    "xmlIdSeed": 1,
 }
 
 vrv_tk = verovio.toolkit()
 vrv_tk.setOptions(VEROVIO_BASE_OPTIONS)
 
 
-def render_pae(pae: str, use_crc: bool = False, enlarged: bool = False, is_mensural: bool = False) -> Optional[tuple]:
+def render_pae(
+    pae: str, use_crc: bool = False, enlarged: bool = False, is_mensural: bool = False
+) -> Optional[tuple]:
     """
     Renders Plaine and Easie to SVG and MIDI. Returns None if there was a problem loading the data.
 
@@ -110,9 +112,11 @@ async def render_url(url: str) -> Optional[str]:
 
         mei: str = await res.text()
         vrv_opts: dict = VEROVIO_BASE_OPTIONS.copy()
-        vrv_opts.update({
-            "pageWidth": 1000,
-        })
+        vrv_opts.update(
+            {
+                "pageWidth": 1000,
+            }
+        )
         vrv_tk.setOptions(vrv_opts)
         vrv_tk.setInputFrom("mei")
         load_status: bool = vrv_tk.loadData(mei)
@@ -142,12 +146,11 @@ def render_mei(req, incipit: dict) -> Optional[str]:
     work_num: str = incipit["work_num_s"]
 
     source_url: str = get_identifier(req, "sources.source", source_id=source_id)
-    incipit_url: str = get_identifier(req, "sources.incipit_mei_encoding", source_id=source_id, work_num=work_num)
+    incipit_url: str = get_identifier(
+        req, "sources.incipit_mei_encoding", source_id=source_id, work_num=work_num
+    )
 
-    metadata_header: dict = {
-        "source_url": source_url,
-        "download_url": incipit_url
-    }
+    metadata_header: dict = {"source_url": source_url, "download_url": incipit_url}
 
     if t := incipit.get("titles_sm", []):
         metadata_header["title"] = " ".join(t)
@@ -169,7 +172,7 @@ def render_mei(req, incipit: dict) -> Optional[str]:
         "clef": incipit.get("clef_s", ""),
         "keysig": incipit.get("key_s", ""),
         "timesig": incipit.get("timesit_s", ""),
-        "data": incipit.get("music_incipit_s", "")
+        "data": incipit.get("music_incipit_s", ""),
     }
 
     load_status: bool = vrv_tk.loadData(orjson.dumps(pae).decode("utf8"))
@@ -188,17 +191,19 @@ def render_png(req, incipit: str) -> Optional[bytes]:
     # Create the temporary image file
     fd, tmpfile = tempfile.mkstemp()
 
-    render_success: bool = render_svg(rendered_svg,
-                                      tmpfile,
-                                      cfg["social"]["resvg"],
-                                      cfg["social"]["font_path"],
-                                      zoom_factor="2")
+    render_success: bool = render_svg(
+        rendered_svg,
+        tmpfile,
+        cfg["social"]["resvg"],
+        cfg["social"]["font_path"],
+        zoom_factor="2",
+    )
     if not render_success:
         log.error("There was a problem rendering an SVG!")
         return None
 
     # The tempfile should have the PNG data in it now.
-    with os.fdopen(fd, 'rb') as t:
+    with os.fdopen(fd, "rb") as t:
         pngdata: bytes = t.read()
 
     # we need to manually remove the temporary file.
@@ -247,11 +252,11 @@ def create_pae_from_request(req) -> str:
 
 def get_pae_features(req) -> Optional[dict]:
     """
-        Parses an incoming search request containing some note data and some
-        optional parameters, and returns a dictionary containing the PAE features.
+    Parses an incoming search request containing some note data and some
+    optional parameters, and returns a dictionary containing the PAE features.
 
-        Note that if Verovio cannot parse the notation it will still return a dictionary
-        with the expected keys, but the list of features will be empty.
+    Note that if Verovio cannot parse the notation it will still return a dictionary
+    with the expected keys, but the list of features will be empty.
     """
     vrv_tk.resetXmlIdSeed(0)
     pae: str = create_pae_from_request(req)
@@ -277,9 +282,7 @@ def validate_pae(req) -> dict:
     validation_output: dict = vrv_tk.validatePAE(pae)
 
     if "data" not in validation_output:
-        return {
-            "valid": True
-        }
+        return {"valid": True}
 
     transl: dict = req.ctx.translations
 
@@ -292,7 +295,4 @@ def validate_pae(req) -> dict:
         error_msg: dict = _find_err_msg(err_needle, transl)
         translated_messages.append({"value": error_msg})
 
-    return {
-        "valid": False,
-        "messages": translated_messages
-    }
+    return {"valid": False, "messages": translated_messages}

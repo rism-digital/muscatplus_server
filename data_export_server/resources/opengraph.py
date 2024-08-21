@@ -9,7 +9,7 @@ from shared_helpers.formatters import (
     format_institution_label,
     format_source_description,
     format_person_description,
-    format_institution_description
+    format_institution_description,
 )
 from shared_helpers.identifiers import ID_SUB, get_url_from_type, get_site
 

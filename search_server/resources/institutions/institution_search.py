@@ -5,9 +5,11 @@ from small_asc.client import Results, SolrError
 
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.search_request import SearchRequest
-from search_server.resources.search.base_search import BaseSearchResults, serialize_response
+from search_server.resources.search.base_search import (
+    BaseSearchResults,
+    serialize_response,
+)
 from search_server.resources.search.search_results import SourceSearchResult
-
 
 log = logging.getLogger("mp_server")
 
@@ -15,8 +17,10 @@ log = logging.getLogger("mp_server")
 def _prepare_query(req, institution_id: str, probe: bool = False) -> Optional[dict]:
     try:
         request_compiler = SearchRequest(req, probe=probe)
-        request_compiler.filters += ["type:source",
-                                     f"holding_institutions_ids:institution_{institution_id} OR related_institutions_ids:institution_{institution_id}"]
+        request_compiler.filters += [
+            "type:source",
+            f"holding_institutions_ids:institution_{institution_id} OR related_institutions_ids:institution_{institution_id}",
+        ]
 
         solr_params = request_compiler.compile()
     except InvalidQueryException as e:
@@ -33,7 +37,9 @@ async def handle_institution_search_request(req, institution_id: str) -> dict:
         raise
 
     try:
-        result_data: dict = await serialize_response(req, solr_params, InstitutionResults)
+        result_data: dict = await serialize_response(
+            req, solr_params, InstitutionResults
+        )
     except SolrError:
         raise
 
@@ -47,7 +53,9 @@ async def handle_institution_probe_request(req, institution_id: str) -> dict:
         raise
 
     try:
-        result_data: dict = await serialize_response(req, solr_params, InstitutionResults)
+        result_data: dict = await serialize_response(
+            req, solr_params, InstitutionResults
+        )
     except SolrError:
         raise
 
@@ -62,8 +70,6 @@ class InstitutionResults(BaseSearchResults):
         if obj.hits == 0:
             return None
 
-        return SourceSearchResult(obj.docs,
-                                  many=True,
-                                  context={"request": self.context.get("request")}).data
-
-
+        return SourceSearchResult(
+            obj.docs, many=True, context={"request": self.context.get("request")}
+        ).data

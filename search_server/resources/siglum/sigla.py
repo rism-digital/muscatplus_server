@@ -16,15 +16,18 @@ log = logging.getLogger("mp_export")
 async def handle_institution_sigla_request(req, siglum: str) -> Optional[str]:
     # ensure characters are handled as UTF-8 using the 'unquote' method.
     fq: list = ["type:institution", f"siglum_s:{unquote(siglum)}"]
-    institution_record: Results = await SolrConnection.search({"query": "*:*",
-                                                               "filter": fq,
-                                                               "fields": ["id"]})
+    institution_record: Results = await SolrConnection.search(
+        {"query": "*:*", "filter": fq, "fields": ["id"]}
+    )
 
     if institution_record.hits == 0:
         return None
 
     if institution_record.hits > 1:
-        log.warning("More than one result was returned for siglum %s. This shouldn't happen.", siglum)
+        log.warning(
+            "More than one result was returned for siglum %s. This shouldn't happen.",
+            siglum,
+        )
 
     institution_record_id: str = institution_record.docs[0]["id"]
     institution_id = re.sub(ID_SUB, "", institution_record_id)
@@ -54,18 +57,18 @@ async def handle_siglum_search_request(req) -> Optional[dict]:
     if not query:
         return None
 
-    query_solr_fields: dict[str, str] = {"name": "names_ft",
-                                         "siglum": "siglum_s",
-                                         "city": "city_ft",
-                                         "country": "country_names_ft",
-                                         "all": ""}
+    query_solr_fields: dict[str, str] = {
+        "name": "names_ft",
+        "siglum": "siglum_s",
+        "city": "city_ft",
+        "country": "country_names_ft",
+        "all": "",
+    }
 
-    if query_type not in query_solr_fields.keys():
+    if query_type not in query_solr_fields:
         return None
 
-    fq: list[str] = ["type:institution",
-                     "!project_s:*",
-                     "has_siglum_b:true"]
+    fq: list[str] = ["type:institution", "!project_s:*", "has_siglum_b:true"]
 
     query_field: str = query_solr_fields[query_type]
     if query_type == "all":
@@ -82,12 +85,12 @@ async def handle_siglum_search_request(req) -> Optional[dict]:
         "offset": start_row,
         "limit": rows,
         "sort": "score desc",
-        "params": {
-            "boost": ["scale(field(total_sources_i), 1, 100)"]
-        }
+        "params": {"boost": ["scale(field(total_sources_i), 1, 100)"]},
     }
 
-    results: Results = await SolrConnection.search(solr_query_obj, handler="/siglaQuery")
+    results: Results = await SolrConnection.search(
+        solr_query_obj, handler="/siglaQuery"
+    )
     search_res: dict = await SearchResults(results, context={"request": req}).data
 
     return search_res

@@ -19,28 +19,22 @@ async def handle_front_request(req) -> response.HTTPResponse:
 
     solr_res: Results = await SolrConnection.search(solr_params)
 
-    results: dict = Front(solr_res,
-                          context={"request": req, "direct_request": True}).data
+    results: dict = Front(
+        solr_res, context={"request": req, "direct_request": True}
+    ).data
 
-    response_headers: dict = {
-        "Content-Type": "application/ld+json; charset=utf-8"
-    }
+    response_headers: dict = {"Content-Type": "application/ld+json; charset=utf-8"}
 
     return response.json(
         results,
         headers=response_headers,
-        option=orjson.OPT_INDENT_2 if req.app.ctx.config['common']['debug'] else 0
+        option=orjson.OPT_INDENT_2 if req.app.ctx.config["common"]["debug"] else 0,
     )
 
 
 class Front(ypres.DictSerializer):
-    fid = ypres.MethodField(
-        label="id"
-    )
-    ftype = ypres.StaticField(
-        label="type",
-        value="rism:Front"
-    )
+    fid = ypres.MethodField(label="id")
+    ftype = ypres.StaticField(label="type", value="rism:Front")
     endpoints = ypres.MethodField()
     facets = ypres.MethodField()
 
@@ -51,9 +45,7 @@ class Front(ypres.DictSerializer):
 
     def get_endpoints(self, obj: Results) -> list:
         req = self.context.get("request")
-        return [
-            get_identifier(req, "query.search")
-        ]
+        return [get_identifier(req, "query.search")]
 
     def get_facets(self, obj: Results) -> dict:
         req = self.context.get("request")
