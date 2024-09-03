@@ -10,6 +10,7 @@ from shared_helpers.display_translators import (
     key_mode_value_translator,
     material_content_types_translator,
     material_source_types_translator,
+    rism_source_id_translator,
     scoring_json_value_translator,
     title_json_value_translator,
 )
@@ -69,7 +70,7 @@ class ContentsSection(ypres.DictSerializer):
             ),
             "language_notes_sm": ("records.language_note", None),
             "rism_series_identifiers_sm": ("records.series_statement", None),
-            "rism_id": ("records.rism_id_number", None),
+            "rism_id": ("records.rism_id_number", rism_source_id_translator),
             "source_fingerprint_s": ("records.fingerprint_identifier", None),
         }
 

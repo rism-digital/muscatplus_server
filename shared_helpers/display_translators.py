@@ -1,9 +1,6 @@
 import re
 from collections import defaultdict
-from typing import Optional, Pattern, Match
-
-from shared_helpers.identifiers import ID_SUB
-from shared_helpers.languages import SUPPORTED_LANGUAGES
+from typing import Match, Optional, Pattern
 
 _MATERIAL_SOURCE_TYPE_MAP: dict = {
     "Manuscript copy": "records.manuscript_copy",
@@ -745,20 +742,6 @@ def clef_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _CLEF_MAP)
 
 
-def id_translator(value: str, translations: dict) -> dict:
-    """
-    Strips an ID prefix off a Solr index so that we can return the bare ID
-    as part of a record display. Uses ID_SUB regex to strip the prefix
-    ("source_12345" -> "12345")
-
-    :param value:
-    :param translations:
-    :return: Language Map value for RISM ID
-    """
-    idval: str = re.sub(ID_SUB, "", value)
-    return {"none": [idval]}
-
-
 URL_DETECTOR: Pattern = re.compile(
     r'(<a href[^>]+>|<a href="")?'
     r"(https?:(?://|\\\\)+"
@@ -793,3 +776,7 @@ def url_detecting_translator(values: list, translations: dict) -> Optional[dict]
         return None
 
     return {"none": wrapped_blocks}
+
+
+def rism_source_id_translator(value: str, translations: dict) -> str:
+    return {"none": [f"sources/{value}"]}
