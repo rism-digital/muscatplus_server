@@ -17,7 +17,8 @@ they can then use to perform searches.
 
 log = logging.getLogger("mp_server")
 
-config: dict = yaml.safe_load(open("configuration.yml"))
+with open("configuration.yml") as yml:
+    config: dict = yaml.safe_load(yml)
 
 solr_url = config["solr"]["server"]
 

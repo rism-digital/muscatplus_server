@@ -1,5 +1,5 @@
 import re
-from typing import Optional
+from typing import Callable, Optional
 
 import ypres
 
@@ -157,7 +157,9 @@ class LocationAddressSection(ypres.DictSerializer):
         for address in obj.get("addresses_json", []):
             out_addr = {}
             for k, _ in address.items():
-                label: Optional[tuple] = mailing_address_field_config.get(k)
+                label: tuple[str, Optional[Callable]] = (
+                    mailing_address_field_config.get(k, ())
+                )
                 if not label:
                     continue
 

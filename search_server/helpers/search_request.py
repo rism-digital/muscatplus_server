@@ -3,13 +3,13 @@ import urllib.parse
 from collections import defaultdict
 from typing import Optional
 
-from shared_helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
 from search_server.exceptions import InvalidQueryException, PaginationParseException
 from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import (
     parse_page_number,
     parse_row_number,
 )
+from shared_helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
 
 log = logging.getLogger("mp_server")
 
@@ -300,12 +300,12 @@ class SearchRequest:
         try:
             _ = parse_page_number(self._req.args.get("page", None))
         except PaginationParseException as e:
-            raise InvalidQueryException(e)
+            raise InvalidQueryException(e) from e
 
         try:
             _ = parse_row_number(self._req, self._req.args.get("rows", None))
         except PaginationParseException as e:
-            raise InvalidQueryException(e)
+            raise InvalidQueryException(e) from e
 
         for filt in self._req.args.getlist("fq", []):
             if ":" not in filt:
@@ -403,11 +403,7 @@ class SearchRequest:
 
                 # uses the 'active value' to map a 'true' toggle to the actual field value
                 # in solr. This means we can say 'foo=true' maps to 'foo_s:false'.
-                value = (
-                    filter_config["active_value"]
-                    if "active_value" in filter_config
-                    else ""
-                )
+                value = filter_config.get("active_value", "")
                 tag = ""
             elif filter_type == FacetTypeValues.QUERY:
                 # The complexphrase query parser is also very sensitive to character escaping, so
@@ -426,7 +422,7 @@ class SearchRequest:
                 value = join_op.join(
                     [f"{val.translate(translation_table)}" for val in quoted_values]
                 )
-                tag = f"{{!complexphrase inOrder=true}}"
+                tag = "{!complexphrase inOrder=true}"
             else:
                 # Select values are not as problematic, so we only need to double-escape backslashes.
                 translation_table = str.maketrans({"\\": "\\\\"})
@@ -524,13 +520,7 @@ class SearchRequest:
                     self._is_contents
                     and s.get("only_contents", False) is True
                     and s.get("default", False) is True
-                ):
-                    configuration_sorts = [", ".join(s["solr_sort"])]
-                    break
-
-                # Else, if it isn't a contents search, and it's marked as default, use this configuration. Likewise,
-                # break afterwards.
-                elif (
+                ) or (
                     not self._is_contents
                     and s.get("only_contents", False) is False
                     and s.get("default", False) is True
@@ -605,7 +595,7 @@ class SearchRequest:
                 query_len = len(contour)
             else:
                 intervals: list = self.pae_features.get("intervalsChromatic", [])
-                incipit_query = " ".join((str(s) for s in intervals))
+                incipit_query = " ".join(str(s) for s in intervals)
                 query_len = len(intervals)
 
             self._requested_query.insert(0, f'{incipit_query_field}:"{incipit_query}"')
@@ -629,7 +619,7 @@ class SearchRequest:
         # the query it will not falsely match since they do not end in "type:". BUT one should look here if, at
         # some point in the future, this changes and weird stuff happens with the search result types not working
         # correctly!
-        manual_type: bool = any(["type:" in f for f in self.filters])
+        manual_type: bool = any("type:" in f for f in self.filters)
         if not manual_type:
             # The tag allows us to reference this in the facets so that we can return all the types of results.
             # See https://solr.apache.org/guide/8_8/faceting.html#tagging-and-excluding-filters

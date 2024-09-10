@@ -507,7 +507,7 @@ def __lookup_translations_list(
         for lcode in langcodes:
             if transl_key:
                 trans: dict = available_translations.get(transl_key, {})
-                result[lcode].extend(trans[lcode] if lcode in trans else [trans_itm])
+                result[lcode].extend(trans.get(lcode, [trans_itm]))
             else:
                 result[lcode].extend([trans_itm])
 

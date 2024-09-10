@@ -9,8 +9,8 @@ import aiohttp
 import verovio
 from orjson import orjson
 
-from shared_helpers.resvg import render_svg
 from shared_helpers.identifiers import ID_SUB, get_identifier
+from shared_helpers.resvg import render_svg
 
 log = logging.getLogger("mp_server")
 verovio.enableLog(False)
@@ -93,16 +93,15 @@ async def render_url(url: str) -> Optional[str]:
     Takes a URL to an MEI file and returns the SVG for it.
 
     :param url:
-    :param custom_options:
     :return:
     """
     async with aiohttp.ClientSession() as client:
         try:
             res = await client.get(url)
-        except aiohttp.ClientConnectionError as err:
+        except aiohttp.ClientConnectionError:
             log.error("Connection to server timed out for %s", url)
             return None
-        except aiohttp.ClientError as err:
+        except aiohttp.ClientError:
             log.error("Unknown connection error for %s", url)
             return None
 
@@ -135,6 +134,7 @@ def render_mei(req, incipit: dict) -> Optional[str]:
     Renders an MEI result from PAE input. Includes information for the MEI header
     in the `x-header` section.
 
+    :param req: the incoming Sanic request
     :param incipit: A Solr result of an incipit record
     :return: The MEI encoded as a string, or None if there was a problem loading
     """

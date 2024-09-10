@@ -1,5 +1,5 @@
 import logging
-import subprocess
+import subprocess  # noqa: S404
 
 log = logging.getLogger("mp_server")
 
@@ -34,7 +34,7 @@ def render_svg(
         "-",
         outpath,
     ]
-    proc = subprocess.Popen(
+    proc = subprocess.Popen(  # noqa: S603
         command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
     stdout, stderr = proc.communicate(input=svginput.encode())
