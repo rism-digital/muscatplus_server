@@ -219,7 +219,7 @@ class SearchRequest:
         self._requested_mode: str = req.args.get(
             "mode", self._app_config["search"]["default_mode"]
         )
-        self._extra_params: dict = {}
+        self._extra_params: dict = {"multiThreaded": True}
         self._page: Optional[str] = req.args.get("page", None)
         self._return_rows: Optional[str] = req.args.get("rows", None)
         self._result_sorting: Optional[str] = req.args.get("sort", None)
