@@ -310,9 +310,8 @@ class SearchRequest:
         for filt in self._req.args.getlist("fq", []):
             if ":" not in filt:
                 raise InvalidQueryException(
-                    "Malformed filter query %s. A colon was not found to separate \
-                the field and value. The correct format is fq=field:value.",
-                    filt,
+                    f"Malformed filter query {filt}. A colon was not found to separate \
+                    the field and value. The correct format is fq=field:value."
                 )
 
     def _modes_to_filter(self) -> str:
