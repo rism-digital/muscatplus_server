@@ -12,10 +12,24 @@ from shared_helpers.solr_connection import SolrConnection
 
 log = logging.getLogger("mp_export")
 
+INVALID_SIGLUM = re.compile(r"^[\w-]+$")
+
 
 async def handle_institution_sigla_request(req, siglum: str) -> Optional[str]:
+    incoming_sig: str = unquote(siglum)
+
+    # \w in the pattern matches the underscore, which we don't want to match here.
+    # If the regex doesn't match the return value will be None, in which case it's
+    # a problematic siglum.
+    if "_" in incoming_sig or re.fullmatch(INVALID_SIGLUM, incoming_sig) is None:
+        log.warning(
+            "Invalid characters in siglum, so it cannot match anything: %s",
+            incoming_sig,
+        )
+        return None
+
     # ensure characters are handled as UTF-8 using the 'unquote' method.
-    fq: list = ["type:institution", f"siglum_s:{unquote(siglum)}"]
+    fq: list = ["type:institution", f"siglum_s:{incoming_sig}"]
     institution_record: Results = await SolrConnection.search(
         {"query": "*:*", "filter": fq, "fields": ["id"]}
     )
