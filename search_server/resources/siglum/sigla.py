@@ -31,7 +31,7 @@ async def handle_institution_sigla_request(req, siglum: str) -> Optional[str]:
     # ensure characters are handled as UTF-8 using the 'unquote' method.
     fq: list = ["type:institution", f"siglum_s:{incoming_sig}"]
     institution_record: Results = await SolrConnection.search(
-        {"query": "*:*", "filter": fq, "fields": ["id"]}
+        {"query": "*:*", "filter": fq, "fields": ["id"]}, handler="/query"
     )
 
     if institution_record.hits == 0:
