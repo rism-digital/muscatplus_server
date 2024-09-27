@@ -77,7 +77,10 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
         return transl.get("records.exemplars", {})
 
     async def get_items(self, obj: SolrResult) -> Optional[dict]:
-        if obj.get("is_contents_record_b", False):
+        if (
+            obj.get("is_contents_record_b", False)
+            and obj.get("source_type_s", "") != "manuscript"
+        ):
             source_qstmt = f"source_id:{obj.get('source_membership_id')}"
         else:
             source_qstmt = f"source_id:{obj.get('id')}"
