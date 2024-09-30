@@ -82,8 +82,18 @@ async def serialize_response(
     :param extra_context: Any extra context to pass to the serializer. (The request object is automatically passed)
     :return: A dictionary of serialized content.
     """
+
+    # A dedicated solr handler is available, "/probe" for handling simple probe requests that
+    # do not need fulltext searches. However, if a fulltext search is provided then the
+    # probe request will be routed to the full search handler. This is toggled by the lack of a
+    # "query" key in the solr request, or if the solr request is set to "*:*".
+    probe = bool(extra_context and "probe_request" in extra_context)
+    probe &= bool(
+        solr_params and ("query" not in solr_params or solr_params["query"] == "*:*")
+    )
+
     try:
-        solr_res: Optional[Results] = await execute_query(solr_params)
+        solr_res: Optional[Results] = await execute_query(solr_params, probe=probe)
     except SolrError:
         raise
 
