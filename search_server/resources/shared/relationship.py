@@ -42,7 +42,7 @@ class RelationshipsSection(ypres.AsyncDictSerializer):
         sources: list = obj.get("related_sources_json", [])
 
         all_relationships = to_aiter(
-            itertools.chain(now_in, contains, people, institutions, places, sources)
+            itertools.chain(now_in, contains, people, institutions, sources, places)
         )
 
         return await Relationship(

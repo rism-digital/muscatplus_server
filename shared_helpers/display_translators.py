@@ -158,7 +158,7 @@ _QUALIFIER_LABELS_MAP = {
 
 _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     None: "records.other",
-    "xx": "records.related_institution",
+    "xi": "records.related_institution",  # special case for un-qualified institution relationships
     "now-in": "records.now_in",
     "contained-by": "records.includes_holdings_from",
     "brother of": "records.brother_of",
@@ -211,7 +211,7 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
 
 _PLACE_RELATIONSHIP_LABELS_MAP = {
     None: "records.related_place",
-    "xx": "records.related_place",  # special case for un-qualified place relationships
+    "xp": "records.related_place",  # special case for un-qualified place relationships
     "go": "records.place_birth",
     "ha": "records.place_origin",
     "so": "records.place_death",
@@ -425,6 +425,7 @@ _GND_COUNTRY_CODE_MAP: dict = {
     "XB-PH": "places.philippines",
     "XB-SA": "places.saudi_arabia",
     "XB-SY": "places.syrian_arab_republic",
+    "XB-TM": "places.turkmenistan",
     "XB-TR": "places.turkey",
     "XB-TW": "places.taiwan",
     "XB-VN": "places.vietnam",
