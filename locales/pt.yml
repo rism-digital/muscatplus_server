@@ -234,6 +234,7 @@ pt:
     tajikistan: Tajiquistão
     trinidad_tobego: Trinidad e Tobago
     turkey: Turquia
+    turkmenistan: Turkmenistan
     uganda: Uganda
     uk: Reino Unido
     ukraine: Ucrânia
@@ -480,9 +481,11 @@ pt:
     figured_bass_scores: Baixo cifrado
     fijian: Fijianas
     fingerprint_identifier: Identificador de impressão
+    first_entry: First entry
     first_second_group: Primeiro/Segundo grupo
     form_subdivision: Divisão da forma
     format_extent: Formato, extensão
+    former_siglum: Former siglum
     former_owner: Proprietário anterior
     fragments: Fragmentos
     fs_major: Fá sustenido maior
@@ -523,6 +526,10 @@ pt:
     help_transposing_instruments: Ajuda para instrumentos transpositores
     history_institution: História da instituição
     holdings_location: Informação sobre o fundo
+    identification_status: Identification status
+    identified_manuscript: Identified manuscript
+    identified_holding: Identified holding
+    identified_work: Identified work
     identity: Identidade
     identity_area: Identidade
     iiif_manifest: "Manifesto IIIF (fonte digitalizada)"
@@ -548,6 +555,8 @@ pt:
     internal_note: Nota interna
     introduction: Introdução
     invalid_standard_number: Número ou código padrão cancelado/invalido
+    inventory_item: Inventory item
+    inventory_source: Inventory source
     isbn: ISBN
     ismn: ISMN
     issn: ISSN
@@ -567,6 +576,7 @@ pt:
     language_of_cataloging: Idioma de catalogação
     language_original_text: Idioma do texto original
     language_text: Idioma do texto
+    later_entry: Entrada posterior
     later_heading: Título posterior
     latitude: Latitude
     leader: Líder

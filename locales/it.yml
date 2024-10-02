@@ -234,6 +234,7 @@ it:
     tajikistan: Tagikistan
     trinidad_tobego: Trinidad e Tobago
     turkey: Turchia
+    turkmenistan: Turkmenistan
     uganda: Uganda
     uk: Regno Unito
     ukraine: Ucraina
@@ -480,9 +481,11 @@ it:
     figured_bass_scores: Basso cifrato
     fijian: Figiano
     fingerprint_identifier: Impronta
+    first_entry: Prima notizia
     first_second_group: Primo/Secondo gruppo
     form_subdivision: Suddivisione formale
     format_extent: Categoria di fonte, estensione
+    former_siglum: Sigla obsoleta
     former_owner: Proprietario precedente
     fragments: Frammenti
     fs_major: Fa♯ maggiore
@@ -523,6 +526,10 @@ it:
     help_transposing_instruments: Tabella degli strumenti traspositori
     history_institution: Storia dell'ente
     holdings_location: Informazioni sul fondo
+    identification_status: Identification status
+    identified_manuscript: Identified manuscript
+    identified_holding: Esemplare identificato
+    identified_work: Composizione identificata
     identity: Identità
     identity_area: Identità
     iiif_manifest: "IIIF manifest (fonte digitale)"
@@ -548,6 +555,8 @@ it:
     internal_note: Nota interna
     introduction: Introduzione
     invalid_standard_number: Numero standard o codice standard annullato/non valido
+    inventory_item: Voce d'inventario
+    inventory_source: Inventario
     isbn: ISBN
     ismn: ISMN
     issn: ISSN
@@ -567,6 +576,7 @@ it:
     language_of_cataloging: Lingua della catalogazione
     language_original_text: Lingua del testo originale
     language_text: Lingua del testo cantato
+    later_entry: Notizia successiva
     later_heading: Intestazione successiva
     latitude: Latitudine
     leader: Leader
