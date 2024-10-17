@@ -4,6 +4,7 @@ from collections import defaultdict
 from typing import Optional
 
 import luqum.visitor
+from luqum.exceptions import IllegalCharacterError
 from luqum.parser import parser
 from luqum.tree import AndOperation
 from luqum.utils import UnknownOperationResolver
@@ -571,7 +572,12 @@ class SearchRequest:
 
         query_string: str = " AND ".join(self._requested_query)
 
-        tree = parser.parse(query_string)
+        fixed_query = _fix_string(query_string)
+        try:
+            tree = parser.parse(fixed_query)
+        except IllegalCharacterError as err:
+            raise InvalidQueryException("Bad character") from err
+
         resolver = UnknownOperationResolver(resolve_to=AndOperation)
 
         try:
@@ -760,3 +766,52 @@ def _create_select_facet(facet_cfg: dict, behaviour: str) -> dict:
         cfg.update({"domain": {"excludeTags": [SolrQueryTags.SELECT_FILTER_TAG]}})
 
     return cfg
+
+
+MATCH_CHARS = ['"', "'", "(", ")", "[", "]", "{", "}"]
+
+
+def _fix_string(instr: str) -> str:
+    """A string checker that looks for balanced quotation marks
+    and grouping indicators. It will continue to process the string recursively until all
+    problems have been sorted out.
+
+    NB: A note for future me: At some point someone is going to come
+    along and ask why their carefully crafted query that looks for a string
+    that is single-quoted doesn't work as they expect it to.
+
+    So you may have to be a bit more clever about
+    """
+
+    # If the in string doesn't contain any of the characters,
+    # then we don't need to do any processing.
+    proc = any(c in instr for c in MATCH_CHARS)
+    if not proc:
+        return instr
+
+    # Solr doesn't like single quotes, but we can silently replace
+    # them for our users when shipping off the query.
+    if "'" in instr:
+        fixed = instr.replace("'", '"')
+        return _fix_string(fixed)
+
+    if instr.count('"') % 2 != 0:
+        # try fixing the string by adding the missing
+        # quotation mark.
+        fixed = instr[:-1] if instr.endswith('"') and len(instr) > 1 else f'{instr}"'
+        return _fix_string(fixed)
+    elif instr.endswith('""'):
+        fixed = instr[:-2] if len(instr) > 2 else ""
+        return _fix_string(fixed)
+
+    for pair in [("(", ")"), ("[", "]"), ("{", "}")]:
+        open, close = pair
+        if instr.count(open) != instr.count(close):
+            # Since we can't know how to balance the string,
+            # just strip it of all the parentheses and then
+            # try again.
+            fixed = instr.replace(f"{open}", "").replace(f"{close}", "")
+            return _fix_string(fixed)
+
+    # This should represent a string that is OK!
+    return instr
