@@ -19,6 +19,7 @@ small-asc = {git = "https://github.com/rism-digital/small-asc.git", rev = "main"
 #small-asc = {path = "../small-asc", develop = true }
 ypres = {git = "https://github.com/rism-digital/ypres.git", rev = "main"}
 sanic = "^24.0.0"
+luqum = "^0.13.0"
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.0.0"

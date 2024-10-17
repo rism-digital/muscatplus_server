@@ -3,7 +3,16 @@ import urllib.parse
 from collections import defaultdict
 from typing import Optional
 
+import luqum.visitor
+from luqum.parser import parser
+from luqum.tree import AndOperation
+from luqum.utils import UnknownOperationResolver
+
 from search_server.exceptions import InvalidQueryException, PaginationParseException
+from search_server.helpers.query import (
+    AliasedSolrFieldTreeTransformer,
+    UnknownFieldInQueryException,
+)
 from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import (
     parse_page_number,
@@ -88,6 +97,11 @@ def types_alias_map(filters_config: list) -> dict:
         filtmap[f["type"]].append(f["alias"])
 
     return dict(filtmap)
+
+
+def query_fields_for_mode(cfg: dict, mode: str) -> dict:
+    qf: list = cfg["search"]["modes"][mode].get("q_fields", [])
+    return {f"{q['alias']}": f"{q['field']}" for q in qf}
 
 
 def filter_label_map(filters_config: list) -> dict:
@@ -186,7 +200,12 @@ class SearchRequest:
 
     default_sort = "id asc"
 
-    def __init__(self, req, probe: bool = False, is_contents: bool = False):
+    def __init__(
+        self,
+        req,
+        probe: bool = False,
+        is_contents: bool = False,
+    ):
         self._req = req
         self._app_config = req.app.ctx.config
 
@@ -213,6 +232,9 @@ class SearchRequest:
 
         # If there is no q parameter it will return all results
         self._requested_national_collection: list = req.args.getlist("nc", [])
+        # Only one query parameter is allowed; however, to make it easier to add query
+        # clauses, we use a list for the requested query parameters. These are
+        # "AND"ed together later in the query process (See self._compile_query).
         self._requested_query: list = req.args.getlist("q", [])
         self._requested_filters: list = req.args.getlist("fq", [])
         self._requested_facet_behaviours: list = req.args.getlist("fb", [])
@@ -233,6 +255,14 @@ class SearchRequest:
             self._app_config, self._requested_mode
         )
         self._alias_config_map: dict = alias_config_map(self._facets_for_mode)
+
+        self._query_fields_for_mode: dict = query_fields_for_mode(
+            self._app_config, self._requested_mode
+        )
+
+        self._query_transformer: luqum.visitor.TreeTransformer = (
+            AliasedSolrFieldTreeTransformer(self._query_fields_for_mode)
+        )
 
         # Override the configured behaviour with the request behaviour. If a facet does not have a default_behaviour
         # defined, it will be 'intersection'.
@@ -536,9 +566,23 @@ class SearchRequest:
         return ",".join(self.fields)
 
     def _compile_query(self) -> str:
-        if len(self._requested_query) == 0:
+        if not self._requested_query:
             return DEFAULT_QUERY_STRING
-        return " AND ".join(self._requested_query)
+
+        query_string: str = " AND ".join(self._requested_query)
+
+        tree = parser.parse(query_string)
+        resolver = UnknownOperationResolver(resolve_to=AndOperation)
+
+        try:
+            new_tree = self._query_transformer.visit(tree)
+        except UnknownFieldInQueryException as err:
+            raise InvalidQueryException("Bad query") from err
+
+        parsed_query: str = str(resolver(new_tree))
+        log.debug("Parsed query: %s", repr(parsed_query))
+
+        return parsed_query
 
     def compile(self) -> dict:
         """
@@ -569,7 +613,7 @@ class SearchRequest:
 
             # If verovio returns empty features, then something went wrong. Assume the problem is with the input
             # query string, and flag an error to the user.
-            if len(self.pae_features.get("intervalsChromatic", [])) == 0:
+            if self.pae_features.get("intervalsChromatic", []):
                 raise InvalidQueryException(
                     "The requested mode was 'incipits', but the query could not be interpreted as music notation."
                 )
