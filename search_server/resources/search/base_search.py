@@ -22,12 +22,13 @@ class BaseSearchResults(ypres.AsyncSerializer):
 
     sid = ypres.MethodField(label="id")
     stype = ypres.StaticField(label="type", value="Collection")
-    total_items = ypres.MethodField(label="totalItems")
+    total_items = ypres.IntField(attr="hits", label="totalItems")
     view = ypres.MethodField()
     items = ypres.MethodField()
     facets = ypres.MethodField()
     modes = ypres.MethodField()
     sorts = ypres.MethodField()
+    query_fields = ypres.MethodField(label="queryFields")
     page_sizes = ypres.MethodField(label="pageSizes")
 
     def get_sid(self, obj: Results) -> str:
@@ -37,25 +38,61 @@ class BaseSearchResults(ypres.AsyncSerializer):
         req = self.context.get("request")
         return req.url
 
-    def get_total_items(self, obj: Results) -> int:
-        return obj.hits
+    def get_view(self, obj: Results) -> Optional[dict]:
+        is_probe: bool = self.context.get("probe_request", False)
+        if is_probe:
+            return None
 
-    def get_view(self, obj: Results) -> dict:
         return Pagination(obj, context={"request": self.context.get("request")}).data
 
     def get_facets(self, obj: Results) -> Optional[dict]:
+        is_probe: bool = self.context.get("probe_request", False)
+        if is_probe:
+            return None
+
         return get_facets(self.context.get("request"), obj)
 
     def get_sorts(self, obj: Results) -> Optional[list]:
+        is_probe: bool = self.context.get("probe_request", False)
+        if is_probe:
+            return None
+
         is_contents: bool = self.context.get("is_contents", False)
         return get_sorting(self.context.get("request"), is_contents)
 
-    def get_page_sizes(self, obj: Results) -> list[str]:
+    def get_page_sizes(self, obj: Results) -> Optional[list[str]]:
+        is_probe: bool = self.context.get("probe_request", False)
+        if is_probe:
+            return None
+
         req = self.context.get("request")
         cfg: dict = req.app.ctx.config
         pgsizes: list[str] = [str(p) for p in cfg["search"]["page_sizes"]]
 
         return pgsizes
+
+    def get_query_fields(self, obj: Results) -> Optional[list]:
+        req = self.context.get("request")
+        cfg: dict = req.app.ctx.config
+        transl: dict = req.app.ctx.translations
+
+        current_mode: str = req.args.get("mode", cfg["search"]["default_mode"])
+        qfields: list = cfg["search"]["modes"][current_mode].get("q_fields", [])
+
+        query_fields: list = []
+
+        for qfield in qfields:
+            q_translation_key: str = qfield["label"]
+            q_translation: Optional[dict] = transl.get(q_translation_key)
+            q_label: dict = q_translation or {"none": [q_translation_key]}
+            query_fields.append(
+                {
+                    "label": q_label,
+                    "alias": qfield["alias"],
+                }
+            )
+
+        return query_fields or None
 
     @abstractmethod
     def get_modes(self, obj: Results) -> Optional[dict]:
@@ -63,7 +100,7 @@ class BaseSearchResults(ypres.AsyncSerializer):
 
     @abstractmethod
     async def get_items(self, obj: Results) -> Optional[list]:
-        pass
+        return None
 
 
 async def serialize_response(

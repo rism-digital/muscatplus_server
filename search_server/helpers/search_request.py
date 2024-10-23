@@ -1,19 +1,13 @@
+import functools
 import logging
 import urllib.parse
 from collections import defaultdict
 from typing import Optional
 
-import luqum.visitor
-from luqum.exceptions import IllegalCharacterError
-from luqum.parser import parser
-from luqum.tree import AndOperation
-from luqum.utils import UnknownOperationResolver
+import small_asc.query
+from small_asc.query import QueryParseError
 
 from search_server.exceptions import InvalidQueryException, PaginationParseException
-from search_server.helpers.query import (
-    AliasedSolrFieldTreeTransformer,
-    UnknownFieldInQueryException,
-)
 from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import (
     parse_page_number,
@@ -100,7 +94,12 @@ def types_alias_map(filters_config: list) -> dict:
     return dict(filtmap)
 
 
-def query_fields_for_mode(cfg: dict, mode: str) -> dict:
+def query_field_label_alias(cfg: dict, mode: str) -> list[dict]:
+    qf: list = cfg["search"]["modes"][mode].get("q_fields", [])
+    return []
+
+
+def query_field_type_map(cfg: dict, mode: str) -> dict:
     qf: list = cfg["search"]["modes"][mode].get("q_fields", [])
     return {f"{q['alias']}": f"{q['field']}" for q in qf}
 
@@ -218,6 +217,7 @@ class SearchRequest:
         self.filters: list = []
         self.sorts: list = []
         self.fields: list = ["*"]
+        self.query_report: Optional[dict] = None
 
         # A probe request will do all the reqular things EXCEPT it will hard-code the number of responses to 0
         # so that the actual results are not returned.
@@ -231,7 +231,6 @@ class SearchRequest:
         # Is null if this request is not for incipits, or if PAE features could not be extracted from an incipit.
         self.pae_features: Optional[dict] = None
 
-        # If there is no q parameter it will return all results
         self._requested_national_collection: list = req.args.getlist("nc", [])
         # Only one query parameter is allowed; however, to make it easier to add query
         # clauses, we use a list for the requested query parameters. These are
@@ -257,12 +256,8 @@ class SearchRequest:
         )
         self._alias_config_map: dict = alias_config_map(self._facets_for_mode)
 
-        self._query_fields_for_mode: dict = query_fields_for_mode(
+        self._query_fields_for_mode: dict = query_field_type_map(
             self._app_config, self._requested_mode
-        )
-
-        self._query_transformer: luqum.visitor.TreeTransformer = (
-            AliasedSolrFieldTreeTransformer(self._query_fields_for_mode)
         )
 
         # Override the configured behaviour with the request behaviour. If a facet does not have a default_behaviour
@@ -568,26 +563,21 @@ class SearchRequest:
 
     def _compile_query(self) -> str:
         if not self._requested_query:
+            self.query_report = {"valid": True}
             return DEFAULT_QUERY_STRING
 
         query_string: str = " AND ".join(self._requested_query)
 
-        fixed_query = _fix_string(query_string)
         try:
-            tree = parser.parse(fixed_query)
-        except IllegalCharacterError as err:
-            raise InvalidQueryException("Bad character") from err
+            parsed_query = small_asc.query.parse_with_field_replacements(
+                query_string, self._query_fields_for_mode
+            )
+        except QueryParseError:
+            self.query_report = {"valid": False}
+            return query_string
 
-        resolver = UnknownOperationResolver(resolve_to=AndOperation)
-
-        try:
-            new_tree = self._query_transformer.visit(tree)
-        except UnknownFieldInQueryException as err:
-            raise InvalidQueryException("Bad query") from err
-
-        parsed_query: str = str(resolver(new_tree))
         log.debug("Parsed query: %s", repr(parsed_query))
-
+        self.query_report = {"valid": True}
         return parsed_query
 
     def compile(self) -> dict:
@@ -771,6 +761,7 @@ def _create_select_facet(facet_cfg: dict, behaviour: str) -> dict:
 MATCH_CHARS = ['"', "'", "(", ")", "[", "]", "{", "}"]
 
 
+@functools.lru_cache(maxsize=2048)
 def _fix_string(instr: str) -> str:
     """A string checker that looks for balanced quotation marks
     and grouping indicators. It will continue to process the string recursively until all
@@ -785,8 +776,8 @@ def _fix_string(instr: str) -> str:
 
     # If the in string doesn't contain any of the characters,
     # then we don't need to do any processing.
-    proc = any(c in instr for c in MATCH_CHARS)
-    if not proc:
+    has_matches: bool = any(c in instr for c in MATCH_CHARS)
+    if not has_matches:
         return instr
 
     # Solr doesn't like single quotes, but we can silently replace

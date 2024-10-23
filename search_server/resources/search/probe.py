@@ -19,6 +19,7 @@ async def handle_probe_request(req) -> dict:
         "query_pae_features": request_compiler.pae_features,
         "direct_request": True,
         "probe_request": True,
+        "query_validation": request_compiler.query_report,
     }
 
     return await serialize_response(req, solr_params, SearchResults, extra_context)

@@ -35,10 +35,18 @@ CSS_REPLACEMENT_PATTERN: Pattern = re.compile(
 
 
 class SearchResults(BaseSearchResults):
+    query_validation = ypres.MethodField(label="queryValidation")
+
+    def get_query_validation(self, obj: Results) -> Optional[dict]:
+        if "query_validation" not in self.context:
+            return None
+
+        return self.context["query_validation"]
+
     def get_modes(self, obj: Results) -> Optional[dict]:
-        req = self.context.get("request")
-        cfg: dict = req.app.ctx.config
-        transl: dict = req.ctx.translations
+        is_probe: bool = self.context.get("probe_request", False)
+        if is_probe:
+            return None
 
         facet_results: Optional[dict] = obj.raw_response.get("facets")
         if not facet_results:
@@ -54,6 +62,10 @@ class SearchResults(BaseSearchResults):
         # mode facet block at all.
         if len(mode_buckets) == 0:
             return None
+
+        req = self.context.get("request")
+        cfg: dict = req.app.ctx.config
+        transl: dict = req.app.ctx.translations
 
         mode_items: list = []
         mode_config: dict = cfg["search"]["modes"]

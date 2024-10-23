@@ -14,7 +14,7 @@ def get_sorting(req, is_contents: bool = False) -> Optional[dict]:
     :return: A list of available sorting options.
     """
     cfg: dict = req.app.ctx.config
-    transl: dict = req.ctx.translations
+    transl: dict = req.app.ctx.translations
     current_mode: str = req.args.get("mode", cfg["search"]["default_mode"])
     sorts: list = sorting_for_mode(cfg, current_mode)
 
