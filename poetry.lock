@@ -1921,7 +1921,7 @@ parsimonious = "^0.10.0"
 type = "git"
 url = "https://github.com/rism-digital/small-asc.git"
 reference = "main"
-resolved_reference = "5ed4e80d7350f5b01d03c9291480ee4888020a85"
+resolved_reference = "3c3411f7d410c95ef7ef18e85efdf5b919096f8e"
 
 [[package]]
 name = "stack-data"

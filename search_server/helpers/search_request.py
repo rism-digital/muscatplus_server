@@ -5,7 +5,7 @@ from collections import defaultdict
 from typing import Optional
 
 import small_asc.query
-from small_asc.query import QueryParseError
+from small_asc.query import FieldNotFoundError, QueryParseError
 
 from search_server.exceptions import InvalidQueryException, PaginationParseException
 from search_server.helpers.vrv import get_pae_features
@@ -573,7 +573,16 @@ class SearchRequest:
                 query_string, self._query_fields_for_mode
             )
         except QueryParseError:
-            self.query_report = {"valid": False}
+            self.query_report = {
+                "valid": False,
+                "message": "There was a problem parsing the query",
+            }
+            return query_string
+        except FieldNotFoundError:
+            self.query_report = {
+                "valid": False,
+                "message": "One of the fields was not found",
+            }
             return query_string
 
         log.debug("Parsed query: %s", repr(parsed_query))
