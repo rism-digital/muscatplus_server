@@ -5,7 +5,6 @@ import orjson
 import sentry_sdk
 import yaml
 from sanic import Sanic, response
-from small_asc.client import Results
 
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.api import api_blueprint
@@ -113,30 +112,27 @@ async def front(req):
 @app.route("/about")
 async def about(req):
     cfg: dict = req.app.ctx.config
-    sort: str = "indexed desc"
-    idx_results: Results = await SolrConnection.search(
-        {
-            "query": "*:*",
-            "filter": ["type:indexer"],
-            "sort": sort,
-            "limit": 1,
-            "fields": ["indexed", "indexer_version_sni"],
-        }
-    )
+    idx_result: Optional[dict] = await SolrConnection.get("rism-online-index-info")
 
     # If, for some reason, we don't have a result for the last indexed
     # value, then return Jan 1, 1970.
-    if idx_results.hits > 0:
-        lastidx = idx_results.docs[0]["indexed"]
-        idxversion = idx_results.docs[0]["indexer_version_sni"]
+    if idx_result:
+        lastidx = idx_result["indexed"]
+        idxversion = idx_result["indexer_version_sni"]
+        diamm_records = idx_result.get("diamm_latest_dt")
+        cantus_records = idx_result.get("cantus_latest_dt")
     else:
         lastidx = "1970-01-01T00:00:00.000Z"
         idxversion = "unknown"
+        diamm_records = "1970-01-01T00:00:00.000Z"
+        cantus_records = "1970-01-01T00:00:00.000Z"
 
     resp: dict = {
         "serverVersion": cfg["common"]["version"],
         "indexerVersion": idxversion,
         "lastIndexed": lastidx,
+        "latestFromDIAMM": diamm_records,
+        "latestFromCantus": cantus_records,
     }
 
     return response.json(resp)
