@@ -190,15 +190,17 @@ class LocationAddressSection(ypres.DictSerializer):
         long_label: dict = transl.get("records.longitude")
         lat_label: dict = transl.get("records.latitude")
 
-        lon_lat_label = merge_language_maps(long_label, lat_label)
+        lat_lon_label = merge_language_maps(lat_label, long_label)
 
         return {
             "id": geojson_uri,
             "sectionLabel": transl.get("records.location"),
             "type": "geojson:Feature",
             "geometry": {
-                "label": lon_lat_label,
+                "label": lat_lon_label,
                 "type": "geojson:Point",
+                # NB: GeoJSON specifies lon,lat, but most people think in
+                # lat,lon. Standards, amirite? ¯\_(ツ)_/¯
                 "coordinates": [float(lon), float(lat)],
             },
         }
