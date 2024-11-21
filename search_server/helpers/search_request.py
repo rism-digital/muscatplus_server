@@ -1,4 +1,3 @@
-import functools
 import logging
 import urllib.parse
 from collections import defaultdict
@@ -92,11 +91,6 @@ def types_alias_map(filters_config: list) -> dict:
         filtmap[f["type"]].append(f["alias"])
 
     return dict(filtmap)
-
-
-def query_field_label_alias(cfg: dict, mode: str) -> list[dict]:
-    qf: list = cfg["search"]["modes"][mode].get("q_fields", [])
-    return []
 
 
 def query_field_type_map(cfg: dict, mode: str) -> dict:
@@ -414,7 +408,7 @@ class SearchRequest:
 
             if filter_type == FacetTypeValues.RANGE:
                 value = unquoted_values[0] if field_has_values else ""
-                tag = f"{{!tag={SolrQueryTags.RANGE_FILTER_TAG}}}"
+                tag = f"{{!tag={SolrQueryTags.RANGE_FILTER_TAG} cost=100}}"
             elif filter_type == FacetTypeValues.TOGGLE:
                 # We only accept 'true' as a value for toggles; anything else will
                 # cause us to ignore this filter request. We do, however, try it against
@@ -455,7 +449,7 @@ class SearchRequest:
                     [f"{val.translate(translation_table)}" for val in quoted_values]
                 )
                 tag = (
-                    f"{{!tag={SolrQueryTags.SELECT_FILTER_TAG}}}"
+                    f"{{!tag={SolrQueryTags.SELECT_FILTER_TAG} cost=80}}"
                     if behaviour == FacetBehaviourValues.UNION
                     else ""
                 )
@@ -767,51 +761,51 @@ def _create_select_facet(facet_cfg: dict, behaviour: str) -> dict:
     return cfg
 
 
-MATCH_CHARS = ['"', "'", "(", ")", "[", "]", "{", "}"]
+# MATCH_CHARS = ['"', "'", "(", ")", "[", "]", "{", "}"]
+#
 
-
-@functools.lru_cache(maxsize=2048)
-def _fix_string(instr: str) -> str:
-    """A string checker that looks for balanced quotation marks
-    and grouping indicators. It will continue to process the string recursively until all
-    problems have been sorted out.
-
-    NB: A note for future me: At some point someone is going to come
-    along and ask why their carefully crafted query that looks for a string
-    that is single-quoted doesn't work as they expect it to.
-
-    So you may have to be a bit more clever about
-    """
-
-    # If the in string doesn't contain any of the characters,
-    # then we don't need to do any processing.
-    has_matches: bool = any(c in instr for c in MATCH_CHARS)
-    if not has_matches:
-        return instr
-
-    # Solr doesn't like single quotes, but we can silently replace
-    # them for our users when shipping off the query.
-    if "'" in instr:
-        fixed = instr.replace("'", '"')
-        return _fix_string(fixed)
-
-    if instr.count('"') % 2 != 0:
-        # try fixing the string by adding the missing
-        # quotation mark.
-        fixed = instr[:-1] if instr.endswith('"') and len(instr) > 1 else f'{instr}"'
-        return _fix_string(fixed)
-    elif instr.endswith('""'):
-        fixed = instr[:-2] if len(instr) > 2 else ""
-        return _fix_string(fixed)
-
-    for pair in [("(", ")"), ("[", "]"), ("{", "}")]:
-        open, close = pair
-        if instr.count(open) != instr.count(close):
-            # Since we can't know how to balance the string,
-            # just strip it of all the parentheses and then
-            # try again.
-            fixed = instr.replace(f"{open}", "").replace(f"{close}", "")
-            return _fix_string(fixed)
-
-    # This should represent a string that is OK!
-    return instr
+# @functools.lru_cache(maxsize=2048)
+# def _fix_string(instr: str) -> str:
+#     """A string checker that looks for balanced quotation marks
+#     and grouping indicators. It will continue to process the string recursively until all
+#     problems have been sorted out.
+#
+#     NB: A note for future me: At some point someone is going to come
+#     along and ask why their carefully crafted query that looks for a string
+#     that is single-quoted doesn't work as they expect it to.
+#
+#     So you may have to be a bit more clever about
+#     """
+#
+#     # If the in string doesn't contain any of the characters,
+#     # then we don't need to do any processing.
+#     has_matches: bool = any(c in instr for c in MATCH_CHARS)
+#     if not has_matches:
+#         return instr
+#
+#     # Solr doesn't like single quotes, but we can silently replace
+#     # them for our users when shipping off the query.
+#     if "'" in instr:
+#         fixed = instr.replace("'", '"')
+#         return _fix_string(fixed)
+#
+#     if instr.count('"') % 2 != 0:
+#         # try fixing the string by adding the missing
+#         # quotation mark.
+#         fixed: str = instr[:-1] if instr.endswith('"') and len(instr) > 1 else f'{instr}"'
+#         return _fix_string(fixed)
+#     elif instr.endswith('""'):
+#         fixed = instr[:-2] if len(instr) > 2 else ""
+#         return _fix_string(fixed)
+#
+#     for pair in [("(", ")"), ("[", "]"), ("{", "}")]:
+#         op, cl = pair
+#         if instr.count(op) != instr.count(cl):
+#             # Since we can't know how to balance the string,
+#             # just strip it of all the parentheses and then
+#             # try again.
+#             fixed = instr.replace(f"{op}", "").replace(f"{cl}", "")
+#             return _fix_string(fixed)
+#
+#     # This should represent a string that is OK!
+#     return instr
