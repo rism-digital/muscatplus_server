@@ -556,8 +556,15 @@ class SearchRequest:
         return ",".join(self.fields)
 
     def _compile_query(self) -> str:
+        """Returns a validated query string that has been passed through the small-asc query parser. This
+        also does query field replacement, substituting the external query field names with the internal Solr
+        field names.
+
+        Also sets an instance variable as report on the validity of the query. If the query is not valid
+        the original query string is returned.
+        """
         if not self._requested_query:
-            self.query_report = {"valid": True}
+            self.query_report = {"valid": True, "message": "The query was valid"}
             return DEFAULT_QUERY_STRING
 
         query_string: str = " AND ".join(self._requested_query)
@@ -580,7 +587,8 @@ class SearchRequest:
             return query_string
 
         log.debug("Parsed query: %s", repr(parsed_query))
-        self.query_report = {"valid": True}
+        self.query_report = {"valid": True, "message": "The query was valid"}
+
         return parsed_query
 
     def compile(self) -> dict:
