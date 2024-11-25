@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 
+import ypres
 from small_asc.client import Results, SolrError
 
 from search_server.exceptions import InvalidQueryException
@@ -14,7 +15,7 @@ from search_server.resources.search.search_results import (
 log = logging.getLogger("mp_server")
 
 
-def _prepare_query(req, person_id: str, probe: bool = False) -> dict:
+def _prepare_query(req, person_id: str, probe: bool = False) -> (dict, dict):
     try:
         request_compiler = SearchRequest(req, probe=probe)
         request_compiler.filters += [
@@ -26,17 +27,21 @@ def _prepare_query(req, person_id: str, probe: bool = False) -> dict:
         log.exception("Invalid query: %s", e)
         raise
 
-    return solr_params
+    return solr_params, request_compiler.query_report
 
 
 async def handle_person_search_request(req, person_id: str) -> dict:
     try:
-        solr_params: Optional[dict] = _prepare_query(req, person_id)
+        solr_params, query_report = _prepare_query(req, person_id)
     except InvalidQueryException:
         raise
 
+    extra_context: dict = {"direct_request": True, "query_validation": query_report}
+
     try:
-        result_data: dict = await serialize_response(req, solr_params, PersonResults)
+        result_data: dict = await serialize_response(
+            req, solr_params, PersonResults, extra_context
+        )
     except SolrError:
         raise
 
@@ -45,12 +50,20 @@ async def handle_person_search_request(req, person_id: str) -> dict:
 
 async def handle_person_probe_request(req, person_id: str) -> dict:
     try:
-        solr_params: Optional[dict] = _prepare_query(req, person_id, probe=True)
+        solr_params, query_report = _prepare_query(req, person_id, probe=True)
     except InvalidQueryException:
         raise
 
+    extra_context: dict = {
+        "direct_request": True,
+        "probe_request": True,
+        "query_validation": query_report,
+    }
+
     try:
-        result_data: dict = await serialize_response(req, solr_params, PersonResults)
+        result_data: dict = await serialize_response(
+            req, solr_params, PersonResults, extra_context
+        )
     except SolrError:
         raise
 
@@ -58,6 +71,14 @@ async def handle_person_probe_request(req, person_id: str) -> dict:
 
 
 class PersonResults(BaseSearchResults):
+    query_validation = ypres.MethodField(label="queryValidation")
+
+    def get_query_validation(self, obj: Results) -> Optional[dict]:
+        if "query_validation" not in self.context:
+            return None
+
+        return self.context["query_validation"]
+
     def get_modes(self, obj: Results) -> Optional[dict]:
         return None
 
