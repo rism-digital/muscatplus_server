@@ -10,7 +10,6 @@ package-mode = false
 python = "^3.9"
 pyyaml = "^6.0.1"
 rdflib = "^7.0.0"
-sentry-sdk = "^2.7.1"
 Jinja2 = "^3.1.2"
 orjson = "^3.9.15"
 verovio = { version = "^4.2.0", allow-prereleases = true }
@@ -20,6 +19,7 @@ small-asc = {git = "https://github.com/rism-digital/small-asc.git", rev = "main"
 ypres = {git = "https://github.com/rism-digital/ypres.git", rev = "main"}
 sanic = "^24.0.0"
 luqum = "^0.13.0"
+sentry-sdk = {extras = ["sanic"], version = "^2.19.0"}
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.0.0"
