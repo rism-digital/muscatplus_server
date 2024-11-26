@@ -40,6 +40,7 @@ class FacetTypeValues:
     SELECT = "select"
     NOTATION = "notation"
     QUERY = "query"
+    PARAMETER = "parameter"
 
 
 class FacetSortValues:
@@ -385,6 +386,7 @@ class SearchRequest:
             unquoted_values: list[str] = [s.replace('"', "") for s in unencoded_values]
 
             # If a value has a special character in it we need to requote it... If the value is not truthy, drop it.
+            # TODO: Check how this works with the new query grammar!
             quoted_values: list[str] = []
             for v in unquoted_values:
                 if v and (set(v) & {":", " ", "[", "]", "\\"}):
@@ -442,6 +444,9 @@ class SearchRequest:
                     [f"{val.translate(translation_table)}" for val in quoted_values]
                 )
                 tag = "{!complexphrase inOrder=true}"
+            elif filter_type == FacetTypeValues.PARAMETER:
+                value = unquoted_values[0] if field_has_values else ""
+                tag = ""
             else:
                 # Select values are not as problematic, so we only need to double-escape backslashes.
                 translation_table = str.maketrans({"\\": "\\\\"})
