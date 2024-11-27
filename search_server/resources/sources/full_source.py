@@ -14,6 +14,7 @@ from search_server.resources.sources.exemplars import ExemplarsSection
 from search_server.resources.sources.material_groups import MaterialGroupsSection
 from search_server.resources.sources.references_notes import ReferencesNotesSection
 from search_server.resources.sources.source_items import SourceItemsSection
+from search_server.resources.sources.works import WorksSection
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 
@@ -48,6 +49,7 @@ class FullSource(BaseSource):
     external_resources = ypres.MethodField(label="externalResources")
     digital_objects = ypres.MethodField(label="digitalObjects")
     dates = ypres.MethodField()
+    works = ypres.MethodField()
     properties = ypres.MethodField()
 
     # In the full class view we don't want to display the summary as a top-level field
@@ -158,6 +160,18 @@ class FullSource(BaseSource):
             return None
 
         return await DigitalObjectsSection(
+            obj,
+            context={
+                "request": self.context.get("request"),
+                "session": self.context.get("session"),
+            },
+        ).data
+
+    async def get_works(self, obj: SolrResult) -> Optional[dict]:
+        if "work_node_json" not in obj:
+            return None
+
+        return await WorksSection(
             obj,
             context={
                 "request": self.context.get("request"),
