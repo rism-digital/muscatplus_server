@@ -489,6 +489,8 @@ class SearchRequest:
                         facet_alias, FacetBehaviourValues.INTERSECTION
                     )
                     solr_facet_def = _create_select_facet(facet_cfg, behaviour)
+                elif facet_cfg["type"] == FacetTypeValues.PARAMETER:
+                    solr_facet_def = _create_parameter_facet(facet_cfg)
                 else:
                     continue
 
@@ -773,6 +775,12 @@ def _create_select_facet(facet_cfg: dict, behaviour: str) -> dict:
     if behaviour == "union":
         cfg.update({"domain": {"excludeTags": [SolrQueryTags.SELECT_FILTER_TAG]}})
 
+    return cfg
+
+
+def _create_parameter_facet(facet_cfg: dict) -> dict:
+    field_name: str = facet_cfg["field"]
+    cfg: dict = {"type": "terms", "field": field_name, "limit": 0}
     return cfg
 
 

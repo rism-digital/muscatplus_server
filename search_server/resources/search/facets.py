@@ -132,6 +132,8 @@ def _get_facet_type(val) -> str:
         return "rism:NotationFacet"
     elif val == FacetTypeValues.QUERY:
         return "rism:QueryFacet"
+    elif val == FacetTypeValues.PARAMETER:
+        return "rism:ParameterFacet"
     else:
         return "rism:Facet"
 
