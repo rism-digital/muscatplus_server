@@ -350,7 +350,6 @@ class SearchRequest:
     def _compile_filters(self) -> list:
         raw_statements: defaultdict = defaultdict(list)
         filter_statements: list = []
-
         # in a first pass, gather all the fields and values
         # into a dictionary {"fieldname":[value1, value2]}
         # Only split at the first occurrence since any other colons will be in the field value.
@@ -445,7 +444,10 @@ class SearchRequest:
                 )
                 tag = "{!complexphrase inOrder=true}"
             elif filter_type == FacetTypeValues.PARAMETER:
-                value = unquoted_values[0] if field_has_values else ""
+                translation_table = str.maketrans({"\\": "\\\\"})
+                value = join_op.join(
+                    [f"{val.translate(translation_table)}" for val in quoted_values]
+                )
                 tag = ""
             else:
                 # Select values are not as problematic, so we only need to double-escape backslashes.
