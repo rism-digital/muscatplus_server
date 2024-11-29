@@ -10,6 +10,7 @@ from search_server.resources.shared.external_authority import ExternalAuthoritie
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
+from search_server.resources.sources.works import WorksSection
 from shared_helpers.display_fields import get_display_fields
 from shared_helpers.display_translators import person_gender_translator
 from shared_helpers.identifiers import ID_SUB, get_identifier
@@ -36,6 +37,7 @@ class Person(BasePerson):
     relationships = ypres.MethodField()
     notes = ypres.MethodField(label="notes")
     sources = ypres.MethodField()
+    works = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
 
     def get_biographical_details(self, obj: SolrResult) -> Optional[dict]:
@@ -113,6 +115,14 @@ class Person(BasePerson):
             return notelist
 
         return None
+
+    async def get_works(self, obj: SolrResult) -> Optional[dict]:
+        if "work_nodes_json" not in obj:
+            return None
+
+        return await WorksSection(
+            obj, context={"request": self.context.get("request")}
+        ).data
 
     async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
         if "external_resources_json" not in obj and not obj.get(
