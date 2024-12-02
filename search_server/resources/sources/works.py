@@ -82,4 +82,5 @@ def format_work_node(req, work_node: dict) -> dict:
         "search": search_url,
         "url": url,
         "externalIdentifier": external_id,
+        "sourceCount": work_node.get("source_count", 1),
     }
