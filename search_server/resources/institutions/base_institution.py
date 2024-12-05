@@ -91,6 +91,7 @@ class OrganizationDetails(ypres.DictSerializer):
             "parallel_names_sm": ("records.parallel_form", None),
             "institution_types_sm": ("records.type_institution", None),
             "country_codes_sm": ("records.country", country_codes_labels_translator),
+            "former_sigla_sm": ("records.former_siglum", None),
         }
 
         return get_display_fields(obj, transl, field_config)
