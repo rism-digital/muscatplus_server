@@ -25,7 +25,7 @@ EXTERNAL_IDS: dict = {
     },
     "dnb": {
         "label": "Deutsche Nationalbibliothek (GND)",
-        "ident": "http://d-nb.info/gnd/{ident}",
+        "ident": "https://d-nb.info/gnd/{ident}",
     },
     "wkp": {"label": "Wikidata", "ident": "https://www.wikidata.org/wiki/{ident}"},
     "isil": {
