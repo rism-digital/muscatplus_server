@@ -33,17 +33,37 @@ release: str = ""
 # Otherwise, use the version string verbatim, e.g., 'muscatplus_server@development'.
 release = version_string[1:] if version_string.startswith("v") else version_string
 
-if debug_mode is False:
-    from sentry_sdk.integrations.sanic import SanicIntegration
+# if debug_mode is False:
+#     from sentry_sdk.integrations.sanic import SanicIntegration
+#
+#     sentry_sdk.init(
+#         dsn=config["sentry"]["api"]["dsn"],
+#         integrations=[SanicIntegration()],
+#         environment=config["sentry"]["environment"],
+#         release=f"muscatplus_server@{release}",
+#     )
+app = Sanic("mp_server", dumps=orjson.dumps)
+
+
+@app.listener("before_server_start")
+async def init_sentry(_):
+    if debug_mode is True:
+        return
+
+    from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
     sentry_sdk.init(
         dsn=config["sentry"]["api"]["dsn"],
-        integrations=[SanicIntegration()],
-        environment=config["sentry"]["environment"],
-        release=f"muscatplus_server@{release}",
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for tracing.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
+        integrations=[AsyncioIntegration()],
     )
 
-app = Sanic("mp_server", dumps=orjson.dumps)
 
 # register routes with their blueprints
 app.blueprint(sources_blueprint)
