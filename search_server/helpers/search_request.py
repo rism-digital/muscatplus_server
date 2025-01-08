@@ -573,7 +573,10 @@ class SearchRequest:
         the original query string is returned.
         """
         if not self._requested_query:
-            self.query_report = {"valid": True, "message": "The query was valid"}
+            self.query_report = {
+                "valid": True,
+                "message": {"none": ["The query was valid"]},
+            }
             return DEFAULT_QUERY_STRING
 
         query_string: str = " AND ".join(self._requested_query)
@@ -585,18 +588,21 @@ class SearchRequest:
         except QueryParseError:
             self.query_report = {
                 "valid": False,
-                "message": "There was a problem parsing the query",
+                "message": {"none": ["There was a problem parsing the query"]},
             }
             return query_string
-        except FieldNotFoundError:
+        except FieldNotFoundError as e:
             self.query_report = {
                 "valid": False,
-                "message": "One of the fields was not found",
+                "message": {"none": [str(e)]},
             }
             return query_string
 
         log.debug("Parsed query: %s", repr(parsed_query))
-        self.query_report = {"valid": True, "message": "The query was valid"}
+        self.query_report = {
+            "valid": True,
+            "message": {"none": ["The query was valid"]},
+        }
 
         return parsed_query
 
