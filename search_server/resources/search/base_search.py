@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Optional, Type
+from typing import Optional
 
 import ypres
 from small_asc.client import Results, SolrError
@@ -106,7 +106,7 @@ class BaseSearchResults(ypres.AsyncSerializer):
 async def serialize_response(
     req,
     solr_params: dict,
-    serializer_cls: Type[BaseSearchResults],
+    serializer_cls: type[BaseSearchResults],
     extra_context: Optional[dict] = None,
 ) -> dict:
     """
