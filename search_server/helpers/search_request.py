@@ -19,6 +19,10 @@ log = logging.getLogger("mp_server")
 DEFAULT_QUERY_STRING: str = "*:*"
 TERM_FACET_LIMIT: int = 200  # The maximum number of results to return with a select facet ('term' facet in solr).
 
+# The set of fields that should always pass through the query validation because they are injected manually
+# and do not come from the user interface. Mostly used in incipit queries.
+RAW_FIELDS: set = {"intervals_bi", "pitches_bi", "contour_refined_bi"}
+
 
 # Some of the facets and filters need to have a solr `{!tag}` prepended. We'll
 # define them up-front.
@@ -583,7 +587,7 @@ class SearchRequest:
 
         try:
             parsed_query = small_asc.query.parse_with_field_replacements(
-                query_string, self._query_fields_for_mode
+                query_string, self._query_fields_for_mode, raw_fields=RAW_FIELDS
             )
         except QueryParseError:
             self.query_report = {
