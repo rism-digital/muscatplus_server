@@ -3,11 +3,11 @@ import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sanic import Sanic
 
-from data_export_server.routes.sitemap import sitemap_blueprint
 from data_export_server.routes.opengraph import opengraph_blueprint
+from data_export_server.routes.sitemap import sitemap_blueprint
 
 app = Sanic("mp_dataexport")
-config: dict = yaml.safe_load(open("configuration.yml", "r"))
+config: dict = yaml.safe_load(open("configuration.yml"))
 
 # Make the application configuration object available in the app context
 app.ctx.config = config
@@ -21,10 +21,7 @@ if debug_mode is False:
     # The full release string would then be 'muscatplus_server@1.1.1'
     # Otherwise, use the version string verbatim, e.g., 'muscatplus_server@development'.
     version_string: str = config["common"]["version"]
-    if version_string.startswith("v"):
-        release = version_string[1:]
-    else:
-        release = version_string
+    release = version_string[1:] if version_string.startswith("v") else version_string
 
     sentry_sdk.init(
         dsn=config["sentry"]["export"]["dsn"],
