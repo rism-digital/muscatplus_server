@@ -7,15 +7,22 @@ from data_export_server.routes.opengraph import opengraph_blueprint
 from data_export_server.routes.sitemap import sitemap_blueprint
 
 app = Sanic("mp_dataexport")
-config: dict = yaml.safe_load(open("configuration.yml"))
+
+with open("configuration.yml") as c:
+    config: dict = yaml.safe_load(c)
 
 # Make the application configuration object available in the app context
 app.ctx.config = config
 
 debug_mode: bool = config["common"]["debug"]
 
-if debug_mode is False:
-    from sentry_sdk.integrations.sanic import SanicIntegration
+
+@app.listener("before_server_start")
+async def init_sentry(_):
+    if debug_mode is True:
+        return
+
+    from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
     # If we have semver then remove the leading 'v', e.g., 'v1.1.1' -> '1.1.1'
     # The full release string would then be 'muscatplus_server@1.1.1'
@@ -25,10 +32,11 @@ if debug_mode is False:
 
     sentry_sdk.init(
         dsn=config["sentry"]["export"]["dsn"],
-        integrations=[SanicIntegration()],
+        integrations=[AsyncioIntegration()],
         environment=config["sentry"]["environment"],
         release=f"muscatplus_server@{release}",
     )
+
 
 template_env = Environment(
     loader=FileSystemLoader("data_export_server/templates"),
