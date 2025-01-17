@@ -1,6 +1,7 @@
 import re
 from collections import defaultdict
-from typing import Match, Optional, Pattern
+from re import Match
+from typing import Optional
 
 _MATERIAL_SOURCE_TYPE_MAP: dict = {
     "Manuscript copy": "records.manuscript_copy",
@@ -743,7 +744,7 @@ def clef_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _CLEF_MAP)
 
 
-URL_DETECTOR: Pattern = re.compile(
+URL_DETECTOR: re.Pattern = re.compile(
     r'(<a href[^>]+>|<a href="")?'
     r"(https?:(?://|\\\\)+"
     r"(?:[\w\d:#@%/;$()~_?+\-=\\.&](?:#!)?)*)",

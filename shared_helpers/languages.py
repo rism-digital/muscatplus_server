@@ -4,14 +4,14 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Optional, Pattern, Union
+from typing import Optional, Union
 
 import yaml
 
 log = logging.getLogger("mp_server")
 
 # Removes ruby crud in the YML files.
-REMOVE_ACTIVESUPPORT: Pattern = re.compile(
+REMOVE_ACTIVESUPPORT: re.Pattern = re.compile(
     r"!map:ActiveSupport::HashWithIndifferentAccess"
 )
 # A list of the languages we support

@@ -3,8 +3,8 @@ import re
 import timeit
 from typing import Callable
 
-import aiohttp
 import aiofiles
+import aiohttp
 import uvloop
 from small_asc.client import Solr
 
@@ -31,9 +31,7 @@ async def fetch(url, session) -> bool:
         responses: A dict like object containing http response
     """
     async with session.get(url, headers={"Accept": "application/ld+json"}) as response:
-        if response.status != 200:
-            return False
-        return True
+        return response.status == 200
 
 
 async def gather_with_concurrency(n, *tasks):
@@ -78,7 +76,6 @@ async def download_all(sources: list) -> tuple[int, int]:
         responses: A list of strings. If a call is successful, the entry is 'None'.
     """
     async with aiohttp.ClientSession(headers={"Accept": "text/turtle"}) as session:
-        tasks = []
         responses: list = []
         for source in sources:
             print(f"Fetching {source}")

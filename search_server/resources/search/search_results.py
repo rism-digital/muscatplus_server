@@ -1,7 +1,7 @@
 import difflib
 import logging
 import re
-from typing import Optional, Pattern
+from typing import Optional
 
 import ypres
 from small_asc.client import Results
@@ -29,7 +29,7 @@ from shared_helpers.solr_connection import SolrConnection, SolrResult
 log = logging.getLogger("mp_server")
 
 
-CSS_REPLACEMENT_PATTERN: Pattern = re.compile(
+CSS_REPLACEMENT_PATTERN: re.Pattern = re.compile(
     r'<style type="text/css">(?P<existing_style>.*)</style>'
 )
 

@@ -1,7 +1,7 @@
 import re
-from typing import Optional, Pattern
+from typing import Optional
 
-ID_SUB: Pattern = re.compile(
+ID_SUB: re.Pattern = re.compile(
     r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_|work_"
 )
 
@@ -9,7 +9,7 @@ PROJECT_PATT: str = (
     r"(?:diamm|cantus)_(?:source|person|holding|institution|organization|archive)_"
 )
 
-PROJECT_ID_SUB: Pattern = re.compile(PROJECT_PATT, re.VERBOSE)
+PROJECT_ID_SUB: re.Pattern = re.compile(PROJECT_PATT, re.VERBOSE)
 
 
 PROJECT_IDENTIFIERS = {

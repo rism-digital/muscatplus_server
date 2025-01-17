@@ -1,3 +1,7 @@
+import sys
+
+sys.path.append("./")
+
 import argparse
 import asyncio
 import concurrent.futures
@@ -23,20 +27,22 @@ from search_server.resources.people.person import Person
 from search_server.resources.sources.full_source import FullSource
 from search_server.server import app
 from shared_helpers.jsonld import (
-    RISM_JSONLD_SOURCE_CONTEXT,
-    RISM_JSONLD_PERSON_CONTEXT,
-    RISM_JSONLD_INSTITUTION_CONTEXT,
     RISM_JSONLD_DEFAULT_CONTEXT,
+    RISM_JSONLD_INSTITUTION_CONTEXT,
+    RISM_JSONLD_PERSON_CONTEXT,
+    RISM_JSONLD_SOURCE_CONTEXT,
 )
-from shared_helpers.languages import load_translations, filter_languages
+from shared_helpers.languages import filter_languages, load_translations
 
-
-log_config: dict = yaml.safe_load(open("linked_data/logging.yml", "r"))
+with open("linked_data/logging.yml") as lg:
+    log_config: dict = yaml.safe_load(lg)
 logging.config.dictConfig(log_config)
 
 log = logging.getLogger("ld_export")
 
-config: dict = yaml.safe_load(open("configuration.yml", "r"))
+with open("configuration.yml") as cf:
+    config: dict = yaml.safe_load(cf)
+
 SOLR_SERVER: str = config["solr"]["server"]
 
 solr_conn = Solr(SOLR_SERVER)
@@ -238,7 +244,7 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
         db_name = str(db_file)
 
         sqlconn = sqlite3.connect(db_name)
-        sql_stmt: str = f"CREATE TABLE IF NOT EXISTS serialized(id TEXT PRIMARY KEY, type TEXT, ttl TEXT)"
+        sql_stmt: str = "CREATE TABLE IF NOT EXISTS serialized(id TEXT PRIMARY KEY, type TEXT, ttl TEXT)"
         sqlconn.execute(sql_stmt)
         sqlconn.commit()
         sqlconn.close()
@@ -294,7 +300,7 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
 
         with open(ttl_path, "w") as ttl_out:
             log.info("Writing TTL output to %s", str(ttl_path))
-            sql_stmt = f"SELECT ttl FROM serialized"
+            sql_stmt = "SELECT ttl FROM serialized"
 
             subprocess.run(["sqlite3", str(db_name), sql_stmt], stdout=ttl_out)
 
