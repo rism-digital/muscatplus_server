@@ -1,9 +1,7 @@
 import re
 from collections import defaultdict
-from typing import Optional, Pattern, Match
-
-from shared_helpers.identifiers import ID_SUB
-from shared_helpers.languages import SUPPORTED_LANGUAGES
+from re import Match
+from typing import Optional
 
 _MATERIAL_SOURCE_TYPE_MAP: dict = {
     "Manuscript copy": "records.manuscript_copy",
@@ -16,7 +14,7 @@ _MATERIAL_SOURCE_TYPE_MAP: dict = {
     "Print with autograph annotations": "records.print_with_autograph_annotations",
     "Print with non-autograph annotations": "records.print_with_non_autograph_annotations",
     "Composite": "records.composite",
-    "Additional printed material": "records.additional_printed_material"
+    "Additional printed material": "records.additional_printed_material",
 }
 
 _MATERIAL_CONTENT_TYPE_MAP: dict = {
@@ -24,7 +22,7 @@ _MATERIAL_CONTENT_TYPE_MAP: dict = {
     "Other": "records.other",
     "Libretto": "records.libretto",
     "Treatise": "records.treatise",
-    "Mixed": "records.mixed"
+    "Mixed": "records.mixed",
 }
 
 _RECORD_TYPE_TRANSLATION_MAP: dict = {
@@ -32,14 +30,14 @@ _RECORD_TYPE_TRANSLATION_MAP: dict = {
     "item": "rism_online.item",
     "collection": "rism_online.collection",
     "composite": "records.composite",
-    "work": "records.work"
+    "work": "records.work",
 }
 
 _SOURCE_TYPE_TRANSLATION_MAP: dict = {
     "printed": "rism_online.printed",
     "manuscript": "rism_online.manuscript",
     "composite": "rism_online.composite",
-    "unspecified": "records.other"
+    "unspecified": "records.other",
 }
 
 _CONTENT_TYPE_TRANSLATION_MAP: dict = {
@@ -47,7 +45,7 @@ _CONTENT_TYPE_TRANSLATION_MAP: dict = {
     "treatise": "records.treatise",
     "musical": "records.notated_music",
     "mixed": "records.mixed",
-    "other": "records.other"
+    "other": "records.other",
 }
 
 _KEY_MODE_MAP: dict = {
@@ -120,21 +118,18 @@ _KEY_MODE_MAP: dict = {
     "7byz": "records.octoechos7",
     "8byz": "records.octoechos8",
 }
-_CLEF_MAP: dict = {
-    "G-2": "records.g_minus_2_treble",
-    "C-1": "records.c_minus_1"
-}
+_CLEF_MAP: dict = {"G-2": "records.g_minus_2_treble", "C-1": "records.c_minus_1"}
 
 _SUBHEADING_MAP: dict = {
     "Excerpts": "records.excerpts",
     "Sketches": "records.sketches",
     "Fragments": "records.fragments",
-    "Inserts": "records.inserts"
+    "Inserts": "records.inserts",
 }
 _ARRANGEMENT_MAP: dict = {
     "Arr": "records.arrangement",
     "arr": "records.arrangement",
-    "Arrangement": "records.arrangement"
+    "Arrangement": "records.arrangement",
 }
 
 _PRINTING_TECHNIQUE_MAP: dict = {
@@ -159,12 +154,12 @@ _QUALIFIER_LABELS_MAP = {
     "Conjectural": "records.conjectural",
     "Alleged": "records.alleged",
     "Doubtful": "records.doubtful",
-    "Misattributed": "records.misattributed"
+    "Misattributed": "records.misattributed",
 }
 
 _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     None: "records.other",
-    "xx": "records.related_institution",
+    "xi": "records.related_institution",  # special case for un-qualified institution relationships
     "now-in": "records.now_in",
     "contained-by": "records.includes_holdings_from",
     "brother of": "records.brother_of",
@@ -212,12 +207,12 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     "prt": "records.printer",
     "scr": "records.copyist",
     "trl": "records.translator",
-    "tyd": "records.type_designer"
+    "tyd": "records.type_designer",
 }
 
 _PLACE_RELATIONSHIP_LABELS_MAP = {
     None: "records.related_place",
-    "xx": "records.related_place",  # special case for un-qualified place relationships
+    "xp": "records.related_place",  # special case for un-qualified place relationships
     "go": "records.place_birth",
     "ha": "records.place_origin",
     "so": "records.place_death",
@@ -235,7 +230,7 @@ _SOURCE_RELATIONSHIP_LABELS_MAP = {
     "rdau:P60242": "relations.P60242",
     "rdau:P60274": "relations.P60274",
     "rdau:P60194": "relations.P60194",
-    "rdau:P60183": "relations.P60183"
+    "rdau:P60183": "relations.P60183",
 }
 
 _PERSON_NAME_VARIANT_TYPES_MAP = {
@@ -249,14 +244,14 @@ _PERSON_NAME_VARIANT_TYPES_MAP = {
     "tn": "records.baptismal_name",
     "ub": "records.translation",
     "xx": "records.uncategorized",
-    "z": "records.alternate_spelling"
+    "z": "records.alternate_spelling",
 }
 
 
 _PERSON_GENDER_MAP = {
     None: "general.unknown",
     "male": "general.male",
-    "female": "general.female"
+    "female": "general.female",
 }
 
 # These are the countries that currently have sources attached to them. They are separated from
@@ -325,40 +320,40 @@ SOURCE_SIGLA_COUNTRY_MAP = {
 # siglum for something in them, but there are no sources catalogued that are held in these countries.
 # This list is merged with the source list to create a full listing of all countries.
 _FULL_COUNTRY_SIGLA_MAP: dict = {
-     "AFG": "places.afghanistan",
-     "ARM": "places.armenia",
-     "AS": "record.saudi_arabia",
-     "AZ": "places.azerbaijan",
-     "BD": "places.bangladesh",
-     "BG": "places.bulgaria",
-     "BIH": "places.bosnia_herzegovina",
-     "C": "places.cuba",
-     "CR": "places.costa_rica",
-     "EC": "places.ecuador",
-     "ET": "places.egypt",
-     "GE": "places.georgia",
-     "IND": "places.india",
-     "IR": "places.iran",
-     "IRLN": "places.northern_ireland",
-     "IS": "places.iceland",
-     "KSA": "places.saudi_arabia",
-     "L": "places.luxembourg",
-     "MC": "places.monaco",
-     "MD": "places.moldavia",
-     "MNE": "places.montenegro",
-     "NIC": "places.nicaragua",
-     "NMK": "places.north_macedonia",
-     "PK": "places.pakistan",
-     "PNG": "places.papua_new_guinea",
-     "PRI": "places.puerto_rico",
-     "RI": "places.indonesia",
-     "RL": "places.lebanon",
-     "SRB": "places.serbia",
-     "TA": "places.tajikistan",
-     "TR": "places.turkey",
-     "USB": "places.uzbekistan",
-     "XX": "records.unknown",
-     "ZA": "places.south_africa"
+    "AFG": "places.afghanistan",
+    "ARM": "places.armenia",
+    "AS": "record.saudi_arabia",
+    "AZ": "places.azerbaijan",
+    "BD": "places.bangladesh",
+    "BG": "places.bulgaria",
+    "BIH": "places.bosnia_herzegovina",
+    "C": "places.cuba",
+    "CR": "places.costa_rica",
+    "EC": "places.ecuador",
+    "ET": "places.egypt",
+    "GE": "places.georgia",
+    "IND": "places.india",
+    "IR": "places.iran",
+    "IRLN": "places.northern_ireland",
+    "IS": "places.iceland",
+    "KSA": "places.saudi_arabia",
+    "L": "places.luxembourg",
+    "MC": "places.monaco",
+    "MD": "places.moldavia",
+    "MNE": "places.montenegro",
+    "NIC": "places.nicaragua",
+    "NMK": "places.north_macedonia",
+    "PK": "places.pakistan",
+    "PNG": "places.papua_new_guinea",
+    "PRI": "places.puerto_rico",
+    "RI": "places.indonesia",
+    "RL": "places.lebanon",
+    "SRB": "places.serbia",
+    "TA": "places.tajikistan",
+    "TR": "places.turkey",
+    "USB": "places.uzbekistan",
+    "XX": "records.unknown",
+    "ZA": "places.south_africa",
 } | SOURCE_SIGLA_COUNTRY_MAP
 
 _GND_COUNTRY_CODE_MAP: dict = {
@@ -431,6 +426,7 @@ _GND_COUNTRY_CODE_MAP: dict = {
     "XB-PH": "places.philippines",
     "XB-SA": "places.saudi_arabia",
     "XB-SY": "places.syrian_arab_republic",
+    "XB-TM": "places.turkmenistan",
     "XB-TR": "places.turkey",
     "XB-TW": "places.taiwan",
     "XB-VN": "places.vietnam",
@@ -468,7 +464,9 @@ _GND_COUNTRY_CODE_MAP: dict = {
 }
 
 
-def __lookup_translations(value, available_translations: dict, translations_map: dict) -> dict:
+def __lookup_translations(
+    value, available_translations: dict, translations_map: dict
+) -> dict:
     """
     Returns a translated value from the Solr records. The available translations are
     all the translated keys in their respective languages; the translations map
@@ -489,7 +487,9 @@ def __lookup_translations(value, available_translations: dict, translations_map:
     return available_translations.get(trans_key)
 
 
-def __lookup_translations_list(values: list, available_translations: dict, translations_map: dict) -> dict:
+def __lookup_translations_list(
+    values: list, available_translations: dict, translations_map: dict
+) -> dict:
     """
     Like the function above, but for lists of values instead of a single value.
 
@@ -509,11 +509,12 @@ def __lookup_translations_list(values: list, available_translations: dict, trans
         for lcode in langcodes:
             if transl_key:
                 trans: dict = available_translations.get(transl_key, {})
-                result[lcode].extend(trans[lcode] if lcode in trans else [trans_itm])
+                result[lcode].extend(trans.get(lcode, [trans_itm]))
             else:
                 result[lcode].extend([trans_itm])
 
     return dict(result)
+
 
 def record_type_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _RECORD_TYPE_TRANSLATION_MAP)
@@ -546,6 +547,7 @@ def country_code_labels_translator(value: str, translations: dict) -> dict:
 def country_codes_labels_translator(values: list, translations: dict) -> dict:
     return __lookup_translations_list(values, translations, _FULL_COUNTRY_SIGLA_MAP)
 
+
 def person_name_variant_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _PERSON_NAME_VARIANT_TYPES_MAP)
 
@@ -566,14 +568,21 @@ def qualifier_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _QUALIFIER_LABELS_MAP)
 
 
-def person_institution_relationship_labels_translator(value: str, translations: dict) -> dict:
-    return __lookup_translations(value, translations, _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP)
+def person_institution_relationship_labels_translator(
+    value: str, translations: dict
+) -> dict:
+    return __lookup_translations(
+        value, translations, _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP
+    )
+
 
 def printing_techniques_translator(values: list, translations: dict) -> dict:
     return __lookup_translations_list(values, translations, _PRINTING_TECHNIQUE_MAP)
 
 
-def secondary_literature_json_value_translator(values: list, translations: dict) -> dict:
+def secondary_literature_json_value_translator(
+    values: list, translations: dict
+) -> dict:
     # all_works: { "literature_123": {"formatted": "blah blah", pages: ["12", "13", "14", etc.]} }
     all_works: dict = {}
 
@@ -626,7 +635,7 @@ def dramatic_roles_json_value_translator(values: list, translations: dict) -> di
     roles: list = []
     for r in values:
         standard: str = f"{r.get('standard_spelling', '')}"
-        source: Optional[str] = f"[{s}]" if (s := r.get('source_spelling')) else None
+        source: Optional[str] = f"[{s}]" if (s := r.get("source_spelling")) else None
         role = " ".join(f for f in [source, standard] if f)
         roles.append(role)
     return {"none": roles}
@@ -664,7 +673,9 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
         subheading: Optional[str] = v.get("subheading")
         arrangement: Optional[str] = v.get("arrangement")
         key_mode: Optional[str] = v.get("key_mode")
-        catalogue_numbers: Optional[str] = ", ".join(ch) if (ch := v.get("catalogue_numbers")) else None
+        catalogue_numbers: Optional[str] = (
+            ", ".join(ch) if (ch := v.get("catalogue_numbers")) else None
+        )
         holding_siglum: Optional[str] = v.get("holding_siglum")
         holding_shelfmark: Optional[str] = v.get("holding_shelfmark")
         source_type: str = v.get("source_type", "")
@@ -674,18 +685,24 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
             subheading_trans = subheading_value_translator(subheading, translations)
 
         if arrangement:
-            arrangement_trans = arrangement_statement_value_translator(arrangement, translations)
+            arrangement_trans = arrangement_statement_value_translator(
+                arrangement, translations
+            )
 
         if key_mode:
             key_mode_trans = key_mode_value_translator(key_mode, translations)
 
         if source_type:
-            source_type_trans = material_source_types_translator([source_type], translations)
+            source_type_trans = material_source_types_translator(
+                [source_type], translations
+            )
 
         for lang in langcodes:
             tith = f"{title}"
-            subh = ', '.join(sh) if (sh := subheading_trans.get(lang, [])) else ""
-            arrh = f" {', '.join(ah)}" if (ah := arrangement_trans.get(lang, [])) else ""
+            subh = ", ".join(sh) if (sh := subheading_trans.get(lang, [])) else ""
+            arrh = (
+                f" {', '.join(ah)}" if (ah := arrangement_trans.get(lang, [])) else ""
+            )
 
             exarr: str = ""
             if subh:
@@ -694,7 +711,11 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
                 exarr += f", {arrh.strip()}" if subh else f"{arrh.strip()}"
 
             exarr = f" ({exarr})" if exarr else ""
-            styp = f"; {', '.join(st)}" if (st := source_type_trans.get(lang, [])) else source_type
+            styp = (
+                f"; {', '.join(st)}"
+                if (st := source_type_trans.get(lang, []))
+                else source_type
+            )
             keyh = f"–{', '.join(kh)}" if (kh := key_mode_trans.get(lang, [])) else ""
             cath = f"; {catalogue_numbers}" if catalogue_numbers else ""
             hsigh = f"; {holding_siglum}" if holding_siglum else ""
@@ -723,25 +744,12 @@ def clef_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _CLEF_MAP)
 
 
-def id_translator(value: str, translations: dict) -> dict:
-    """
-    Strips an ID prefix off a Solr index so that we can return the bare ID
-    as part of a record display. Uses ID_SUB regex to strip the prefix
-    ("source_12345" -> "12345")
-
-    :param value:
-    :param translations:
-    :return: Language Map value for RISM ID
-    """
-    idval: str = re.sub(ID_SUB, "", value)
-    return {"none": [idval]}
-
-
-URL_DETECTOR: Pattern = re.compile(
+URL_DETECTOR: re.Pattern = re.compile(
     r'(<a href[^>]+>|<a href="")?'
-    r'(https?:(?://|\\\\)+'
+    r"(https?:(?://|\\\\)+"
     r"(?:[\w\d:#@%/;$()~_?+\-=\\.&](?:#!)?)*)",
-    flags=re.IGNORECASE)
+    flags=re.IGNORECASE,
+)
 
 
 def _repl_fn(match_obj: Match) -> str:
@@ -758,7 +766,7 @@ def _wrap_addresses(inp: str) -> str:
     return re.sub(URL_DETECTOR, _repl_fn, inp)
 
 
-def url_detecting_translator(values: list, translations: dict) -> dict:
+def url_detecting_translator(values: list, translations: dict) -> Optional[dict]:
     """
     Detects `http://` and `https://` in a block of text and wraps them in `<a href>` tags
     so that they can be parsed and displayed without a lot of fuss on the front-end.
@@ -766,5 +774,11 @@ def url_detecting_translator(values: list, translations: dict) -> dict:
     The basic methodology of this is taken from https://stackoverflow.com/a/33399083
     """
     wrapped_blocks: list[str] = [_wrap_addresses(s) for s in values]
+    if not wrapped_blocks:
+        return None
+
     return {"none": wrapped_blocks}
 
+
+def rism_source_id_translator(value: str, translations: dict) -> str:
+    return {"none": [f"sources/{value}"]}

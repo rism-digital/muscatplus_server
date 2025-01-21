@@ -9,29 +9,26 @@ from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 
 SOLR_FIELDS_FOR_BASE_PERSON: list = [
-    "id", "type", "created", "updated", "name_s", "name_ans", "date_statement_s"
+    "id",
+    "type",
+    "created",
+    "updated",
+    "name_s",
+    "name_ans",
+    "date_statement_s",
 ]
 
 
 class BasePerson(ypres.AsyncDictSerializer):
-    pid = ypres.MethodField(
-        label="id"
-    )
-    stype = ypres.StaticField(
-        label="type",
-        value="rism:Person"
-    )
-    type_label = ypres.MethodField(
-        label="typeLabel"
-    )
+    pid = ypres.MethodField(label="id")
+    stype = ypres.StaticField(label="type", value="rism:Person")
+    type_label = ypres.MethodField(label="typeLabel")
     label = ypres.MethodField()
-    record_history = ypres.MethodField(
-        label="recordHistory"
-    )
+    record_history = ypres.MethodField(label="recordHistory")
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context.get("request")
-        person_id: str = re.sub(ID_SUB, "", obj['id'])
+        person_id: str = re.sub(ID_SUB, "", obj["id"])
 
         return get_identifier(req, "people.person", person_id=person_id)
 

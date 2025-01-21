@@ -3,9 +3,9 @@ import re
 from typing import Optional
 
 from sanic import Blueprint, response
-
 from small_asc.client import Results
-from shared_helpers.identifiers import get_site, ID_SUB, get_url_from_type
+
+from shared_helpers.identifiers import ID_SUB, get_site, get_url_from_type
 from shared_helpers.solr_connection import SolrConnection
 
 sitemap_blueprint: Blueprint = Blueprint("sitemap")
@@ -18,16 +18,16 @@ async def sitemap_root(req):
 
     solr_query = {
         "query": "*:*",
-        "filter": ["type:person OR type:source OR type:institution", "!project_s:[* TO *]"],
-        "limit": 0
+        "filter": [
+            "type:person OR type:source OR type:institution",
+            "!project_s:[* TO *]",
+        ],
+        "limit": 0,
     }
     res: Results = await SolrConnection.search(solr_query, handler="/query")
     num_pages: int = math.ceil(res.hits / page_size)
 
-    tmpl_vars = {
-        "sitemap_pages": num_pages,
-        "site": site
-    }
+    tmpl_vars = {"sitemap_pages": num_pages, "site": site}
 
     sitemap_root_tmpl = req.app.ctx.template_env.get_template("sitemaps/root.xml.j2")
     rendered_template = sitemap_root_tmpl.render(**tmpl_vars)
@@ -39,7 +39,7 @@ async def sitemap_root(req):
 async def sitemap_page(req, page_num: str):
     try:
         pnum: int = int(page_num)
-    except ValueError as e:
+    except ValueError:
         pnum = 1
 
     if pnum < 1:
@@ -52,11 +52,14 @@ async def sitemap_page(req, page_num: str):
 
     solr_query = {
         "query": "*:*",
-        "filter": ["type:person OR type:source OR type:institution", "!project_s:[* TO *]"],
+        "filter": [
+            "type:person OR type:source OR type:institution",
+            "!project_s:[* TO *]",
+        ],
         "limit": page_size,
         "offset": offset,
         "fields": ["id", "type", "created", "updated"],
-        "sort": "created asc"
+        "sort": "created asc",
     }
 
     res: Results = await SolrConnection.search(solr_query, handler="/query")
@@ -70,10 +73,7 @@ async def sitemap_page(req, page_num: str):
         if not url:
             continue
 
-        urlentries.append({
-            "url": url,
-            "updated": result.get("updated")
-        })
+        urlentries.append({"url": url, "updated": result.get("updated")})
 
     tmpl_vars = {
         "urlentries": urlentries,

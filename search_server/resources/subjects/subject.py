@@ -3,31 +3,25 @@ from typing import Optional
 
 import ypres
 
-from shared_helpers.identifiers import get_identifier, ID_SUB
+from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrConnection, SolrResult, result_count
 
 
 async def handle_subject_request(req, subject_id: str) -> Optional[dict]:
     subject_record: Optional[dict] = await SolrConnection.get(f"subject_{subject_id}")
 
-    return await Subject(subject_record, context={"request": req,
-                                                  "direct_request": True}).data
+    return await Subject(
+        subject_record, context={"request": req, "direct_request": True}
+    ).data
 
 
 class Subject(ypres.AsyncDictSerializer):
-    sid = ypres.MethodField(
-        label="id"
-    )
-    stype = ypres.StaticField(
-        label="type",
-        value="rism:Subject"
-    )
+    sid = ypres.MethodField(label="id")
+    stype = ypres.StaticField(label="type", value="rism:Subject")
     label = ypres.MethodField()
     term = ypres.MethodField()
     notes = ypres.MethodField()
-    alternate_terms = ypres.MethodField(
-        label="alternateTerms"
-    )
+    alternate_terms = ypres.MethodField(label="alternateTerms")
     sources = ypres.MethodField()
 
     def get_sid(self, obj: SolrResult) -> str:
@@ -43,7 +37,7 @@ class Subject(ypres.AsyncDictSerializer):
         return transl.get("records.subject_heading", {})
 
     def get_term(self, obj: SolrResult) -> dict:
-        return {"none": [obj.get('term_s')]}
+        return {"none": [obj.get("term_s")]}
 
     def get_notes(self, obj: SolrResult) -> Optional[dict]:
         # If we're not retrieving the full record with a direct request, do not show the notes
@@ -67,8 +61,7 @@ class Subject(ypres.AsyncDictSerializer):
 
         subject_id: str = obj["id"]
 
-        fq: list = ["type:source",
-                    f"subject_ids:{subject_id}"]
+        fq: list = ["type:source", f"subject_ids:{subject_id}"]
         num_results: int = await result_count(fq=fq)
 
         if num_results == 0:
@@ -77,6 +70,10 @@ class Subject(ypres.AsyncDictSerializer):
         ident: str = re.sub(ID_SUB, "", subject_id)
 
         return {
-            "id": get_identifier(self.context.get("request"), "subjects.subject_sources", subject_id=ident),
-            "totalItems": num_results
+            "id": get_identifier(
+                self.context.get("request"),
+                "subjects.subject_sources",
+                subject_id=ident,
+            ),
+            "totalItems": num_results,
         }

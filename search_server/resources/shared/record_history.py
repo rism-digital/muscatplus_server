@@ -14,7 +14,7 @@ def get_record_history(obj: dict, transl: dict) -> Optional[dict]:
     :param transl: A dictionary of translatable fields
     :return: A dictionary corresponding to a record history block.
     """
-    if 'created' not in obj or 'updated' not in obj:
+    if "created" not in obj or "updated" not in obj:
         return None
 
     return {
@@ -22,5 +22,5 @@ def get_record_history(obj: dict, transl: dict) -> Optional[dict]:
         "createdLabel": transl.get("general.created_at"),
         "updatedLabel": transl.get("general.updated_at"),
         "created": obj.get("created"),
-        "updated": obj.get("updated")
+        "updated": obj.get("updated"),
     }

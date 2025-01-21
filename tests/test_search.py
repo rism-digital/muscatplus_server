@@ -1,4 +1,3 @@
-
 from search_server.server import app
 
 

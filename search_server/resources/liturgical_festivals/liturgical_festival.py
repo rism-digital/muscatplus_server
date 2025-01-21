@@ -14,18 +14,14 @@ async def handle_festival_request(req, festival_id: str) -> Optional[dict]:
     if not record:
         return None
 
-    return LiturgicalFestival(record, context={"request": req,
-                                               "direct_request": True}).data
+    return LiturgicalFestival(
+        record, context={"request": req, "direct_request": True}
+    ).data
 
 
 class LiturgicalFestival(ypres.DictSerializer):
-    fid = ypres.MethodField(
-        label="id"
-    )
-    ftype = ypres.StaticField(
-        label="type",
-        value="rism:LiturgicalFestival"
-    )
+    fid = ypres.MethodField(label="id")
+    ftype = ypres.StaticField(label="type", value="rism:LiturgicalFestival")
     label = ypres.MethodField()
     summary = ypres.MethodField()
 
@@ -38,7 +34,7 @@ class LiturgicalFestival(ypres.DictSerializer):
     def get_label(self, obj: dict) -> dict:
         # This serializer can also be used by the 'liturgical festival' section
         # on a source, which has a different name field.
-        if 'name' in obj:
+        if "name" in obj:
             return {"none": [f"{obj.get('name')}"]}
         else:
             return {"none": [f"{obj.get('name_s')}"]}
@@ -53,7 +49,7 @@ class LiturgicalFestival(ypres.DictSerializer):
         field_config: LabelConfig = {
             # should be "Alternate terms" but this is not available in the translations currently...
             "alternate_terms_sm": ("records.other_form_of_name", None),
-            "notes_sm": ("records.general_note", None)
+            "notes_sm": ("records.general_note", None),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)

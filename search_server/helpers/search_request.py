@@ -3,15 +3,25 @@ import urllib.parse
 from collections import defaultdict
 from typing import Optional
 
-from shared_helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
+import small_asc.query
+from small_asc.query import FieldNotFoundError, QueryParseError
+
 from search_server.exceptions import InvalidQueryException, PaginationParseException
 from search_server.helpers.vrv import get_pae_features
-from search_server.resources.search.pagination import parse_page_number, parse_row_number
+from search_server.resources.search.pagination import (
+    parse_page_number,
+    parse_row_number,
+)
+from shared_helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
 
 log = logging.getLogger("mp_server")
 
 DEFAULT_QUERY_STRING: str = "*:*"
-TERM_FACET_LIMIT: int = 200   # The maximum number of results to return with a select facet ('term' facet in solr).
+TERM_FACET_LIMIT: int = 200  # The maximum number of results to return with a select facet ('term' facet in solr).
+
+# The set of fields that should always pass through the query validation because they are injected manually
+# and do not come from the user interface. Mostly used in incipit queries.
+RAW_FIELDS: set = {"intervals_bi", "pitches_bi", "contour_refined_bi"}
 
 
 # Some of the facets and filters need to have a solr `{!tag}` prepended. We'll
@@ -34,6 +44,7 @@ class FacetTypeValues:
     SELECT = "select"
     NOTATION = "notation"
     QUERY = "query"
+    PARAMETER = "parameter"
 
 
 class FacetSortValues:
@@ -60,7 +71,7 @@ def filters_for_mode(cfg: dict, mode: str) -> list:
     :return: The list of filter fields from the configuration for a given mode, or an empty dictionary if no filters
         are configured.
     """
-    return cfg["search"]["modes"][mode].get('filters', [])
+    return cfg["search"]["modes"][mode].get("filters", [])
 
 
 def filter_type_map(filters_config: list) -> dict:
@@ -82,9 +93,14 @@ def types_alias_map(filters_config: list) -> dict:
     """
     filtmap = defaultdict(list)
     for f in filters_config:
-        filtmap[f['type']].append(f['alias'])
+        filtmap[f["type"]].append(f["alias"])
 
     return dict(filtmap)
+
+
+def query_field_type_map(cfg: dict, mode: str) -> dict:
+    qf: list = cfg["search"]["modes"][mode].get("q_fields", [])
+    return {f"{q['alias']}": f"{q['field']}" for q in qf}
 
 
 def filter_label_map(filters_config: list) -> dict:
@@ -130,7 +146,11 @@ def facet_modifier_map(requested_values: list) -> dict:
 
 
 def suggest_fields_for_alias(facet_definitions: dict) -> dict:
-    return {f"{cnf['alias']}": cnf['suggest_fields'] for _, cnf in facet_definitions.items() if cnf["type"] == "query"}
+    return {
+        f"{cnf['alias']}": cnf["suggest_fields"]
+        for _, cnf in facet_definitions.items()
+        if cnf["type"] == "query"
+    }
 
 
 class SearchRequest:
@@ -176,9 +196,15 @@ class SearchRequest:
             be sent to Solr.
 
     """
+
     default_sort = "id asc"
 
-    def __init__(self, req, probe: bool = False, is_contents: bool = False):
+    def __init__(
+        self,
+        req,
+        probe: bool = False,
+        is_contents: bool = False,
+    ):
         self._req = req
         self._app_config = req.app.ctx.config
 
@@ -190,6 +216,7 @@ class SearchRequest:
         self.filters: list = []
         self.sorts: list = []
         self.fields: list = ["*"]
+        self.query_report: Optional[dict] = None
 
         # A probe request will do all the reqular things EXCEPT it will hard-code the number of responses to 0
         # so that the actual results are not returned.
@@ -203,12 +230,16 @@ class SearchRequest:
         # Is null if this request is not for incipits, or if PAE features could not be extracted from an incipit.
         self.pae_features: Optional[dict] = None
 
-        # If there is no q parameter it will return all results
         self._requested_national_collection: list = req.args.getlist("nc", [])
+        # Only one query parameter is allowed; however, to make it easier to add query
+        # clauses, we use a list for the requested query parameters. These are
+        # "AND"ed together later in the query process (See self._compile_query).
         self._requested_query: list = req.args.getlist("q", [])
         self._requested_filters: list = req.args.getlist("fq", [])
         self._requested_facet_behaviours: list = req.args.getlist("fb", [])
-        self._requested_mode: str = req.args.get("mode", self._app_config["search"]["default_mode"])
+        self._requested_mode: str = req.args.get(
+            "mode", self._app_config["search"]["default_mode"]
+        )
         self._extra_params: dict = {}
         self._page: Optional[str] = req.args.get("page", None)
         self._return_rows: Optional[str] = req.args.get("rows", None)
@@ -219,19 +250,35 @@ class SearchRequest:
         self._incipit_mode: str = req.args.get("im", IncipitModeValues.INTERVALS)
 
         # Configure the facets to show for the selected mode.
-        self._facets_for_mode: list = filters_for_mode(self._app_config, self._requested_mode)
+        self._facets_for_mode: list = filters_for_mode(
+            self._app_config, self._requested_mode
+        )
         self._alias_config_map: dict = alias_config_map(self._facets_for_mode)
+
+        self._query_fields_for_mode: dict = query_field_type_map(
+            self._app_config, self._requested_mode
+        )
 
         # Override the configured behaviour with the request behaviour. If a facet does not have a default_behaviour
         # defined, it will be 'intersection'.
-        self._behaviour_from_config: dict = {k: v.get("default_behaviour", FacetBehaviourValues.INTERSECTION) for k, v in self._alias_config_map.items()}
-        self._behaviour_from_request: dict = facet_modifier_map(self._requested_facet_behaviours)
+        self._behaviour_from_config: dict = {
+            k: v.get("default_behaviour", FacetBehaviourValues.INTERSECTION)
+            for k, v in self._alias_config_map.items()
+        }
+        self._behaviour_from_request: dict = facet_modifier_map(
+            self._requested_facet_behaviours
+        )
         # Will merge both dictionaries, with the request behaviour overwriting any defaults in the config
         # behaviour.
-        self._behaviour_for_facet: dict = {**self._behaviour_from_config, **self._behaviour_from_request}
+        self._behaviour_for_facet: dict = {
+            **self._behaviour_from_config,
+            **self._behaviour_from_request,
+        }
 
         # Configure the sorting for the different result modes (source, people, institutions, etc.)
-        self._sorts_for_mode: list = sorting_for_mode(self._app_config, self._requested_mode)
+        self._sorts_for_mode: list = sorting_for_mode(
+            self._app_config, self._requested_mode
+        )
 
     def _validate_incoming_request(self) -> None:
         """
@@ -247,13 +294,17 @@ class SearchRequest:
 
         national_collection_param: list = self._req.args.getlist("nc", [])
         if len(national_collection_param) > 1:
-            raise InvalidQueryException("Only one national collection parameter can be supplied.")
+            raise InvalidQueryException(
+                "Only one national collection parameter can be supplied."
+            )
 
         if len(national_collection_param) == 1:
             nc_valid_params = SOURCE_SIGLA_COUNTRY_MAP.keys()
             nc_incoming = set(national_collection_param)
             if nc_valid_params.isdisjoint(nc_incoming):
-                raise InvalidQueryException("A valid country code must be used for the national collection parameter.")
+                raise InvalidQueryException(
+                    "A valid country code must be used for the national collection parameter."
+                )
 
         requested_modes: list = self._req.args.getlist("mode", [])
         if len(requested_modes) > 1:
@@ -274,17 +325,19 @@ class SearchRequest:
         try:
             _ = parse_page_number(self._req.args.get("page", None))
         except PaginationParseException as e:
-            raise InvalidQueryException(e)
+            raise InvalidQueryException(e) from e
 
         try:
             _ = parse_row_number(self._req, self._req.args.get("rows", None))
         except PaginationParseException as e:
-            raise InvalidQueryException(e)
+            raise InvalidQueryException(e) from e
 
         for filt in self._req.args.getlist("fq", []):
             if ":" not in filt:
-                raise InvalidQueryException("Malformed filter query %s. A colon was not found to separate \
-                the field and value. The correct format is fq=field:value.", filt)
+                raise InvalidQueryException(
+                    f"Malformed filter query {filt}. A colon was not found to separate \
+                    the field and value. The correct format is fq=field:value."
+                )
 
     def _modes_to_filter(self) -> str:
         """
@@ -301,7 +354,6 @@ class SearchRequest:
     def _compile_filters(self) -> list:
         raw_statements: defaultdict = defaultdict(list)
         filter_statements: list = []
-
         # in a first pass, gather all the fields and values
         # into a dictionary {"fieldname":[value1, value2]}
         # Only split at the first occurrence since any other colons will be in the field value.
@@ -316,29 +368,32 @@ class SearchRequest:
 
         for field, values in raw_statements.items():
             # if no behaviour is found, the default is 'intersection'
-            behaviour: str = self._behaviour_for_facet.get(field, FacetBehaviourValues.INTERSECTION)
+            behaviour: str = self._behaviour_for_facet.get(
+                field, FacetBehaviourValues.INTERSECTION
+            )
 
             filter_config: dict = self._alias_config_map[field]
-            filter_type: str = filter_config['type']
+            filter_type: str = filter_config["type"]
             solr_field_name: str
 
-            if 'function_query' in filter_config:
-                solr_field_name = filter_config['function_query']
+            if "function_query" in filter_config:
+                solr_field_name = filter_config["function_query"]
             else:
-                solr_field_name = filter_config['field']
+                solr_field_name = filter_config["field"]
 
             # do some processing and normalization on the value. First ensure we have a non-entity string.
             # This should convert the URL-encoded parameters back to 'normal' characters
             unencoded_values: list[str] = [urllib.parse.unquote(s) for s in values]
             # Then remove any quotes (single or double) to ensure we control how the values actually get
             # to Solr.
-            unquoted_values: list[str] = [s.replace("\"", "") for s in unencoded_values]
+            unquoted_values: list[str] = [s.replace('"', "") for s in unencoded_values]
 
             # If a value has a special character in it we need to requote it... If the value is not truthy, drop it.
+            # TODO: Check how this works with the new query grammar!
             quoted_values: list[str] = []
             for v in unquoted_values:
                 if v and (set(v) & {":", " ", "[", "]", "\\"}):
-                    quoted_values.append(f"\"{v}\"")
+                    quoted_values.append(f'"{v}"')
                 elif v:
                     quoted_values.append(f"{v}")
                 else:
@@ -350,13 +405,15 @@ class SearchRequest:
             value: str
             tag: str
             translation_table: dict
-            join_op: str = " OR " if behaviour == FacetBehaviourValues.UNION else " AND "
+            join_op: str = (
+                " OR " if behaviour == FacetBehaviourValues.UNION else " AND "
+            )
 
             field_has_values: bool = len(quoted_values) > 0
 
             if filter_type == FacetTypeValues.RANGE:
                 value = unquoted_values[0] if field_has_values else ""
-                tag = f"{{!tag={SolrQueryTags.RANGE_FILTER_TAG}}}"
+                tag = f"{{!tag={SolrQueryTags.RANGE_FILTER_TAG} cost=100}}"
             elif filter_type == FacetTypeValues.TOGGLE:
                 # We only accept 'true' as a value for toggles; anything else will
                 # cause us to ignore this filter request. We do, however, try it against
@@ -370,33 +427,49 @@ class SearchRequest:
 
                 # uses the 'active value' to map a 'true' toggle to the actual field value
                 # in solr. This means we can say 'foo=true' maps to 'foo_s:false'.
-                value = filter_config['active_value'] if 'active_value' in filter_config else ""
+                value = filter_config.get("active_value", "")
                 tag = ""
             elif filter_type == FacetTypeValues.QUERY:
                 # The complexphrase query parser is also very sensitive to character escaping, so
                 # we do some custom escaping here to make sure things are sent to Solr correctly. This means
                 # double-escaping special characters which, when it's a backslash, also means triple-escaping it!
-                translation_table = str.maketrans({
-                    "/": "\\\\/",
-                    "~": "\\\\~",
-                    ":": "\\\\:",
-                    "\\": "\\\\\\",
-                    "[": "\\\\[",
-                    "]": "\\\\]"
-                })
-                value = join_op.join([f"{val.translate(translation_table)}" for val in quoted_values])
-                tag = f"{{!complexphrase inOrder=true}}"
+                translation_table = str.maketrans(
+                    {
+                        "/": "\\\\/",
+                        "~": "\\\\~",
+                        ":": "\\\\:",
+                        "\\": "\\\\\\",
+                        "[": "\\\\[",
+                        "]": "\\\\]",
+                    }
+                )
+                value = join_op.join(
+                    [f"{val.translate(translation_table)}" for val in quoted_values]
+                )
+                tag = "{!complexphrase inOrder=true}"
+            elif filter_type == FacetTypeValues.PARAMETER:
+                translation_table = str.maketrans({"\\": "\\\\"})
+                value = join_op.join(
+                    [f"{val.translate(translation_table)}" for val in quoted_values]
+                )
+                tag = ""
             else:
                 # Select values are not as problematic, so we only need to double-escape backslashes.
                 translation_table = str.maketrans({"\\": "\\\\"})
-                value = join_op.join([f"{val.translate(translation_table)}" for val in quoted_values])
-                tag = f"{{!tag={SolrQueryTags.SELECT_FILTER_TAG}}}" if behaviour == FacetBehaviourValues.UNION else ""
+                value = join_op.join(
+                    [f"{val.translate(translation_table)}" for val in quoted_values]
+                )
+                tag = (
+                    f"{{!tag={SolrQueryTags.SELECT_FILTER_TAG} cost=80}}"
+                    if behaviour == FacetBehaviourValues.UNION
+                    else ""
+                )
 
             query_string: str
             # A function query can be used in the filter query, but
             # then it needs to take over the whole query string.
-            if 'function_query' in filter_config:
-                query_string = filter_config['function_query']
+            if "function_query" in filter_config:
+                query_string = filter_config["function_query"]
             else:
                 query_string = f"{tag}{solr_field_name}:({value})"
             filter_statements.append(query_string)
@@ -411,13 +484,17 @@ class SearchRequest:
                 solr_facet_def: dict
                 facet_alias = facet_cfg["alias"]
 
-                if facet_cfg['type'] == FacetTypeValues.RANGE:
+                if facet_cfg["type"] == FacetTypeValues.RANGE:
                     solr_facet_def = _create_range_facet(facet_cfg)
-                elif facet_cfg['type'] == FacetTypeValues.TOGGLE:
+                elif facet_cfg["type"] == FacetTypeValues.TOGGLE:
                     solr_facet_def = _create_toggle_facet(facet_cfg)
-                elif facet_cfg['type'] == FacetTypeValues.SELECT:
-                    behaviour: str = self._behaviour_for_facet.get(facet_alias, FacetBehaviourValues.INTERSECTION)
+                elif facet_cfg["type"] == FacetTypeValues.SELECT:
+                    behaviour: str = self._behaviour_for_facet.get(
+                        facet_alias, FacetBehaviourValues.INTERSECTION
+                    )
                     solr_facet_def = _create_select_facet(facet_cfg, behaviour)
+                elif facet_cfg["type"] == FacetTypeValues.PARAMETER:
+                    solr_facet_def = _create_parameter_facet(facet_cfg)
                 else:
                     continue
 
@@ -427,7 +504,12 @@ class SearchRequest:
         # regardless of the current filter selected. So if the user selects the 'person' mode, we still want to
         # show the count for the number of sources. This also allows us to omit a mode if there are zero results.
         # a list of all possible modes configured.
-        all_modes: str = " OR ".join([f"{v['record_type']}" for k, v in self._app_config['search']['modes'].items()])
+        all_modes: str = " OR ".join(
+            [
+                f"{v['record_type']}"
+                for k, v in self._app_config["search"]["modes"].items()
+            ]
+        )
         mode_query: str = f"type:({all_modes})"
 
         json_facets["mode"] = {
@@ -435,8 +517,8 @@ class SearchRequest:
             "field": "type",
             "domain": {
                 "excludeTags": SolrQueryTags.MODE_FILTER_TAG,
-                "filter": mode_query
-            }
+                "filter": mode_query,
+            },
         }
 
         return json_facets
@@ -452,7 +534,11 @@ class SearchRequest:
         # alias. If the sort parameter has *not* been passed, then use the sort configuration that is defined as
         # the default.
         if self._result_sorting:
-            configuration_sorts = [", ".join(s['solr_sort']) for s in self._sorts_for_mode if s['alias'] == self._result_sorting]
+            configuration_sorts = [
+                ", ".join(s["solr_sort"])
+                for s in self._sorts_for_mode
+                if s["alias"] == self._result_sorting
+            ]
         else:
             for s in self._sorts_for_mode:
                 # Not interested in blocks that are not marked as a default search option.
@@ -462,13 +548,15 @@ class SearchRequest:
                 # If this is a contents search, if the config is marked for only contents, and if it's marked as
                 # default, then use this. Break afterwards, since we've found the default configuration for the
                 # sorting.
-                if self._is_contents and s.get("only_contents", False) is True and s.get("default", False) is True:
-                    configuration_sorts = [", ".join(s['solr_sort'])]
-                    break
-
-                # Else, if it isn't a contents search, and it's marked as default, use this configuration. Likewise,
-                # break afterwards.
-                elif not self._is_contents and s.get("only_contents", False) is False and s.get("default", False) is True:
+                if (
+                    self._is_contents
+                    and s.get("only_contents", False) is True
+                    and s.get("default", False) is True
+                ) or (
+                    not self._is_contents
+                    and s.get("only_contents", False) is False
+                    and s.get("default", False) is True
+                ):
                     configuration_sorts = [", ".join(s["solr_sort"])]
                     break
 
@@ -481,9 +569,46 @@ class SearchRequest:
         return ",".join(self.fields)
 
     def _compile_query(self) -> str:
-        if len(self._requested_query) == 0:
+        """Returns a validated query string that has been passed through the small-asc query parser. This
+        also does query field replacement, substituting the external query field names with the internal Solr
+        field names.
+
+        Also sets an instance variable as report on the validity of the query. If the query is not valid
+        the original query string is returned.
+        """
+        if not self._requested_query:
+            self.query_report = {
+                "valid": True,
+                "message": {"none": ["The query was valid"]},
+            }
             return DEFAULT_QUERY_STRING
-        return " AND ".join(self._requested_query)
+
+        query_string: str = " AND ".join(self._requested_query)
+
+        try:
+            parsed_query = small_asc.query.parse_with_field_replacements(
+                query_string, self._query_fields_for_mode, raw_fields=RAW_FIELDS
+            )
+        except QueryParseError:
+            self.query_report = {
+                "valid": False,
+                "message": {"none": ["There was a problem parsing the query"]},
+            }
+            return query_string
+        except FieldNotFoundError as e:
+            self.query_report = {
+                "valid": False,
+                "message": {"none": [str(e)]},
+            }
+            return query_string
+
+        log.debug("Parsed query: %s", repr(parsed_query))
+        self.query_report = {
+            "valid": True,
+            "message": {"none": ["The query was valid"]},
+        }
+
+        return parsed_query
 
     def compile(self) -> dict:
         """
@@ -508,12 +633,16 @@ class SearchRequest:
             # If we have an incipit mode, assume the incoming request is a PAE string.
             self.pae_features: Optional[dict] = get_pae_features(self._req)
             if not self.pae_features:
-                raise InvalidQueryException("The requested mode was 'incipits', but the PAE input was malformed.")
+                raise InvalidQueryException(
+                    "The requested mode was 'incipits', but the PAE input was malformed."
+                )
 
             # If verovio returns empty features, then something went wrong. Assume the problem is with the input
             # query string, and flag an error to the user.
-            if len(self.pae_features.get("intervalsChromatic", [])) == 0:
-                raise InvalidQueryException("The requested mode was 'incipits', but the query could not be interpreted as music notation.")
+            if not self.pae_features.get("intervalsChromatic", []):
+                raise InvalidQueryException(
+                    "The requested mode was 'incipits', but the query could not be interpreted as music notation."
+                )
 
             # This will be refactored to take into account the other accepted values for the interval search modes,
             # once we know what they are.
@@ -535,11 +664,11 @@ class SearchRequest:
                 query_len = len(contour)
             else:
                 intervals: list = self.pae_features.get("intervalsChromatic", [])
-                incipit_query = " ".join((str(s) for s in intervals))
+                incipit_query = " ".join(str(s) for s in intervals)
                 query_len = len(intervals)
 
-            self._requested_query.insert(0, f'{incipit_query_field}:\"{incipit_query}\"')
-            self._extra_params["qq"] = f"{incipit_query_field}:\"{incipit_query}\""
+            self._requested_query.insert(0, f'{incipit_query_field}:"{incipit_query}"')
+            self._extra_params["qq"] = f'{incipit_query_field}:"{incipit_query}"'
             # query($qq) returns the score for the given subquery (qscore).
             # scoring function is (qscore / ((doc_len + query_len) - qscore))
             score_stmt: str = f"div(query($qq), sub(add({incipit_len_field}, {query_len}), query($qq)))"
@@ -559,15 +688,17 @@ class SearchRequest:
         # the query it will not falsely match since they do not end in "type:". BUT one should look here if, at
         # some point in the future, this changes and weird stuff happens with the search result types not working
         # correctly!
-        manual_type: bool = any(["type:" in f for f in self.filters])
+        manual_type: bool = any("type:" in f for f in self.filters)
         if not manual_type:
             # The tag allows us to reference this in the facets so that we can return all the types of results.
             # See https://solr.apache.org/guide/8_8/faceting.html#tagging-and-excluding-filters
-            self.filters.append(f"{{!tag={SolrQueryTags.MODE_FILTER_TAG}}}{mode_filter}")
+            self.filters.append(
+                f"{{!tag={SolrQueryTags.MODE_FILTER_TAG}}}{mode_filter}"
+            )
 
         if self._requested_national_collection:
             nc_value: str = self._requested_national_collection[0]
-            self.filters += [f"country_codes_sm:\"{nc_value}\""]
+            self.filters += [f'country_codes_sm:"{nc_value}"']
 
         # These have already been checked in the validation, so they shouldn't raise an exception here.
         page_num: int = parse_page_number(self._page)
@@ -587,7 +718,7 @@ class SearchRequest:
             "sort": self._compile_sorts(),
             "facet": self._compile_facets(),
             "fields": self._compile_fields(),
-            "params": self._extra_params
+            "params": self._extra_params,
         }
 
         return solr_query
@@ -618,22 +749,15 @@ def _create_range_facet(facet_cfg: dict) -> dict:
     cfg: dict = {
         "type": "query",
         "q": "*:*",
-        "facet": {
-            "min": f"min({field_name})",
-            "max": f"max({field_name})"
-        },
-        "domain": {
-            "excludeTags": [SolrQueryTags.RANGE_FILTER_TAG]
-        }
+        "facet": {"min": f"min({field_name})", "max": f"max({field_name})"},
+        "domain": {"excludeTags": [SolrQueryTags.RANGE_FILTER_TAG]},
     }
     return cfg
 
 
 def _create_toggle_facet(facet_cfg: dict) -> dict:
     field_name: str
-    cfg: dict = {
-        "limit": 2
-    }
+    cfg: dict = {"limit": 2}
 
     if "function_query" in facet_cfg:
         field_name = facet_cfg["function_query"]
@@ -656,18 +780,65 @@ def _create_select_facet(facet_cfg: dict, behaviour: str) -> dict:
     """
     field_name: str = facet_cfg["field"]
 
-    cfg: dict = {
-        "type": "terms",
-        "field": f"{field_name}",
-        "limit": TERM_FACET_LIMIT
-    }
+    cfg: dict = {"type": "terms", "field": f"{field_name}", "limit": TERM_FACET_LIMIT}
 
     if behaviour == "union":
-        cfg.update({
-            "domain": {
-                "excludeTags": [SolrQueryTags.SELECT_FILTER_TAG]
-            }
-        })
+        cfg.update({"domain": {"excludeTags": [SolrQueryTags.SELECT_FILTER_TAG]}})
 
     return cfg
 
+
+def _create_parameter_facet(facet_cfg: dict) -> dict:
+    field_name: str = facet_cfg["field"]
+    cfg: dict = {"type": "terms", "field": field_name, "limit": 0}
+    return cfg
+
+
+# MATCH_CHARS = ['"', "'", "(", ")", "[", "]", "{", "}"]
+#
+
+# @functools.lru_cache(maxsize=2048)
+# def _fix_string(instr: str) -> str:
+#     """A string checker that looks for balanced quotation marks
+#     and grouping indicators. It will continue to process the string recursively until all
+#     problems have been sorted out.
+#
+#     NB: A note for future me: At some point someone is going to come
+#     along and ask why their carefully crafted query that looks for a string
+#     that is single-quoted doesn't work as they expect it to.
+#
+#     So you may have to be a bit more clever about
+#     """
+#
+#     # If the in string doesn't contain any of the characters,
+#     # then we don't need to do any processing.
+#     has_matches: bool = any(c in instr for c in MATCH_CHARS)
+#     if not has_matches:
+#         return instr
+#
+#     # Solr doesn't like single quotes, but we can silently replace
+#     # them for our users when shipping off the query.
+#     if "'" in instr:
+#         fixed = instr.replace("'", '"')
+#         return _fix_string(fixed)
+#
+#     if instr.count('"') % 2 != 0:
+#         # try fixing the string by adding the missing
+#         # quotation mark.
+#         fixed: str = instr[:-1] if instr.endswith('"') and len(instr) > 1 else f'{instr}"'
+#         return _fix_string(fixed)
+#     elif instr.endswith('""'):
+#         fixed = instr[:-2] if len(instr) > 2 else ""
+#         return _fix_string(fixed)
+#
+#     for pair in [("(", ")"), ("[", "]"), ("{", "}")]:
+#         op, cl = pair
+#         if instr.count(op) != instr.count(cl):
+#             # Since we can't know how to balance the string,
+#             # just strip it of all the parentheses and then
+#             # try again.
+#             fixed = instr.replace(f"{op}", "").replace(f"{cl}", "")
+#             return _fix_string(fixed)
+#
+#     # This should represent a string that is OK!
+#     return instr

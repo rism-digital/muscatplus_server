@@ -21,6 +21,33 @@ async def fetch(url: str, session, num: int) -> bool:
         return False
 
 
+async def do_something(results):
+    for result in results:
+        pass
+
+
+async def run_search() -> (int, int):
+    async with aiohttp.ClientSession(
+        headers={"Accept": "application/ld+json", "X-API-Accept-Language": "en"}
+    ) as session, session.get("https://rism.online/search?mode=people") as r:
+        response = await r.json()
+        search_info = response.get("view")
+        this_page = search_info["thisPage"]
+        total_pages = search_info.get("totalPages")
+        while total_pages > 0:
+            _ = await do_something(response["items"])
+            print("finished processing page", this_page)
+
+            with await session.get(search_info["next"]) as r:
+                response = await r.json()
+                search_info = response.get("view")
+                this_page = search_info["thisPage"]
+
+            total_pages -= 1
+
+    return (0, 0)
+
+
 async def get_ids():
     s = Solr("http://localhost:8983/solr/muscatplus_live")
     # fq = ["type:source", "country_code_s:CH"]
@@ -34,8 +61,13 @@ async def get_ids():
     sort = "id asc"
     fl: list = ["id"]
 
-    res = await s.search({"query": "*:*", "filter": fq, "fields": fl, "sort": sort, "limit": 500}, cursor=True)
-    id_sub = re.compile(r"source_|person_|institution_|diamm_source_|diamm_organization_|diamm_person_")
+    res = await s.search(
+        {"query": "*:*", "filter": fq, "fields": fl, "sort": sort, "limit": 500},
+        cursor=True,
+    )
+    id_sub = re.compile(
+        r"source_|person_|institution_|diamm_source_|diamm_organization_|diamm_person_"
+    )
     print(f"Assembling {res.hits} IDs")
     ids: list = []
     async for s in res:
@@ -49,9 +81,11 @@ async def run() -> (int, int):
     item_ids: list = await get_ids()
     responses: list = []
 
-    async with aiohttp.ClientSession(headers={"Accept": "application/ld+json", "X-API-Accept-Language": "en"}) as session:
+    async with aiohttp.ClientSession(
+        headers={"Accept": "application/ld+json", "X-API-Accept-Language": "en"}
+    ) as session:
         for num, itm in enumerate(item_ids):
-            url: str = f"http://dev.rism.offline/institutions/{itm}"
+            url: str = f"https://rism.online/institutions/{itm}"
             # url: str = f"http://dev.rism.offline/external/diamm/person/{itm}"
             res: bool = await fetch(url, session, num)
             responses.append(res)
@@ -64,7 +98,7 @@ async def run() -> (int, int):
 
 async def main():
     start = timeit.default_timer()
-    successes, failures = await run()
+    successes, failures = await run_search()
     end = timeit.default_timer()
     elapsed: float = end - start
 

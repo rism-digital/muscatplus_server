@@ -18,13 +18,10 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
     in the Solr result before calling this, as we assume that if this is called there
     is at least one link!
     """
-    section_label = ypres.MethodField(
-        label="sectionLabel"
-    )
+
+    section_label = ypres.MethodField(label="sectionLabel")
     items = ypres.MethodField()
-    external_records = ypres.MethodField(
-        label="externalRecords"
-    )
+    external_records = ypres.MethodField(label="externalRecords")
     # sites = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
@@ -43,8 +40,9 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
         else:
             return None
 
-        return ExternalResource(res, many=True,
-                                context={"request": self.context.get("request")}).data
+        return ExternalResource(
+            res, many=True, context={"request": self.context.get("request")}
+        ).data
 
     def get_external_records(self, obj: dict) -> Optional[list[dict]]:
         if not obj.get("has_external_record_b", False):
@@ -74,7 +72,7 @@ def _create_external_record_link(record: dict, translations: dict) -> Optional[d
 
     project_type: str = record.get("project_type")
     sfx = f"{project_type}/{record['id']}"
-    record_type = record['type']
+    record_type = record["type"]
 
     if record_type == "source":
         resource_type = "rism:Source"
@@ -93,30 +91,29 @@ def _create_external_record_link(record: dict, translations: dict) -> Optional[d
         "id": ident.format(ident=sfx),
         "type": resource_type,
         "typeLabel": type_label,
-        "label": {"none": [f"{record.get('label')}"]}
+        "label": {"none": [f"{record.get('label')}"]},
     }
 
     if record_type == "source":
-        resource_record["sourceTypes"] = create_source_types_block("collection", "manuscript", ["musical"], translations),
+        resource_record["sourceTypes"] = (
+            create_source_types_block(
+                "collection", "manuscript", ["musical"], translations
+            ),
+        )
 
     return {
         "id": f"urn:rism:{project}:{record_type}:{record['id']}",
         "type": "rism:ExternalRecord",
         "project": PROJECT_IDENTIFIERS[project],
-        "record": resource_record
+        "record": resource_record,
     }
 
 
 class ExternalResource(ypres.DictSerializer):
-    rtype = ypres.StaticField(
-        label="type",
-        value="rism:ExternalResource"
-    )
+    rtype = ypres.StaticField(label="type", value="rism:ExternalResource")
     url = ypres.MethodField()
     label = ypres.MethodField()
-    resource_type = ypres.MethodField(
-        label="resourceType"
-    )
+    resource_type = ypres.MethodField(label="resourceType")
 
     def get_url(self, obj: dict) -> Optional[str]:
         return obj.get("url")
@@ -136,7 +133,11 @@ class ExternalResource(ypres.DictSerializer):
         rtype: str
         link_type: Optional[str] = obj.get("link_type")
 
-        if link_type in ("IIIF", "IIIF manifest (digitized source)", "IIIF manifest (other)"):
+        if link_type in (
+            "IIIF",
+            "IIIF manifest (digitized source)",
+            "IIIF manifest (other)",
+        ):
             rtype = "IIIFManifestLink"
         elif link_type in ("Digitalization", "Digitized"):
             rtype = "DigitizationLink"

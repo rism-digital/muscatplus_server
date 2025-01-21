@@ -1,6 +1,9 @@
 from sanic import Blueprint, response
 
-from search_server.resources.incipits.render import handle_incipit_render, handle_incipit_validate
+from search_server.resources.incipits.render import (
+    handle_incipit_render,
+    handle_incipit_validate,
+)
 
 incipits_blueprint: Blueprint = Blueprint("incipits", url_prefix="/incipits")
 

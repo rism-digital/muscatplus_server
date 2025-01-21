@@ -7,23 +7,24 @@ license = "MIT"
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 pyyaml = "^6.0.1"
 rdflib = "^7.0.0"
-sentry-sdk = "^2.7.1"
 Jinja2 = "^3.1.2"
 orjson = "^3.9.15"
-verovio = { version = "^4.0.0", allow-prereleases = true }
+verovio = { version = "^4.2.0", allow-prereleases = true }
 aiohttp = {extras = ["speedups"], version = "^3.8.5"}
 small-asc = {git = "https://github.com/rism-digital/small-asc.git", rev = "main"}
 #small-asc = {path = "../small-asc", develop = true }
 ypres = {git = "https://github.com/rism-digital/ypres.git", rev = "main"}
 sanic = "^24.0.0"
+luqum = "^0.13.0"
+sentry-sdk = {extras = ["sanic"], version = "^2.19.0"}
 
 [tool.poetry.dev-dependencies]
-ipython = "^8.0.0"
-pytest = "^7.0.0"
-pytest-cov = "^4.0.0"
+ipython = "^8.31.0"
+pytest = "^8.0.0"
+pytest-cov = "^6.0.0"
 aiofiles = "^24.0.0"
 
 [tool.poetry.group.dev.dependencies]
@@ -41,3 +42,35 @@ priority = "primary"
 name = "testpypi"
 url = "https://test.pypi.org/simple/"
 priority = "supplemental"
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # pycodestyle warnings
+    "W",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    ## Flake8 plugins
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-comprehensions
+    "C",
+    # flake8-django
+    "DJ",
+    # flake8-bandit
+    "S",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+
+ignore = [
+    # Ignore Pycodestyle line-length warnings, (mainly long comments).
+    "E501",
+    # Ignore McCabe complexity (for now).
+    "C901",
+]

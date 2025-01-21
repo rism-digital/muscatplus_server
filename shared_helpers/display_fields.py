@@ -1,9 +1,8 @@
-from typing import Optional, Callable, Union
 import logging
+from typing import Callable, Optional, Union
 
 from shared_helpers.identifiers import SOLR_FIELD_DATA_TYPES
 from shared_helpers.solr_connection import SolrResult
-
 
 # LabelConfig takes a Solr field, and maps it to a tuple containing the translation value for the label, and an
 # optional Callable that can be used to provide the value translations. For example, if we have:
@@ -27,7 +26,7 @@ FIELD_CONFIG: LabelConfig = {
     "main_title_s": ("records.standardized_title", None),
     "scoring_summary_sm": ("records.scoring_summary", None),
     "source_title_s": ("records.title_on_source", None),
-    "additional_title_s": ("records.additional_title", None)
+    "additional_title_s": ("records.additional_title", None),
 }
 
 
@@ -48,7 +47,9 @@ def _default_translator(value: Union[str, list], translations: dict) -> dict:
     :param translations: Not used, but provided so that this method has the same signature as the others.
     :return: A dictionary containing a default language map of the value.
     """
-    return {"none": [str(v) for v in value] if isinstance(value, list) else [str(value)]}
+    return {
+        "none": [str(v) for v in value] if isinstance(value, list) else [str(value)]
+    }
 
 
 # The field configuration should have a Solr field on one side, and a Tuple on the other. The tuple
@@ -57,7 +58,12 @@ def _default_translator(value: Union[str, list], translations: dict) -> dict:
 # value will use the default translator function, returning a language key of "none".
 # The function for translating takes two arguments: The string to translate, and a dictionary of available translations.
 # This field config will be the default used if one is not provided.
-def assemble_label_value(record: Union[SolrResult, dict], field_name: str, translation_map: tuple[str, Optional[Callable]], translations: dict) -> dict:
+def assemble_label_value(
+    record: Union[SolrResult, dict],
+    field_name: str,
+    translation_map: tuple[str, Optional[Callable]],
+    translations: dict,
+) -> dict:
     # deconstruct the translation map tuple into the translation
     # key and the translator function
     label_translation, value_translator = translation_map
@@ -71,7 +77,7 @@ def assemble_label_value(record: Union[SolrResult, dict], field_name: str, trans
 
     label_value_map: dict = {
         "label": translations.get(label_translation),
-        "value": value_translator(record_value, translations)
+        "value": value_translator(record_value, translations),
     }
 
     if dtype := SOLR_FIELD_DATA_TYPES.get(field_name):
@@ -80,9 +86,11 @@ def assemble_label_value(record: Union[SolrResult, dict], field_name: str, trans
     return label_value_map
 
 
-def get_display_fields(record: Union[SolrResult, dict],
-                       translations: dict,
-                       field_config: Optional[LabelConfig] = None) -> Optional[list]:
+def get_display_fields(
+    record: Union[SolrResult, dict],
+    translations: dict,
+    field_config: Optional[LabelConfig] = None,
+) -> Optional[list]:
     """
     Returns a list of translated display fields for a given record. Uses the metadata fields to configure
     the label, based on the Solr field. Supports direct value output, or a function for translating the values.
@@ -101,14 +109,18 @@ def get_display_fields(record: Union[SolrResult, dict],
         if field not in record:
             continue
 
-        label_value: dict = assemble_label_value(record, field, translation_map, translations)
+        label_value: dict = assemble_label_value(
+            record, field, translation_map, translations
+        )
 
         display.append(label_value)
 
     return display or None
 
 
-def get_search_result_summary(field_config: dict, translations: dict, result: dict) -> Optional[dict]:
+def get_search_result_summary(
+    field_config: dict, translations: dict, result: dict
+) -> Optional[dict]:
     summary: dict = {}
 
     for solr_fieldname, cfg in field_config.items():
@@ -122,7 +134,12 @@ def get_search_result_summary(field_config: dict, translations: dict, result: di
         output_fieldname: str = cfg[0]
         translation_key: str = cfg[1]
         translation_value_translator_fn: Optional[Callable] = cfg[2]
-        field_res: dict = assemble_label_value(result, solr_fieldname, (translation_key, translation_value_translator_fn), translations)
+        field_res: dict = assemble_label_value(
+            result,
+            solr_fieldname,
+            (translation_key, translation_value_translator_fn),
+            translations,
+        )
         summary.update({output_fieldname: field_res})
 
     return summary or None

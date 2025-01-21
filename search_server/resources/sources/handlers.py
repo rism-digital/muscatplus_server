@@ -1,7 +1,7 @@
 from typing import Optional
 
-from shared_helpers.solr_connection import SolrConnection
 from search_server.resources.sources.full_source import FullSource
+from shared_helpers.solr_connection import SolrConnection
 
 
 async def handle_source_request(req, source_id: str) -> Optional[dict]:
@@ -10,5 +10,6 @@ async def handle_source_request(req, source_id: str) -> Optional[dict]:
     if not source_record:
         return None
 
-    return await FullSource(source_record, context={"request": req,
-                                                    "direct_request": True}).data
+    return await FullSource(
+        source_record, context={"request": req, "direct_request": True}
+    ).data

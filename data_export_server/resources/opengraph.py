@@ -2,16 +2,17 @@ import re
 import textwrap
 from typing import Optional
 from urllib.parse import urljoin
+
 import ypres
 
 from shared_helpers.formatters import (
-    format_person_label,
+    format_institution_description,
     format_institution_label,
-    format_source_description,
     format_person_description,
-    format_institution_description
+    format_person_label,
+    format_source_description,
 )
-from shared_helpers.identifiers import ID_SUB, get_url_from_type, get_site
+from shared_helpers.identifiers import ID_SUB, get_site, get_url_from_type
 
 
 class OpenGraph(ypres.DictSerializer):
@@ -139,11 +140,12 @@ class OpenGraphSvg(ypres.DictSerializer):
         elif (t := obj.get("source_member_composers_sm")) and objtype == "source":
             member_list = textwrap.shorten("; ".join(t), width=40)
             return CardIcons.PEOPLE, member_list
-        elif (t := obj.get("total_sources_i")) and objtype == "person":
-            src: str = "sources" if t > 1 else "source"
-            label: str = f"Related to {t:,} {src}"
-            return CardIcons.SOURCE, label
-        elif (t := obj.get("total_sources_i")) and objtype == "institution":
+        elif (
+            (t := obj.get("total_sources_i"))
+            and objtype == "person"
+            or (t := obj.get("total_sources_i"))
+            and objtype == "institution"
+        ):
             src: str = "sources" if t > 1 else "source"
             label: str = f"Related to {t:,} {src}"
             return CardIcons.SOURCE, label
@@ -161,7 +163,7 @@ class OpenGraphSvg(ypres.DictSerializer):
         objtype: str = obj["type"]
 
         if (t := obj.get("num_source_members_i")) and objtype == "source":
-            label: str = f"{t} item{'s'[:t^1]} in this source"
+            label: str = f"{t} item{'s'[: t ^ 1]} in this source"
             return CardIcons.CONTENT, label
         elif (t := obj.get("num_holdings_i")) and objtype == "source":
             cpy: str = "copy" if t == 1 else "copies"

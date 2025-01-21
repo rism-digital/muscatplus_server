@@ -7,22 +7,15 @@ from small_asc.client import Results
 
 from search_server.helpers.vrv import render_url
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrResult, SolrConnection
+from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 log = logging.getLogger("mp_server")
 
 
 class DigitalObjectsSection(ypres.AsyncDictSerializer):
-    doid = ypres.MethodField(
-        label="id"
-    )
-    section_label = ypres.MethodField(
-        label="sectionLabel"
-    )
-    dotype = ypres.StaticField(
-        label="type",
-        value="rism:DigitalObjectsSection"
-    )
+    doid = ypres.MethodField(label="id")
+    section_label = ypres.MethodField(label="sectionLabel")
+    dotype = ypres.StaticField(label="type", value="rism:DigitalObjectsSection")
     items = ypres.MethodField()
 
     def get_doid(self, obj: SolrResult) -> str:
@@ -38,7 +31,9 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
         elif obj_type == "person":
             return get_identifier(req, "people.digital_object_list", person_id=obj_id)
         elif obj_type == "institution":
-            return get_identifier(req, "institution.digital_object_list", institution_id=obj_id)
+            return get_identifier(
+                req, "institution.digital_object_list", institution_id=obj_id
+            )
         else:
             log.error("Could not determine ID for %s", obj["id"])
             return "no-id"
@@ -50,31 +45,30 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
         return transl.get("records.digital_objects")
 
     async def get_items(self, obj: SolrResult) -> Optional[list]:
-        fq: list = [f"linked_id:{obj.get('id')}",
-                    "type:dobject"]
+        fq: list = [f"linked_id:{obj.get('id')}", "type:dobject"]
 
-        results: Results = await SolrConnection.search({"query": "*:*",
-                                                        "filter": fq},
-                                                       cursor=True,
-                                                       session=self.context.get("session"))
+        results: Results = await SolrConnection.search(
+            {"query": "*:*", "filter": fq},
+            cursor=True,
+            session=self.context.get("session"),
+        )
 
         if results.hits == 0:
             return None
 
-        return await DigitalObject(results,
-                                   many=True,
-                                   context={"request": self.context.get("request"),
-                                            "session": self.context.get("session")}).data
+        return await DigitalObject(
+            results,
+            many=True,
+            context={
+                "request": self.context.get("request"),
+                "session": self.context.get("session"),
+            },
+        ).data
 
 
 class DigitalObject(ypres.AsyncDictSerializer):
-    doid = ypres.MethodField(
-        label="id"
-    )
-    dotype = ypres.StaticField(
-        label="type",
-        value="rism:DigitalObject"
-    )
+    doid = ypres.MethodField(label="id")
+    dotype = ypres.StaticField(label="type", value="rism:DigitalObject")
     # part_of = ypres.MethodField(
     #     label="partOf"
     # )
@@ -91,11 +85,23 @@ class DigitalObject(ypres.AsyncDictSerializer):
         dobject_id: str = re.sub(ID_SUB, "", dobject_id_val)
 
         if linked_record_type == "source":
-            return get_identifier(req, "sources.digital_object", source_id=linked_id, dobject_id=dobject_id)
+            return get_identifier(
+                req,
+                "sources.digital_object",
+                source_id=linked_id,
+                dobject_id=dobject_id,
+            )
         elif linked_record_type == "person":
-            return get_identifier(req, "people.digital_object", person_id=linked_id, dobject_id=dobject_id)
+            return get_identifier(
+                req, "people.digital_object", person_id=linked_id, dobject_id=dobject_id
+            )
         elif linked_record_type == "institution":
-            return get_identifier(req, "institution.digital_object", institution_id=linked_id, dobject_id=dobject_id)
+            return get_identifier(
+                req,
+                "institution.digital_object",
+                institution_id=linked_id,
+                dobject_id=dobject_id,
+            )
         else:
             log.error("Could not determine ID for %s", obj["id"])
             return "no-id"
@@ -114,20 +120,13 @@ class DigitalObject(ypres.AsyncDictSerializer):
         d = {}
         mt: Optional[str] = obj.get("media_type_s")
         if mt in ("image/jpeg", "image/png"):
-            d.update({
-                "original": {
-                    "format": mt,
-                    "url": obj.get("original_url_s")
-                },
-                "thumb": {
-                    "format": mt,
-                    "url": obj.get("thumb_url_s")
-                },
-                "medium": {
-                    "format": mt,
-                    "url": obj.get("medium_url_s")
+            d.update(
+                {
+                    "original": {"format": mt, "url": obj.get("original_url_s")},
+                    "thumb": {"format": mt, "url": obj.get("thumb_url_s")},
+                    "medium": {"format": mt, "url": obj.get("medium_url_s")},
                 }
-            })
+            )
         elif mt == "application/xml":
             mei_url: str = obj["encoding_url_s"]
             svg: Optional[str] = await render_url(mei_url)
@@ -135,15 +134,11 @@ class DigitalObject(ypres.AsyncDictSerializer):
             if not svg:
                 log.error("Could not render SVG for %s", obj.get("id"))
 
-            d.update({
-                "encoding": {
-                    "format": mt,
-                    "url": obj.get("encoding_url_s")
-                },
-                "rendered": {
-                    "format": "image/svg+xml",
-                    "data": svg
+            d.update(
+                {
+                    "encoding": {"format": mt, "url": obj.get("encoding_url_s")},
+                    "rendered": {"format": "image/svg+xml", "data": svg},
                 }
-            })
+            )
 
         return d

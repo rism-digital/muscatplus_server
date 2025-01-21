@@ -2,11 +2,11 @@ import logging
 import math
 from typing import Optional
 
-from small_asc.client import Results
 import ypres
+from small_asc.client import Results
 
 from search_server.exceptions import PaginationParseException
-from search_server.helpers.urls import replace_query_param, remove_query_param
+from search_server.helpers.urls import remove_query_param, replace_query_param
 
 log = logging.getLogger("mp_server")
 
@@ -23,20 +23,13 @@ class Pagination(ypres.DictSerializer):
     details.)
     """
 
-    pagination_type = ypres.StaticField(
-        label="type",
-        value="PartialCollectionView"
-    )
+    pagination_type = ypres.StaticField(label="type", value="PartialCollectionView")
     first = ypres.MethodField()
     next = ypres.MethodField()
     previous = ypres.MethodField()
     last = ypres.MethodField()
-    total_pages = ypres.MethodField(
-        label="totalPages"
-    )
-    this_page = ypres.MethodField(
-        label="thisPage"
-    )
+    total_pages = ypres.MethodField(label="totalPages")
+    this_page = ypres.MethodField(label="thisPage")
 
     def _number_of_pages(self, total: int) -> int:
         """
@@ -197,15 +190,19 @@ def parse_row_number(req, row_query_string: Optional[str]) -> int:
     search_config: dict = req.app.ctx.config["search"]
 
     if not row_query_string:
-        return search_config['rows']
+        return search_config["rows"]
 
     try:
         rows = int(row_query_string)
-    except ValueError as e:
-        raise PaginationParseException("Invalid value for rows. If provided, it must be a whole number.")
+    except ValueError as err:
+        raise PaginationParseException(
+            "Invalid value for rows. If provided, it must be a whole number."
+        ) from err
 
-    if rows not in search_config['page_sizes']:
-        raise PaginationParseException(f"Invalid value for page size. Only {', '.join([str(v) for v in search_config['page_sizes']])} are acceptable values")
+    if rows not in search_config["page_sizes"]:
+        raise PaginationParseException(
+            f"Invalid value for page size. Only {', '.join([str(v) for v in search_config['page_sizes']])} are acceptable values"
+        )
 
     return rows
 
@@ -235,8 +232,9 @@ def parse_page_number(page_query_string: Optional[str]) -> int:
 
     try:
         this_page: int = int(page_query_string)
-    except ValueError as e:
-        raise PaginationParseException("Page number must be an integer")
+    except ValueError as err:
+        raise PaginationParseException("Page number must be an integer") from err
+
     if this_page < 1:
         raise PaginationParseException("Page number must be greater than 0")
 

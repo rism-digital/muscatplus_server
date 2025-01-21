@@ -1,5 +1,4 @@
 from search_server.exceptions import InvalidQueryException
-
 from search_server.helpers.search_request import SearchRequest
 from search_server.resources.search.base_search import serialize_response
 from search_server.resources.search.search_results import SearchResults
@@ -9,16 +8,17 @@ from shared_helpers.solr_connection import is_composite
 async def _get_normal_results(req, source_id: str) -> dict:
     try:
         request_compiler: SearchRequest = SearchRequest(req, is_contents=True)
-        request_compiler.filters += ["type:source",
-                                     "is_contents_record_b:true",
-                                     f"source_membership_id:{source_id}",
-                                     f"!id:{source_id}"]
+        request_compiler.filters += [
+            "type:source",
+            "is_contents_record_b:true",
+            f"source_membership_id:{source_id}",
+            f"!id:{source_id}",
+        ]
         solr_params: dict = request_compiler.compile()
-    except InvalidQueryException as e:
+    except InvalidQueryException:
         raise
 
-    extra_context: dict = {"direct_request": True,
-                           "is_contents": True}
+    extra_context: dict = {"direct_request": True, "is_contents": True}
 
     return await serialize_response(req, solr_params, SearchResults, extra_context)
 
@@ -26,19 +26,23 @@ async def _get_normal_results(req, source_id: str) -> dict:
 async def _get_composite_results(req, source_id: str) -> dict:
     try:
         request_compiler: SearchRequest = SearchRequest(req, is_contents=True)
-        request_compiler.filters += ["type:source OR type:holding",
-                                     f"source_membership_id:{source_id} OR composite_parent_id:{source_id}",
-                                     f"!id:{source_id}"]
+        request_compiler.filters += [
+            "type:source OR type:holding",
+            f"source_membership_id:{source_id} OR composite_parent_id:{source_id}",
+            f"!id:{source_id}",
+        ]
 
         # NB: The sort parameter is handled internally from the configuration
         # so we don't need to manually set it here.
         solr_params: dict = request_compiler.compile()
-    except InvalidQueryException as e:
+    except InvalidQueryException:
         raise
 
-    extra_context: dict = {"direct_request": True,
-                           "is_composite": True,
-                           "is_contents": True}
+    extra_context: dict = {
+        "direct_request": True,
+        "is_composite": True,
+        "is_contents": True,
+    }
 
     return await serialize_response(req, solr_params, SearchResults, extra_context)
 
@@ -63,12 +67,14 @@ async def handle_contents_probe_request(req, source_id: str) -> dict:
 
     try:
         request_compiler: SearchRequest = SearchRequest(req, probe=True)
-        request_compiler.filters += ["type:source",
-                                     "is_contents_record_b:true",
-                                     f"source_membership_id:{this_id}",
-                                     f"!id:{this_id}"]
+        request_compiler.filters += [
+            "type:source",
+            "is_contents_record_b:true",
+            f"source_membership_id:{this_id}",
+            f"!id:{this_id}",
+        ]
         solr_params: dict = request_compiler.compile()
-    except InvalidQueryException as e:
+    except InvalidQueryException:
         raise
 
     extra_context: dict = {"direct_request": True}

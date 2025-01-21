@@ -2,7 +2,10 @@ from sanic import Blueprint, response
 
 from search_server.request_handlers import handle_request, handle_search
 from search_server.resources.people.person import handle_person_request
-from search_server.resources.people.person_search import handle_person_search_request, handle_person_probe_request
+from search_server.resources.people.person_search import (
+    handle_person_probe_request,
+    handle_person_search_request,
+)
 
 people_blueprint: Blueprint = Blueprint("people", url_prefix="/people")
 
@@ -19,26 +22,20 @@ async def person(req, person_id: str):
 
     For example, `/people/20000365`.
     """
-    return await handle_request(req,
-                                handle_person_request,
-                                person_id=person_id)
+    return await handle_request(req, handle_person_request, person_id=person_id)
 
 
 @people_blueprint.route("/<person_id:str>/sources/")
 async def person_sources(req, person_id: str):
     """
-        Query the sources attached to this person. Supports all search options for sources.
+    Query the sources attached to this person. Supports all search options for sources.
     """
-    return await handle_search(req,
-                               handle_person_search_request,
-                               person_id=person_id)
+    return await handle_search(req, handle_person_search_request, person_id=person_id)
 
 
 @people_blueprint.route("/<person_id:str>/probe/")
 async def person_probe(req, person_id: str):
-    return await handle_search(req,
-                               handle_person_probe_request,
-                               person_id=person_id)
+    return await handle_search(req, handle_person_probe_request, person_id=person_id)
 
 
 @people_blueprint.route("/<person_id:str>/relationships/")

@@ -1,28 +1,24 @@
 import logging
-import re
 from typing import Optional
 
 import ypres
 
-from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.display_translators import (
-    printing_techniques_translator,
-    material_source_types_translator,
-    material_content_types_translator
-)
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrResult
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
+from shared_helpers.display_fields import LabelConfig, get_display_fields
+from shared_helpers.display_translators import (
+    material_content_types_translator,
+    material_source_types_translator,
+    printing_techniques_translator,
+)
+from shared_helpers.solr_connection import SolrResult
 from shared_helpers.utilities import to_aiter
 
 log = logging.getLogger("mp_server")
 
 
 class MaterialGroupsSection(ypres.AsyncDictSerializer):
-    section_label = ypres.MethodField(
-        label="sectionLabel"
-    )
+    section_label = ypres.MethodField(label="sectionLabel")
     items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
@@ -34,9 +30,11 @@ class MaterialGroupsSection(ypres.AsyncDictSerializer):
     async def get_items(self, obj: SolrResult) -> list[dict]:
         mgdata: list = obj.get("material_groups_json", [])
         # NB: The regular list needs to be converted to an async iterator
-        return await MaterialGroup(to_aiter(mgdata),
-                                   many=True,
-                                   context={"request": self.context.get("request")}).data
+        return await MaterialGroup(
+            to_aiter(mgdata),
+            many=True,
+            context={"request": self.context.get("request")},
+        ).data
 
 
 class MaterialGroup(ypres.AsyncDictSerializer):
@@ -44,9 +42,7 @@ class MaterialGroup(ypres.AsyncDictSerializer):
     summary = ypres.MethodField()
     notes = ypres.MethodField()
     relationships = ypres.MethodField()
-    external_resources = ypres.MethodField(
-        label="externalResources"
-    )
+    external_resources = ypres.MethodField(label="externalResources")
 
     def get_label(self, obj: dict) -> dict:
         # TODO: Translate this header into the languages
@@ -58,8 +54,14 @@ class MaterialGroup(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
-            "material_source_types": ("records.source_type", material_source_types_translator),
-            "material_content_types": ("records.content_type", material_content_types_translator),
+            "material_source_types": (
+                "records.source_type",
+                material_source_types_translator,
+            ),
+            "material_content_types": (
+                "records.content_type",
+                material_content_types_translator,
+            ),
             "publication_place": ("records.place_publication", None),
             "publisher_copyist": ("records.publisher_copyist", None),
             "date_statements": ("records.date", None),
@@ -71,7 +73,10 @@ class MaterialGroup(ypres.AsyncDictSerializer):
             "physical_details": ("records.other_physical_details", None),
             # "parts_held": ("records.parts_held", None),
             # "parts_extent": ("records.extent_parts", None),,
-            "printing_techniques": ("records.printing_technique", printing_techniques_translator),
+            "printing_techniques": (
+                "records.printing_technique",
+                printing_techniques_translator,
+            ),
             "book_formats": ("records.book_format", None),
             "plate_numbers": ("records.plate_number", None),
             "publisher_numbers": ("records.publisher_number", None),
@@ -94,13 +99,17 @@ class MaterialGroup(ypres.AsyncDictSerializer):
     async def get_relationships(self, obj: dict) -> Optional[dict]:
         # a set is disjoint if there are no keys in common. Check if these keys exist in the
         # record; if they are disjoint, then we don't need to process them.
-        if {'related_people_json', 'related_institutions_json'}.isdisjoint(obj.keys()):
+        if {"related_people_json", "related_institutions_json"}.isdisjoint(obj.keys()):
             return None
 
-        return await RelationshipsSection(obj, context={"request": self.context.get("request")}).data
+        return await RelationshipsSection(
+            obj, context={"request": self.context.get("request")}
+        ).data
 
     async def get_external_resources(self, obj: dict) -> Optional[dict]:
         if "external_resources" not in obj:
             return None
 
-        return await ExternalResourcesSection(obj, context={"request": self.context.get("request")}).data
+        return await ExternalResourcesSection(
+            obj, context={"request": self.context.get("request")}
+        ).data

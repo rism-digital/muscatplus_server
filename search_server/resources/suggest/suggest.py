@@ -16,13 +16,8 @@ log = logging.getLogger("mp_server")
 
 
 class SuggestionResults(ypres.DictSerializer):
-    sid = ypres.MethodField(
-        label="id"
-    )
-    typ = ypres.StaticField(
-        label="type",
-        value="rism:SuggestionResults"
-    )
+    sid = ypres.MethodField(label="id")
+    typ = ypres.StaticField(label="type", value="rism:SuggestionResults")
     alias = ypres.MethodField()
     items = ypres.MethodField()
 
@@ -52,10 +47,10 @@ class SuggestionResults(ypres.DictSerializer):
         """
         req = self.context.get("request")
         cfg: dict = req.app.ctx.config
-        num_suggestions: int = cfg['search']['suggestions']
+        num_suggestions: int = cfg["search"]["suggestions"]
 
         fields: list = self.context.get("suggest_fields")
-        terms: dict = obj.get("terms", [])
+        terms: dict = obj.get("terms", {})
 
         all_suggestions: dict = defaultdict(int)
         for f in fields:
@@ -68,26 +63,26 @@ class SuggestionResults(ypres.DictSerializer):
         merged: dict = dict(all_suggestions)
 
         if len(merged) == 0:
-            return [{
-                "label": {"none": ["No suggestions"]},
-                "value": 0
-            }]
+            return [{"label": {"none": ["No suggestions"]}, "value": 0}]
 
         res: list = []
-        for label, value in sorted(merged.items(), key=operator.itemgetter(1), reverse=True):
-            res.append({
-                "label": {"none": [label]},
-                "value": {"none": [f"{value}"]}
-            })
+        for label, value in sorted(
+            merged.items(), key=operator.itemgetter(1), reverse=True
+        ):
+            res.append({"label": {"none": [label]}, "value": {"none": [f"{value}"]}})
 
         # Limit the number returned to the top N, where N is set in the configuration.
         return res[:num_suggestions]
 
 
-async def handle_suggest_request(req: request.Request, **kwargs) -> response.HTTPResponse:
+async def handle_suggest_request(
+    req: request.Request, **kwargs
+) -> response.HTTPResponse:
     alias: Optional[str] = req.args.get("alias")
     if not alias:
-        return response.text("A suggest request requires an alias parameter", status=400)
+        return response.text(
+            "A suggest request requires an alias parameter", status=400
+        )
 
     query: Optional[str] = req.args.get("q")
     if not query:
@@ -96,7 +91,7 @@ async def handle_suggest_request(req: request.Request, **kwargs) -> response.HTT
     cfg: dict = req.app.ctx.config
     # unlike the search handler we don't know what mode we're in, so we
     # have to process all facet definitions looking for the fields.
-    facet_definitions: dict = cfg['search']['facet_definitions']
+    facet_definitions: dict = cfg["search"]["facet_definitions"]
     field_map: dict = suggest_fields_for_alias(facet_definitions)
     fields: list = field_map.get(alias, [])
 
@@ -105,16 +100,24 @@ async def handle_suggest_request(req: request.Request, **kwargs) -> response.HTT
     escaped_query: str = re.escape(query)
 
     try:
-        solr_res: dict = await SolrConnection.term_suggest({"query": escaped_query, "fields": fields})
+        solr_res: dict = await SolrConnection.term_suggest(
+            {"query": escaped_query, "fields": fields}
+        )
     except SolrError:
         msg: str = "Error sending suggest request"
         log.exception(msg)
         return response.text(msg, status=500)
 
-    suggest_results: dict = SuggestionResults(solr_res,
-                                              context={"request": req,
-                                                       "alias": alias,
-                                                       "direct_request": True,
-                                                       "suggest_fields": fields}).data
+    suggest_results: dict = SuggestionResults(
+        solr_res,
+        context={
+            "request": req,
+            "alias": alias,
+            "direct_request": True,
+            "suggest_fields": fields,
+        },
+    ).data
 
-    return await send_json_response(suggest_results, req.app.ctx.config['common']['debug'])
+    return await send_json_response(
+        suggest_results, req.app.ctx.config["common"]["debug"]
+    )
