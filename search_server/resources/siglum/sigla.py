@@ -74,7 +74,7 @@ async def handle_siglum_search_request(req) -> Optional[dict]:
     query_solr_fields: dict[str, str] = {
         "name": "name_al",
         "siglum": "siglum_s",
-        "city": "city_al",
+        "city": "city_ft",
         "country": "country_names_ft",
         "all": "",
     }
