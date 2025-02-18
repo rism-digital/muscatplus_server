@@ -1,4 +1,3 @@
-from typing import Optional
 
 import ypres
 
@@ -21,7 +20,7 @@ class NotesSection(ypres.AsyncDictSerializer):
         # TODO: Change this to just 'notes' when the translation is available.
         return transl.get("records.references_and_notes")
 
-    def get_notes(self, obj: SolrResult) -> Optional[list]:
+    def get_notes(self, obj: SolrResult) -> list | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 

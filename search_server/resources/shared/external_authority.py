@@ -1,4 +1,3 @@
-from typing import Optional
 
 import ypres
 
@@ -25,7 +24,7 @@ class ExternalAuthoritiesSection(ypres.DictSerializer):
                 continue
 
             label: str = base["label"]
-            uri_tmpl: Optional[str] = base.get("ident")
+            uri_tmpl: str | None = base.get("ident")
             full_label: str = f"{label}: {ident}"
 
             record: dict = {}

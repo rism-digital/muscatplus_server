@@ -86,7 +86,7 @@ class Pagination(ypres.DictSerializer):
         # Vary the query dictionary for the first result page
         return remove_query_param(req.url, PAGE_QUERY_PARAM)
 
-    def get_next(self, obj: Results) -> Optional[str]:
+    def get_next(self, obj: Results) -> str | None:
         """
         Pretty self-explanatory. Gets the URL for the next page of results.
         The only corner case is that it will return None if the next page is
@@ -140,7 +140,7 @@ class Pagination(ypres.DictSerializer):
 
         return replace_query_param(url, PAGE_QUERY_PARAM, prev_page)
 
-    def get_last(self, obj: Results) -> Optional[str]:
+    def get_last(self, obj: Results) -> str | None:
         """
         Gets the last page of results. If there is only one page, then this will not
         be included in the pagination result.
@@ -173,12 +173,12 @@ def parse_row_number_from_request(req) -> int:
     :param req:
     :return: the number of rows (i.e. the page size)
     """
-    this_page_qstr: Optional[str] = req.args.get(ROWS_QUERY_PARAM, None)
+    this_page_qstr: str | None = req.args.get(ROWS_QUERY_PARAM, None)
 
     return parse_row_number(req, this_page_qstr)
 
 
-def parse_row_number(req, row_query_string: Optional[str]) -> int:
+def parse_row_number(req, row_query_string: str | None) -> int:
     """
     Parses the row parameter string. If it's None, return the default rows
     Any invalid cases (rows not in the permitted list, rows not an int etc.) will raise a PaginationParseError
@@ -219,7 +219,7 @@ def parse_page_number_from_request(req) -> int:
     return parse_page_number(this_page_qstr)
 
 
-def parse_page_number(page_query_string: Optional[str]) -> int:
+def parse_page_number(page_query_string: str | None) -> int:
     """
     Parses the page string. If it's None, return 1
     Any invalid cases (page < 1, page not an int etc.) will raise a PaginationParseError

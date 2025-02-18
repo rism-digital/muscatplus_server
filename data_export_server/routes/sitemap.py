@@ -1,6 +1,5 @@
 import math
 import re
-from typing import Optional
 
 from sanic import Blueprint, response
 from small_asc.client import Results
@@ -69,7 +68,7 @@ async def sitemap_page(req, page_num: str):
         restype: str = result["type"]
         resid: str = re.sub(ID_SUB, "", result["id"])
 
-        url: Optional[str] = get_url_from_type(req, restype, resid)
+        url: str | None = get_url_from_type(req, restype, resid)
         if not url:
             continue
 

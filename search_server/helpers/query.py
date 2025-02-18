@@ -1,4 +1,3 @@
-from typing import Optional
 
 from luqum.tree import SearchField
 from luqum.visitor import TreeTransformer
@@ -30,7 +29,7 @@ class AliasedSolrFieldTreeTransformer(TreeTransformer):
         self.strict = strict
 
     def visit_search_field(self, node: SearchField, parents) -> SearchField:
-        field_name: Optional[str] = self.allowed_fields.get(node.name)
+        field_name: str | None = self.allowed_fields.get(node.name)
         if field_name is None and self.strict:
             raise UnknownFieldInQueryException(f"Invalid field name {node.name}")
 

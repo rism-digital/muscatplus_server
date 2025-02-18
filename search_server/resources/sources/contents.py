@@ -1,6 +1,5 @@
 import re
 import urllib.parse
-from typing import Optional
 
 import ypres
 
@@ -30,7 +29,7 @@ class ContentsSection(ypres.DictSerializer):
 
         return transl.get("records.title_content_description")
 
-    def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
+    def get_summary(self, obj: SolrResult) -> list[dict] | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -76,7 +75,7 @@ class ContentsSection(ypres.DictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_subjects(self, obj: SolrResult) -> Optional[dict]:
+    def get_subjects(self, obj: SolrResult) -> dict | None:
         if "subjects_json" not in obj:
             return None
 

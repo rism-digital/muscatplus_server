@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 import ypres
 
@@ -63,7 +62,7 @@ class FullSource(BaseSource):
             obj, context={"request": req, "session": self.context.get("session")}
         ).data
 
-    async def get_material_groups(self, obj: SolrResult) -> Optional[dict]:
+    async def get_material_groups(self, obj: SolrResult) -> dict | None:
         if "material_groups_json" not in obj:
             return None
 
@@ -72,7 +71,7 @@ class FullSource(BaseSource):
             obj, context={"request": req, "session": self.context.get("session")}
         ).data
 
-    async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
+    async def get_relationships(self, obj: SolrResult) -> dict | None:
         # sets are cool; two sets are disjoint if they have no keys in common. We
         # can use this to check whether these keys are in the solr result; if not,
         # we have no relationships to render, so we can return.
@@ -90,7 +89,7 @@ class FullSource(BaseSource):
             obj, context={"request": req, "session": self.context.get("session")}
         ).data
 
-    async def get_incipits(self, obj: SolrResult) -> Optional[dict]:
+    async def get_incipits(self, obj: SolrResult) -> dict | None:
         if not obj.get("has_incipits_b", False):
             return None
 
@@ -99,7 +98,7 @@ class FullSource(BaseSource):
             obj, context={"request": req, "session": self.context.get("session")}
         ).data
 
-    async def get_references_notes(self, obj: SolrResult) -> Optional[dict]:
+    async def get_references_notes(self, obj: SolrResult) -> dict | None:
         req = self.context.get("request")
         refnotes: dict = await ReferencesNotesSection(
             obj, context={"request": req, "session": self.context.get("session")}
@@ -114,7 +113,7 @@ class FullSource(BaseSource):
 
         return refnotes
 
-    async def get_exemplars(self, obj: SolrResult) -> Optional[dict]:
+    async def get_exemplars(self, obj: SolrResult) -> dict | None:
         # If this record does not have any physical copies attached to it ("Holdings", either
         # print holdings or a manuscript holding record) then bypass the solr query that will retrieve
         # zero records.
@@ -129,7 +128,7 @@ class FullSource(BaseSource):
             },
         ).data
 
-    async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
+    async def get_external_resources(self, obj: SolrResult) -> dict | None:
         if "external_resources_json" not in obj and not obj.get(
             "has_external_record_b", False
         ):
@@ -143,7 +142,7 @@ class FullSource(BaseSource):
             },
         ).data
 
-    async def get_source_items(self, obj: SolrResult) -> Optional[dict]:
+    async def get_source_items(self, obj: SolrResult) -> dict | None:
         if "num_source_members_i" not in obj:
             return None
 
@@ -155,7 +154,7 @@ class FullSource(BaseSource):
             },
         ).data
 
-    async def get_digital_objects(self, obj: SolrResult) -> Optional[dict]:
+    async def get_digital_objects(self, obj: SolrResult) -> dict | None:
         if not obj.get("has_digital_objects_b", False):
             return None
 
@@ -167,7 +166,7 @@ class FullSource(BaseSource):
             },
         ).data
 
-    async def get_works(self, obj: SolrResult) -> Optional[dict]:
+    async def get_works(self, obj: SolrResult) -> dict | None:
         if "work_node_json" not in obj:
             return None
 
@@ -179,7 +178,7 @@ class FullSource(BaseSource):
             },
         ).data
 
-    def get_dates(self, obj: SolrResult) -> Optional[dict]:
+    def get_dates(self, obj: SolrResult) -> dict | None:
         if "date_ranges_im" not in obj:
             return None
 
@@ -193,7 +192,7 @@ class FullSource(BaseSource):
 
         return {k: v for k, v in d.items() if v}
 
-    def get_properties(self, obj: SolrResult) -> Optional[dict]:
+    def get_properties(self, obj: SolrResult) -> dict | None:
         d: dict = {
             "keyMode": obj.get("key_mode_s"),
             "physicalDimensions": obj.get("physical_dimensions_sm"),

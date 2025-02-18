@@ -1,7 +1,6 @@
-from typing import Optional
 
 
-def get_record_history(obj: dict, transl: dict) -> Optional[dict]:
+def get_record_history(obj: dict, transl: dict) -> dict | None:
     """
     Formats a record history object with the appropriate translation labels.
 

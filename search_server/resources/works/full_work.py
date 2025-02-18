@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import ypres
 from small_asc.client import Results
@@ -16,7 +15,7 @@ from shared_helpers.solr_connection import SolrConnection, SolrResult
 class FullWork(BaseWork):
     sources = ypres.MethodField()
 
-    async def get_sources(self, obj: SolrResult) -> Optional[dict]:
+    async def get_sources(self, obj: SolrResult) -> dict | None:
         req = self.context.get("request")
         work_id: str = obj.get("id")
         source_count: int = obj.get("source_count_i", 0)
@@ -28,14 +27,14 @@ class FullWork(BaseWork):
             "totalItems": source_count,
         }
 
-        items: Optional[list] = await get_source_objects(req, work_id)
+        items: list | None = await get_source_objects(req, work_id)
         if items:
             d["items"] = items
 
         return d
 
 
-async def get_source_objects(req, work_id: str) -> Optional[list]:
+async def get_source_objects(req, work_id: str) -> list | None:
     fq = ["type:source", f"work_ids:{work_id}"]
 
     sort: str = "main_title_ans asc"

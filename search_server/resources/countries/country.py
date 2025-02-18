@@ -1,4 +1,3 @@
-from typing import Optional
 
 import ypres
 
@@ -8,13 +7,13 @@ from shared_helpers.display_translators import (
 )
 
 
-async def handle_country_request(req, country_id: str) -> Optional[dict]:
+async def handle_country_request(req, country_id: str) -> dict | None:
     # Placeholder
     # fq: list = ["type:place"]
     return None
 
 
-async def handle_country_list_request(req) -> Optional[dict]:  # type: ignore
+async def handle_country_list_request(req) -> dict | None:  # type: ignore
     return CountryList(
         SOURCE_SIGLA_COUNTRY_MAP, context={"request": req, "direct_request": True}
     ).data

@@ -1,4 +1,3 @@
-from typing import Optional
 
 from shared_helpers.display_translators import title_json_value_translator
 
@@ -21,7 +20,7 @@ def format_institution_label(obj: dict) -> str:
     # prefer institution records with 'name_s', but if used in
     # holdings, then the field is 'institution_name_s'. Fall back
     # to "[No name]" if neither is found.
-    name: Optional[str] = obj.get("name_s")
+    name: str | None = obj.get("name_s")
     if not name:
         name = obj.get("institution_name_s", "[No name]")
 

@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 import ypres
 from small_asc.client import Results
@@ -35,7 +34,7 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
     def get_total_items(self, obj: SolrResult) -> int:
         return obj.get("num_source_members_i", 0)
 
-    async def get_items(self, obj: SolrResult) -> Optional[list]:
+    async def get_items(self, obj: SolrResult) -> list | None:
         this_id: str = obj.get("id")
         is_composite: bool = obj["record_type_s"] == "composite"
 
@@ -78,7 +77,7 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
                 # This requires a Solr lookup, so it's slower, but it should only happen on a small
                 # proportion of the results.
                 source_id: str = res["source_id"]
-                source_doc: Optional[dict] = await SolrConnection.get(
+                source_doc: dict | None = await SolrConnection.get(
                     source_id, session=self.context.get("session")
                 )
 

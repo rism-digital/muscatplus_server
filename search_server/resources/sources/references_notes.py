@@ -1,4 +1,3 @@
-from typing import Optional
 
 import ypres
 
@@ -28,7 +27,7 @@ class ReferencesNotesSection(ypres.AsyncDictSerializer):
 
         return transl.get("records.references_and_notes")
 
-    def get_notes(self, obj: SolrResult) -> Optional[dict]:
+    def get_notes(self, obj: SolrResult) -> dict | None:
         # 500, 505, 518, 525
         req = self.context.get("request")
         transl: dict = req.ctx.translations
@@ -54,7 +53,7 @@ class ReferencesNotesSection(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    async def get_performance_locations(self, obj: SolrResult) -> Optional[dict]:
+    async def get_performance_locations(self, obj: SolrResult) -> dict | None:
         # 651
         if "location_of_performance_json" not in obj:
             return None
@@ -63,7 +62,7 @@ class ReferencesNotesSection(ypres.AsyncDictSerializer):
             obj, context={"request": self.context.get("request")}
         ).data
 
-    def get_liturgical_festivals(self, obj: SolrResult) -> Optional[dict]:
+    def get_liturgical_festivals(self, obj: SolrResult) -> dict | None:
         # 657
         if "liturgical_festivals_json" not in obj:
             return None
@@ -105,7 +104,7 @@ class LiturgicalFestivalsSection(ypres.DictSerializer):
 
         return transl.get("records.liturgical_festivals")
 
-    def get_items(self, obj: SolrResult) -> Optional[list]:
+    def get_items(self, obj: SolrResult) -> list | None:
         liturgical_festivals = obj.get("liturgical_festivals_json", [])
 
         return LiturgicalFestival(

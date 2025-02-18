@@ -2,7 +2,6 @@ import logging
 import re
 import urllib.parse
 from re import Pattern
-from typing import Optional
 
 from small_asc.client import Results
 
@@ -23,8 +22,8 @@ RANGE_PARSING_REGEX: Pattern = re.compile(
 )
 
 
-def get_facets(req, obj: Results) -> Optional[dict]:
-    facet_result: Optional[dict] = obj.raw_response.get("facets")
+def get_facets(req, obj: Results) -> dict | None:
+    facet_result: dict | None = obj.raw_response.get("facets")
 
     if not facet_result:
         return None
@@ -44,7 +43,7 @@ def get_facets(req, obj: Results) -> Optional[dict]:
     notation_aliases: list = type_config_map.get(FacetTypeValues.NOTATION, [])
     for n_alias in notation_aliases:
         n_translation_key: str = facet_config_map[n_alias]["label"]
-        n_translation: Optional[dict] = transl.get(n_translation_key)
+        n_translation: dict | None = transl.get(n_translation_key)
         n_label: dict = n_translation or {"none": [n_translation_key]}
 
         n_facet_cfg: dict = {
@@ -60,7 +59,7 @@ def get_facets(req, obj: Results) -> Optional[dict]:
     query_aliases: list = type_config_map.get(FacetTypeValues.QUERY, [])
     for q_alias in query_aliases:
         q_translation_key: str = facet_config_map[q_alias]["label"]
-        q_translation: Optional[dict] = transl.get(q_translation_key)
+        q_translation: dict | None = transl.get(q_translation_key)
         q_label: dict = q_translation or {"none": [q_translation_key]}
 
         q_facet_cfg: dict = {
@@ -96,7 +95,7 @@ def get_facets(req, obj: Results) -> Optional[dict]:
         # map. This lets us supply a label for a facet (in english) that doesn't
         # yet have a translation available.
         translation_key: str = facet_config_map[alias]["label"]
-        translation: Optional[dict] = transl.get(translation_key)
+        translation: dict | None = transl.get(translation_key)
         label: dict = translation or {"none": [translation_key]}
 
         cfg: dict = {
@@ -283,8 +282,8 @@ def _create_select_facet(
     alias: str, res: dict, req, cfg: dict, all_translations: dict
 ) -> dict:
     value_buckets = res["buckets"]
-    translation_prefix: Optional[str] = cfg.get("translation_prefix")
-    translation_values: Optional[dict] = cfg.get("translation_values")
+    translation_prefix: str | None = cfg.get("translation_prefix")
+    translation_values: dict | None = cfg.get("translation_values")
 
     default_behaviour: str = cfg.get(
         "default_behaviour", FacetBehaviourValues.INTERSECTION
@@ -317,7 +316,7 @@ def _create_select_facet(
             )
         elif translation_values:
             # look up the Solr value in the translation values in the configuration
-            trans_key: Optional[str] = translation_values.get(solr_value)
+            trans_key: str | None = translation_values.get(solr_value)
             if not trans_key:
                 label = default_label
             else:

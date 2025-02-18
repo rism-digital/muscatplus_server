@@ -2,7 +2,6 @@ import logging
 import operator
 import re
 from collections import defaultdict
-from typing import Optional
 
 import ypres
 from sanic import request, response
@@ -56,7 +55,7 @@ class SuggestionResults(ypres.DictSerializer):
         for f in fields:
             suggest_for_field: list = terms.get(f, [])
             v_iter = iter(suggest_for_field)
-            zipped_list = zip(v_iter, v_iter)
+            zipped_list = zip(v_iter, v_iter, strict=False)
             for label, count in zipped_list:
                 current_count = all_suggestions[label]
                 all_suggestions[label] = current_count + count
@@ -78,13 +77,13 @@ class SuggestionResults(ypres.DictSerializer):
 async def handle_suggest_request(
     req: request.Request, **kwargs
 ) -> response.HTTPResponse:
-    alias: Optional[str] = req.args.get("alias")
+    alias: str | None = req.args.get("alias")
     if not alias:
         return response.text(
             "A suggest request requires an alias parameter", status=400
         )
 
-    query: Optional[str] = req.args.get("q")
+    query: str | None = req.args.get("q")
     if not query:
         return response.text("A suggest request requires a q parameter", status=400)
 

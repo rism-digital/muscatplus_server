@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import ypres
 
@@ -7,8 +6,8 @@ from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrConnection, SolrResult, result_count
 
 
-async def handle_subject_request(req, subject_id: str) -> Optional[dict]:
-    subject_record: Optional[dict] = await SolrConnection.get(f"subject_{subject_id}")
+async def handle_subject_request(req, subject_id: str) -> dict | None:
+    subject_record: dict | None = await SolrConnection.get(f"subject_{subject_id}")
 
     return await Subject(
         subject_record, context={"request": req, "direct_request": True}
@@ -39,21 +38,21 @@ class Subject(ypres.AsyncDictSerializer):
     def get_term(self, obj: SolrResult) -> dict:
         return {"none": [obj.get("term_s")]}
 
-    def get_notes(self, obj: SolrResult) -> Optional[dict]:
+    def get_notes(self, obj: SolrResult) -> dict | None:
         # If we're not retrieving the full record with a direct request, do not show the notes
         if not self.context.get("direct_request"):
             return None
 
         return {"none": [obj.get("notes_sm")]}
 
-    def get_alternate_terms(self, obj: SolrResult) -> Optional[dict]:
+    def get_alternate_terms(self, obj: SolrResult) -> dict | None:
         # If we're not retrieving the full record with a direct request, do not show the alternate terms
         if not self.context.get("direct_request"):
             return None
 
         return {"none": [obj.get("alternate_terms_sm")]}
 
-    async def get_sources(self, obj: SolrResult) -> Optional[dict]:
+    async def get_sources(self, obj: SolrResult) -> dict | None:
         # Only give a list of sources for this term if we are looking at a dedicated page for this subject heading, and
         # it is not embedded in another type of record.
         if not self.context.get("direct_request"):

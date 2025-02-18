@@ -1,7 +1,7 @@
 import itertools
 import logging
 import re
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import ypres
 
@@ -62,14 +62,14 @@ class Relationship(ypres.AsyncDictSerializer):
     name = ypres.MethodField()
     note = ypres.MethodField()
 
-    def get_role(self, obj: dict) -> Optional[dict]:
+    def get_role(self, obj: dict) -> dict | None:
         if "relationship" not in obj:
             return None
 
         relationship_value: str = obj["relationship"]
         req = self.context.get("request")
         transl: dict = req.ctx.translations
-        relationship_translator: Optional[Callable] = _relationship_translator(obj)
+        relationship_translator: Callable | None = _relationship_translator(obj)
         if not relationship_translator:
             return {"none": ["[Unknown relationship]"]}
 
@@ -86,7 +86,7 @@ class Relationship(ypres.AsyncDictSerializer):
             "id": f"{rel}",
         }
 
-    def get_qualifier(self, obj: dict) -> Optional[dict]:
+    def get_qualifier(self, obj: dict) -> dict | None:
         if "qualifier" not in obj:
             return None
 
@@ -99,7 +99,7 @@ class Relationship(ypres.AsyncDictSerializer):
             "id": f"rism:{obj.get('qualifier')}",
         }
 
-    def get_related_to(self, obj: dict) -> Optional[dict]:
+    def get_related_to(self, obj: dict) -> dict | None:
         req = self.context.get("request")
         if "person_id" in obj:
             return _related_to_person(req, obj)
@@ -113,7 +113,7 @@ class Relationship(ypres.AsyncDictSerializer):
             # Something is wrong, but we can't find out what to display.
             return None
 
-    def get_name(self, obj: dict) -> Optional[dict]:
+    def get_name(self, obj: dict) -> dict | None:
         # This is displayed if all we have for the related-to is a string, not a linked
         # object.
         # if any of these keys are in the object, then we have a relationship and it should be handled
@@ -131,7 +131,7 @@ class Relationship(ypres.AsyncDictSerializer):
             # to do anything with this? Just bail, and hope someone fixes the data.
             return None
 
-    def get_note(self, obj: dict) -> Optional[dict]:
+    def get_note(self, obj: dict) -> dict | None:
         if "note" not in obj:
             return None
 
@@ -191,11 +191,11 @@ def _related_to_source(req, obj: dict) -> dict:
 
     source_id: str
     ident: str
-    proj: Optional[str] = obj.get("project")
+    proj: str | None = obj.get("project")
 
     if proj and proj in {"diamm", "cantus"}:
         source_id = re.sub(PROJECT_ID_SUB, "", obj["source_id"])
-        prefix: Optional[str] = EXTERNAL_IDS.get(obj["project"], {}).get("ident")
+        prefix: str | None = EXTERNAL_IDS.get(obj["project"], {}).get("ident")
         if not prefix:
             # If, for some reason this isn't found, return the empty dict.
             log.error("A URI prefix was not found for project %s", obj["project"])
@@ -212,7 +212,7 @@ def _related_to_source(req, obj: dict) -> dict:
     return {"id": ident, "label": source_title, "type": "rism:Source"}
 
 
-def _relationship_translator(obj: dict) -> Optional[Callable]:
+def _relationship_translator(obj: dict) -> Callable | None:
     """
     We need different role translator functions for different types
     of relationships. This returns a function that is a suitable translator

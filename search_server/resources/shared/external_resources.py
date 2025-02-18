@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import ypres
 
@@ -30,7 +29,7 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
 
         return transl.get("records.related_resources", {})
 
-    def get_items(self, obj: SolrResult) -> Optional[list[dict]]:
+    def get_items(self, obj: SolrResult) -> list[dict] | None:
         if "external_resources" in obj:
             # If we're serializing from a JSON field, then this will be the key
             res = obj["external_resources"]
@@ -44,7 +43,7 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
             res, many=True, context={"request": self.context.get("request")}
         ).data
 
-    def get_external_records(self, obj: dict) -> Optional[list[dict]]:
+    def get_external_records(self, obj: dict) -> list[dict] | None:
         if not obj.get("has_external_record_b", False):
             return None
 
@@ -55,7 +54,7 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
         ret = []
 
         for r in external_records:
-            rec: Optional[dict] = _create_external_record_link(r, transl)
+            rec: dict | None = _create_external_record_link(r, transl)
             if not rec:
                 continue
 
@@ -64,9 +63,9 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
         return ret
 
 
-def _create_external_record_link(record: dict, translations: dict) -> Optional[dict]:
+def _create_external_record_link(record: dict, translations: dict) -> dict | None:
     project: str = record["project"]
-    ident: Optional[str] = EXTERNAL_IDS.get(project, {}).get("ident")
+    ident: str | None = EXTERNAL_IDS.get(project, {}).get("ident")
     if not ident:
         return None
 
@@ -115,7 +114,7 @@ class ExternalResource(ypres.DictSerializer):
     label = ypres.MethodField()
     resource_type = ypres.MethodField(label="resourceType")
 
-    def get_url(self, obj: dict) -> Optional[str]:
+    def get_url(self, obj: dict) -> str | None:
         return obj.get("url")
 
     def get_label(self, obj: dict) -> dict:
@@ -131,7 +130,7 @@ class ExternalResource(ypres.DictSerializer):
 
     def get_resource_type(self, obj: dict) -> str:
         rtype: str
-        link_type: Optional[str] = obj.get("link_type")
+        link_type: str | None = obj.get("link_type")
 
         if link_type in (
             "IIIF",

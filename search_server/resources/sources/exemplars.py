@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import ypres
 from small_asc.client import Results
@@ -19,8 +18,8 @@ from shared_helpers.identifiers import ID_SUB, PROJECT_ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 
-async def handle_exemplar_section_request(req, source_id: str) -> Optional[dict]:
-    source_record: Optional[dict] = await SolrConnection.get(f"source_{source_id}")
+async def handle_exemplar_section_request(req, source_id: str) -> dict | None:
+    source_record: dict | None = await SolrConnection.get(f"source_{source_id}")
 
     if not source_record:
         return None
@@ -32,8 +31,8 @@ async def handle_exemplar_section_request(req, source_id: str) -> Optional[dict]
 
 async def handle_exemplar_request(
     req, source_id: str, holding_id: str
-) -> Optional[dict]:
-    holding_record: Optional[dict] = await SolrConnection.get(f"holding_{holding_id}")
+) -> dict | None:
+    holding_record: dict | None = await SolrConnection.get(f"holding_{holding_id}")
 
     if not holding_record:
         # MSS records are assigned a holding ID comprised of the institution ID and the source ID. If
@@ -76,7 +75,7 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
 
         return transl.get("records.exemplars", {})
 
-    async def get_items(self, obj: SolrResult) -> Optional[dict]:
+    async def get_items(self, obj: SolrResult) -> dict | None:
         if (
             obj.get("is_contents_record_b", False)
             and obj.get("source_type_s", "") != "manuscript"
@@ -177,7 +176,7 @@ class Exemplar(ypres.AsyncDictSerializer):
 
         return {"none": [title]}
 
-    def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
+    def get_summary(self, obj: SolrResult) -> list[dict] | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -211,7 +210,7 @@ class Exemplar(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config)
 
-    def get_notes(self, obj: SolrResult) -> Optional[list]:
+    def get_notes(self, obj: SolrResult) -> list | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -225,7 +224,7 @@ class Exemplar(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_held_by(self, obj: dict) -> Optional[dict]:
+    def get_held_by(self, obj: dict) -> dict | None:
         # This should never happen, but it did happen due to a buggy import so we check it first.
         if "institution_id" not in obj:
             return None
@@ -246,7 +245,7 @@ class Exemplar(ypres.AsyncDictSerializer):
             "label": {"none": [f"{institution_name}"]},
         }
 
-    async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
+    async def get_relationships(self, obj: SolrResult) -> dict | None:
         if {
             "related_people_json",
             "related_places_json",
@@ -259,7 +258,7 @@ class Exemplar(ypres.AsyncDictSerializer):
             obj, context={"request": req, "session": self.context.get("session")}
         ).data
 
-    async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
+    async def get_external_resources(self, obj: SolrResult) -> dict | None:
         if "external_resources_json" not in obj:
             return None
 
@@ -271,12 +270,12 @@ class Exemplar(ypres.AsyncDictSerializer):
             },
         ).data
 
-    async def get_bound_with(self, obj: SolrResult) -> Optional[dict]:
+    async def get_bound_with(self, obj: SolrResult) -> dict | None:
         if "composite_parent_id" not in obj:
             return None
 
         composite_parent: str = obj["composite_parent_id"]
-        source: Optional[SolrResult] = await SolrConnection.get(composite_parent)
+        source: SolrResult | None = await SolrConnection.get(composite_parent)
         if not source:
             return None
 

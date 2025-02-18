@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from typing import Optional
 
 import ypres
 from small_asc.client import Results, SolrError
@@ -38,21 +37,21 @@ class BaseSearchResults(ypres.AsyncSerializer):
         req = self.context.get("request")
         return req.url
 
-    def get_view(self, obj: Results) -> Optional[dict]:
+    def get_view(self, obj: Results) -> dict | None:
         is_probe: bool = self.context.get("probe_request", False)
         if is_probe:
             return None
 
         return Pagination(obj, context={"request": self.context.get("request")}).data
 
-    def get_facets(self, obj: Results) -> Optional[dict]:
+    def get_facets(self, obj: Results) -> dict | None:
         is_probe: bool = self.context.get("probe_request", False)
         if is_probe:
             return None
 
         return get_facets(self.context.get("request"), obj)
 
-    def get_sorts(self, obj: Results) -> Optional[list]:
+    def get_sorts(self, obj: Results) -> list | None:
         is_probe: bool = self.context.get("probe_request", False)
         if is_probe:
             return None
@@ -60,7 +59,7 @@ class BaseSearchResults(ypres.AsyncSerializer):
         is_contents: bool = self.context.get("is_contents", False)
         return get_sorting(self.context.get("request"), is_contents)
 
-    def get_page_sizes(self, obj: Results) -> Optional[list[str]]:
+    def get_page_sizes(self, obj: Results) -> list[str] | None:
         is_probe: bool = self.context.get("probe_request", False)
         if is_probe:
             return None
@@ -71,7 +70,7 @@ class BaseSearchResults(ypres.AsyncSerializer):
 
         return pgsizes
 
-    def get_query_fields(self, obj: Results) -> Optional[list]:
+    def get_query_fields(self, obj: Results) -> list | None:
         req = self.context.get("request")
         cfg: dict = req.app.ctx.config
         transl: dict = req.app.ctx.translations
@@ -83,7 +82,7 @@ class BaseSearchResults(ypres.AsyncSerializer):
 
         for qfield in qfields:
             q_translation_key: str = qfield["label"]
-            q_translation: Optional[dict] = transl.get(q_translation_key)
+            q_translation: dict | None = transl.get(q_translation_key)
             q_label: dict = q_translation or {"none": [q_translation_key]}
             query_fields.append(
                 {
@@ -95,11 +94,11 @@ class BaseSearchResults(ypres.AsyncSerializer):
         return query_fields or None
 
     @abstractmethod
-    def get_modes(self, obj: Results) -> Optional[dict]:
+    def get_modes(self, obj: Results) -> dict | None:
         return None
 
     @abstractmethod
-    async def get_items(self, obj: Results) -> Optional[list]:
+    async def get_items(self, obj: Results) -> list | None:
         return None
 
 
@@ -107,7 +106,7 @@ async def serialize_response(
     req,
     solr_params: dict,
     serializer_cls: type[BaseSearchResults],
-    extra_context: Optional[dict] = None,
+    extra_context: dict | None = None,
 ) -> dict:
     """
     Takes an incoming search request, performs a Solr query, and serializes
@@ -130,7 +129,7 @@ async def serialize_response(
     )
 
     try:
-        solr_res: Optional[Results] = await execute_query(solr_params, probe=probe)
+        solr_res: Results | None = await execute_query(solr_params, probe=probe)
     except SolrError:
         raise
 

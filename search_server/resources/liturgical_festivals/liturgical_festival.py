@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import ypres
 
@@ -8,8 +7,8 @@ from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrConnection
 
 
-async def handle_festival_request(req, festival_id: str) -> Optional[dict]:
-    record: Optional[dict] = await SolrConnection.get(f"id:festival_{festival_id}")
+async def handle_festival_request(req, festival_id: str) -> dict | None:
+    record: dict | None = await SolrConnection.get(f"id:festival_{festival_id}")
 
     if not record:
         return None
@@ -39,7 +38,7 @@ class LiturgicalFestival(ypres.DictSerializer):
         else:
             return {"none": [f"{obj.get('name_s')}"]}
 
-    def get_summary(self, obj: dict) -> Optional[list]:
+    def get_summary(self, obj: dict) -> list | None:
         if not self.context.get("direct_request"):
             return None
 

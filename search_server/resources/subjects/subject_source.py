@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from small_asc.client import Results
 
@@ -22,7 +21,7 @@ async def handle_subject_source_request(req, subject_id: str) -> dict:
 
 
 class SubjectResults(BaseSearchResults):
-    async def get_items(self, obj: Results) -> Optional[list]:
+    async def get_items(self, obj: Results) -> list | None:
         if obj.hits == 0:
             return None
 

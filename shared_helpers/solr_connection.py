@@ -1,5 +1,5 @@
 import logging
-from typing import NewType, Optional
+from typing import NewType
 
 import yaml
 from small_asc.client import Results, Solr
@@ -59,7 +59,7 @@ async def result_count(**kwargs) -> int:
 
 
 async def is_composite(source_id: str) -> bool:
-    res: Optional[dict] = await SolrConnection.get(source_id, ["record_type_s"])
+    res: dict | None = await SolrConnection.get(source_id, ["record_type_s"])
     return (
         res["record_type_s"] == "composite" if res and "record_type_s" in res else False
     )
