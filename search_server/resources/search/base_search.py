@@ -38,9 +38,9 @@ class BaseSearchResults(ypres.AsyncSerializer):
         return req.url
 
     def get_view(self, obj: Results) -> dict | None:
-        is_probe: bool = self.context.get("probe_request", False)
-        if is_probe:
-            return None
+        # is_probe: bool = self.context.get("probe_request", False)
+        # if is_probe:
+        #     return None
 
         return Pagination(obj, context={"request": self.context.get("request")}).data
 
