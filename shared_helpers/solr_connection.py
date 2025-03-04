@@ -29,18 +29,18 @@ log.debug("Solr connection set to %s", solr_url)
 SolrResult = NewType("SolrResult", dict)
 
 
-async def execute_query(solr_params: dict, probe: bool = False) -> Results:
+async def execute_query(solr_params: dict, handler: str | None = None) -> Results:
     """
     Executes a search query. Expects a pre-compiled dictionary of parameters to pass to Solr. Raises SolrError
     if there was a problem with the query.
 
     :param solr_params: A dictionary representing a JSON Search API query for Solr.
-    :param probe: Whether the query is a probe query or not.
+    :param handler: The query handler to use
     :return: A Solr Results object with the results of a query.
     """
     extra_args = {}
-    if probe:
-        extra_args["handler"] = "/probe"
+    if handler:
+        extra_args["handler"] = handler
     solr_res: Results = await SolrConnection.search(solr_params, **extra_args)
     return solr_res
 

@@ -622,12 +622,12 @@ class IncipitSearchResult(ypres.DictSerializer):
 
 def _render_incipit_pae(obj: SolrResult) -> tuple | None:
     pae_code: str | None = obj.get("original_pae_sni")
-    is_mensural: bool = obj.get("is_mensural_b", False)
 
     if not pae_code:
         log.debug("no PAE code")
         return None
 
+    is_mensural: bool = obj.get("is_mensural_b", False)
     rendered_pae: tuple | None = render_pae(
         pae_code, use_crc=True, is_mensural=is_mensural
     )

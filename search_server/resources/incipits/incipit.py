@@ -202,7 +202,7 @@ class Incipit(ypres.AsyncDictSerializer):
 
     def get_incip_id(self, obj: dict) -> str:
         req = self.context.get("request")
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+        source_id: str = re.sub(ID_SUB, "", obj["source_id"])
         work_num: str = f"{obj.get('work_num_s')}"
 
         return get_identifier(

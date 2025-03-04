@@ -1,3 +1,4 @@
+import logging
 from abc import abstractmethod
 
 import ypres
@@ -7,6 +8,8 @@ from search_server.resources.search.facets import get_facets
 from search_server.resources.search.pagination import Pagination
 from search_server.resources.search.sorting import get_sorting
 from shared_helpers.solr_connection import execute_query
+
+log = logging.getLogger("mp_server")
 
 
 class BaseSearchResults(ypres.AsyncSerializer):
@@ -123,13 +126,21 @@ async def serialize_response(
     # do not need fulltext searches. However, if a fulltext search is provided then the
     # probe request will be routed to the full search handler. This is toggled by the lack of a
     # "query" key in the solr request, or if the solr request is set to "*:*".
-    probe = bool(extra_context and "probe_request" in extra_context)
-    probe &= bool(
+    is_probe = bool(extra_context and "probe_request" in extra_context)
+    is_probe &= bool(
         solr_params and ("query" not in solr_params or solr_params["query"] == "*:*")
     )
+    is_search = bool(extra_context and "search_request" in extra_context)
+
+    handler = None
+    if is_probe:
+        handler = "/probe"
+    elif is_search:
+        log.debug("Using the search handler")
+        handler = "/search"
 
     try:
-        solr_res: Results | None = await execute_query(solr_params, probe=probe)
+        solr_res: Results | None = await execute_query(solr_params, handler=handler)
     except SolrError:
         raise
 
