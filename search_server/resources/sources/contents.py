@@ -83,7 +83,6 @@ class ContentsSection(ypres.DictSerializer):
             obj,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 
@@ -104,7 +103,6 @@ class SourceSubjectsSection(ypres.DictSerializer):
             many=True,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 

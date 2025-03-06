@@ -59,7 +59,7 @@ class FullSource(BaseSource):
     def get_contents(self, obj: SolrResult) -> dict:
         req = self.context.get("request")
         return ContentsSection(
-            obj, context={"request": req, "session": self.context.get("session")}
+            obj, context={"request": req}
         ).data
 
     async def get_material_groups(self, obj: SolrResult) -> dict | None:
@@ -68,7 +68,7 @@ class FullSource(BaseSource):
 
         req = self.context.get("request")
         return await MaterialGroupsSection(
-            obj, context={"request": req, "session": self.context.get("session")}
+            obj, context={"request": req}
         ).data
 
     async def get_relationships(self, obj: SolrResult) -> dict | None:
@@ -86,7 +86,7 @@ class FullSource(BaseSource):
 
         req = self.context.get("request")
         return await RelationshipsSection(
-            obj, context={"request": req, "session": self.context.get("session")}
+            obj, context={"request": req}
         ).data
 
     async def get_incipits(self, obj: SolrResult) -> dict | None:
@@ -95,13 +95,13 @@ class FullSource(BaseSource):
 
         req = self.context.get("request")
         return await IncipitsSection(
-            obj, context={"request": req, "session": self.context.get("session")}
+            obj, context={"request": req}
         ).data
 
     async def get_references_notes(self, obj: SolrResult) -> dict | None:
         req = self.context.get("request")
         refnotes: dict = await ReferencesNotesSection(
-            obj, context={"request": req, "session": self.context.get("session")}
+            obj, context={"request": req}
         ).data
 
         # if the only two keys in the references and notes section is 'label' and 'type'
@@ -124,7 +124,6 @@ class FullSource(BaseSource):
             obj,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 
@@ -138,7 +137,6 @@ class FullSource(BaseSource):
             obj,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 
@@ -150,7 +148,6 @@ class FullSource(BaseSource):
             obj,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 
@@ -162,7 +159,6 @@ class FullSource(BaseSource):
             obj,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 
@@ -174,7 +170,6 @@ class FullSource(BaseSource):
             obj,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 

@@ -50,7 +50,6 @@ class RelationshipsSection(ypres.AsyncDictSerializer):
             many=True,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 

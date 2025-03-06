@@ -54,7 +54,6 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
         source_results: Results = await SolrConnection.search(
             {"query": "*:*", "filter": fq, "sort": sort, "limit": 100},
             cursor=True,
-            session=self.context.get("session"),
         )
 
         if source_results.hits == 0:
@@ -69,7 +68,6 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
                         res,
                         context={
                             "request": self.context.get("request"),
-                            "session": self.context.get("session"),
                         },
                     ).data
                 )
@@ -78,7 +76,7 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
                 # proportion of the results.
                 source_id: str = res["source_id"]
                 source_doc: dict | None = await SolrConnection.get(
-                    source_id, session=self.context.get("session")
+                    source_id,
                 )
 
                 if not source_doc:
@@ -90,7 +88,6 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
                         source_doc,
                         context={
                             "request": self.context.get("request"),
-                            "session": self.context.get("session"),
                         },
                     ).data
                 )

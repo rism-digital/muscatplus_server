@@ -91,7 +91,6 @@ class BaseSource(ypres.AsyncDictSerializer):
             context={
                 "request": self.context.get("request"),
                 "reltype": "rism:Creator",
-                "session": self.context.get("session"),
             },
         ).data
 

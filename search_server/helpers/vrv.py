@@ -4,7 +4,7 @@ import re
 import tempfile
 import urllib.parse
 
-import aiohttp
+import httpx
 import verovio
 from orjson import orjson
 
@@ -99,21 +99,18 @@ async def render_url(url: str) -> str | None:
     :param url:
     :return:
     """
-    async with aiohttp.ClientSession() as client:
+    async with httpx.AsyncClient() as client:
         try:
             res = await client.get(url)
-        except aiohttp.ClientConnectionError:
-            log.error("Connection to server timed out for %s", url)
-            return None
-        except aiohttp.ClientError:
-            log.error("Unknown connection error for %s", url)
+        except httpx.RequestError:
+            log.error("Request error for %s", url)
             return None
 
-        if res.status != 200:
-            log.error("Server responded with non-success status code: %s", res.status)
+        if res.status_code != 200:
+            log.error("Server responded with non-success status code: %s", res.status_code)
             return None
 
-        mei: str = await res.text()
+        mei: str = res.text
         vrv_opts: dict = VEROVIO_BASE_OPTIONS.copy()
         vrv_opts.update(
             {

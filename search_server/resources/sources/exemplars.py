@@ -92,7 +92,6 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
         results: Results = await SolrConnection.search(
             {"query": "*:*", "filter": fq, "sort": sort, "limit": 100},
             cursor=True,
-            session=self.context.get("session"),
         )
 
         if results.hits == 0:
@@ -103,7 +102,6 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
             many=True,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 
@@ -255,7 +253,7 @@ class Exemplar(ypres.AsyncDictSerializer):
 
         req = self.context.get("request")
         return await RelationshipsSection(
-            obj, context={"request": req, "session": self.context.get("session")}
+            obj, context={"request": req,}
         ).data
 
     async def get_external_resources(self, obj: SolrResult) -> dict | None:
@@ -266,7 +264,6 @@ class Exemplar(ypres.AsyncDictSerializer):
             obj,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 

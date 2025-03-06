@@ -170,7 +170,6 @@ class IncipitsSection(ypres.AsyncDictSerializer):
         results: Results = await SolrConnection.search(
             {"query": "*:*", "filter": fq, "sort": sort},
             cursor=True,
-            session=self.context.get("session"),
         )
 
         # It will be strange for this to happen, since we only
@@ -185,7 +184,6 @@ class IncipitsSection(ypres.AsyncDictSerializer):
             many=True,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 
@@ -223,7 +221,7 @@ class Incipit(ypres.AsyncDictSerializer):
                 "records.item_part_of"
             ),  # TODO: This should probably be changed to 'incipit part of'
             "source": await BaseSource(
-                obj, context={"request": req, "session": self.context.get("session")}
+                obj, context={"request": req,}
             ).data,
         }
 

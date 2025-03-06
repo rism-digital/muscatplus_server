@@ -49,7 +49,6 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
         results: Results = await SolrConnection.search(
             {"query": "*:*", "filter": fq},
             cursor=True,
-            session=self.context.get("session"),
         )
 
         if results.hits == 0:
@@ -60,7 +59,6 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
             many=True,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 
