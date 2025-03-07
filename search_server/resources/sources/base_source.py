@@ -129,6 +129,7 @@ class BaseSource(ypres.AsyncDictSerializer):
 
         return {
             "sectionLabel": transl.get("records.item_part_of"),
+            "type": "rism:PartOfSection",
             "source": {
                 "id": ident,
                 "type": "rism:Source",

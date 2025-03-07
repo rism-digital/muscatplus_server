@@ -361,6 +361,7 @@ class PersonSearchResult(ypres.DictSerializer):
         field_config = {
             "profession_function_sm": ("roles", "records.profession_or_function", None),
             "total_sources_i": ("numSources", "records.sources", None),
+            "gender_s": ("gender", "records.gender", None)
         }
 
         req = self.context.get("request")
@@ -563,6 +564,7 @@ class IncipitSearchResult(ypres.DictSerializer):
             ),
             "text_incipit_sm": ("textIncipit", "records.text_incipit", None),
             "voice_instrument_s": ("voiceInstrument", "records.voice_instrument", None),
+            "original_pae_sni": ("paeCode", "records.plaine_and_easie", None),
         }
 
         req = self.context.get("request")
@@ -582,13 +584,22 @@ class IncipitSearchResult(ypres.DictSerializer):
         parent_source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
         transl: dict = req.ctx.translations
 
+        record_type: str = obj.get("record_type_s", "item")
+        source_type: str = obj.get("source_type_s", "unspecified")
+        content_types: list[str] = obj.get("content_types_sm", [])
+
+        source_types_block: dict = create_source_types_block(
+            record_type, source_type, content_types, transl
+        )
+
         return {
-            "label": transl.get("records.item_part_of"),
+            "sectionLabel": transl.get("records.item_part_of"),
             "type": "rism:PartOfSection",
             "source": {
                 "id": get_identifier(req, "sources.source", source_id=parent_source_id),
                 "type": "rism:Source",
                 "typeLabel": transl.get("records.source"),
+                "sourceTypes": source_types_block,
                 "label": {"none": [parent_title]},
             },
         }
