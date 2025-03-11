@@ -62,6 +62,10 @@ EXTERNAL_IDS: dict = {
         "label": "Cantus: A Database for Latin Ecclesiastical Chant",
         "ident": "https://cantusdatabase.org/{ident}",
     },
+    "cmo": {
+        "label": "Corpus Musicae Ottomanicae (CMO)",
+        "ident": "https://corpus-musicae-ottomanicae.de/receive/{ident}"
+    }
 }
 
 
