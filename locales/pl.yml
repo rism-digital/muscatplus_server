@@ -280,6 +280,8 @@ pl:
     alternate_spelling: Alternatywna pisownia
     alternative_work_title: Alternatywny tytuł dzieła
     amount: Liczba
+    annex: Annex
+    appendix: Załącznik
     archive: Archiwum
     arrangement: Aranżacja
     arrangement_statement: Uwaga do aranżacji
@@ -460,7 +462,7 @@ pl:
     excerpts: Wyjątki
     exemplar: Egzemplarz
     exemplars: Egzemplarzu
-    expansion: Expansion
+    expansion: Ekspansja
     extent: Zakres
     extent_parts: Objętność
     external_resource: Zasób zewnętrzny
@@ -694,6 +696,7 @@ pl:
     number: Liczba
     number_page: Numer / strona
     number_part_section: Numer części / sekcji dzieła
+    number_volume: Numer/wolumin
     number_volume_part: Numer wolumenu / części
     numbers_code_fields: Pola liczb i kodów
     numeric_designation: Oznaczenie numeryczne
@@ -742,6 +745,8 @@ pl:
     performances: Wykonania
     performer: Wykonawca
     performer_note: Uwaga o wykonaniu
+    periodical_or_series: Periodyk lub seria
+    periodical_or_series_title: Tytuł periodyka lub serii
     person: Osoba
     person_name: Imię i nazwisko
     personal_name: Imię i nazwisko
@@ -827,6 +832,7 @@ pl:
     series: Seria
     series_added_entry: Dodatkowe wpisy tytułów
     series_statement: Pola uwag do serii
+    section: Sekcja
     shelfmark: Sygnatura
     shelfmark_olim: Poprzednia sygnatura (olim)
     short_title: Skrócony tytuł
@@ -922,6 +928,7 @@ pl:
     woodwinds: Instrumenty dęte drewniane
     work: Dzieło
     work_catalog_note: Notatka do katalogu utworów
+    work_list: Work list
     work_node: Odniesienie do Dzieła zewnętrznego (Work node)
     work_number: Numer dzieła
     work_tag: tag edycji Dzieła

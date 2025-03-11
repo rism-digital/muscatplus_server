@@ -280,6 +280,8 @@ fr:
     alternate_spelling: Autres formes
     alternative_work_title: Titre alternatif
     amount: Nombre
+    annex: Annexe
+    appendix: Appendice
     archive: Archives
     arrangement: Arrangement
     arrangement_statement: Mention d'arrangement
@@ -694,6 +696,7 @@ fr:
     number: Nombre
     number_page: Numéro/page
     number_part_section: Numéro de partie / section d'une œuvre
+    number_volume: Numéro/volume
     number_volume_part: Numéro du volume ou de la partie
     numbers_code_fields: Numéros et codes
     numeric_designation: Désignation numérique
@@ -742,6 +745,8 @@ fr:
     performances: Exécutions
     performer: Interprète
     performer_note: Remarque sur les interprètes
+    periodical_or_series: Revue ou série
+    periodical_or_series_title: Titre de la revue ou série
     person: Personne
     person_name: Nom de la personne
     personal_name: Nom de la personne
@@ -827,6 +832,7 @@ fr:
     series: Série
     series_added_entry: Champs de collection
     series_statement: Mentions de collection
+    section: Section
     shelfmark: Cote
     shelfmark_olim: Ancienne cote (olim)
     short_title: Titre abrégé
@@ -922,6 +928,7 @@ fr:
     woodwinds: Bois
     work: Oeuvre
     work_catalog_note: Note sur le catalogue des œuvres
+    work_list: Liste des œuvres
     work_node: Référence externe d'œuvre (Work node)
     work_number: Numéro de l'œuvre
     work_tag: Étiquette de révision
