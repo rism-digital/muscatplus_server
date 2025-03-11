@@ -77,6 +77,10 @@ async def handle_contents_probe_request(req, source_id: str) -> dict:
     except InvalidQueryException:
         raise
 
-    extra_context: dict = {"direct_request": True}
+    extra_context: dict = {
+        "direct_request": True,
+        "probe_request": True,
+        "query_validation": request_compiler.query_report,
+    }
 
     return await serialize_response(req, solr_params, SearchResults, extra_context)
