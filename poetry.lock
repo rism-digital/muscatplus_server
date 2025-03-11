@@ -2495,7 +2495,7 @@ name = "ypres"
 version = "1.0.0"
 description = "ypres is a simple object serialization framework built for speed."
 optional = false
-python-versions = ">=3.11,<4.0"
+python-versions = ">=3.10,<4.0"
 groups = ["main"]
 files = []
 develop = false
@@ -2504,7 +2504,7 @@ develop = false
 type = "git"
 url = "https://github.com/rism-digital/ypres.git"
 reference = "main"
-resolved_reference = "d002a39ac6be1c6a7fcbe4d0ef3e07f1be266cb8"
+resolved_reference = "492eef3ba32b6551b2f1d9571b2712927a4e46e4"
 
 [metadata]
 lock-version = "2.1"
