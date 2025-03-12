@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import ypres
 
@@ -53,7 +52,7 @@ class BaseInstitution(ypres.AsyncDictSerializer):
 
         return transl.get("records.institution")
 
-    def get_organization_details(self, obj: SolrResult) -> Optional[dict]:
+    def get_organization_details(self, obj: SolrResult) -> dict | None:
         org_deets: dict = OrganizationDetails(
             obj, context={"request": self.context.get("request")}
         ).data
@@ -80,7 +79,7 @@ class OrganizationDetails(ypres.DictSerializer):
 
         return transl.get("records.summary")
 
-    def get_summary(self, obj: SolrResult) -> Optional[dict]:
+    def get_summary(self, obj: SolrResult) -> dict | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 

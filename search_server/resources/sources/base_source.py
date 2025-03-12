@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 import ypres
 
@@ -83,7 +82,7 @@ class BaseSource(ypres.AsyncDictSerializer):
 
         return transl.get("records.source")
 
-    async def get_creator(self, obj: SolrResult) -> Optional[dict]:
+    async def get_creator(self, obj: SolrResult) -> dict | None:
         if "creator_json" not in obj:
             return None
 
@@ -92,11 +91,10 @@ class BaseSource(ypres.AsyncDictSerializer):
             context={
                 "request": self.context.get("request"),
                 "reltype": "rism:Creator",
-                "session": self.context.get("session"),
             },
         ).data
 
-    def get_part_of(self, obj: SolrResult) -> Optional[dict]:
+    def get_part_of(self, obj: SolrResult) -> dict | None:
         # This source is not part of another source; return None
         if "source_membership_json" not in obj:
             return None
@@ -108,9 +106,9 @@ class BaseSource(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         parent_title: str = source_membership.get("main_title", "[No title]")
-        parent_shelfmark: Optional[str] = source_membership.get("shelfmark")
-        parent_siglum: Optional[str] = source_membership.get("siglum")
-        parent_material_types: Optional[list] = source_membership.get("material_types")
+        parent_shelfmark: str | None = source_membership.get("shelfmark")
+        parent_siglum: str | None = source_membership.get("siglum")
+        parent_material_types: list | None = source_membership.get("material_types")
 
         # NB: This should match the format in formatters.format_source_label! But since
         # we're dealing with a JSON field the names are different, and we only do this
@@ -131,6 +129,7 @@ class BaseSource(ypres.AsyncDictSerializer):
 
         return {
             "sectionLabel": transl.get("records.item_part_of"),
+            "type": "rism:PartOfSection",
             "source": {
                 "id": ident,
                 "type": "rism:Source",
@@ -143,7 +142,7 @@ class BaseSource(ypres.AsyncDictSerializer):
     # This method will get overridden in the 'full source' class, and will be returned as 'None' since
     # the summary is part of the 'contents' section. But in the base source view it will deliver some basic
     # identification fields.
-    def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
+    def get_summary(self, obj: SolrResult) -> list[dict] | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 

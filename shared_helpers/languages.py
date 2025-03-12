@@ -4,7 +4,6 @@ import logging
 import os
 import re
 from pathlib import Path
-from typing import Optional, Union
 
 import yaml
 
@@ -77,7 +76,7 @@ def __flatten(d: dict) -> dict:
     return out
 
 
-def load_translations(path: str) -> Optional[dict]:
+def load_translations(path: str) -> dict | None:
     """Takes a path to a set of locale yml files, and returns a dictionary of translations, with each unique key
      pointing to all available translations of that key. For example:
 
@@ -133,7 +132,7 @@ def load_translations(path: str) -> Optional[dict]:
     return translations
 
 
-def languages_translator(value: Union[str, list], translations: dict) -> dict:
+def languages_translator(value: str | list, translations: dict) -> dict:
     """
     A value translator that takes a language code and returns
     the translated value for that language, e.g., "ger" -> "German" for

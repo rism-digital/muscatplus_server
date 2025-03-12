@@ -1,7 +1,6 @@
 import logging
 import urllib.parse
 from collections import defaultdict
-from typing import Optional
 
 import small_asc.query
 from small_asc.query import FieldNotFoundError, QueryParseError
@@ -216,7 +215,7 @@ class SearchRequest:
         self.filters: list = []
         self.sorts: list = []
         self.fields: list = ["*"]
-        self.query_report: Optional[dict] = None
+        self.query_report: dict | None = None
 
         # A probe request will do all the reqular things EXCEPT it will hard-code the number of responses to 0
         # so that the actual results are not returned.
@@ -228,7 +227,7 @@ class SearchRequest:
 
         # Initialize a dictionary for caching the query PAE features so that we only have to do this once
         # Is null if this request is not for incipits, or if PAE features could not be extracted from an incipit.
-        self.pae_features: Optional[dict] = None
+        self.pae_features: dict | None = None
 
         self._requested_national_collection: list = req.args.getlist("nc", [])
         # Only one query parameter is allowed; however, to make it easier to add query
@@ -241,9 +240,9 @@ class SearchRequest:
             "mode", self._app_config["search"]["default_mode"]
         )
         self._extra_params: dict = {}
-        self._page: Optional[str] = req.args.get("page", None)
-        self._return_rows: Optional[str] = req.args.get("rows", None)
-        self._result_sorting: Optional[str] = req.args.get("sort", None)
+        self._page: str | None = req.args.get("page", None)
+        self._return_rows: str | None = req.args.get("rows", None)
+        self._result_sorting: str | None = req.args.get("sort", None)
 
         # parameters that are only valid with incipit searches, and are otherwise ignored.
         # It is always initialized with the default value.
@@ -316,7 +315,7 @@ class SearchRequest:
 
         modes: dict = self._app_config["search"]["modes"]
         if len(requested_modes) == 1:
-            requested_mode_config: Optional[dict] = modes.get(requested_modes[0])
+            requested_mode_config: dict | None = modes.get(requested_modes[0])
 
             # if the requested mode does not match anything configured, raise an exception
             if not requested_mode_config:
@@ -631,7 +630,7 @@ class SearchRequest:
             #   3c. Doing all this while also supporting 'traditional' facet searches.
 
             # If we have an incipit mode, assume the incoming request is a PAE string.
-            self.pae_features: Optional[dict] = get_pae_features(self._req)
+            self.pae_features: dict | None = get_pae_features(self._req)
             if not self.pae_features:
                 raise InvalidQueryException(
                     "The requested mode was 'incipits', but the PAE input was malformed."

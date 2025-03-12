@@ -280,6 +280,8 @@ en:
     alternate_spelling: Alternate spelling
     alternative_work_title: Alternative work title
     amount: Number
+    annex: Annex
+    appendix: Appendix
     archive: Archive
     arrangement: Arrangement
     arrangement_statement: Arrangement statement
@@ -694,6 +696,7 @@ en:
     number: Number
     number_page: Number/page
     number_part_section: Number of part/section of a work
+    number_volume: Number/volume
     number_volume_part: Number of volume/part
     numbers_code_fields: Numbers and code fields
     numeric_designation: Numeric designation
@@ -745,6 +748,8 @@ en:
     performances: Performances
     performer: Performer
     performer_note: Note on performance
+    periodical_or_series: Periodical or series
+    periodical_or_series_title: Periodical or series title
     person: Person
     person_name: Person name
     personal_name: Personal name
@@ -830,6 +835,7 @@ en:
     series: Series
     series_added_entry: Series added entry fields
     series_statement: Series statement fields
+    section: Section
     shelfmark: Shelfmark
     shelfmark_olim: Former shelfmark (olim)
     short_title: Short title
@@ -925,6 +931,7 @@ en:
     woodwinds: Woodwinds
     work: Work
     work_catalog_note: Work catalog note
+    work_list: Work list
     work_node: External work reference (Work node)
     work_number: Work number
     work_tag: Work revision tag

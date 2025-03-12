@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import ypres
 
@@ -22,7 +21,7 @@ class WorksSection(ypres.AsyncDictSerializer):
         # TODO: Check label
         return transl.get("records.work")
 
-    def get_work_reference(self, obj: SolrResult) -> Optional[dict]:
+    def get_work_reference(self, obj: SolrResult) -> dict | None:
         if "work_node_json" not in obj:
             return None
 
@@ -30,7 +29,7 @@ class WorksSection(ypres.AsyncDictSerializer):
         req = self.context.get("request")
         return format_work_node(req, work_node)
 
-    async def get_work_references(self, obj: SolrResult) -> Optional[dict]:
+    async def get_work_references(self, obj: SolrResult) -> dict | None:
         if "work_nodes_json" not in obj:
             return None
 

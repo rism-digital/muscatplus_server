@@ -1,7 +1,6 @@
 import difflib
 import logging
 import re
-from typing import Optional
 
 import ypres
 from small_asc.client import Results
@@ -37,22 +36,22 @@ CSS_REPLACEMENT_PATTERN: re.Pattern = re.compile(
 class SearchResults(BaseSearchResults):
     query_validation = ypres.MethodField(label="queryValidation")
 
-    def get_query_validation(self, obj: Results) -> Optional[dict]:
+    def get_query_validation(self, obj: Results) -> dict | None:
         if "query_validation" not in self.context:
             return None
 
         return self.context["query_validation"]
 
-    def get_modes(self, obj: Results) -> Optional[dict]:
+    def get_modes(self, obj: Results) -> dict | None:
         is_probe: bool = self.context.get("probe_request", False)
         if is_probe:
             return None
 
-        facet_results: Optional[dict] = obj.raw_response.get("facets")
+        facet_results: dict | None = obj.raw_response.get("facets")
         if not facet_results:
             return None
 
-        mode_facet: Optional[dict] = facet_results.get("mode")
+        mode_facet: dict | None = facet_results.get("mode")
         # if, for some reason, we don't have a mode facet we return gracefully.
         if not mode_facet:
             return None
@@ -98,7 +97,7 @@ class SearchResults(BaseSearchResults):
             "items": mode_items,
         }
 
-    async def get_items(self, obj: Results) -> Optional[list]:
+    async def get_items(self, obj: Results) -> list | None:
         is_probe: bool = self.context.get("probe_request", False)
         # If we have no hits, or we have a 'probe' request, then don't
         # return an empty items block.
@@ -143,7 +142,7 @@ class SearchResults(BaseSearchResults):
                 # happen when a source is marked as composite, and the relationship to an item in the source is
                 # a holding record.
                 source_id: str = d["source_id"]
-                source_doc: Optional[dict] = await SolrConnection.get(source_id)
+                source_doc: dict | None = await SolrConnection.get(source_id)
                 if not source_doc:
                     log.error("Malformed holding %s", d["id"])
                     continue
@@ -198,7 +197,7 @@ class SourceSearchResult(ypres.DictSerializer):
         transl: dict = req.ctx.translations
         return transl.get("records.source")
 
-    def get_summary(self, obj: dict) -> Optional[dict]:
+    def get_summary(self, obj: dict) -> dict | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -219,11 +218,11 @@ class SourceSearchResult(ypres.DictSerializer):
             ),
             "num_holdings_i": ("numExemplars", "records.exemplars", None),
         }
-        summary: Optional[dict] = get_search_result_summary(field_config, transl, obj)
+        summary: dict | None = get_search_result_summary(field_config, transl, obj)
 
         return summary or None
 
-    def get_part_of(self, obj: SolrResult) -> Optional[dict]:
+    def get_part_of(self, obj: SolrResult) -> dict | None:
         """
         Provides a pointer back to a parent. Used for Items in Sources and Incipits.
         """
@@ -261,7 +260,7 @@ class SourceSearchResult(ypres.DictSerializer):
             },
         }
 
-    def get_flags(self, obj: dict) -> Optional[dict]:
+    def get_flags(self, obj: dict) -> dict | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -358,10 +357,11 @@ class PersonSearchResult(ypres.DictSerializer):
 
         return transl.get("records.person")
 
-    def get_summary(self, obj: dict) -> Optional[dict]:
+    def get_summary(self, obj: dict) -> dict | None:
         field_config = {
             "profession_function_sm": ("roles", "records.profession_or_function", None),
             "total_sources_i": ("numSources", "records.sources", None),
+            "gender_s": ("gender", "records.gender", None)
         }
 
         req = self.context.get("request")
@@ -369,7 +369,7 @@ class PersonSearchResult(ypres.DictSerializer):
 
         return get_search_result_summary(field_config, transl, obj)
 
-    def get_flags(self, obj: dict) -> Optional[dict]:
+    def get_flags(self, obj: dict) -> dict | None:
         result_flags: dict = {}
         number_of_sources: int = obj.get("source_count_i", 0)
         linked_with_external_record: bool = obj.get("has_external_record_b", False)
@@ -453,7 +453,7 @@ class InstitutionSearchResult(ypres.DictSerializer):
 
         return get_search_result_summary(field_config, transl, obj)
 
-    def get_flags(self, obj: dict) -> Optional[dict]:
+    def get_flags(self, obj: dict) -> dict | None:
         result_flags: dict = {}
         number_of_sources: int = obj.get("total_sources_i", 0)
         linked_with_external_record: bool = obj.get("has_external_record_b", False)
@@ -554,7 +554,7 @@ class IncipitSearchResult(ypres.DictSerializer):
 
         return transl.get("records.incipit")
 
-    def get_summary(self, obj: dict) -> Optional[dict]:
+    def get_summary(self, obj: dict) -> dict | None:
         field_config: dict = {
             "creator_name_s": ("incipitComposer", "records.composer_author", None),
             "standard_titles_json": (
@@ -564,6 +564,7 @@ class IncipitSearchResult(ypres.DictSerializer):
             ),
             "text_incipit_sm": ("textIncipit", "records.text_incipit", None),
             "voice_instrument_s": ("voiceInstrument", "records.voice_instrument", None),
+            "original_pae_sni": ("paeCode", "records.plaine_and_easie", None),
         }
 
         req = self.context.get("request")
@@ -571,7 +572,7 @@ class IncipitSearchResult(ypres.DictSerializer):
 
         return get_search_result_summary(field_config, transl, obj)
 
-    def get_part_of(self, obj: SolrResult) -> Optional[dict]:
+    def get_part_of(self, obj: SolrResult) -> dict | None:
         """
         Provides a pointer back to the parent for this incipit
         """
@@ -583,18 +584,27 @@ class IncipitSearchResult(ypres.DictSerializer):
         parent_source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
         transl: dict = req.ctx.translations
 
+        record_type: str = obj.get("record_type_s", "item")
+        source_type: str = obj.get("source_type_s", "unspecified")
+        content_types: list[str] = obj.get("content_types_sm", [])
+
+        source_types_block: dict = create_source_types_block(
+            record_type, source_type, content_types, transl
+        )
+
         return {
-            "label": transl.get("records.item_part_of"),
+            "sectionLabel": transl.get("records.item_part_of"),
             "type": "rism:PartOfSection",
             "source": {
                 "id": get_identifier(req, "sources.source", source_id=parent_source_id),
                 "type": "rism:Source",
                 "typeLabel": transl.get("records.source"),
+                "sourceTypes": source_types_block,
                 "label": {"none": [parent_title]},
             },
         }
 
-    def get_rendered(self, obj: SolrResult) -> Optional[list]:
+    def get_rendered(self, obj: SolrResult) -> list | None:
         if not obj.get("music_incipit_s"):
             log.debug("No music incipit")
             return None
@@ -603,7 +613,7 @@ class IncipitSearchResult(ypres.DictSerializer):
 
         # Grab the PAE features we computed from the incoming query request. These will
         # be used to perform the highlighting
-        query_pae_features: Optional[dict] = self.context.get("query_pae_features")
+        query_pae_features: dict | None = self.context.get("query_pae_features")
 
         if not query_pae_features:
             svg, midi = _render_without_highlighting(req, obj)
@@ -615,21 +625,21 @@ class IncipitSearchResult(ypres.DictSerializer):
             {"format": "audio/midi", "data": midi},
         ]
 
-    def get_score(self, obj: SolrResult) -> Optional[float]:
+    def get_score(self, obj: SolrResult) -> float | None:
         if "custom_score" in obj:
             return obj["custom_score"]
         return None
 
 
-def _render_incipit_pae(obj: SolrResult) -> Optional[tuple]:
-    pae_code: Optional[str] = obj.get("original_pae_sni")
-    is_mensural: bool = obj.get("is_mensural_b", False)
+def _render_incipit_pae(obj: SolrResult) -> tuple | None:
+    pae_code: str | None = obj.get("original_pae_sni")
 
     if not pae_code:
         log.debug("no PAE code")
         return None
 
-    rendered_pae: Optional[tuple] = render_pae(
+    is_mensural: bool = obj.get("is_mensural_b", False)
+    rendered_pae: tuple | None = render_pae(
         pae_code, use_crc=True, is_mensural=is_mensural
     )
 
@@ -640,8 +650,8 @@ def _render_incipit_pae(obj: SolrResult) -> Optional[tuple]:
     return rendered_pae
 
 
-def _render_without_highlighting(req, obj: SolrResult) -> Optional[tuple]:
-    rendered_incipit: Optional[tuple] = _render_incipit_pae(obj)
+def _render_without_highlighting(req, obj: SolrResult) -> tuple | None:
+    rendered_incipit: tuple | None = _render_incipit_pae(obj)
 
     if not rendered_incipit:
         return None
@@ -650,8 +660,8 @@ def _render_without_highlighting(req, obj: SolrResult) -> Optional[tuple]:
 
 
 def _render_with_highlighting(
-    req, obj: SolrResult, query_pae_features: Optional[dict]
-) -> Optional[tuple]:
+    req, obj: SolrResult, query_pae_features: dict | None
+) -> tuple | None:
     if not query_pae_features:
         log.error("Could not highlight a search result without query features!")
         return None

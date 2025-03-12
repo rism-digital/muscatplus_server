@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import ypres
 
@@ -11,8 +10,8 @@ from shared_helpers.utilities import is_number
 
 async def handle_institution_geojson_request(
     req, institution_id: str
-) -> Optional[dict]:
-    institution_record: Optional[dict] = await SolrConnection.get(
+) -> dict | None:
+    institution_record: dict | None = await SolrConnection.get(
         f"institution_{institution_id}"
     )
 
@@ -27,9 +26,9 @@ class InstitutionGeoJson(ypres.AsyncDictSerializer):
 
     features = ypres.MethodField()
 
-    async def get_features(self, obj: dict) -> Optional[list]:
+    async def get_features(self, obj: dict) -> list | None:
         primary_obj_id = obj["id"]
-        location: Optional[str] = obj.get("location_loc")
+        location: str | None = obj.get("location_loc")
         if not location:
             return None
 
@@ -96,7 +95,7 @@ class GeoJsonFeature(ypres.AsyncDictSerializer):
         return props
 
     def get_geometry(self, obj: dict) -> dict:
-        location: Optional[str] = obj.get("location_loc")
+        location: str | None = obj.get("location_loc")
         if not location:
             return {}
 

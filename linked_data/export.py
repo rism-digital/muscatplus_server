@@ -10,7 +10,6 @@ import sqlite3
 import subprocess
 import timeit
 from pathlib import Path
-from typing import Optional
 
 import aiohttp
 import rdflib
@@ -92,7 +91,7 @@ def to_turtle(data: dict) -> str:
 
 
 async def create_id_groups(
-    num_groups: int, record_type: str, country_code: Optional[str]
+    num_groups: int, record_type: str, country_code: str | None
 ) -> list:
     log.info("Creating ID groups")
     fq = [f"type:{record_type}", "!project_s:[* TO *]"]
@@ -302,7 +301,7 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
             log.info("Writing TTL output to %s", str(ttl_path))
             sql_stmt = "SELECT ttl FROM serialized"
 
-            subprocess.run(["sqlite3", str(db_name), sql_stmt], stdout=ttl_out)
+            subprocess.run(["sqlite3", str(db_name), sql_stmt], stdout=ttl_out)  # noqa
 
     return True
 

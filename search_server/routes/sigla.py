@@ -1,4 +1,3 @@
-from typing import Optional
 from urllib.parse import unquote
 
 from sanic import Blueprint, response
@@ -13,7 +12,7 @@ sigla_blueprint: Blueprint = Blueprint("sigla", url_prefix="/sigla")
 
 @sigla_blueprint.route("/<siglum:str>")
 async def siglum_redirect(req, siglum: str):
-    resp: Optional[str] = await handle_institution_sigla_request(req, siglum)
+    resp: str | None = await handle_institution_sigla_request(req, siglum)
 
     if not resp:
         return response.text(
@@ -26,7 +25,7 @@ async def siglum_redirect(req, siglum: str):
 
 @sigla_blueprint.route("/")
 async def siglum_search(req):
-    resp: Optional[dict] = await handle_siglum_search_request(req)
+    resp: dict | None = await handle_siglum_search_request(req)
     if not resp:
         response.text("There was a problem with the search query")
 

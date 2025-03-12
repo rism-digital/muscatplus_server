@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import orjson
 import sentry_sdk
@@ -78,7 +77,7 @@ logging.basicConfig(
 
 log = logging.getLogger("mp_server")
 
-translations: Optional[dict] = load_translations("locales/")
+translations: dict | None = load_translations("locales/")
 if not translations:
     log.critical("No translations can be loaded.")
 
@@ -118,7 +117,7 @@ async def front(req):
 @app.route("/about")
 async def about(req):
     cfg: dict = req.app.ctx.config
-    idx_result: Optional[dict] = await SolrConnection.get("rism-online-index-info")
+    idx_result: dict | None = await SolrConnection.get("rism-online-index-info")
 
     # If, for some reason, we don't have a result for the last indexed
     # value, then return Jan 1, 1970.

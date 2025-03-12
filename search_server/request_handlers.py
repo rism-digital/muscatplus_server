@@ -1,7 +1,7 @@
 import logging
-from typing import Callable, Optional
+from collections.abc import Callable
 
-import aiohttp
+import httpx
 import orjson
 from sanic import request, response
 from small_asc.client import SolrError
@@ -43,9 +43,9 @@ async def handle_request(
     :param kwargs: A set of options to be passed to the
     :return: A JSON Response, or an error if not successful.
     """
-    accept: Optional[str] = req.headers.get("Accept")
+    accept: str | None = req.headers.get("Accept")
 
-    data_obj: Optional[dict] = await handler(req, **kwargs)
+    data_obj: dict | None = await handler(req, **kwargs)
 
     # This will return a 404 for both the cases where the response is None, and where
     # it is an empty dictionary.
@@ -88,11 +88,10 @@ async def handle_request(
             "Authorization": f"Token {req.app.ctx.config['common']['muscat_auth']}"
         }
 
-        async with aiohttp.ClientSession(headers=auth_headers) as session, session.get(
-            f"https://muscat.rism.info/data/{rtype}/{rid}"
-        ) as muscat_req:
-            muscat_resp = await muscat_req.text()
-            if muscat_req.status != 200:
+        async with httpx.AsyncClient(headers=auth_headers) as client:
+            muscat_req = await client.get(f"https://muscat.rism.info/data/{rtype}/{rid}")
+            muscat_resp = muscat_req.text
+            if muscat_req.status_code != 200:
                 return response.text(
                     "Could not retrieve MARCXML from upstream", status=500
                 )
@@ -136,7 +135,7 @@ async def handle_search(
     #     return response.text("Supported content types for search interfaces are 'application/json' and
     #     application/ld+json'", status=406)
 
-    accept: Optional[str] = req.headers.get("Accept")
+    accept: str | None = req.headers.get("Accept")
     if accept and "application/ld+json" not in accept:
         status_msg = f"""Accept header {accept} is not available for this resource.
         Only application/ld+json is available"""

@@ -280,6 +280,8 @@ it:
     alternate_spelling: Ortografia alternativa
     alternative_work_title: Titolo alternativo dell'opera
     amount: Numero
+    annex: Appendice
+    appendix: Appendice
     archive: Archivio
     arrangement: Arrangiamento
     arrangement_statement: Arrangiamento
@@ -694,6 +696,7 @@ it:
     number: Numero
     number_page: Numero/pagina
     number_part_section: Numero della parte/sezione di una composizione
+    number_volume: Numero/volume
     number_volume_part: Numero del volume/parte
     numbers_code_fields: Numeri e codici
     numeric_designation: Numerazione identificativa
@@ -742,6 +745,8 @@ it:
     performances: Esecuzioni
     performer: Interprete
     performer_note: Nota sull'esecuzione
+    periodical_or_series: Periodico o serie
+    periodical_or_series_title: Titolo del periodico o della serie
     person: Persona
     person_name: Nome di persona
     personal_name: Nome di persona
@@ -827,6 +832,7 @@ it:
     series: Serie
     series_added_entry: Notizia secondaria sul titolo sovraordinato
     series_statement: Informazioni sul titolo sovraordinato
+    section: Sezione
     shelfmark: Segnatura
     shelfmark_olim: Segnatura antica (olim)
     short_title: Titolo breve
@@ -922,6 +928,7 @@ it:
     woodwinds: Legni
     work: Opera
     work_catalog_note: Nota sul catalogo delle opere
+    work_list: Lista di opere
     work_node: Voce di autorità esterna (Work node)
     work_number: Numero dell'opera
     work_tag: Tag per il Work

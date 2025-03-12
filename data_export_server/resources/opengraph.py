@@ -1,6 +1,5 @@
 import re
 import textwrap
-from typing import Optional
 from urllib.parse import urljoin
 
 import ypres
@@ -34,9 +33,9 @@ class OpenGraph(ypres.DictSerializer):
         if obj["type"] == "source":
             title: str = obj.get("main_title_s", "[No title]")
             #  TODO: Translate source types
-            source_types: Optional[list] = obj.get("material_source_types_sm")
-            shelfmark: Optional[str] = obj.get("shelfmark_s")
-            siglum: Optional[str] = obj.get("siglum_s")
+            source_types: list | None = obj.get("material_source_types_sm")
+            shelfmark: str | None = obj.get("shelfmark_s")
+            siglum: str | None = obj.get("siglum_s")
 
             label: str = title
             if source_types:
@@ -107,9 +106,9 @@ class OpenGraphSvg(ypres.DictSerializer):
         if obj["type"] == "source":
             main_title: str = obj.get("main_title_s", "[No title]")
             #  TODO: Translate source types
-            source_types: Optional[list] = obj.get("material_source_types_sm")
-            shelfmark: Optional[str] = obj.get("shelfmark_s")
-            siglum: Optional[str] = obj.get("siglum_s")
+            source_types: list | None = obj.get("material_source_types_sm")
+            shelfmark: str | None = obj.get("shelfmark_s")
+            siglum: str | None = obj.get("siglum_s")
 
             label: str = main_title
             if source_types:
@@ -132,7 +131,7 @@ class OpenGraphSvg(ypres.DictSerializer):
     # These lines return a tuple of (icon, text). If the return value is
     # None then this line will be omitted. The icon names are defined in the
     # CardIcons class above, and correspond to a CSS rule in the SVG template.
-    def get_record_first_line(self, obj: dict) -> Optional[tuple[str, str]]:
+    def get_record_first_line(self, obj: dict) -> tuple[str, str] | None:
         objtype: str = obj["type"]
 
         if (t := obj.get("creator_name_s")) and objtype == "source":
@@ -151,7 +150,7 @@ class OpenGraphSvg(ypres.DictSerializer):
             return CardIcons.SOURCE, label
         return None
 
-    def get_record_second_line(self, obj: dict) -> Optional[tuple[str, str]]:
+    def get_record_second_line(self, obj: dict) -> tuple[str, str] | None:
         objtype: str = obj["type"]
 
         if (t := obj.get("date_statements_sm")) and objtype == "source":
@@ -159,7 +158,7 @@ class OpenGraphSvg(ypres.DictSerializer):
             return CardIcons.DATE, label
         return None
 
-    def get_record_third_line(self, obj: dict) -> Optional[tuple[str, str]]:
+    def get_record_third_line(self, obj: dict) -> tuple[str, str] | None:
         objtype: str = obj["type"]
 
         if (t := obj.get("num_source_members_i")) and objtype == "source":

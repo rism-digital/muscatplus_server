@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import ypres
 from small_asc.client import Results, SolrError
@@ -73,16 +72,16 @@ async def handle_person_probe_request(req, person_id: str) -> dict:
 class PersonResults(BaseSearchResults):
     query_validation = ypres.MethodField(label="queryValidation")
 
-    def get_query_validation(self, obj: Results) -> Optional[dict]:
+    def get_query_validation(self, obj: Results) -> dict | None:
         if "query_validation" not in self.context:
             return None
 
         return self.context["query_validation"]
 
-    def get_modes(self, obj: Results) -> Optional[dict]:
+    def get_modes(self, obj: Results) -> dict | None:
         return None
 
-    async def get_items(self, obj: Results) -> Optional[list]:
+    async def get_items(self, obj: Results) -> list | None:
         if obj.hits == 0:
             return None
 

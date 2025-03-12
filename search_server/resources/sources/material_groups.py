@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import ypres
 
@@ -49,7 +48,7 @@ class MaterialGroup(ypres.AsyncDictSerializer):
         group_num: str = obj.get("group_num")
         return {"none": [f"Group {group_num}"]}
 
-    def get_summary(self, obj: dict) -> Optional[list]:
+    def get_summary(self, obj: dict) -> list | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -84,7 +83,7 @@ class MaterialGroup(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    def get_notes(self, obj: dict) -> Optional[list]:
+    def get_notes(self, obj: dict) -> list | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -96,7 +95,7 @@ class MaterialGroup(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    async def get_relationships(self, obj: dict) -> Optional[dict]:
+    async def get_relationships(self, obj: dict) -> dict | None:
         # a set is disjoint if there are no keys in common. Check if these keys exist in the
         # record; if they are disjoint, then we don't need to process them.
         if {"related_people_json", "related_institutions_json"}.isdisjoint(obj.keys()):
@@ -106,7 +105,7 @@ class MaterialGroup(ypres.AsyncDictSerializer):
             obj, context={"request": self.context.get("request")}
         ).data
 
-    async def get_external_resources(self, obj: dict) -> Optional[dict]:
+    async def get_external_resources(self, obj: dict) -> dict | None:
         if "external_resources" not in obj:
             return None
 

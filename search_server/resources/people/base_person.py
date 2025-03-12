@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import ypres
 
@@ -37,12 +36,12 @@ class BasePerson(ypres.AsyncDictSerializer):
 
         return {"none": [label]}
 
-    def get_type_label(self, obj: SolrResult) -> Optional[dict]:
+    def get_type_label(self, obj: SolrResult) -> dict | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
         return transl.get("records.person")
 
-    def get_record_history(self, obj: dict) -> Optional[dict]:
+    def get_record_history(self, obj: dict) -> dict | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 

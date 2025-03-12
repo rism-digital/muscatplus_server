@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 import ypres
 
@@ -19,7 +18,7 @@ from shared_helpers.solr_connection import SolrConnection, SolrResult
 log = logging.getLogger("mp_server")
 
 
-async def handle_person_request(req, person_id: str) -> Optional[dict]:
+async def handle_person_request(req, person_id: str) -> dict | None:
     person_record = await SolrConnection.get(f"person_{person_id}")
 
     if not person_record:
@@ -40,7 +39,7 @@ class Person(BasePerson):
     works = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
 
-    def get_biographical_details(self, obj: SolrResult) -> Optional[dict]:
+    def get_biographical_details(self, obj: SolrResult) -> dict | None:
         bio_details: dict = BiographicalDetails(
             obj, context={"request": self.context.get("request")}
         ).data
@@ -50,7 +49,7 @@ class Person(BasePerson):
 
         return bio_details
 
-    def get_external_authorities(self, obj: SolrResult) -> Optional[list[dict]]:
+    def get_external_authorities(self, obj: SolrResult) -> list[dict] | None:
         if "external_ids" not in obj:
             return None
 
@@ -58,7 +57,7 @@ class Person(BasePerson):
             obj["external_ids"], context={"request": self.context.get("request")}
         ).data
 
-    def get_name_variants(self, obj: SolrResult) -> Optional[list]:
+    def get_name_variants(self, obj: SolrResult) -> list | None:
         if "variant_names_json" not in obj:
             return None
 
@@ -66,7 +65,7 @@ class Person(BasePerson):
             obj, context={"request": self.context.get("request")}
         ).data
 
-    def get_sources(self, obj: SolrResult) -> Optional[dict]:
+    def get_sources(self, obj: SolrResult) -> dict | None:
         # Do not show a link to sources if this serializer is used for embedded results
         if not self.context.get("direct_request") or obj.get("project_s") == "diamm":
             return None
@@ -87,7 +86,7 @@ class Person(BasePerson):
             "totalItems": source_count,
         }
 
-    async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
+    async def get_relationships(self, obj: SolrResult) -> dict | None:
         if not self.context.get("direct_request"):
             return None
 
@@ -105,7 +104,7 @@ class Person(BasePerson):
         req = self.context.get("request")
         return await RelationshipsSection(obj, context={"request": req}).data
 
-    async def get_notes(self, obj: SolrResult) -> Optional[dict]:
+    async def get_notes(self, obj: SolrResult) -> dict | None:
         notelist: dict = await NotesSection(
             obj, context={"request": self.context.get("request")}
         ).data
@@ -116,7 +115,7 @@ class Person(BasePerson):
 
         return None
 
-    async def get_works(self, obj: SolrResult) -> Optional[dict]:
+    async def get_works(self, obj: SolrResult) -> dict | None:
         if "work_nodes_json" not in obj:
             return None
 
@@ -124,7 +123,7 @@ class Person(BasePerson):
             obj, context={"request": self.context.get("request")}
         ).data
 
-    async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
+    async def get_external_resources(self, obj: SolrResult) -> dict | None:
         if "external_resources_json" not in obj and not obj.get(
             "has_external_record_b", False
         ):

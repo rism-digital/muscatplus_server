@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Optional, Union
+from collections.abc import Callable
 
 from shared_helpers.identifiers import SOLR_FIELD_DATA_TYPES
 from shared_helpers.solr_connection import SolrResult
@@ -18,7 +18,7 @@ from shared_helpers.solr_connection import SolrResult
 #  A value of `None` for the value translator means to simply take the value verbatim. (Technically, a value of None
 #  passes it through the _default_translator function, but this is largely transparent to the user).
 #
-LabelConfig = dict[str, tuple[str, Optional[Union[Callable, dict]]]]
+LabelConfig = dict[str, tuple[str, Callable | dict | None]]
 
 log = logging.getLogger("mp_server")
 
@@ -30,7 +30,7 @@ FIELD_CONFIG: LabelConfig = {
 }
 
 
-def _default_translator(value: Union[str, list], translations: dict) -> dict:
+def _default_translator(value: str | list, translations: dict) -> dict:
     """
     If the parameter given for a value translator in the field configuration is None,
     then use this function as the default translator. It will return the value wrapped
@@ -59,9 +59,9 @@ def _default_translator(value: Union[str, list], translations: dict) -> dict:
 # The function for translating takes two arguments: The string to translate, and a dictionary of available translations.
 # This field config will be the default used if one is not provided.
 def assemble_label_value(
-    record: Union[SolrResult, dict],
+    record: SolrResult | dict,
     field_name: str,
-    translation_map: tuple[str, Optional[Callable]],
+    translation_map: tuple[str, Callable | None],
     translations: dict,
 ) -> dict:
     # deconstruct the translation map tuple into the translation
@@ -87,10 +87,10 @@ def assemble_label_value(
 
 
 def get_display_fields(
-    record: Union[SolrResult, dict],
+    record: SolrResult | dict,
     translations: dict,
-    field_config: Optional[LabelConfig] = None,
-) -> Optional[list]:
+    field_config: LabelConfig | None = None,
+) -> list | None:
     """
     Returns a list of translated display fields for a given record. Uses the metadata fields to configure
     the label, based on the Solr field. Supports direct value output, or a function for translating the values.
@@ -120,7 +120,7 @@ def get_display_fields(
 
 def get_search_result_summary(
     field_config: dict, translations: dict, result: dict
-) -> Optional[dict]:
+) -> dict | None:
     summary: dict = {}
 
     for solr_fieldname, cfg in field_config.items():
@@ -133,7 +133,7 @@ def get_search_result_summary(
 
         output_fieldname: str = cfg[0]
         translation_key: str = cfg[1]
-        translation_value_translator_fn: Optional[Callable] = cfg[2]
+        translation_value_translator_fn: Callable | None = cfg[2]
         field_res: dict = assemble_label_value(
             result,
             solr_fieldname,

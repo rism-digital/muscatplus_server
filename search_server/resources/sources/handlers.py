@@ -1,11 +1,10 @@
-from typing import Optional
 
 from search_server.resources.sources.full_source import FullSource
 from shared_helpers.solr_connection import SolrConnection
 
 
-async def handle_source_request(req, source_id: str) -> Optional[dict]:
-    source_record: Optional[dict] = await SolrConnection.get(f"source_{source_id}")
+async def handle_source_request(req, source_id: str) -> dict | None:
+    source_record: dict | None = await SolrConnection.get(f"source_{source_id}")
 
     if not source_record:
         return None

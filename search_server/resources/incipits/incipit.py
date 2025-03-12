@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 import ypres
 from small_asc.client import JsonAPIRequest, Results
@@ -20,7 +19,7 @@ from shared_helpers.solr_connection import SolrConnection, SolrResult
 log = logging.getLogger("mp_server")
 
 
-async def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
+async def _fetch_incipit(source_id: str, work_num: str) -> SolrResult | None:
     json_request: JsonAPIRequest = {
         "query": "*:*",
         "filter": [
@@ -39,7 +38,7 @@ async def _fetch_incipit(source_id: str, work_num: str) -> Optional[SolrResult]:
     return record.docs[0]
 
 
-async def handle_incipits_list_request(req, source_id: str) -> Optional[dict]:
+async def handle_incipits_list_request(req, source_id: str) -> dict | None:
     json_request: JsonAPIRequest = {
         "query": "*:*",
         "filter": ["type:source", f"id:source_{source_id}", "has_incipits_b:true"],
@@ -55,8 +54,8 @@ async def handle_incipits_list_request(req, source_id: str) -> Optional[dict]:
     ).data
 
 
-async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional[dict]:
-    incipit_record: Optional[SolrResult] = await _fetch_incipit(source_id, work_num)
+async def handle_incipit_request(req, source_id: str, work_num: str) -> dict | None:
+    incipit_record: SolrResult | None = await _fetch_incipit(source_id, work_num)
 
     if not incipit_record:
         return None
@@ -66,12 +65,12 @@ async def handle_incipit_request(req, source_id: str, work_num: str) -> Optional
     ).data
 
 
-async def handle_mei_download(req, source_id: str, work_num: str) -> Optional[dict]:
+async def handle_mei_download(req, source_id: str, work_num: str) -> dict | None:
     """
     Handle MEI file download for a given incipit. Returns a dictionary containing the
     attachment filename and the MEI content sent in the body of the response.
     """
-    incipit_record: Optional[SolrResult] = await _fetch_incipit(source_id, work_num)
+    incipit_record: SolrResult | None = await _fetch_incipit(source_id, work_num)
 
     if not incipit_record:
         return None
@@ -85,15 +84,15 @@ async def handle_mei_download(req, source_id: str, work_num: str) -> Optional[di
         "Content-Type": "application/mei+xml",
     }
 
-    mei_content: Optional[str] = render_mei(req, incipit_record)
+    mei_content: str | None = render_mei(req, incipit_record)
     if not mei_content:
         return None
 
     return {"headers": response_headers, "content": mei_content}
 
 
-async def handle_png_download(req, source_id: str, work_num: str) -> Optional[dict]:
-    incipit_record: Optional[SolrResult] = await _fetch_incipit(source_id, work_num)
+async def handle_png_download(req, source_id: str, work_num: str) -> dict | None:
+    incipit_record: SolrResult | None = await _fetch_incipit(source_id, work_num)
 
     if not incipit_record:
         return None
@@ -107,7 +106,7 @@ async def handle_png_download(req, source_id: str, work_num: str) -> Optional[di
         "Content-Type": "image/png",
     }
 
-    png_content: Optional[bytes] = render_png(req, incipit_record["original_pae_sni"])
+    png_content: bytes | None = render_png(req, incipit_record["original_pae_sni"])
     if not png_content:
         return None
 
@@ -165,13 +164,12 @@ class IncipitsSection(ypres.AsyncDictSerializer):
             },
         }
 
-    async def get_items(self, obj: SolrResult) -> Optional[list]:
+    async def get_items(self, obj: SolrResult) -> list | None:
         fq: list = [f"source_id:{obj.get('id')}", "type:incipit"]
         sort: str = "work_num_ans asc"
         results: Results = await SolrConnection.search(
             {"query": "*:*", "filter": fq, "sort": sort},
             cursor=True,
-            session=self.context.get("session"),
         )
 
         # It will be strange for this to happen, since we only
@@ -186,7 +184,6 @@ class IncipitsSection(ypres.AsyncDictSerializer):
             many=True,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 
@@ -203,19 +200,19 @@ class Incipit(ypres.AsyncDictSerializer):
 
     def get_incip_id(self, obj: dict) -> str:
         req = self.context.get("request")
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+        source_id: str = re.sub(ID_SUB, "", obj["source_id"])
         work_num: str = f"{obj.get('work_num_s')}"
 
         return get_identifier(
             req, "sources.incipit", source_id=source_id, work_num=work_num
         )
 
-    def get_label(self, obj: SolrResult) -> Optional[dict]:
+    def get_label(self, obj: SolrResult) -> dict | None:
         label: str = format_incipit_label(obj)
 
         return {"none": [label]}
 
-    async def get_part_of(self, obj: SolrResult) -> Optional[dict]:
+    async def get_part_of(self, obj: SolrResult) -> dict | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -224,11 +221,11 @@ class Incipit(ypres.AsyncDictSerializer):
                 "records.item_part_of"
             ),  # TODO: This should probably be changed to 'incipit part of'
             "source": await BaseSource(
-                obj, context={"request": req, "session": self.context.get("session")}
+                obj, context={"request": req,}
             ).data,
         }
 
-    def get_properties(self, obj: SolrResult) -> Optional[dict]:
+    def get_properties(self, obj: SolrResult) -> dict | None:
         # If no notation info in the Solr result, don't bother with this.
         if {"clef_s", "timesig_s", "key_s", "music_incipit_s"}.isdisjoint(obj):
             return None
@@ -242,7 +239,7 @@ class Incipit(ypres.AsyncDictSerializer):
 
         return {k: v for k, v in d.items() if v}
 
-    def get_summary(self, obj: SolrResult) -> Optional[list[dict]]:
+    def get_summary(self, obj: SolrResult) -> list[dict] | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -278,9 +275,9 @@ class Incipit(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config)
 
-    def get_rendered(self, obj: SolrResult) -> Optional[list]:
+    def get_rendered(self, obj: SolrResult) -> list | None:
         # Use the pre-cached version.
-        pae_code: Optional[str] = obj.get("original_pae_sni")
+        pae_code: str | None = obj.get("original_pae_sni")
         if not pae_code:
             return None
 
@@ -289,7 +286,7 @@ class Incipit(ypres.AsyncDictSerializer):
 
         # Set Verovio to render random IDs for this so that we don't have any ID collisions with
         # search result highlighting
-        rendered_pae: Optional[tuple] = render_pae(
+        rendered_pae: tuple | None = render_pae(
             pae_code, use_crc=False, is_mensural=is_mensural
         )
 
@@ -311,7 +308,7 @@ class Incipit(ypres.AsyncDictSerializer):
             {"format": "image/png", "url": png_download_url},
         ]
 
-    def get_encodings(self, obj: SolrResult) -> Optional[list]:
+    def get_encodings(self, obj: SolrResult) -> list | None:
         if "music_incipit_s" not in obj:
             return None
 

@@ -1,4 +1,3 @@
-from typing import Optional
 
 import orjson
 import ypres
@@ -54,7 +53,7 @@ class Front(ypres.DictSerializer):
         req = self.context.get("request")
         return get_facets(req, obj)
 
-    def get_query_fields(self, obj: Results) -> Optional[list]:
+    def get_query_fields(self, obj: Results) -> list | None:
         req = self.context.get("request")
         cfg: dict = req.app.ctx.config
         transl: dict = req.app.ctx.translations
@@ -66,7 +65,7 @@ class Front(ypres.DictSerializer):
 
         for qfield in qfields:
             q_translation_key: str = qfield["label"]
-            q_translation: Optional[dict] = transl.get(q_translation_key)
+            q_translation: dict | None = transl.get(q_translation_key)
             q_label: dict = q_translation or {"none": [q_translation_key]}
             query_fields.append(
                 {

@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 from urllib.parse import unquote
 
 from small_asc.client import Results
@@ -15,7 +14,7 @@ log = logging.getLogger("mp_export")
 INVALID_SIGLUM = re.compile(r"^[\w-]+$")
 
 
-async def handle_institution_sigla_request(req, siglum: str) -> Optional[str]:
+async def handle_institution_sigla_request(req, siglum: str) -> str | None:
     incoming_sig: str = unquote(siglum)
 
     # \w in the pattern matches the underscore, which we don't want to match here.
@@ -49,7 +48,7 @@ async def handle_institution_sigla_request(req, siglum: str) -> Optional[str]:
     return f"/institutions/{institution_id}"
 
 
-async def handle_siglum_search_request(req) -> Optional[dict]:
+async def handle_siglum_search_request(req) -> dict | None:
     # query types:
     #  - all: Any field
     #  - name: Library name
@@ -59,9 +58,9 @@ async def handle_siglum_search_request(req) -> Optional[dict]:
     #  q = query
     #  qt = query type, keyword search over the whole record if omitted.
     #  page = control pagination
-    query: Optional[str] = req.args.get("q", None)
-    query_type: Optional[str] = req.args.get("qt", "all")
-    page: Optional[str] = req.args.get("page", None)
+    query: str | None = req.args.get("q", None)
+    query_type: str | None = req.args.get("qt", "all")
+    page: str | None = req.args.get("page", None)
 
     page_num: int = parse_page_number(page)
     rows: int = 20

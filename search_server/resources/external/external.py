@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 import ypres
 
@@ -19,7 +18,7 @@ log = logging.getLogger("mp_server")
 
 async def handle_external_request(
     req, project: str, resource_type: str, ext_id: str
-) -> Optional[dict]:
+) -> dict | None:
     solr_id: str = f"{project}_{resource_type}_{ext_id}"
     external_record = await SolrConnection.get(solr_id)
 

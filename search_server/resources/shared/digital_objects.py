@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 import ypres
 from small_asc.client import Results
@@ -44,13 +43,12 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
 
         return transl.get("records.digital_objects")
 
-    async def get_items(self, obj: SolrResult) -> Optional[list]:
+    async def get_items(self, obj: SolrResult) -> list | None:
         fq: list = [f"linked_id:{obj.get('id')}", "type:dobject"]
 
         results: Results = await SolrConnection.search(
             {"query": "*:*", "filter": fq},
             cursor=True,
-            session=self.context.get("session"),
         )
 
         if results.hits == 0:
@@ -61,7 +59,6 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
             many=True,
             context={
                 "request": self.context.get("request"),
-                "session": self.context.get("session"),
             },
         ).data
 
@@ -109,16 +106,16 @@ class DigitalObject(ypres.AsyncDictSerializer):
     def get_label(self, obj: SolrResult) -> dict:
         return {"none": [f"{obj.get('description_s')}"]}
 
-    def get_part_of(self, obj: SolrResult) -> Optional[dict]:
+    def get_part_of(self, obj: SolrResult) -> dict | None:
         # TODO!
         pass
 
-    def get_format(self, obj: SolrResult) -> Optional[str]:
+    def get_format(self, obj: SolrResult) -> str | None:
         return obj.get("media_type_s")
 
     async def get_body(self, obj: SolrResult) -> dict:
         d = {}
-        mt: Optional[str] = obj.get("media_type_s")
+        mt: str | None = obj.get("media_type_s")
         if mt in ("image/jpeg", "image/png"):
             d.update(
                 {
@@ -129,7 +126,7 @@ class DigitalObject(ypres.AsyncDictSerializer):
             )
         elif mt == "application/xml":
             mei_url: str = obj["encoding_url_s"]
-            svg: Optional[str] = await render_url(mei_url)
+            svg: str | None = await render_url(mei_url)
 
             if not svg:
                 log.error("Could not render SVG for %s", obj.get("id"))

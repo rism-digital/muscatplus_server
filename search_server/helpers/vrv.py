@@ -3,9 +3,8 @@ import os
 import re
 import tempfile
 import urllib.parse
-from typing import Optional
 
-import aiohttp
+import httpx
 import verovio
 from orjson import orjson
 
@@ -42,7 +41,7 @@ vrv_tk.setOptions(VEROVIO_BASE_OPTIONS)
 
 def render_pae(
     pae: str, use_crc: bool = False, enlarged: bool = False, is_mensural: bool = False
-) -> Optional[tuple]:
+) -> tuple | None:
     """
     Renders Plaine and Easie to SVG and MIDI. Returns None if there was a problem loading the data.
 
@@ -93,28 +92,25 @@ def render_pae(
     return svg, b64midi
 
 
-async def render_url(url: str) -> Optional[str]:
+async def render_url(url: str) -> str | None:
     """
     Takes a URL to an MEI file and returns the SVG for it.
 
     :param url:
     :return:
     """
-    async with aiohttp.ClientSession() as client:
+    async with httpx.AsyncClient() as client:
         try:
             res = await client.get(url)
-        except aiohttp.ClientConnectionError:
-            log.error("Connection to server timed out for %s", url)
-            return None
-        except aiohttp.ClientError:
-            log.error("Unknown connection error for %s", url)
+        except httpx.RequestError:
+            log.error("Request error for %s", url)
             return None
 
-        if res.status != 200:
-            log.error("Server responded with non-success status code: %s", res.status)
+        if res.status_code != 200:
+            log.error("Server responded with non-success status code: %s", res.status_code)
             return None
 
-        mei: str = await res.text()
+        mei: str = res.text
         vrv_opts: dict = VEROVIO_BASE_OPTIONS.copy()
         vrv_opts.update(
             {
@@ -134,7 +130,7 @@ async def render_url(url: str) -> Optional[str]:
         return svg
 
 
-def render_mei(req, incipit: dict) -> Optional[str]:
+def render_mei(req, incipit: dict) -> str | None:
     """
     Renders an MEI result from PAE input. Includes information for the MEI header
     in the `x-header` section.
@@ -190,7 +186,7 @@ def render_mei(req, incipit: dict) -> Optional[str]:
     return mei
 
 
-def render_png(req, incipit: str) -> Optional[bytes]:
+def render_png(req, incipit: str) -> bytes | None:
     rendered_svg, _ = render_pae(incipit)
     cfg: dict = req.app.ctx.config
     # Create the temporary image file
@@ -255,7 +251,7 @@ def create_pae_from_request(req) -> str:
     return "\n".join(pae_elements)
 
 
-def get_pae_features(req) -> Optional[dict]:
+def get_pae_features(req) -> dict | None:
     """
     Parses an incoming search request containing some note data and some
     optional parameters, and returns a dictionary containing the PAE features.

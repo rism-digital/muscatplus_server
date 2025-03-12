@@ -1,9 +1,8 @@
-from typing import Optional
 
 from search_server.helpers.search_request import sorting_for_mode
 
 
-def get_sorting(req, is_contents: bool = False) -> Optional[dict]:
+def get_sorting(req, is_contents: bool = False) -> dict | None:
     """
     If the sorting config is being loaded for a source contents page, then set the
     is_contents flag to `True`. This will add any sort parameters that are marked
@@ -39,7 +38,7 @@ def get_sorting(req, is_contents: bool = False) -> Optional[dict]:
             sort_default = cfg_alias
 
         translation_key: str = sortcfg["label"]
-        translation: Optional[dict] = transl.get(translation_key)
+        translation: dict | None = transl.get(translation_key)
         label: dict = translation or {"none": [translation_key]}
 
         sorting_options.append({"label": label, "alias": cfg_alias})

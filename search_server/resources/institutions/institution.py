@@ -1,5 +1,5 @@
 import re
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import ypres
 
@@ -15,8 +15,8 @@ from shared_helpers.solr_connection import SolrConnection, SolrResult
 from shared_helpers.utilities import is_number
 
 
-async def handle_institution_request(req, institution_id: str) -> Optional[dict]:
-    institution_record: Optional[dict] = await SolrConnection.get(
+async def handle_institution_request(req, institution_id: str) -> dict | None:
+    institution_record: dict | None = await SolrConnection.get(
         f"institution_{institution_id}"
     )
 
@@ -37,7 +37,7 @@ class Institution(BaseInstitution):
     external_resources = ypres.MethodField(label="externalResources")
     properties = ypres.MethodField()
 
-    def get_sources(self, obj: SolrResult) -> Optional[dict]:
+    def get_sources(self, obj: SolrResult) -> dict | None:
         institution_id = obj["institution_id"]
         ident: str = re.sub(ID_SUB, "", institution_id)
         source_count: int = obj.get("total_sources_i", 0)
@@ -55,7 +55,7 @@ class Institution(BaseInstitution):
             "totalItems": source_count,
         }
 
-    async def get_location(self, obj: SolrResult) -> Optional[dict]:
+    async def get_location(self, obj: SolrResult) -> dict | None:
         if {
             "street_address_sm",
             "city_address_sm",
@@ -69,7 +69,7 @@ class Institution(BaseInstitution):
             obj, context={"request": self.context.get("request")}
         ).data
 
-    async def get_external_authorities(self, obj: SolrResult) -> Optional[list[dict]]:
+    async def get_external_authorities(self, obj: SolrResult) -> list[dict] | None:
         if "external_ids" not in obj:
             return None
 
@@ -77,7 +77,7 @@ class Institution(BaseInstitution):
             obj["external_ids"], context={"request": self.context.get("request")}
         ).data
 
-    async def get_relationships(self, obj: SolrResult) -> Optional[dict]:
+    async def get_relationships(self, obj: SolrResult) -> dict | None:
         if not self.context.get("direct_request"):
             return None
 
@@ -95,7 +95,7 @@ class Institution(BaseInstitution):
 
         return await RelationshipsSection(obj, context={"request": req}).data
 
-    async def get_notes(self, obj: SolrResult) -> Optional[dict]:
+    async def get_notes(self, obj: SolrResult) -> dict | None:
         notes: dict = await NotesSection(
             obj, context={"request": self.context.get("request")}
         ).data
@@ -104,7 +104,7 @@ class Institution(BaseInstitution):
 
         return None
 
-    async def get_external_resources(self, obj: SolrResult) -> Optional[dict]:
+    async def get_external_resources(self, obj: SolrResult) -> dict | None:
         if "external_resources_json" not in obj and not obj.get(
             "has_external_record_b", False
         ):
@@ -114,7 +114,7 @@ class Institution(BaseInstitution):
             obj, context={"request": self.context.get("request")}
         ).data
 
-    def get_properties(self, obj: SolrResult) -> Optional[dict]:
+    def get_properties(self, obj: SolrResult) -> dict | None:
         d = {
             "siglum": obj.get("siglum_s"),
             "countryCodes": obj.get("country_codes_sm", []),
@@ -137,7 +137,7 @@ class LocationAddressSection(ypres.DictSerializer):
 
         return transl.get("records.location_and_address")
 
-    def get_addresses(self, obj: SolrResult) -> Optional[list]:
+    def get_addresses(self, obj: SolrResult) -> list | None:
         if "addresses_json" not in obj:
             return None
 
@@ -157,7 +157,7 @@ class LocationAddressSection(ypres.DictSerializer):
         for address in obj.get("addresses_json", []):
             out_addr = {}
             for k, _ in address.items():
-                label: tuple[str, Optional[Callable]] = (
+                label: tuple[str, Callable | None] = (
                     mailing_address_field_config.get(k, ())
                 )
                 if not label:
@@ -168,7 +168,7 @@ class LocationAddressSection(ypres.DictSerializer):
 
         return all_addresses
 
-    def get_coordinates(self, obj: SolrResult) -> Optional[dict]:
+    def get_coordinates(self, obj: SolrResult) -> dict | None:
         if "location_loc" not in obj:
             return None
 
@@ -205,7 +205,7 @@ class LocationAddressSection(ypres.DictSerializer):
             },
         }
 
-    def get_website(self, obj: SolrResult) -> Optional[dict]:
+    def get_website(self, obj: SolrResult) -> dict | None:
         if (
             "website_address_sm" not in obj
             or len(obj.get("website_address_sm", [])) == 0
@@ -220,7 +220,7 @@ class LocationAddressSection(ypres.DictSerializer):
             "value": {"none": obj.get("website_address_sm", [])},
         }
 
-    def get_email(self, obj: SolrResult) -> Optional[dict]:
+    def get_email(self, obj: SolrResult) -> dict | None:
         if "email_address_sm" not in obj or len(obj.get("email_address_sm", [])) == 0:
             return None
 

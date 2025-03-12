@@ -1,7 +1,6 @@
 import re
 from collections import defaultdict
 from re import Match
-from typing import Optional
 
 _MATERIAL_SOURCE_TYPE_MAP: dict = {
     "Manuscript copy": "records.manuscript_copy",
@@ -481,7 +480,7 @@ def __lookup_translations(
     :param translations_map: A dictionary mapping Solr values to the key in the available translations.
     :return: A dictionary corresponding to a language map for that value, selected from the available translations.
     """
-    trans_key: Optional[str] = translations_map.get(value)
+    trans_key: str | None = translations_map.get(value)
     if not trans_key:
         return {"none": [value]}
     return available_translations.get(trans_key)
@@ -505,7 +504,7 @@ def __lookup_translations_list(
     langcodes: list = list(available_translations["general.rism"].keys())
 
     for trans_itm in values:
-        transl_key: Optional[str] = translations_map.get(trans_itm)
+        transl_key: str | None = translations_map.get(trans_itm)
         for lcode in langcodes:
             if transl_key:
                 trans: dict = available_translations.get(transl_key, {})
@@ -635,7 +634,7 @@ def dramatic_roles_json_value_translator(values: list, translations: dict) -> di
     roles: list = []
     for r in values:
         standard: str = f"{r.get('standard_spelling', '')}"
-        source: Optional[str] = f"[{s}]" if (s := r.get("source_spelling")) else None
+        source: str | None = f"[{s}]" if (s := r.get("source_spelling")) else None
         role = " ".join(f for f in [source, standard] if f)
         roles.append(role)
     return {"none": roles}
@@ -670,14 +669,14 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
     # Get the individual fields for each entry in the title field, if any.
     for v in values:
         title = v.get("title", "[Without title]")
-        subheading: Optional[str] = v.get("subheading")
-        arrangement: Optional[str] = v.get("arrangement")
-        key_mode: Optional[str] = v.get("key_mode")
-        catalogue_numbers: Optional[str] = (
+        subheading: str | None = v.get("subheading")
+        arrangement: str | None = v.get("arrangement")
+        key_mode: str | None = v.get("key_mode")
+        catalogue_numbers: str | None = (
             ", ".join(ch) if (ch := v.get("catalogue_numbers")) else None
         )
-        holding_siglum: Optional[str] = v.get("holding_siglum")
-        holding_shelfmark: Optional[str] = v.get("holding_shelfmark")
+        holding_siglum: str | None = v.get("holding_siglum")
+        holding_shelfmark: str | None = v.get("holding_shelfmark")
         source_type: str = v.get("source_type", "")
         subheading_trans = arrangement_trans = key_mode_trans = source_type_trans = {}
 
@@ -766,7 +765,7 @@ def _wrap_addresses(inp: str) -> str:
     return re.sub(URL_DETECTOR, _repl_fn, inp)
 
 
-def url_detecting_translator(values: list, translations: dict) -> Optional[dict]:
+def url_detecting_translator(values: list, translations: dict) -> dict | None:
     """
     Detects `http://` and `https://` in a block of text and wraps them in `<a href>` tags
     so that they can be parsed and displayed without a lot of fuss on the front-end.

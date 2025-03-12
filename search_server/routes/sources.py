@@ -1,4 +1,3 @@
-from typing import Optional
 
 from sanic import Blueprint, response
 
@@ -48,11 +47,11 @@ async def incipit(req, source_id: str, work_num: str):
     of the incipit.
 
     """
-    accept: Optional[str] = req.headers.get("Accept")
+    accept: str | None = req.headers.get("Accept")
 
     if accept and "application/mei+xml" in accept:
         # Handle the request differently if the Accept type is MEI
-        resp: Optional[dict] = await handle_mei_download(
+        resp: dict | None = await handle_mei_download(
             req, source_id=source_id, work_num=work_num
         )
         if not resp:
@@ -61,7 +60,7 @@ async def incipit(req, source_id: str, work_num: str):
             )
         return response.text(resp["content"], headers=resp["headers"])
     elif accept and "image/png" in accept:
-        resp: Optional[dict] = await handle_png_download(
+        resp: dict | None = await handle_png_download(
             req, source_id=source_id, work_num=work_num
         )
         if not resp:
@@ -83,7 +82,7 @@ async def incipit_mei_encoding(req, source_id: str, work_num: str):
     response to the main incipit retrieve function, so we use the same handler
     for both.
     """
-    resp: Optional[dict] = await handle_mei_download(
+    resp: dict | None = await handle_mei_download(
         req, source_id=source_id, work_num=work_num
     )
     if not resp:
@@ -100,7 +99,7 @@ async def incipit_png_rendering(req, source_id: str, work_num: str):
     response to the main incipit retrieve function, so we use the same handler
     for both.
     """
-    resp: Optional[dict] = await handle_png_download(
+    resp: dict | None = await handle_png_download(
         req, source_id=source_id, work_num=work_num
     )
     if not resp:

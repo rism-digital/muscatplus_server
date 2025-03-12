@@ -22,8 +22,14 @@ __BASE_CONTEXT = {
     "type": "@type",
     "id": "@id",
     # "none": "@none",
-    "label": {"@id": "rdfs:label", "@container": ["@language", "@set"]},
-    "value": {"@id": "rdf:value", "@container": ["@language", "@set"]},
+    "label": {
+        "@id": "rdfs:label",
+        "@container": ["@language", "@set"],
+    },
+    "value": {
+        "@id": "rdf:value",
+        "@container": ["@language", "@set"],
+    },
 }
 
 __RELATIONSHIPS = {
@@ -60,13 +66,22 @@ __INCIPITS = {
             "notation": {"@id": "rism:hasPAEData"},
             "encodings": {
                 "@id": "rism:hasEncoding",
-                "@type": "@set",
+                "@container": "@set",
                 "@context": {
-                    "data": {"@id": "rism:paeEncoding", "@type": "@json"},
-                    "url": {"@id": "rism:meiEncoding", "@type": "xsd:anyURI"},
+                    "data": {
+                        "@id": "rism:paeEncoding",
+                        "@type": "@json",
+                    },
+                    "url": {
+                        "@id": "rism:meiEncoding",
+                        "@type": "xsd:anyURI",
+                    },
                 },
             },
-            "partOf": {"@value": "null", "propagate": "false"},
+            "partOf": {
+                "@value": "null",
+                "propagate": "false",
+            },
         },
     }
 }
@@ -83,7 +98,10 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     "siglum": {
         "@id": "rism:hasSiglum",
     },
-    "countryCodes": {"@id": "rism:hasCountryCodes", "@type": "@set"},
+    "countryCodes": {
+        "@id": "rism:hasCountryCodes",
+        "@container": "@set",
+    },
 }
 
 RISM_JSONLD_WORK_CONTEXT: ContextDocument = {**__BASE_CONTEXT}
@@ -94,8 +112,14 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     "dates": {
         "@id": "rism:hasDates",
         "@context": {
-            "earliestDate": {"@id": "rism:earliestDate", "@type": "xsd:integer"},
-            "latestDate": {"@id": "rism:latestDate", "@type": "xsd:integer"},
+            "earliestDate": {
+                "@id": "rism:earliestDate",
+                "@type": "xsd:integer",
+            },
+            "latestDate": {
+                "@id": "rism:latestDate",
+                "@type": "xsd:integer",
+            },
             "dateStatement": {
                 "@id": "rism:dateStatement",
             },
@@ -126,7 +150,10 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     "exemplars": {
         "@id": "rism:hasHolding",
         "@type": "@id",
-        "@context": {"items": "@set", "heldBy": {"@id": "rism:hasHoldingInstitution"}},
+        "@context": {
+            "items": "@set",
+            "heldBy": {"@id": "rism:hasHoldingInstitution"},
+        },
     },
     "contents": {
         "@id": "@nest",
@@ -140,7 +167,10 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     "keyMode": {
         "@id": "rism:hasKeyMode",
     },
-    "physicalDimensions": {"@id": "rism:hasPhysicalDimensions", "@type": "@list"},
+    "physicalDimensions": {
+        "@id": "rism:hasPhysicalDimensions",
+        "@container": "@list",
+    },
 }
 
 

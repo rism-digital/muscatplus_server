@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 ID_SUB: re.Pattern = re.compile(
     r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_|work_"
@@ -63,6 +62,10 @@ EXTERNAL_IDS: dict = {
         "label": "Cantus: A Database for Latin Ecclesiastical Chant",
         "ident": "https://cantusdatabase.org/{ident}",
     },
+    "cmo": {
+        "label": "Corpus Musicae Ottomanicae (CMO)",
+        "ident": "https://corpus-musicae-ottomanicae.de/receive/{ident}"
+    }
 }
 
 
@@ -108,7 +111,7 @@ def get_site(req) -> str:
     return f"{scheme}://{server}"
 
 
-def get_url_from_type(req, record_type: str, record_id: str) -> Optional[str]:
+def get_url_from_type(req, record_type: str, record_id: str) -> str | None:
     site: str = get_site(req)
     url: str
 

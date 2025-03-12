@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import ypres
 
@@ -25,7 +24,7 @@ class BaseWork(ypres.AsyncDictSerializer):
     def get_label(self, obj: SolrResult) -> dict:
         return {"none": [format_work_label(obj)]}
 
-    async def get_creator(self, obj: SolrResult) -> Optional[dict]:
+    async def get_creator(self, obj: SolrResult) -> dict | None:
         if "creator_json" not in obj:
             return None
 
@@ -34,7 +33,7 @@ class BaseWork(ypres.AsyncDictSerializer):
             context={"request": self.context.get("request"), "reltype": "rism:Creator"},
         ).data
 
-    def get_sources(self, obj: SolrResult) -> Optional[dict]:
+    def get_sources(self, obj: SolrResult) -> dict | None:
         req = self.context.get("request")
         work_id: str = obj.get("id")
         source_count: int = obj.get("source_count_i", 0)

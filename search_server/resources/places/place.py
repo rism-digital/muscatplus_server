@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 import ypres
 from small_asc.client import JsonAPIRequest, Results
@@ -22,8 +21,8 @@ from shared_helpers.solr_connection import SolrConnection, SolrResult
 log = logging.getLogger("mp_server")
 
 
-async def handle_place_request(req, place_id: str) -> Optional[dict]:
-    record: Optional[dict] = await SolrConnection.get(f"place_{place_id}")
+async def handle_place_request(req, place_id: str) -> dict | None:
+    record: dict | None = await SolrConnection.get(f"place_{place_id}")
 
     if not record:
         return None
@@ -55,7 +54,7 @@ class Place(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
         return transl.get("records.place")
 
-    def get_summary(self, obj: SolrResult) -> Optional[dict]:
+    def get_summary(self, obj: SolrResult) -> dict | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -66,7 +65,7 @@ class Place(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config)
 
-    async def get_sources(self, obj: SolrResult) -> Optional[dict]:
+    async def get_sources(self, obj: SolrResult) -> dict | None:
         # if there are no sources attached to this place, return None
         source_count: int = obj.get("sources_count_i", 0)
         if source_count == 0:
@@ -88,7 +87,7 @@ class Place(ypres.AsyncDictSerializer):
 
         return {"type": "rism:PlaceSourceList", "items": source_list}
 
-    async def get_people(self, obj: SolrResult) -> Optional[dict]:
+    async def get_people(self, obj: SolrResult) -> dict | None:
         people_count: int = obj.get("people_count_i", 0)
         if people_count == 0:
             return None
@@ -108,7 +107,7 @@ class Place(ypres.AsyncDictSerializer):
 
         return {"type": "rism:PlacePersonList", "items": person_list}
 
-    async def get_institutions(self, obj: SolrResult) -> Optional[dict]:
+    async def get_institutions(self, obj: SolrResult) -> dict | None:
         institution_count: int = obj.get("institutions_count_i", 0)
         if institution_count == 0:
             return None
