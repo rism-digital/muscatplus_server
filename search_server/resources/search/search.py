@@ -32,6 +32,7 @@ FIELDS = [
     "has_iiif_manifest_b",
     "has_external_record_b",
     "num_holdings_i",
+    "record_uri_sni",
     "name_s",
     "gender_s",
     "date_statement_s",
