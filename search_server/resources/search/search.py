@@ -72,7 +72,6 @@ FIELDS = [
 async def handle_search_request(req) -> dict:
     try:
         request_compiler: SearchRequest = SearchRequest(req)
-        request_compiler.fields = FIELDS
         solr_params: dict = request_compiler.compile()
     except InvalidQueryException:
         raise
