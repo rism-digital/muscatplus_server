@@ -59,6 +59,12 @@ FIELDS = [
     "is_mensural_b",
     "source_id",
     "external_institution_id",
+    "intervals_bi",
+    "intervals_len_i",
+    "pitches_bi",
+    "pitches_len_i",
+    "contour_refined_bi",
+    "country_codes_sm",
 ]
 
 
