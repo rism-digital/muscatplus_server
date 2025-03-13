@@ -316,6 +316,11 @@ class SourceSearchResult(ypres.DictSerializer):
         if is_cantus_record:
             result_flags.update({"isCantusRecord": is_cantus_record})
 
+        if is_diamm_record or is_cantus_record:
+            project_url: str = obj.get("record_uri_sni", "")
+            result_flags.update({"externalProjectURL": project_url})
+
+
         # return None if flags are empty.
         return result_flags or None
 
@@ -388,7 +393,11 @@ class PersonSearchResult(ypres.DictSerializer):
             result_flags.update({"isDIAMMRecord": is_diamm_record})
 
         if is_cantus_record:
-            result_flags.update({"isDIAMMRecord": is_cantus_record})
+            result_flags.update({"isCantusRecord": is_cantus_record})
+
+        if is_diamm_record or is_cantus_record:
+            project_url: str = obj.get("record_uri_sni", "")
+            result_flags.update({"externalProjectURL": project_url})
 
         return result_flags or None
 
@@ -473,6 +482,10 @@ class InstitutionSearchResult(ypres.DictSerializer):
 
         if is_cantus_record:
             result_flags.update({"isCantusRecord": is_cantus_record})
+
+        if is_diamm_record or is_cantus_record:
+            project_url: str = obj.get("record_uri_sni", "")
+            result_flags.update({"externalProjectURL": project_url})
 
         return result_flags or None
 
