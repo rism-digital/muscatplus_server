@@ -44,7 +44,7 @@ class ExternalRecord(ypres.AsyncDictSerializer):
         req = self.context.get("request")
         project: str = obj["project_s"]
         srtype: str = obj["type"]
-        id_value: str = re.sub(PROJECT_ID_SUB, "", obj.get("id"))
+        id_value: str = re.sub(PROJECT_ID_SUB, "", obj["id"])
 
         return get_identifier(
             req,
