@@ -98,6 +98,7 @@ class Person(BasePerson):
             "related_places_json",
             "related_institutions_json",
             "related_sources_json",
+            "contributing_projects_json"
         }.isdisjoint(obj.keys()):
             return None
 
