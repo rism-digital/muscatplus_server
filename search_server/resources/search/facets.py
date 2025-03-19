@@ -104,11 +104,14 @@ def get_facets(req, obj: Results) -> dict | None:
             "type": _get_facet_type(facet_type),
         }
 
-        if facet_type == "range":
+        if facet_type == FacetTypeValues.RANGE:
             cfg.update(_create_range_facet(alias, res, req))
-        elif facet_type == "toggle":
+        elif facet_type == FacetTypeValues.TOGGLE:
             cfg.update(_create_toggle_facet(res))
-        elif facet_type == "select":
+        elif facet_type == FacetTypeValues.SINGLECHOICE:
+            fcfg: dict = facet_config_map[alias]
+            cfg.update(_create_single_choice_facet(res, fcfg))
+        elif facet_type == FacetTypeValues.SELECT:
             if "buckets" not in res:
                 continue
 
@@ -121,21 +124,23 @@ def get_facets(req, obj: Results) -> dict | None:
 
 
 def _get_facet_type(val) -> str:
-    if val == FacetTypeValues.RANGE:
-        return "rism:RangeFacet"
-    elif val == FacetTypeValues.TOGGLE:
-        return "rism:ToggleFacet"
-    elif val == FacetTypeValues.SELECT:
-        return "rism:SelectFacet"
-    elif val == FacetTypeValues.NOTATION:
-        return "rism:NotationFacet"
-    elif val == FacetTypeValues.QUERY:
-        return "rism:QueryFacet"
-    elif val == FacetTypeValues.PARAMETER:
-        return "rism:ParameterFacet"
-    else:
-        return "rism:Facet"
-
+    match val:
+        case FacetTypeValues.RANGE:
+            return "rism:RangeFacet"
+        case FacetTypeValues.TOGGLE:
+            return "rism:ToggleFacet"
+        case FacetTypeValues.SELECT:
+            return "rism:SelectFacet"
+        case FacetTypeValues.NOTATION:
+            return "rism:NotationFacet"
+        case FacetTypeValues.QUERY:
+            return "rism:QueryFacet"
+        case FacetTypeValues.PARAMETER:
+            return "rism:ParameterFacet"
+        case FacetTypeValues.SINGLECHOICE:
+            return "rism:SingleChoiceFacet"
+        case _:
+            return "rism:Facet"
 
 def __get_key_signature(value: str) -> dict:
     if value == "n":
@@ -276,6 +281,23 @@ def _create_range_facet(alias: str, res, req) -> dict:
 def _create_toggle_facet(res) -> dict:
     toggle_fields: dict = {"value": "true"}
     return toggle_fields
+
+def _create_single_choice_facet(res, cfg: dict):
+    items = []
+    for bucket in res["buckets"]:
+        solr_value = bucket["val"]
+        if isinstance(solr_value, bool):
+            value = str(solr_value).lower()
+        else:
+            value = solr_value
+
+        items.append({
+            "label": {"none": [cfg["translation_values"].get(value, f"[Unknown label for {value}]")]},
+            "value": value,
+            "count": bucket["count"]
+        })
+
+    return {"items": items}
 
 
 def _create_select_facet(

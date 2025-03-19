@@ -166,7 +166,7 @@ class FullSource(BaseSource):
         if "work_node_json" not in obj:
             return None
 
-        return await WorksSection(
+        return WorksSection(
             obj,
             context={
                 "request": self.context.get("request"),

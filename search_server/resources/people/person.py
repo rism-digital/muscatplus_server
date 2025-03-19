@@ -120,7 +120,7 @@ class Person(BasePerson):
         if "work_nodes_json" not in obj:
             return None
 
-        return await WorksSection(
+        return WorksSection(
             obj, context={"request": self.context.get("request")}
         ).data
 
