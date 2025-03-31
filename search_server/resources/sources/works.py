@@ -6,7 +6,7 @@ from shared_helpers.identifiers import EXTERNAL_IDS, ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 
 
-class WorksSection(ypres.AsyncDictSerializer):
+class WorksSection(ypres.DictSerializer):
     section_label = ypres.MethodField(label="sectionLabel")
     stype = ypres.StaticField(label="type", value="rism:WorksSection")
     # for sources, only a single work reference is stored
@@ -29,24 +29,26 @@ class WorksSection(ypres.AsyncDictSerializer):
         req = self.context.get("request")
         return format_work_node(req, work_node)
 
-    async def get_work_references(self, obj: SolrResult) -> dict | None:
+    def get_work_references(self, obj: SolrResult) -> dict | None:
         if "work_nodes_json" not in obj:
             return None
 
-        return await ExternalWorkReferencesSection(
+        return ExternalWorkReferencesSection(
             obj, context={"request": self.context.get("request")}
         ).data
 
 
-class ExternalWorkReferencesSection(ypres.AsyncDictSerializer):
+class ExternalWorkReferencesSection(ypres.DictSerializer):
     # TODO: Add ID field and make resolvable?
     section_label = ypres.MethodField(label="sectionLabel")
     stype = ypres.StaticField(label="type", value="rism:ExternalWorkReferencesSection")
     items = ypres.MethodField(label="items")
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        # TODO: Translations!
-        return {"none": ["External work references"]}
+        req = self.context.get("request")
+        transl: dict = req.ctx.translations
+
+        return transl.get("records.external_work_reference")
 
     def get_items(self, obj: SolrResult) -> list[dict]:
         work_nodes = obj["work_nodes_json"]
@@ -56,6 +58,8 @@ class ExternalWorkReferencesSection(ypres.AsyncDictSerializer):
 
 
 def format_work_node(req, work_node: dict) -> dict:
+    transl: dict = req.ctx.translations
+
     work_node_title = work_node.get("work_title", "[No title]")
     work_node_composer = work_node.get("composer_name", "[No composer]")
     external_id = work_node["external_id"]
@@ -70,7 +74,7 @@ def format_work_node(req, work_node: dict) -> dict:
     person_id = re.sub(ID_SUB, "", work_node["composer_id"])
 
     return {
-        "label": {"none": ["External work reference"]},
+        "label": transl.get("records.external_work_reference"),
         "relatedTo": {
             "id": get_identifier(req, "people.person", person_id=person_id),
             "label": {"none": [work_node_composer]},

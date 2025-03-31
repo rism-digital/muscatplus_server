@@ -88,6 +88,7 @@ class Institution(BaseInstitution):
             "related_sources_json",
             "now_in_json",
             "contains_json",
+            "contributing_projects_json"
         }.isdisjoint(obj.keys()):
             return None
 

@@ -40,9 +40,10 @@ class RelationshipsSection(ypres.AsyncDictSerializer):
         institutions: list = obj.get("related_institutions_json", [])
         places: list = obj.get("related_places_json", [])
         sources: list = obj.get("related_sources_json", [])
+        contributing_projects: list = obj.get("contributing_projects_json", [])
 
         all_relationships = to_aiter(
-            itertools.chain(now_in, contains, people, institutions, sources, places)
+            itertools.chain(now_in, contains, people, institutions, sources, places, contributing_projects)
         )
 
         return await Relationship(
@@ -60,6 +61,7 @@ class Relationship(ypres.AsyncDictSerializer):
     related_to = ypres.MethodField(label="relatedTo")
     name = ypres.MethodField()
     note = ypres.MethodField()
+    project_url = ypres.MethodField()
 
     def get_role(self, obj: dict) -> dict | None:
         if "relationship" not in obj:
@@ -135,6 +137,12 @@ class Relationship(ypres.AsyncDictSerializer):
             return None
 
         return {"none": [obj.get("note")]}
+
+    def get_project_url(self, obj: dict) -> dict | None:
+        # For contributing projects a Project URL is given.
+        if "project_url" not in obj:
+            return None
+        return obj.get("project_url")
 
 
 def _related_to_person(req, obj: dict) -> dict:

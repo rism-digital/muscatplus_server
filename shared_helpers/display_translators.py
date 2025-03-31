@@ -159,6 +159,7 @@ _QUALIFIER_LABELS_MAP = {
 _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     None: "records.other",
     "xi": "records.related_institution",  # special case for un-qualified institution relationships
+    "contributing_project": "records.contributing_project",
     "now-in": "records.now_in",
     "contained-by": "records.includes_holdings_from",
     "brother of": "records.brother_of",

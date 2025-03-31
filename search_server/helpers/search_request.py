@@ -44,6 +44,7 @@ class FacetTypeValues:
     NOTATION = "notation"
     QUERY = "query"
     PARAMETER = "parameter"
+    SINGLECHOICE = "single-choice"
 
 
 class FacetSortValues:
@@ -494,6 +495,8 @@ class SearchRequest:
                     solr_facet_def = _create_select_facet(facet_cfg, behaviour)
                 elif facet_cfg["type"] == FacetTypeValues.PARAMETER:
                     solr_facet_def = _create_parameter_facet(facet_cfg)
+                elif facet_cfg["type"] == FacetTypeValues.SINGLECHOICE:
+                    solr_facet_def = _create_single_choice_facet(facet_cfg)
                 else:
                     continue
 
@@ -789,5 +792,9 @@ def _create_select_facet(facet_cfg: dict, behaviour: str) -> dict:
 
 def _create_parameter_facet(facet_cfg: dict) -> dict:
     field_name: str = facet_cfg["field"]
-    cfg: dict = {"type": "terms", "field": field_name, "limit": 0}
-    return cfg
+    return {"type": "terms", "field": field_name, "limit": 0}
+
+
+def _create_single_choice_facet(facet_cfg: dict) -> dict:
+    field_name: str = facet_cfg["field"]
+    return {"type": "terms", "field": field_name, "limit": 2}
