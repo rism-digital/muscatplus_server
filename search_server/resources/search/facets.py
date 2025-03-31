@@ -98,27 +98,27 @@ def get_facets(req, obj: Results) -> dict | None:
         translation: dict | None = transl.get(translation_key)
         label: dict = translation or {"none": [translation_key]}
 
-        cfg: dict = {
+        this_cfg: dict = {
             "alias": alias,
             "label": label,
             "type": _get_facet_type(facet_type),
         }
 
         if facet_type == FacetTypeValues.RANGE:
-            cfg.update(_create_range_facet(alias, res, req))
+            this_cfg.update(_create_range_facet(alias, res, req))
         elif facet_type == FacetTypeValues.TOGGLE:
-            cfg.update(_create_toggle_facet(res))
+            this_cfg.update(_create_toggle_facet(res))
         elif facet_type == FacetTypeValues.SINGLECHOICE:
-            fcfg: dict = facet_config_map[alias]
-            cfg.update(_create_single_choice_facet(res, fcfg))
+            sc_cfg: dict = facet_config_map[alias]
+            this_cfg.update(_create_single_choice_facet(res, sc_cfg))
         elif facet_type == FacetTypeValues.SELECT:
             if "buckets" not in res:
                 continue
 
-            fcfg: dict = facet_config_map[alias]
-            cfg.update(_create_select_facet(alias, res, req, fcfg, transl))
+            sel_cfg: dict = facet_config_map[alias]
+            this_cfg.update(_create_select_facet(alias, res, req, sel_cfg, transl))
 
-        facets[alias] = cfg
+        facets[alias] = this_cfg
 
     return facets
 

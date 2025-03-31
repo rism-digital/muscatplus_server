@@ -120,16 +120,16 @@ def load_translations(path: str) -> dict | None:
             if translation_value:
                 output[translation_key].update({langcode: [translation_value]})
 
-    translations: dict = dict(output)
+    tr_out: dict = dict(output)
 
     # combine the translations with the values of the language codes, to keep everything in the same spot.
     # namespace the language codes with 'langcodes' (similar to 'general' or 'records'). Language labels
     # can then be looked up with "langcodes.ger".
-    labels: dict = language_labels(translations)
+    labels: dict = language_labels(tr_out)
     namespaced_labels: dict = {f"langcodes.{k}": v for k, v in labels.items()}
-    translations.update(namespaced_labels)
+    tr_out.update(namespaced_labels)
 
-    return translations
+    return tr_out
 
 
 def languages_translator(value: str | list, translations: dict) -> dict:

@@ -1,5 +1,5 @@
-import argparse
 import textwrap
+
 import yaml
 
 from search_server.server import app
@@ -132,7 +132,7 @@ Alias
 """
 
 
-def main():
+def main() -> None:
     all_routes: dict = app.router.routes_all
     sorted_routes = sorted(all_routes.items(), key=lambda tup: tup[1].path)
     with open("routes.md", "w") as opn:
