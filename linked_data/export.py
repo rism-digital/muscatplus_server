@@ -11,11 +11,11 @@ import subprocess
 import timeit
 from pathlib import Path
 
-import aiohttp
+import httpx
+import orjson
 import rdflib
 import uvloop
 import yaml
-from orjson import orjson
 from sanic.compat import Header
 from sanic.models.protocol_types import TransportProtocol
 from sanic.request import Request
@@ -50,7 +50,7 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 # Mock route for the request
-class Route:
+class MockRoute:
     def __init__(self):
         self.name = ""
 
@@ -64,14 +64,12 @@ headers: Header = Header(
         "X-Forwarded-Host": "rism.online",
     }
 )
-translations: dict = load_translations("locales/")
+translations: dict = load_translations("locales/") or {}
 filt_translations: dict = filter_languages({"en"}, translations)
-
-route = Route()
 
 req = Request(bytes("/foo", "ascii"), headers, "", "GET", TransportProtocol(), app)
 req.ctx.translations = filt_translations
-req.route = route
+req.route = MockRoute()    # type: ignore
 
 serializer_map: dict = {
     "source": FullSource,
@@ -81,7 +79,7 @@ serializer_map: dict = {
 
 
 def to_turtle(data: dict) -> str:
-    json_serialized: str = orjson.dumps(data)
+    json_serialized: str = orjson.dumps(data).decode("utf-8")
     graph_object: rdflib.Graph = rdflib.Graph().parse(
         data=json_serialized, format="application/ld+json"
     )
@@ -144,7 +142,7 @@ async def run_serializer(
         try:
             serialized = await serializer(
                 this_doc,
-                context={"request": req, "direct_request": True, "session": session},
+                context={"request": req, "direct_request": True, "client": session},
             ).data
         except Exception as e:
             log.critical(
@@ -160,7 +158,7 @@ async def run_serializer(
         with sqlconn:
             sqlconn.execute(
                 "INSERT INTO serialized VALUES (?, ?, ?)",
-                (docid, this_doc["type"], turtle),
+                (docid, this_doc["type"], turtle),  # type: ignore
             )
 
         sqlconn.commit()
@@ -190,9 +188,8 @@ async def serialize(id_group: list, record_type: str, semaphore, dbname: str) ->
         return None
 
     sqlconn = sqlite3.connect(dbname)
-    async with aiohttp.ClientSession(
-        json_serialize=lambda x: orjson.dumps(x).decode("utf-8")
-    ) as session:
+
+    async with httpx.AsyncClient() as session:
         for docid in id_group:
             task = asyncio.create_task(
                 run_serializer(docid, serializer, ctx_val, semaphore, session, sqlconn)
@@ -202,7 +199,7 @@ async def serialize(id_group: list, record_type: str, semaphore, dbname: str) ->
 
         for coro in asyncio.as_completed(tasks):
             try:
-                _ = await coro
+                await coro
             except Exception as e:
                 log.critical(
                     "===========================================   Exception raised! %s",
@@ -290,7 +287,7 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
         log.info(f"Total processing rate: {num_results / s_elapsed} docs/s")
 
     for i in range(parallel_processes):
-        db_name = Path(args.output, f"output_{i}.db")
+        nth_db_name = Path(args.output, f"output_{i}.db")
         ttl_path = Path(args.output, f"output_{i}.nt")
 
         if args.empty:
@@ -301,7 +298,7 @@ def main(args: argparse.Namespace, parallel_processes: int) -> bool:
             log.info("Writing TTL output to %s", str(ttl_path))
             sql_stmt = "SELECT ttl FROM serialized"
 
-            subprocess.run(["sqlite3", str(db_name), sql_stmt], stdout=ttl_out)  # noqa
+            subprocess.run(["sqlite3", str(nth_db_name), sql_stmt], stdout=ttl_out)  # noqa
 
     return True
 
