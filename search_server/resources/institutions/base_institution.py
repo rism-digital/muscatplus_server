@@ -62,7 +62,7 @@ class BaseInstitution(ypres.AsyncDictSerializer):
 
         return org_deets
 
-    def get_record_history(self, obj: dict) -> dict:
+    def get_record_history(self, obj: dict) -> dict | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
@@ -79,7 +79,7 @@ class OrganizationDetails(ypres.DictSerializer):
 
         return transl.get("records.summary")
 
-    def get_summary(self, obj: SolrResult) -> dict | None:
+    def get_summary(self, obj: SolrResult) -> list[dict] | None:
         req = self.context.get("request")
         transl: dict = req.ctx.translations
 
