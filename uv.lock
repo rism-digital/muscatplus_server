@@ -643,15 +643,15 @@ wheels = [
 
 [[package]]
 name = "pytest-cov"
-version = "6.0.0"
+version = "6.1.0"
 source = { registry = "https://pypi.org/simple/" }
 dependencies = [
     { name = "coverage", extra = ["toml"] },
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/be/45/9b538de8cef30e17c7b45ef42f538a94889ed6a16f2387a6c89e73220651/pytest-cov-6.0.0.tar.gz", hash = "sha256:fde0b595ca248bb8e2d76f020b465f3b107c9632e6a1d1705f17834c89dcadc0", size = 66945 }
+sdist = { url = "https://files.pythonhosted.org/packages/34/8c/039a7793f23f5cb666c834da9e944123f498ccc0753bed5fbfb2e2c11f87/pytest_cov-6.1.0.tar.gz", hash = "sha256:ec55e828c66755e5b74a21bd7cc03c303a9f928389c0563e50ba454a6dbe71db", size = 66651 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/3b/48e79f2cd6a61dbbd4807b4ed46cb564b4fd50a76166b1c4ea5c1d9e2371/pytest_cov-6.0.0-py3-none-any.whl", hash = "sha256:eee6f1b9e61008bd34975a4d5bab25801eb31898b032dd55addc93e96fcaaa35", size = 22949 },
+    { url = "https://files.pythonhosted.org/packages/e1/c5/8d6ffe9fc8f7f57b3662156ae8a34f2b8e7a754c73b48e689ce43145e98c/pytest_cov-6.1.0-py3-none-any.whl", hash = "sha256:cd7e1d54981d5185ef2b8d64b50172ce97e6f357e6df5cb103e828c7f993e201", size = 23743 },
 ]
 
 [[package]]
@@ -769,7 +769,7 @@ wheels = [
 
 [[package]]
 name = "sanic"
-version = "24.12.0"
+version = "25.3.0"
 source = { registry = "https://pypi.org/simple/" }
 dependencies = [
     { name = "aiofiles" },
@@ -784,9 +784,9 @@ dependencies = [
     { name = "uvloop", marker = "implementation_name == 'cpython' and sys_platform != 'win32'" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5c/d6/8761c9df89392c4330c123f1ecc85cfb3884522f3a58e86a7b1809b2d608/sanic-24.12.0.tar.gz", hash = "sha256:09c23aa917616c1e60e44c66dfd7582cb9fd6503f78298c309945909f5839836", size = 351866 }
+sdist = { url = "https://files.pythonhosted.org/packages/df/8b/08dc376390fe854ef32984973883b646ee68c6727da72ffcc65340d8f192/sanic-25.3.0.tar.gz", hash = "sha256:775d522001ec81f034ec8e4d7599e2175bfc097b8d57884f5e4c9322f5e369bb", size = 353027 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/f3/82f38246e8af7976f59f7913a00c8e84325ddb58e05312ab530ce381fdbf/sanic-24.12.0-py3-none-any.whl", hash = "sha256:3c2a01ec0b6c5926e3efe34eac1b497d31ed989038fe213eb25ad0c98687d388", size = 245162 },
+    { url = "https://files.pythonhosted.org/packages/a6/e1/b36ddc16862d63d22986ae21b04a79c8fb7ec48d5d664acdfd1c2acf78ac/sanic-25.3.0-py3-none-any.whl", hash = "sha256:fb519b38b4c220569b0e2e868583ffeaffaab96a78b2e42ae78bc56a644a4cd7", size = 246416 },
 ]
 
 [[package]]
@@ -832,7 +832,7 @@ requires-dist = [
     { name = "orjson", specifier = ">=3.9.15,<4.0.0" },
     { name = "pyyaml", specifier = ">=6.0.1,<7.0.0" },
     { name = "rdflib", specifier = ">=7.0.0,<8.0.0" },
-    { name = "sanic", specifier = ">=24.0.0,<25.0.0" },
+    { name = "sanic", specifier = ">=24.0.0,<26.0.0" },
     { name = "sentry-sdk", extras = ["sanic"], specifier = ">=2.19.0,<3.0.0" },
     { name = "small-asc", git = "https://github.com/rism-digital/small-asc.git?rev=main" },
     { name = "verovio", specifier = ">=5.1.0,<6.0.0" },
@@ -879,7 +879,7 @@ wheels = [
 [[package]]
 name = "small-asc"
 version = "0.25.0"
-source = { git = "https://github.com/rism-digital/small-asc.git?rev=main#49538ac8cbb24bf6ea771a07f2bafed7bb634ae6" }
+source = { git = "https://github.com/rism-digital/small-asc.git?rev=main#bbe2cab59e99176876c0f4b517e47aecba1e98f1" }
 dependencies = [
     { name = "httpx" },
     { name = "orjson" },
@@ -1133,5 +1133,5 @@ wheels = [
 
 [[package]]
 name = "ypres"
-version = "1.0.0"
-source = { git = "https://github.com/rism-digital/ypres.git?rev=main#492eef3ba32b6551b2f1d9571b2712927a4e46e4" }
+version = "1.0.1"
+source = { git = "https://github.com/rism-digital/ypres.git?rev=main#8e6f35b5b647c00358d21d32f8d0f3a1ba10cbd8" }

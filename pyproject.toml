@@ -13,7 +13,7 @@ dependencies = [
     "verovio (>=5.1.0,<6.0.0)",
     "small-asc @ git+https://github.com/rism-digital/small-asc.git@main",
     "ypres @ git+https://github.com/rism-digital/ypres.git@main",
-    "sanic (>=24.0.0,<25.0.0)",
+    "sanic (>=24.0.0,<26.0.0)",
     "sentry-sdk[sanic] (>=2.19.0,<3.0.0)",
     "httpx (>=0.28.1,<0.29.0)",
 ]
