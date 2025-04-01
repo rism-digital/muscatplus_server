@@ -286,10 +286,7 @@ def _create_single_choice_facet(res, cfg: dict):
     items = []
     for bucket in res["buckets"]:
         solr_value = bucket["val"]
-        if isinstance(solr_value, bool):
-            value = str(solr_value).lower()
-        else:
-            value = solr_value
+        value = str(solr_value).lower() if isinstance(solr_value, bool) else solr_value
 
         items.append({
             "label": {"none": [cfg["translation_values"].get(value, f"[Unknown label for {value}]")]},
