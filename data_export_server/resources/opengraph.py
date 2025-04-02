@@ -22,7 +22,7 @@ class OpenGraph(ypres.DictSerializer):
     record_created = ypres.StrField("created")
     record_updated = ypres.StrField("updated")
 
-    def get_record_url(self, obj: dict) -> str:
+    def get_record_url(self, obj: dict) -> str | None:
         req = self.context.get("request")
         record_id: str = re.sub(ID_SUB, "", obj["id"])
         url = get_url_from_type(req, obj["type"], record_id)
@@ -161,11 +161,12 @@ class OpenGraphSvg(ypres.DictSerializer):
     def get_record_third_line(self, obj: dict) -> tuple[str, str] | None:
         objtype: str = obj["type"]
 
+        label: str
         if (t := obj.get("num_source_members_i")) and objtype == "source":
-            label: str = f"{t} item{'s'[: t ^ 1]} in this source"
+            label = f"{t} item{'s'[: t ^ 1]} in this source"
             return CardIcons.CONTENT, label
         elif (t := obj.get("num_holdings_i")) and objtype == "source":
             cpy: str = "copy" if t == 1 else "copies"
-            label: str = f"{t} {cpy} of this print"
+            label = f"{t} {cpy} of this print"
             return CardIcons.CONTENT, label
         return None
