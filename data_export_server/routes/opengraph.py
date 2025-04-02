@@ -52,7 +52,7 @@ def render_og_tmpl(req, record_obj: dict) -> str:
     # The front-end server should have set this header. If it arrives here and it is
     # not set, then assume it's Google.
     bot: str = req.headers.get("X-RO-BotIdentifier", BotIdentifiers.GOOGLE)
-    tmpl_vars: dict = OpenGraph(record_obj, context={"request": req}).data
+    tmpl_vars: dict = OpenGraph(record_obj, context={"request": req}).data  # type: ignore
 
     tmpl_vars.update({"bot": bot})
     source_tmpl = req.app.ctx.template_env.get_template("opengraph/card.html.j2")
@@ -63,7 +63,7 @@ def render_og_tmpl(req, record_obj: dict) -> str:
 
 @opengraph_blueprint.route("/sources/<source_id:str>")
 async def og_source(req, source_id: str) -> response.HTTPResponse:
-    source_record: dict = await SolrConnection.get(
+    source_record: dict = await SolrConnection.get(  # type: ignore
         f"source_{source_id}", fields=SOLR_FIELDS, handler="/fetch"
     )
 
@@ -77,7 +77,7 @@ async def og_source(req, source_id: str) -> response.HTTPResponse:
 
 @opengraph_blueprint.route("/people/<person_id:str>")
 async def og_person(req, person_id: str):
-    person_record: dict = await SolrConnection.get(
+    person_record: dict = await SolrConnection.get(  # type: ignore
         f"person_{person_id}", fields=SOLR_FIELDS, handler="/fetch"
     )
 
@@ -126,7 +126,7 @@ async def og_image(req, image_name: str):
     if not record:
         return response.text(f"Could not retrieve {record_id}", status=404)
 
-    tmpl_data: dict = OpenGraphSvg(record, context={"request": req}).data
+    tmpl_data: dict = OpenGraphSvg(record, context={"request": req}).data  # type: ignore
 
     svg_tmpl = req.app.ctx.template_env.get_template(
         "opengraph/card_image_template.svg.j2"

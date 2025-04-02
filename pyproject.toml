@@ -1,48 +1,44 @@
 [project]
 name = "search_server"
-description = "MuscatPlus Search Server"
-license = "MIT"
 version = "v1.0.5"
-authors = [{name = "Andrew Hankinson", email = "andrew.hankinson@rism.digital"}]
-requires-python = '>=3.11,<4.0'
-dependencies = ['pyyaml (>=6.0.1,<7.0.0)',
-    'rdflib (>=7.0.0,<8.0.0)',
-    'Jinja2 (>=3.1.2,<4.0.0)',
-    'orjson (>=3.9.15,<4.0.0)',
-    'verovio (>=4.2.0,<5.0.0)',
-    'small-asc @ git+https://github.com/rism-digital/small-asc.git@main',
-    'ypres @ git+https://github.com/rism-digital/ypres.git@main',
-    'sanic (>=24.0.0,<25.0.0)',
-    'luqum (>=0.13.0,<0.14.0)',
-    'sentry-sdk[sanic] (>=2.19.0,<3.0.0)',
-    "httpx (>=0.28.1,<0.29.0)"]
+description = "MuscatPlus Search Server"
+authors = [{ name = "Andrew Hankinson", email = "andrew.hankinson@rism.digital" }]
+requires-python = ">=3.11,<4.0"
+license = "MIT"
+dependencies = [
+    "pyyaml (>=6.0.1,<7.0.0)",
+    "rdflib (>=7.0.0,<8.0.0)",
+    "Jinja2 (>=3.1.2,<4.0.0)",
+    "orjson (>=3.9.15,<4.0.0)",
+    "verovio (>=5.1.0,<6.0.0)",
+    "small-asc @ git+https://github.com/rism-digital/small-asc.git@main",
+    "ypres @ git+https://github.com/rism-digital/ypres.git@main",
+    "sanic (>=24.0.0,<26.0.0)",
+    "sentry-sdk[sanic] (>=2.19.0,<3.0.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+]
 
-[tool.poetry]
-package-mode = false
-requires-poetry = '>=2.0,<3.0'
+[dependency-groups]
+dev = [
+    "deptry>=0.23.0,<0.24",
+    "ipython>=9.0.0,<10",
+    "pytest>=8.0.0,<9",
+    "pytest-cov>=6.0.0,<7",
+    "aiofiles>=24.0.0,<25",
+    "mypy>=1.15.0,<2",
+]
 
-[tool.poetry.dependencies.verovio]
-allow-prereleases = true
+[tool.uv]
+package = false
 
-[tool.poetry.group.dev.dependencies]
-deptry = "^0.13.0"
-ipython = "^8.31.0"
-pytest = "^8.0.0"
-pytest-cov = "^6.0.0"
-aiofiles = "^24.0.0"
+[[tool.uv.index]]
+name = "PyPI"
+url = "https://pypi.org/simple/"
+default = true
 
 [build-system]
 requires = ['poetry-core (>=2.0,<3.0)']
 build-backend = "poetry.masonry.api"
-
-[[tool.poetry.source]]
-name = "PyPI"
-priority = "primary"
-
-[[tool.poetry.source]]
-name = "testpypi"
-url = "https://test.pypi.org/simple/"
-priority = "supplemental"
 
 [tool.ruff]
 target-version = "py311"

@@ -18,7 +18,7 @@ debug_mode: bool = config["common"]["debug"]
 
 
 @app.listener("before_server_start")
-async def init_sentry(_):
+async def init_sentry(_) -> None:
     if debug_mode is True:
         return
 

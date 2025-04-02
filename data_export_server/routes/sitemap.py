@@ -1,6 +1,7 @@
 import math
 import re
 
+import sanic
 from sanic import Blueprint, response
 from small_asc.client import Results
 
@@ -11,7 +12,7 @@ sitemap_blueprint: Blueprint = Blueprint("sitemap")
 
 
 @sitemap_blueprint.route("sitemap.xml")
-async def sitemap_root(req):
+async def sitemap_root(req) -> sanic.HTTPResponse:
     site: str = get_site(req)
     page_size: int = req.app.ctx.config["sitemap"]["pagesize"]
 
@@ -23,7 +24,7 @@ async def sitemap_root(req):
         ],
         "limit": 0,
     }
-    res: Results = await SolrConnection.search(solr_query, handler="/query")
+    res: Results = await SolrConnection.search(solr_query, handler="/query")  # type: ignore
     num_pages: int = math.ceil(res.hits / page_size)
 
     tmpl_vars = {"sitemap_pages": num_pages, "site": site}
@@ -61,7 +62,7 @@ async def sitemap_page(req, page_num: str):
         "sort": "created asc",
     }
 
-    res: Results = await SolrConnection.search(solr_query, handler="/query")
+    res: Results = await SolrConnection.search(solr_query, handler="/query")  # type: ignore
 
     urlentries: list = []
     for result in res.docs:
