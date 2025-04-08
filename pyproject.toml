@@ -26,6 +26,7 @@ dev = [
     "pytest-cov>=6.0.0,<7",
     "aiofiles>=24.0.0,<25",
     "mypy>=1.15.0,<2",
+    "pip>=25.0.1",
 ]
 
 [tool.uv]
