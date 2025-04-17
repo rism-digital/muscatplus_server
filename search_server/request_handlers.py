@@ -53,20 +53,21 @@ async def handle_request(
         return response.text("The requested resource was not found", status=404)
 
     # Add the appropriate context to the result dictionary
-    if req.route.name in RouteContextMap:
+    if req.route and req.route.name in RouteContextMap:
         ctx_options = RouteContextMap[req.route.name]
     else:
         ctx_options = RouteContextMap["__default"]
 
+    res: dict
     if accept and "text/turtle" in accept:
         # Always embed the context for turtle, as it avoids a lookup via the URI
         ctx_val = {"@context": ctx_options.context}
-        res: dict = {**ctx_val, **data_obj}
+        res = {**ctx_val, **data_obj}
         ttl = to_turtle(res)
         return response.text(ttl, headers={"Content-Type": "text/turtle"})
     elif accept and "application/n-triples" in accept:
         ctx_val = {"@context": ctx_options.context}
-        res: dict = {**ctx_val, **data_obj}
+        res = {**ctx_val, **data_obj}
         nt: str = to_ntriples(res)
         return response.text(nt, headers={"Content-Type": "application/n-triples"})
     elif accept and "application/marcxml+xml" in accept:
@@ -101,7 +102,7 @@ async def handle_request(
         )
     elif accept and ";profile=expanded" in accept:
         ctx_val = {"@context": ctx_options.context}
-        res: dict = {**ctx_val, **data_obj}
+        res = {**ctx_val, **data_obj}
         exp = to_expanded_jsonld(res)
         return response.text(
             exp, headers={"Content-Type": "application/ld+json;profile=expanded"}
@@ -118,7 +119,7 @@ async def handle_request(
         else:
             ctx_val = {"@context": ctx_options.context}
 
-        res: dict = {**ctx_val, **data_obj}
+        res = {**ctx_val, **data_obj}
 
         return await send_json_response(res, req.app.ctx.config["common"]["debug"])
 

@@ -2,7 +2,7 @@
 import orjson
 import ypres
 from sanic import response
-from small_asc.client import Results
+from small_asc.client import JsonAPIRequest, Results
 
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.search_request import SearchRequest
@@ -14,7 +14,7 @@ from shared_helpers.solr_connection import SolrConnection
 async def handle_front_request(req) -> response.HTTPResponse:
     try:
         request_compiler: SearchRequest = SearchRequest(req, probe=True)
-        solr_params: dict = request_compiler.compile()
+        solr_params: JsonAPIRequest = request_compiler.compile()
     except InvalidQueryException as e:
         return response.text(f"Invalid search query. {e}", status=400)
 
@@ -22,7 +22,7 @@ async def handle_front_request(req) -> response.HTTPResponse:
 
     results: dict = Front(
         solr_res, context={"request": req, "direct_request": True}
-    ).data
+    ).serialized
 
     response_headers: dict = {"Content-Type": "application/ld+json; charset=utf-8"}
 
@@ -41,20 +41,20 @@ class Front(ypres.DictSerializer):
     query_fields = ypres.MethodField(label="queryFields")
 
     def get_fid(self, obj: Results) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
 
         return get_identifier(req, "front")
 
     def get_endpoints(self, obj: Results) -> list:
-        req = self.context.get("request")
+        req = self.context["request"]
         return [get_identifier(req, "query.search")]
 
-    def get_facets(self, obj: Results) -> dict:
-        req = self.context.get("request")
+    def get_facets(self, obj: Results) -> dict | None:
+        req = self.context["request"]
         return get_facets(req, obj)
 
     def get_query_fields(self, obj: Results) -> list | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         cfg: dict = req.app.ctx.config
         transl: dict = req.app.ctx.translations
 

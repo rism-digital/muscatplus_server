@@ -18,24 +18,24 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
     items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.items_in_source")
+        return transl["records.items_in_source"]
 
     def get_url(self, obj: SolrResult) -> str:
         source_id: str = obj["id"]
         ident: str = re.sub(ID_SUB, "", source_id)
 
         return get_identifier(
-            self.context.get("request"), "sources.contents", source_id=ident
+            self.context["request"], "sources.contents", source_id=ident
         )
 
     def get_total_items(self, obj: SolrResult) -> int:
         return obj.get("num_source_members_i", 0)
 
     async def get_items(self, obj: SolrResult) -> list | None:
-        this_id: str = obj.get("id")
+        this_id: str = obj["id"]
         is_composite: bool = obj["record_type_s"] == "composite"
 
         # Remember to filter out the current source from the list of
@@ -67,15 +67,15 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
                     await BaseSource(
                         res,
                         context={
-                            "request": self.context.get("request"),
+                            "request": self.context["request"],
                         },
-                    ).data
+                    ).serialized
                 )
             elif res["type"] == "holding" and is_composite:
                 # This requires a Solr lookup, so it's slower, but it should only happen on a small
                 # proportion of the results.
                 source_id: str = res["source_id"]
-                source_doc: dict | None = await SolrConnection.get(
+                source_doc: dict | None = await SolrConnection.get(  # type: ignore
                     source_id,
                 )
 
@@ -87,9 +87,9 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
                     await BaseSource(
                         source_doc,
                         context={
-                            "request": self.context.get("request"),
+                            "request": self.context["request"],
                         },
-                    ).data
+                    ).serialized
                 )
             else:
                 log.error("Unexpected result type %s for %s", res.get("type"), this_id)

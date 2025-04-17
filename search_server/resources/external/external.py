@@ -30,7 +30,7 @@ async def handle_external_request(
 
     return await ExternalRecord(
         external_record, context={"request": req, "direct_request": True}
-    ).data
+    ).serialized
 
 
 class ExternalRecord(ypres.AsyncDictSerializer):
@@ -41,7 +41,7 @@ class ExternalRecord(ypres.AsyncDictSerializer):
     record = ypres.MethodField()
 
     def get_erid(self, obj: dict) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
         project: str = obj["project_s"]
         srtype: str = obj["type"]
         id_value: str = re.sub(PROJECT_ID_SUB, "", obj["id"])
@@ -59,7 +59,7 @@ class ExternalRecord(ypres.AsyncDictSerializer):
         return PROJECT_IDENTIFIERS[proj]
 
     async def get_record(self, obj: dict) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         return await _record_type_router(req, obj)
 
 
@@ -67,7 +67,7 @@ async def _record_type_router(req, obj: dict) -> dict:
     obj_type = obj["type"]
 
     if obj_type == "source":
-        source: dict = await FullSource(obj, context={"request": req}).data
+        source: dict = await FullSource(obj, context={"request": req}).serialized
         # replace the "normal" URL with the URL from the project.
         source["id"] = obj["record_uri_sni"]
         return source
@@ -75,14 +75,14 @@ async def _record_type_router(req, obj: dict) -> dict:
     elif obj_type == "person":
         person: dict = await Person(
             obj, context={"request": req, "direct_request": True}
-        ).data
+        ).serialized
         person["id"] = obj["record_uri_sni"]
         return person
 
     elif obj_type == "institution":
         institution: dict = await Institution(
             obj, context={"request": req, "direct_request": True}
-        ).data
+        ).serialized
         institution["id"] = obj["record_uri_sni"]
         return institution
 

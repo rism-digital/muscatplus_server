@@ -16,7 +16,7 @@ from shared_helpers.utilities import is_number
 
 
 async def handle_institution_request(req, institution_id: str) -> dict | None:
-    institution_record: dict | None = await SolrConnection.get(
+    institution_record: dict | None = await SolrConnection.get(  # type: ignore
         f"institution_{institution_id}"
     )
 
@@ -25,7 +25,7 @@ async def handle_institution_request(req, institution_id: str) -> dict | None:
 
     return await Institution(
         institution_record, context={"request": req, "direct_request": True}
-    ).data
+    ).serialized
 
 
 class Institution(BaseInstitution):
@@ -48,7 +48,7 @@ class Institution(BaseInstitution):
 
         return {
             "url": get_identifier(
-                self.context.get("request"),
+                self.context["request"],
                 "institutions.institution_sources",
                 institution_id=ident,
             ),
@@ -66,18 +66,18 @@ class Institution(BaseInstitution):
             return None
 
         return LocationAddressSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
-    async def get_external_authorities(self, obj: SolrResult) -> list[dict] | None:
+    async def get_external_authorities(self, obj: SolrResult) -> dict | None:
         if "external_ids" not in obj:
             return None
 
         return ExternalAuthoritiesSection(
-            obj["external_ids"], context={"request": self.context.get("request")}
-        ).data
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
-    async def get_relationships(self, obj: SolrResult) -> dict | None:
+    def get_relationships(self, obj: SolrResult) -> dict | None:
         if not self.context.get("direct_request"):
             return None
 
@@ -92,28 +92,29 @@ class Institution(BaseInstitution):
         }.isdisjoint(obj.keys()):
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
 
-        return await RelationshipsSection(obj, context={"request": req}).data
+        return RelationshipsSection(obj, context={"request": req}).serialized
 
     async def get_notes(self, obj: SolrResult) -> dict | None:
         notes: dict = await NotesSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+            obj, context={"request": self.context["request"]}
+        ).serialized
+
         if "notes" in notes:
             return notes
 
         return None
 
-    async def get_external_resources(self, obj: SolrResult) -> dict | None:
+    def get_external_resources(self, obj: SolrResult) -> dict | None:
         if "external_resources_json" not in obj and not obj.get(
             "has_external_record_b", False
         ):
             return None
 
-        return await ExternalResourcesSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+        return ExternalResourcesSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
     def get_properties(self, obj: SolrResult) -> dict | None:
         d = {
@@ -126,23 +127,23 @@ class Institution(BaseInstitution):
 
 class LocationAddressSection(ypres.DictSerializer):
     ltype = ypres.StaticField(label="type", value="rism:LocationAddressSection")
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     addresses = ypres.MethodField()
     website = ypres.MethodField()
     email = ypres.MethodField()
     coordinates = ypres.MethodField()
 
-    def get_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+    def get_slabel(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.location_and_address")
+        return transl["records.location_and_address"]
 
     def get_addresses(self, obj: SolrResult) -> list | None:
         if "addresses_json" not in obj:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         all_addresses = []
@@ -173,10 +174,10 @@ class LocationAddressSection(ypres.DictSerializer):
         if "location_loc" not in obj:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        loc: str = obj.get("location_loc")
+        loc: str = obj["location_loc"]
         lat, lon = loc.split(",")
 
         if not is_number(lat) or not is_number(lon):
@@ -188,8 +189,8 @@ class LocationAddressSection(ypres.DictSerializer):
         geojson_uri: str = get_identifier(
             req, "institutions.geo_coordinates", institution_id=ident
         )
-        long_label: dict = transl.get("records.longitude")
-        lat_label: dict = transl.get("records.latitude")
+        long_label: dict = transl["records.longitude"]
+        lat_label: dict = transl["records.latitude"]
 
         lat_lon_label = merge_language_maps(lat_label, long_label)
 
@@ -213,7 +214,7 @@ class LocationAddressSection(ypres.DictSerializer):
         ):
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return {
@@ -225,7 +226,7 @@ class LocationAddressSection(ypres.DictSerializer):
         if "email_address_sm" not in obj or len(obj.get("email_address_sm", [])) == 0:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return {

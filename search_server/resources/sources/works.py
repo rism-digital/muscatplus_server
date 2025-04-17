@@ -15,18 +15,18 @@ class WorksSection(ypres.DictSerializer):
     work_references = ypres.MethodField(label="workReferences")
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         # TODO: Check label
-        return transl.get("records.work")
+        return transl["records.work"]
 
     def get_work_reference(self, obj: SolrResult) -> dict | None:
         if "work_node_json" not in obj:
             return None
 
         work_node: dict = obj["work_node_json"]
-        req = self.context.get("request")
+        req = self.context["request"]
         return format_work_node(req, work_node)
 
     def get_work_references(self, obj: SolrResult) -> dict | None:
@@ -34,8 +34,8 @@ class WorksSection(ypres.DictSerializer):
             return None
 
         return ExternalWorkReferencesSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
 
 class ExternalWorkReferencesSection(ypres.DictSerializer):
@@ -45,14 +45,14 @@ class ExternalWorkReferencesSection(ypres.DictSerializer):
     items = ypres.MethodField(label="items")
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.external_work_reference")
+        return transl["records.external_work_reference"]
 
     def get_items(self, obj: SolrResult) -> list[dict]:
         work_nodes = obj["work_nodes_json"]
-        req = self.context.get("request")
+        req = self.context["request"]
 
         return [format_work_node(req, work_node) for work_node in work_nodes]
 

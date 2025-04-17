@@ -2,8 +2,12 @@ import logging
 import urllib.parse
 from collections import defaultdict
 
-import small_asc.query
-from small_asc.query import FieldNotFoundError, QueryParseError
+from small_asc.client import JsonAPIRequest
+from small_asc.query import (
+    FieldNotFoundError,
+    QueryParseError,
+    parse_with_field_replacements,
+)
 
 from search_server.exceptions import InvalidQueryException, PaginationParseException
 from search_server.helpers.vrv import get_pae_features
@@ -588,7 +592,7 @@ class SearchRequest:
         query_string: str = " AND ".join(self._requested_query)
 
         try:
-            parsed_query = small_asc.query.parse_with_field_replacements(
+            parsed_query = parse_with_field_replacements(
                 query_string, self._query_fields_for_mode, raw_fields=RAW_FIELDS
             )
         except QueryParseError:
@@ -612,7 +616,7 @@ class SearchRequest:
 
         return parsed_query
 
-    def compile(self) -> dict:
+    def compile(self) -> JsonAPIRequest:
         """
         Assembles the incoming data into a form that is appropriate for
         Solr.
@@ -633,7 +637,7 @@ class SearchRequest:
             #   3c. Doing all this while also supporting 'traditional' facet searches.
 
             # If we have an incipit mode, assume the incoming request is a PAE string.
-            self.pae_features: dict | None = get_pae_features(self._req)
+            self.pae_features = get_pae_features(self._req)
             if not self.pae_features:
                 raise InvalidQueryException(
                     "The requested mode was 'incipits', but the PAE input was malformed."
@@ -712,7 +716,7 @@ class SearchRequest:
         #  start: page:3 = ((3 - 1) * 20) = start:40
         start_row: int = 0 if page_num == 1 else ((page_num - 1) * return_rows)
 
-        solr_query = {
+        solr_query: JsonAPIRequest = {
             "query": self._compile_query(),
             "filter": self.filters,
             "offset": start_row,

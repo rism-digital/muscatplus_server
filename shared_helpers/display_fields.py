@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Callable
+from typing import Any
 
 from shared_helpers.identifiers import SOLR_FIELD_DATA_TYPES
 from shared_helpers.solr_connection import SolrResult
@@ -30,7 +31,7 @@ FIELD_CONFIG: LabelConfig = {
 }
 
 
-def _default_translator(value: str | list, translations: dict) -> dict:
+def _default_translator(value: Any | list[Any], translations: dict) -> dict:
     """
     If the parameter given for a value translator in the field configuration is None,
     then use this function as the default translator. It will return the value wrapped
@@ -73,7 +74,7 @@ def assemble_label_value(
     if value_translator is None:
         value_translator = _default_translator
 
-    record_value = record.get(field_name)
+    record_value: Any | list[Any] = record.get(field_name)
 
     label_value_map: dict = {
         "label": translations.get(label_translation),
@@ -110,7 +111,7 @@ def get_display_fields(
             continue
 
         label_value: dict = assemble_label_value(
-            record, field, translation_map, translations
+            record, field, translation_map, translations  # type: ignore
         )
 
         display.append(label_value)

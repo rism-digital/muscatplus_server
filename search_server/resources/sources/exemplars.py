@@ -19,25 +19,25 @@ from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 
 async def handle_exemplar_section_request(req, source_id: str) -> dict | None:
-    source_record: dict | None = await SolrConnection.get(f"source_{source_id}")
+    source_record: dict | None = await SolrConnection.get(f"source_{source_id}")  # type: ignore
 
     if not source_record:
         return None
 
     return await ExemplarsSection(
         source_record, context={"request": req, "direct_request": True}
-    ).data
+    ).serialized
 
 
-async def handle_exemplar_request(
+async def handle_holdings_request(
     req, source_id: str, holding_id: str
 ) -> dict | None:
-    holding_record: dict | None = await SolrConnection.get(f"holding_{holding_id}")
+    holding_record: dict | None = await SolrConnection.get(f"holding_{holding_id}")  # type: ignore
 
     if not holding_record:
         # MSS records are assigned a holding ID comprised of the institution ID and the source ID. If
         # a direct lookup doesn't find anything, check to see if it's a MSS holding we're looking for.
-        holding_record = await SolrConnection.get(
+        holding_record = await SolrConnection.get(  # type: ignore
             f"holding_{holding_id}-source_{source_id}"
         )
 
@@ -45,9 +45,9 @@ async def handle_exemplar_request(
         # It really doesn't exist.
         return None
 
-    return await Exemplar(
+    return await Holding(
         holding_record, context={"request": req, "direct_request": True}
-    ).data
+    ).serialized
 
 
 class ExemplarsSection(ypres.AsyncDictSerializer):
@@ -57,7 +57,7 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
     items = ypres.MethodField()
 
     def get_eid(self, obj: SolrResult) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
         source_holding_id_val: str = obj["id"]
 
         if "-" in source_holding_id_val:
@@ -70,12 +70,12 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
         return get_identifier(req, "sources.holdings", source_id=source_id)
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return transl.get("records.exemplars", {})
 
-    async def get_items(self, obj: SolrResult) -> dict | None:
+    async def get_items(self, obj: SolrResult) -> list | None:
         if (
             obj.get("is_contents_record_b", False)
             and obj.get("source_type_s", "") != "manuscript"
@@ -93,33 +93,33 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
             {"query": "*:*", "filter": fq, "sort": sort, "limit": 100},
             cursor=True,
         )
-
         if results.hits == 0:
             return None
 
-        return await Exemplar(
+        return await Holding(
             results,
             many=True,
             context={
-                "request": self.context.get("request"),
+                "request": self.context["request"]
             },
-        ).data
+        ).serialized_many
 
 
-class Exemplar(ypres.AsyncDictSerializer):
+class Holding(ypres.AsyncDictSerializer):
     sid = ypres.MethodField(label="id")
-    stype = ypres.StaticField(label="type", value="rism:Exemplar")
+    stype = ypres.StaticField(label="type", value="rism:Holding")
     section_label = ypres.MethodField(label="sectionLabel")
-    label = ypres.MethodField()
+    hlabel = ypres.MethodField(label="label")
     summary = ypres.MethodField()
     notes = ypres.MethodField()
     held_by = ypres.MethodField(label="heldBy")
     external_resources = ypres.MethodField(label="externalResources")
     relationships = ypres.MethodField()
     bound_with = ypres.MethodField(label="boundWith")
+    part_of = ypres.MethodField(label="partOf")
 
     def get_sid(self, obj: dict) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
 
         if "project_s" in obj and (proj := obj["project_s"]) == "diamm":
             external_inst_val = obj["external_institution_id"]
@@ -151,12 +151,12 @@ class Exemplar(ypres.AsyncDictSerializer):
         )
 
     def get_section_label(self, obj: dict) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.exemplar")
+        return transl["records.exemplar"]
 
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_hlabel(self, obj: SolrResult) -> dict:
         if "holding_titles_json" not in obj:
             return {"none": [obj.get("main_title_s")]}
 
@@ -175,7 +175,7 @@ class Exemplar(ypres.AsyncDictSerializer):
         return {"none": [title]}
 
     def get_summary(self, obj: SolrResult) -> list[dict] | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
@@ -209,7 +209,7 @@ class Exemplar(ypres.AsyncDictSerializer):
         return get_display_fields(obj, transl, field_config)
 
     def get_notes(self, obj: SolrResult) -> list | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
@@ -227,7 +227,7 @@ class Exemplar(ypres.AsyncDictSerializer):
         if "institution_id" not in obj:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         institution_id: str
         obj_ident: str
 
@@ -243,7 +243,7 @@ class Exemplar(ypres.AsyncDictSerializer):
             "label": {"none": [f"{institution_name}"]},
         }
 
-    async def get_relationships(self, obj: SolrResult) -> dict | None:
+    def get_relationships(self, obj: SolrResult) -> dict | None:
         if {
             "related_people_json",
             "related_places_json",
@@ -251,37 +251,50 @@ class Exemplar(ypres.AsyncDictSerializer):
         }.isdisjoint(obj.keys()):
             return None
 
-        req = self.context.get("request")
-        return await RelationshipsSection(
+        req = self.context["request"]
+        return RelationshipsSection(
             obj, context={"request": req,}
-        ).data
+        ).serialized
 
-    async def get_external_resources(self, obj: SolrResult) -> dict | None:
+    def get_external_resources(self, obj: SolrResult) -> dict | None:
         if "external_resources_json" not in obj:
             return None
 
-        return await ExternalResourcesSection(
+        return ExternalResourcesSection(
             obj,
             context={
-                "request": self.context.get("request"),
+                "request": self.context["request"],
             },
-        ).data
+        ).serialized
 
     async def get_bound_with(self, obj: SolrResult) -> dict | None:
         if "composite_parent_id" not in obj:
             return None
 
         composite_parent: str = obj["composite_parent_id"]
-        source: SolrResult | None = await SolrConnection.get(composite_parent)
+        source: SolrResult | None = await SolrConnection.get(composite_parent)  # type: ignore
         if not source:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return {
             "sectionLabel": transl.get("records.bound_with"),
             "source": await BaseSource(
-                source, context={"request": self.context.get("request")}
-            ).data,
+                source, context={"request": self.context["request"]}
+            ).serialized,
+        }
+
+    async def get_part_of(self, obj: SolrResult) -> dict | None:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return {
+            "label": transl.get(
+                "records.item_part_of"
+            ),  # TODO: This should probably be changed to 'incipit part of'
+            "source": await BaseSource(
+                obj, context={"request": req,}
+            ).serialized,
         }

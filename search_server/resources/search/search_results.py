@@ -7,7 +7,7 @@ from small_asc.client import Results
 
 from search_server.helpers.record_types import create_source_types_block
 from search_server.helpers.search_request import IncipitModeValues
-from search_server.helpers.vrv import render_pae
+from search_server.helpers.vrv import RenderedIncipit, render_pae
 from search_server.resources.search.base_search import BaseSearchResults
 from shared_helpers.display_fields import get_search_result_summary
 from shared_helpers.display_translators import (
@@ -31,7 +31,6 @@ log = logging.getLogger("mp_server")
 CSS_REPLACEMENT_PATTERN: re.Pattern = re.compile(
     r'<style type="text/css">(?P<existing_style>.*)</style>'
 )
-
 
 class SearchResults(BaseSearchResults):
     query_validation = ypres.MethodField(label="queryValidation")
@@ -62,7 +61,7 @@ class SearchResults(BaseSearchResults):
         if len(mode_buckets) == 0:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         cfg: dict = req.app.ctx.config
         transl: dict = req.app.ctx.translations
 
@@ -105,23 +104,17 @@ class SearchResults(BaseSearchResults):
             return None
 
         results: list[dict] = []
-        req = self.context.get("request")
+        req = self.context["request"]
         is_composite: bool = self.context.get("is_composite", False)
 
         for d in obj.docs:
             if d["type"] == "source":
-                results.append(SourceSearchResult(d, context={"request": req}).data)
+                results.append(SourceSearchResult(d, context={"request": req}).serialized)
             elif d["type"] == "person":
-                results.append(PersonSearchResult(d, context={"request": req}).data)
+                results.append(PersonSearchResult(d, context={"request": req}).serialized)
             elif d["type"] == "institution":
                 results.append(
-                    InstitutionSearchResult(d, context={"request": req}).data
-                )
-            elif d["type"] == "place":
-                results.append(PlaceSearchResult(d, context={"request": req}).data)
-            elif d["type"] == "liturgical_festival":
-                results.append(
-                    LiturgicalFestivalSearchResult(d, context={"request": req}).data
+                    InstitutionSearchResult(d, context={"request": req}).serialized
                 )
             elif d["type"] == "incipit":
                 results.append(
@@ -133,7 +126,7 @@ class SearchResults(BaseSearchResults):
                                 "query_pae_features"
                             ),
                         },
-                    ).data
+                    ).serialized
                 )
             elif d["type"] == "holding" and is_composite is True:
                 # The SLOW path, but there shouldn't be many of these, so hopefully it won't be too bad.
@@ -142,13 +135,13 @@ class SearchResults(BaseSearchResults):
                 # happen when a source is marked as composite, and the relationship to an item in the source is
                 # a holding record.
                 source_id: str = d["source_id"]
-                source_doc: dict | None = await SolrConnection.get(source_id)
+                source_doc: dict | None = await SolrConnection.get(source_id)  # type: ignore
                 if not source_doc:
                     log.error("Malformed holding %s", d["id"])
                     continue
 
                 results.append(
-                    SourceSearchResult(source_doc, context={"request": req}).data
+                    SourceSearchResult(source_doc, context={"request": req}).serialized
                 )
             else:
                 return None
@@ -158,7 +151,7 @@ class SearchResults(BaseSearchResults):
 
 class SourceSearchResult(ypres.DictSerializer):
     srid = ypres.MethodField(label="id")
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     result_type = ypres.StaticField(label="type", value="rism:Source")
     type_label = ypres.MethodField(label="typeLabel")
     summary = ypres.MethodField()
@@ -166,17 +159,17 @@ class SourceSearchResult(ypres.DictSerializer):
     flags = ypres.MethodField()
 
     def get_srid(self, obj: dict) -> str:
-        req = self.context.get("request")
-
+        req = self.context["request"]
+        id_value: str
         # Formulate a different ID if we have an external project
         # resource.
         if "project_s" not in obj:
-            id_value: str = re.sub(ID_SUB, "", obj.get("id"))
+            id_value = re.sub(ID_SUB, "", obj["id"])
             return get_identifier(req, "sources.source", source_id=id_value)
 
         project: str = obj["project_s"]
         srtype: str = obj["type"]
-        id_value: str = re.sub(PROJECT_ID_SUB, "", obj.get("id"))
+        id_value = re.sub(PROJECT_ID_SUB, "", obj["id"])
         return get_identifier(
             req,
             "external.external",
@@ -185,20 +178,20 @@ class SourceSearchResult(ypres.DictSerializer):
             ext_id=id_value,
         )
 
-    def get_label(self, obj: dict) -> dict:
-        req = self.context.get("request")
+    def get_slabel(self, obj: dict) -> dict:
+        req = self.context["request"]
         transl: dict = req.ctx.translations
         label: dict = format_source_label(obj["standard_titles_json"], transl)
 
         return label
 
     def get_type_label(self, obj: dict) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
-        return transl.get("records.source")
+        return transl["records.source"]
 
     def get_summary(self, obj: dict) -> dict | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: dict = {
@@ -231,14 +224,11 @@ class SourceSearchResult(ypres.DictSerializer):
         if not is_contents_record:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        parent_title: str
-        parent_source_id: str
-
-        parent_title = obj.get("source_membership_title_s")
-        parent_source_id = re.sub(ID_SUB, "", obj.get("source_membership_id"))
+        parent_title: str = obj["source_membership_title_s"]
+        parent_source_id: str = re.sub(ID_SUB, "", obj["source_membership_id"])
 
         source_membership: dict = obj.get("source_membership_json", {})
         record_type: str = source_membership.get("record_type", "item")
@@ -261,7 +251,7 @@ class SourceSearchResult(ypres.DictSerializer):
         }
 
     def get_flags(self, obj: dict) -> dict | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         has_digitization: bool = obj.get("has_digitization_b", False)
@@ -327,22 +317,23 @@ class SourceSearchResult(ypres.DictSerializer):
 
 class PersonSearchResult(ypres.DictSerializer):
     srid = ypres.MethodField(label="id")
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     result_type = ypres.StaticField(label="type", value="rism:Person")
     type_label = ypres.MethodField(label="typeLabel")
     summary = ypres.MethodField()
     flags = ypres.MethodField()
 
     def get_srid(self, obj: dict) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
 
+        id_value: str
         if "project_s" not in obj:
-            id_value: str = re.sub(ID_SUB, "", obj.get("id"))
+            id_value = re.sub(ID_SUB, "", obj["id"])
             return get_identifier(req, "people.person", person_id=id_value)
 
         project: str = obj["project_s"]
         srtype: str = obj["type"]
-        id_value: str = re.sub(PROJECT_ID_SUB, "", obj.get("id"))
+        id_value = re.sub(PROJECT_ID_SUB, "", obj["id"])
         return get_identifier(
             req,
             "external.external",
@@ -351,16 +342,16 @@ class PersonSearchResult(ypres.DictSerializer):
             ext_id=id_value,
         )
 
-    def get_label(self, obj: dict) -> dict:
+    def get_slabel(self, obj: dict) -> dict:
         label: str = format_person_label(obj)
 
         return {"none": [label]}
 
     def get_type_label(self, obj: dict) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.person")
+        return transl["records.person"]
 
     def get_summary(self, obj: dict) -> dict | None:
         field_config = {
@@ -369,7 +360,7 @@ class PersonSearchResult(ypres.DictSerializer):
             "gender_s": ("gender", "records.gender", None)
         }
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return get_search_result_summary(field_config, transl, obj)
@@ -404,24 +395,25 @@ class PersonSearchResult(ypres.DictSerializer):
 
 class InstitutionSearchResult(ypres.DictSerializer):
     srid = ypres.MethodField(label="id")
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     result_type = ypres.StaticField(label="type", value="rism:Institution")
     type_label = ypres.MethodField(label="typeLabel")
     summary = ypres.MethodField()
     flags = ypres.MethodField()
 
     def get_srid(self, obj: dict) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
 
+        id_value: str
         if "project_s" not in obj:
-            id_value: str = re.sub(ID_SUB, "", obj.get("id"))
+            id_value = re.sub(ID_SUB, "", obj["id"])
             return get_identifier(
                 req, "institutions.institution", institution_id=id_value
             )
 
         project: str = obj["project_s"]
         srtype = obj["project_type_s"] if "project_type_s" in obj else obj["type"]
-        id_value: str = re.sub(PROJECT_ID_SUB, "", obj.get("id"))
+        id_value = re.sub(PROJECT_ID_SUB, "", obj["id"])
 
         return get_identifier(
             req,
@@ -431,18 +423,18 @@ class InstitutionSearchResult(ypres.DictSerializer):
             ext_id=id_value,
         )
 
-    def get_label(self, obj: dict) -> dict:
+    def get_slabel(self, obj: dict) -> dict:
         label = format_institution_label(obj)
 
         return {"none": [label]}
 
     def get_type_label(self, obj: dict) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl = req.ctx.translations
 
         return transl.get("records.institution")
 
-    def get_summary(self, obj: dict) -> dict:
+    def get_summary(self, obj: dict) -> dict | None:
         field_config: dict = {
             "gnd_country_codes_sm": (
                 "countryName",
@@ -457,7 +449,7 @@ class InstitutionSearchResult(ypres.DictSerializer):
             ),  # TODO: Find a better label
         }
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return get_search_result_summary(field_config, transl, obj)
@@ -490,57 +482,9 @@ class InstitutionSearchResult(ypres.DictSerializer):
         return result_flags or None
 
 
-class PlaceSearchResult(ypres.DictSerializer):
-    srid = ypres.MethodField(label="id")
-    label = ypres.MethodField()
-    result_type = ypres.StaticField(label="type", value="rism:Place")
-    type_label = ypres.MethodField(label="typeLabel")
-
-    def get_srid(self, obj: dict) -> str:
-        req = self.context.get("request")
-        id_value: str = re.sub(ID_SUB, "", obj.get("id"))
-
-        return get_identifier(req, "places.place", place_id=id_value)
-
-    def get_label(self, obj: dict) -> dict:
-        label: str = obj.get("FIXME")
-
-        return {"none": [label]}
-
-    def get_type_label(self, obj: dict) -> dict:
-        req = self.context.get("request")
-        transl: dict = req.ctx.translations
-
-        return transl.get("records.place")
-
-
-class LiturgicalFestivalSearchResult(ypres.DictSerializer):
-    srid = ypres.MethodField(label="id")
-    label = ypres.MethodField()
-    result_type = ypres.StaticField(label="type", value="rism:LiturgicalFestival")
-    type_label = ypres.MethodField(label="typeLabel")
-
-    def get_srid(self, obj: dict) -> str:
-        req = self.context.get("request")
-        id_value: str = re.sub(ID_SUB, "", obj.get("id"))
-
-        return get_identifier(req, "festivals.festival", festival_id=id_value)
-
-    def get_label(self, obj: dict) -> dict:
-        label: str = obj.get("name_s")
-
-        return {"none": [label]}
-
-    def get_type_label(self, obj: dict) -> dict:
-        req = self.context.get("request")
-        transl: dict = req.ctx.translations
-
-        return transl.get("records.liturgical_festival")
-
-
 class IncipitSearchResult(ypres.DictSerializer):
     srid = ypres.MethodField(label="id")
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     result_type = ypres.StaticField(label="type", value="rism:Incipit")
     type_label = ypres.MethodField(label="typeLabel")
     part_of = ypres.MethodField(label="partOf")
@@ -549,23 +493,23 @@ class IncipitSearchResult(ypres.DictSerializer):
     score = ypres.MethodField()
 
     def get_srid(self, obj: dict) -> str:
-        req = self.context.get("request")
-        work_num: str = re.sub(ID_SUB, "", obj.get("work_num_s"))
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+        req = self.context["request"]
+        work_num: str = re.sub(ID_SUB, "", obj["work_num_s"])
+        source_id: str = re.sub(ID_SUB, "", obj["source_id"])
 
         return get_identifier(
             req, "sources.incipit", source_id=source_id, work_num=work_num
         )
 
-    def get_label(self, obj: dict) -> dict:
+    def get_slabel(self, obj: dict) -> dict:
         incipit_label: str = format_incipit_label(obj)
         return {"none": [incipit_label]}
 
     def get_type_label(self, obj: dict) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.incipit")
+        return transl["records.incipit"]
 
     def get_summary(self, obj: dict) -> dict | None:
         field_config: dict = {
@@ -580,7 +524,7 @@ class IncipitSearchResult(ypres.DictSerializer):
             "original_pae_sni": ("paeCode", "records.plaine_and_easie", None),
         }
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return get_search_result_summary(field_config, transl, obj)
@@ -589,12 +533,9 @@ class IncipitSearchResult(ypres.DictSerializer):
         """
         Provides a pointer back to the parent for this incipit
         """
-        req = self.context.get("request")
-        parent_title: str
-        parent_source_id: str
-
-        parent_title: str = obj.get("main_title_s")
-        parent_source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+        req = self.context["request"]
+        parent_title: str = obj["main_title_s"]
+        parent_source_id: str = re.sub(ID_SUB, "", obj["source_id"])
         transl: dict = req.ctx.translations
 
         record_type: str = obj.get("record_type_s", "item")
@@ -622,16 +563,21 @@ class IncipitSearchResult(ypres.DictSerializer):
             log.debug("No music incipit")
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
 
         # Grab the PAE features we computed from the incoming query request. These will
         # be used to perform the highlighting
         query_pae_features: dict | None = self.context.get("query_pae_features")
 
         if not query_pae_features:
-            svg, midi = _render_without_highlighting(req, obj)
+            svg, midi = _render_incipit_pae(obj)
         else:
-            svg, midi = _render_with_highlighting(req, obj, query_pae_features)
+            # Find out what mode we're operating in to determine which fields we're using.
+            search_mode: str = req.args.get("im", IncipitModeValues.INTERVALS)
+            svg, midi = _render_with_highlighting(obj, query_pae_features, search_mode)
+
+        if not svg:
+            return None
 
         return [
             {"format": "image/svg+xml", "data": svg},
@@ -639,50 +585,38 @@ class IncipitSearchResult(ypres.DictSerializer):
         ]
 
     def get_score(self, obj: SolrResult) -> float | None:
-        if "custom_score" in obj:
-            return obj["custom_score"]
-        return None
+        return obj.get("custom_score")
 
 
-def _render_incipit_pae(obj: SolrResult) -> tuple | None:
+def _render_incipit_pae(obj: SolrResult) -> RenderedIncipit:
     pae_code: str | None = obj.get("original_pae_sni")
 
     if not pae_code:
         log.debug("no PAE code")
-        return None
+        return None, None
 
     is_mensural: bool = obj.get("is_mensural_b", False)
-    rendered_pae: tuple | None = render_pae(
+    rendered_pae: RenderedIncipit = render_pae(
         pae_code, use_crc=True, is_mensural=is_mensural
     )
 
-    if not rendered_pae:
+    if not rendered_pae[0]:
         log.error("Could not load music incipit for %s", obj.get("id"))
-        return None
+        return None, None
 
     return rendered_pae
 
 
-def _render_without_highlighting(req, obj: SolrResult) -> tuple | None:
-    rendered_incipit: tuple | None = _render_incipit_pae(obj)
-
-    if not rendered_incipit:
-        return None
-
-    return rendered_incipit
-
-
 def _render_with_highlighting(
-    req, obj: SolrResult, query_pae_features: dict | None
-) -> tuple | None:
+    obj: SolrResult, query_pae_features: dict | None, search_mode: str
+) -> RenderedIncipit:
     if not query_pae_features:
         log.error("Could not highlight a search result without query features!")
-        return None
+        return None, None
 
     svg, b64midi = _render_incipit_pae(obj)
-
-    # Find out what mode we're operating in to determine which fields we're using.
-    search_mode: str = req.args.get("im", IncipitModeValues.INTERVALS)
+    if not svg:
+        return None, None
 
     feature_field: str = "intervals_im"
     ids_field: str = "interval_ids_json"

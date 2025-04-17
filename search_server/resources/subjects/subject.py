@@ -7,30 +7,30 @@ from shared_helpers.solr_connection import SolrConnection, SolrResult, result_co
 
 
 async def handle_subject_request(req, subject_id: str) -> dict | None:
-    subject_record: dict | None = await SolrConnection.get(f"subject_{subject_id}")
+    subject_record: dict | None = await SolrConnection.get(f"subject_{subject_id}")  # type: ignore
 
     return await Subject(
         subject_record, context={"request": req, "direct_request": True}
-    ).data
+    ).serialized
 
 
 class Subject(ypres.AsyncDictSerializer):
     sid = ypres.MethodField(label="id")
     stype = ypres.StaticField(label="type", value="rism:Subject")
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     term = ypres.MethodField()
     notes = ypres.MethodField()
     alternate_terms = ypres.MethodField(label="alternateTerms")
     sources = ypres.MethodField()
 
     def get_sid(self, obj: SolrResult) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
         subject_id: str = re.sub(ID_SUB, "", obj["id"])
 
         return get_identifier(req, "subjects.subject", subject_id=subject_id)
 
-    def get_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+    def get_slabel(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return transl.get("records.subject_heading", {})
@@ -70,7 +70,7 @@ class Subject(ypres.AsyncDictSerializer):
 
         return {
             "id": get_identifier(
-                self.context.get("request"),
+                self.context["request"],
                 "subjects.subject_sources",
                 subject_id=ident,
             ),

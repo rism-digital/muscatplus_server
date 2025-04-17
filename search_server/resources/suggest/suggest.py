@@ -21,10 +21,10 @@ class SuggestionResults(ypres.DictSerializer):
     items = ypres.MethodField()
 
     def get_sid(self, obj: dict) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
         return req.url
 
-    def get_alias(self, obj: dict) -> str:
+    def get_alias(self, obj: dict) -> str | None:
         return self.context.get("alias")
 
     def get_items(self, obj: dict) -> list:
@@ -44,11 +44,11 @@ class SuggestionResults(ypres.DictSerializer):
         :return: A list of label/value results. The count (value) is converted to a language map
             to make it easier to show in the UI (if needed).
         """
-        req = self.context.get("request")
+        req = self.context["request"]
         cfg: dict = req.app.ctx.config
         num_suggestions: int = cfg["search"]["suggestions"]
 
-        fields: list = self.context.get("suggest_fields")
+        fields: list = self.context.get("suggest_fields", [])
         terms: dict = obj.get("terms", {})
 
         all_suggestions: dict = defaultdict(int)
@@ -99,7 +99,7 @@ async def handle_suggest_request(
     escaped_query: str = re.escape(query)
 
     try:
-        solr_res: dict = await SolrConnection.term_suggest(
+        solr_res: dict = await SolrConnection.term_suggest(  # type: ignore
             {"query": escaped_query, "fields": fields}
         )
     except SolrError:
@@ -115,7 +115,7 @@ async def handle_suggest_request(
             "direct_request": True,
             "suggest_fields": fields,
         },
-    ).data
+    ).serialized
 
     return await send_json_response(
         suggest_results, req.app.ctx.config["common"]["debug"]

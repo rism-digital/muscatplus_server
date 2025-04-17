@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 
 import ypres
-from small_asc.client import Results, SolrError
+from small_asc.client import JsonAPIRequest, Results, SolrError
 
 from search_server.resources.search.facets import get_facets
 from search_server.resources.search.pagination import Pagination
@@ -37,7 +37,7 @@ class BaseSearchResults(ypres.AsyncSerializer):
         """
         Simply reflects the incoming URL wholesale.
         """
-        req = self.context.get("request")
+        req = self.context["request"]
         return req.url
 
     def get_view(self, obj: Results) -> dict | None:
@@ -45,36 +45,36 @@ class BaseSearchResults(ypres.AsyncSerializer):
         # if is_probe:
         #     return None
 
-        return Pagination(obj, context={"request": self.context.get("request")}).data
+        return Pagination(obj, context={"request": self.context["request"]}).serialized
 
     def get_facets(self, obj: Results) -> dict | None:
         is_probe: bool = self.context.get("probe_request", False)
         if is_probe:
             return None
 
-        return get_facets(self.context.get("request"), obj)
+        return get_facets(self.context["request"], obj)
 
-    def get_sorts(self, obj: Results) -> list | None:
+    def get_sorts(self, obj: Results) -> dict | None:
         is_probe: bool = self.context.get("probe_request", False)
         if is_probe:
             return None
 
         is_contents: bool = self.context.get("is_contents", False)
-        return get_sorting(self.context.get("request"), is_contents)
+        return get_sorting(self.context["request"], is_contents)
 
     def get_page_sizes(self, obj: Results) -> list[str] | None:
         is_probe: bool = self.context.get("probe_request", False)
         if is_probe:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         cfg: dict = req.app.ctx.config
         pgsizes: list[str] = [str(p) for p in cfg["search"]["page_sizes"]]
 
         return pgsizes
 
     def get_query_fields(self, obj: Results) -> list | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         cfg: dict = req.app.ctx.config
         transl: dict = req.app.ctx.translations
 
@@ -107,7 +107,7 @@ class BaseSearchResults(ypres.AsyncSerializer):
 
 async def serialize_response(
     req,
-    solr_params: dict,
+    solr_params: JsonAPIRequest,
     serializer_cls: type[BaseSearchResults],
     extra_context: dict | None = None,
 ) -> dict:
@@ -149,4 +149,4 @@ async def serialize_response(
     if extra_context:
         ctx.update(extra_context)
 
-    return await serializer_cls(solr_res, context=ctx).data
+    return await serializer_cls(solr_res, context=ctx).serialized

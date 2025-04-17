@@ -1,5 +1,7 @@
 import logging
 
+from small_asc.client import JsonAPIRequest
+
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.search_request import SearchRequest
 from search_server.resources.search.base_search import serialize_response
@@ -11,7 +13,7 @@ log = logging.getLogger("mp_server")
 async def handle_probe_request(req) -> dict:
     try:
         request_compiler: SearchRequest = SearchRequest(req, probe=True)
-        solr_params: dict = request_compiler.compile()
+        solr_params: JsonAPIRequest = request_compiler.compile()
     except InvalidQueryException:
         raise
 
@@ -22,4 +24,4 @@ async def handle_probe_request(req) -> dict:
         "query_validation": request_compiler.query_report,
     }
 
-    return await serialize_response(req, solr_params, SearchResults, extra_context)
+    return await serialize_response(req, solr_params, SearchResults, extra_context)  # type: ignore

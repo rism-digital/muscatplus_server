@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import unquote
 
-from small_asc.client import Results
+from small_asc.client import JsonAPIRequest, Results
 
 from search_server.resources.search.pagination import parse_page_number
 from search_server.resources.search.search_results import SearchResults
@@ -92,7 +92,7 @@ async def handle_siglum_search_request(req) -> dict | None:
     else:
         solr_query = f"{query_field}:{query}"
 
-    solr_query_obj = {
+    solr_query_obj: JsonAPIRequest = {
         "query": solr_query,
         "filter": fq,
         "offset": start_row,
@@ -104,6 +104,6 @@ async def handle_siglum_search_request(req) -> dict | None:
     results: Results = await SolrConnection.search(
         solr_query_obj, handler="/siglaQuery"
     )
-    search_res: dict = await SearchResults(results, context={"request": req}).data
+    search_res: dict = await SearchResults(results, context={"request": req}).serialized
 
     return search_res

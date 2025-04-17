@@ -52,7 +52,7 @@ def render_og_tmpl(req, record_obj: dict) -> str:
     # The front-end server should have set this header. If it arrives here and it is
     # not set, then assume it's Google.
     bot: str = req.headers.get("X-RO-BotIdentifier", BotIdentifiers.GOOGLE)
-    tmpl_vars: dict = OpenGraph(record_obj, context={"request": req}).data  # type: ignore
+    tmpl_vars: dict = OpenGraph(record_obj, context={"request": req}).serialized  # type: ignore
 
     tmpl_vars.update({"bot": bot})
     source_tmpl = req.app.ctx.template_env.get_template("opengraph/card.html.j2")
@@ -91,7 +91,7 @@ async def og_person(req, person_id: str):
 
 @opengraph_blueprint.route("/institutions/<institution_id:str>")
 async def og_institution(req, institution_id: str):
-    institution_record: dict = await SolrConnection.get(
+    institution_record: dict = await SolrConnection.get(  # type: ignore
         f"institution_{institution_id}", fields=SOLR_FIELDS, handler="/fetch"
     )
 
@@ -119,14 +119,14 @@ async def og_image(req, image_name: str):
     #  7. Respond to the request with the PNG data.
     #  8. Delete the tempfile
     record_id: str = image_name.removesuffix(".png")
-    record: dict | None = await SolrConnection.get(
+    record: dict | None = await SolrConnection.get(  # type: ignore
         record_id, fields=SOLR_FIELDS, handler="/fetch"
     )
 
     if not record:
         return response.text(f"Could not retrieve {record_id}", status=404)
 
-    tmpl_data: dict = OpenGraphSvg(record, context={"request": req}).data  # type: ignore
+    tmpl_data: dict = OpenGraphSvg(record, context={"request": req}).serialized  # type: ignore
 
     svg_tmpl = req.app.ctx.template_env.get_template(
         "opengraph/card_image_template.svg.j2"

@@ -13,10 +13,10 @@ async def handle_country_request(req, country_id: str) -> dict | None:
     return None
 
 
-async def handle_country_list_request(req) -> dict | None:  # type: ignore
+async def handle_country_list_request(req) -> dict | None:
     return CountryList(
         SOURCE_SIGLA_COUNTRY_MAP, context={"request": req, "direct_request": True}
-    ).data
+    ).serialized
 
 
 class CountryList(ypres.DictSerializer):
@@ -26,11 +26,11 @@ class CountryList(ypres.DictSerializer):
     items = ypres.MethodField()
 
     def get_clid(self, _) -> str:
-        req = self.context.get("request")  # type: ignore
+        req = self.context["request"]  # type: ignore
         return req.url
 
     def get_items(self, obj: dict) -> list[dict]:
-        req = self.context.get("request")  # type: ignore
+        req = self.context["request"]  # type: ignore
         transl: dict = req.ctx.translations
 
         res: list = []
