@@ -96,8 +96,8 @@ class Institution(BaseInstitution):
 
         return RelationshipsSection(obj, context={"request": req}).serialized
 
-    async def get_notes(self, obj: SolrResult) -> dict | None:
-        notes: dict = await NotesSection(
+    def get_notes(self, obj: SolrResult) -> dict | None:
+        notes: dict = NotesSection(
             obj, context={"request": self.context["request"]}
         ).serialized
 

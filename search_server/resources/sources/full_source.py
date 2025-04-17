@@ -162,7 +162,7 @@ class FullSource(BaseSource):
             },
         ).serialized
 
-    async def get_works(self, obj: SolrResult) -> dict | None:
+    def get_works(self, obj: SolrResult) -> dict | None:
         if "work_node_json" not in obj:
             return None
 

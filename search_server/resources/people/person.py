@@ -105,8 +105,8 @@ class Person(BasePerson):
         req = self.context["request"]
         return RelationshipsSection(obj, context={"request": req}).serialized
 
-    async def get_notes(self, obj: SolrResult) -> dict | None:
-        notelist: dict = await NotesSection(
+    def get_notes(self, obj: SolrResult) -> dict | None:
+        notelist: dict = NotesSection(
             obj, context={"request": self.context["request"]}
         ).serialized
 
