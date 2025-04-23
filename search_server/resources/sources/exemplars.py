@@ -302,7 +302,7 @@ class Holding(ypres.AsyncDictSerializer):
         }
 
     async def get_part_of(self, obj: SolrResult) -> dict | None:
-        if not self.context.get("direct_request"):
+        if not self.context.get("direct_request", False):
             return None
 
         req = self.context["request"]
@@ -318,6 +318,9 @@ class Holding(ypres.AsyncDictSerializer):
         }
 
     def get_record_history(self, obj: SolrResult) -> dict | None:
+        if not self.context.get("direct_request", False):
+            return None
+
         req = self.context["request"]
         transl: dict = req.ctx.translations
 
