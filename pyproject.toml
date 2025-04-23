@@ -38,10 +38,6 @@ name = "PyPI"
 url = "https://pypi.org/simple/"
 default = true
 
-[build-system]
-requires = ['poetry-core (>=2.0,<3.0)']
-build-backend = "poetry.masonry.api"
-
 [tool.ruff]
 target-version = "py311"
 
