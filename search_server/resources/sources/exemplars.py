@@ -4,6 +4,7 @@ import ypres
 from small_asc.client import Results
 
 from search_server.resources.shared.external_resources import ExternalResourcesSection
+from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import BaseSource
 from shared_helpers.display_fields import LabelConfig, get_display_fields
@@ -108,6 +109,7 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
 class Holding(ypres.AsyncDictSerializer):
     sid = ypres.MethodField(label="id")
     stype = ypres.StaticField(label="type", value="rism:Holding")
+    holding_type = ypres.MethodField(label="holdingType")
     section_label = ypres.MethodField(label="sectionLabel")
     hlabel = ypres.MethodField(label="label")
     summary = ypres.MethodField()
@@ -117,6 +119,7 @@ class Holding(ypres.AsyncDictSerializer):
     relationships = ypres.MethodField()
     bound_with = ypres.MethodField(label="boundWith")
     part_of = ypres.MethodField(label="partOf")
+    record_history = ypres.MethodField(label="recordHistory")
 
     def get_sid(self, obj: dict) -> str:
         req = self.context["request"]
@@ -155,6 +158,18 @@ class Holding(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         return transl["records.exemplar"]
+
+    def get_holding_type(self, obj: SolrResult) -> str:
+        source_type = obj["source_type_s"]
+        match source_type:
+            case "manuscript":
+                return "rism:ManuscriptHolding"
+            case "printed":
+                return "rism:PrintHolding"
+            case "composite":
+                return "rism:CompositeHolding"
+            case _:
+                return "rism:PrintHolding"
 
     def get_hlabel(self, obj: SolrResult) -> dict:
         if "holding_titles_json" not in obj:
@@ -287,14 +302,23 @@ class Holding(ypres.AsyncDictSerializer):
         }
 
     async def get_part_of(self, obj: SolrResult) -> dict | None:
+        if not self.context.get("direct_request"):
+            return None
+
         req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return {
             "label": transl.get(
-                "records.item_part_of"
-            ),  # TODO: This should probably be changed to 'incipit part of'
+                "records.source_details"
+            ),
             "source": await BaseSource(
                 obj, context={"request": req,}
             ).serialized,
         }
+
+    def get_record_history(self, obj: SolrResult) -> dict | None:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return get_record_history(obj, transl)
