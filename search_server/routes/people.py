@@ -12,7 +12,7 @@ people_blueprint: Blueprint = Blueprint("people", url_prefix="/people")
 
 @people_blueprint.route("/")
 async def get_people(req):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @people_blueprint.route("/<person_id:str>/")
@@ -40,19 +40,19 @@ async def person_probe(req, person_id: str):
 
 @people_blueprint.route("/<person_id:str>/relationships/")
 async def relationships(req, person_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @people_blueprint.route("/<person_id:str>/relationships/<relationship_id:str>")
 async def relationship(req, person_id: str, relationship_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @people_blueprint.route("/<person_id:str>/digital-objects/")
 async def digital_object_list(req, person_id):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @people_blueprint.route("/<person_id:str>/digital-objects/<dobject_id:str>")
 async def digital_object(req, person_id: str, dobject_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)

@@ -8,20 +8,25 @@ from small_asc.client import SolrError
 
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.linked_data import to_expanded_jsonld, to_ntriples, to_turtle
+from search_server.resources.tombstones import handle_tombstone
 from shared_helpers.identifiers import get_identifier
 from shared_helpers.jsonld import RouteContextMap
 
 log = logging.getLogger("mp_server")
 
+async def tombstone_or_not_found(req: request.Request) -> response.HTTPResponse:
+    maybe_tombstone: dict | None = await handle_tombstone(req)
+    if maybe_tombstone:
+        return response.json(maybe_tombstone, status=410)
+    return response.json({"message": "The requested resource was not found"}, status=404)
+
 
 async def send_json_response(
     serialized_results: dict, debug_response: bool
 ) -> response.HTTPResponse:
-    response_headers: dict = {"Content-Type": "application/ld+json; charset=utf-8"}
-
     return response.json(
         serialized_results,
-        headers=response_headers,
+        content_type="application/ld+json;charset=utf-8",
         option=orjson.OPT_INDENT_2 if debug_response else 0,
     )
 
@@ -50,7 +55,7 @@ async def handle_request(
     # This will return a 404 for both the cases where the response is None, and where
     # it is an empty dictionary.
     if not data_obj:
-        return response.text("The requested resource was not found", status=404)
+        return await tombstone_or_not_found(req)
 
     # Add the appropriate context to the result dictionary
     if req.route and req.route.name in RouteContextMap:
@@ -64,12 +69,12 @@ async def handle_request(
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         ttl = to_turtle(res)
-        return response.text(ttl, headers={"Content-Type": "text/turtle"})
+        return response.text(ttl, content_type="text/turtle")
     elif accept and "application/n-triples" in accept:
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         nt: str = to_ntriples(res)
-        return response.text(nt, headers={"Content-Type": "application/n-triples"})
+        return response.text(nt, content_type="application/n-triples")
     elif accept and "application/marcxml+xml" in accept:
         if sid := req.match_info.get("source_id"):
             rtype = "sources"
@@ -81,8 +86,8 @@ async def handle_request(
             rtype = "people"
             rid = pid
         else:
-            return response.text(
-                "Cannot retrieve MARCXML for this resource.", status=406
+            return response.json(
+                {"message": "Cannot retrieve MARCXML for this resource."}, status=406
             )
 
         auth_headers: dict = {
@@ -93,19 +98,19 @@ async def handle_request(
             muscat_req = await client.get(f"https://muscat.rism.info/data/{rtype}/{rid}")
             muscat_resp = muscat_req.text
             if muscat_req.status_code != 200:
-                return response.text(
-                    "Could not retrieve MARCXML from upstream", status=500
+                return response.json(
+                    {"message": "Could not retrieve MARCXML from upstream"}, status=500
                 )
 
         return response.text(
-            muscat_resp, headers={"Content-Type": "application/marcxml+xml"}
+            muscat_resp, content_type="application/marcxml+xml"
         )
     elif accept and ";profile=expanded" in accept:
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         exp = to_expanded_jsonld(res)
         return response.text(
-            exp, headers={"Content-Type": "application/ld+json;profile=expanded"}
+            exp, content_type="application/ld+json;profile=expanded"
         )
     else:
         log.debug("Sending JSON-LD")
@@ -138,19 +143,18 @@ async def handle_search(
 
     accept: str | None = req.headers.get("Accept")
     if accept and "application/ld+json" not in accept:
-        status_msg = f"""Accept header {accept} is not available for this resource.
-        Only application/ld+json is available"""
-        return response.text(status_msg, status=406)
+        status_msg = f"""Accept header {accept} is not available for this resource. Only application/ld+json is available"""
+        return response.json({"message": status_msg}, status=406)
 
     try:
         data_obj: dict = await handler(req, **kwargs)
     except InvalidQueryException as e:
-        return response.text(f"Invalid search query. {e}", status=400)
+        return response.json({"message": f"Invalid search query. {e}"}, status=400)
     except SolrError as e:
         error_message: str = f"Error sending search to Solr. {e}"
-        return response.text(error_message, status=500)
+        return response.json({"message": error_message}, status=500)
 
     if not data_obj:
-        return response.text("The requested resource was not found", status=404)
+        return response.json({"message": "The requested resource was not found"}, status=404)
 
     return await send_json_response(data_obj, req.app.ctx.config["common"]["debug"])

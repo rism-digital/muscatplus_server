@@ -11,7 +11,7 @@ subjects_blueprint: Blueprint = Blueprint("subjects", url_prefix="/subjects")
 
 @subjects_blueprint.route("/")
 async def subject_list(req):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @subjects_blueprint.route("/<subject_id:str>/")

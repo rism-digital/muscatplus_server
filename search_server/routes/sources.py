@@ -55,8 +55,8 @@ async def incipit(req, source_id: str, work_num: str):
             req, source_id=source_id, work_num=work_num
         )
         if not mei_resp:
-            return response.text(
-                "The requested resource could not be found", status=404
+            return response.json(
+                {"message": "The requested resource could not be found"}, status=404
             )
         return response.text(mei_resp["content"], headers=mei_resp["headers"])
     elif accept and "image/png" in accept:
@@ -64,8 +64,8 @@ async def incipit(req, source_id: str, work_num: str):
             req, source_id=source_id, work_num=work_num
         )
         if not png_resp:
-            return response.text(
-                "An error occurred when downloading this PNG", status=400
+            return response.json(
+                {"message": "An error occurred when downloading this PNG"}, status=400
             )
         return response.raw(png_resp["content"], headers=png_resp["headers"])
 
@@ -86,7 +86,7 @@ async def incipit_mei_encoding(req, source_id: str, work_num: str):
         req, source_id=source_id, work_num=work_num
     )
     if not resp:
-        return response.text("The requested resource could not be found", status=404)
+        return response.json({"message": "The requested resource could not be found"}, status=404)
 
     return response.text(resp["content"], headers=resp["headers"])
 
@@ -103,7 +103,7 @@ async def incipit_png_rendering(req, source_id: str, work_num: str):
         req, source_id=source_id, work_num=work_num
     )
     if not resp:
-        return response.text("The requested resource could not be found", status=404)
+        return response.json({"message": "The requested resource could not be found"}, status=404)
 
     return response.raw(resp["content"], headers=resp["headers"])
 
@@ -129,42 +129,42 @@ async def probe(req, source_id: str):
 
 @sources_blueprint.route("/<source_id:str>/creator/")
 async def creator(req, source_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/relationships/")
 async def relationships(req, source_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/relationships/<relationship_id:str>")
 async def relationship(req, source_id: str, relationship_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/material-groups/")
 async def material_groups_list(req, source_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/material-groups/<mg_id:str>/")
 async def material_group(req, source_id: str, mg_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/material-groups/<mg_id:str>/relationships/")
 async def material_group_relationships(req, source_id: str, mg_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/digital-objects/")
 async def digital_object_list(req, source_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/digital-objects/<dobject_id:str>")
 async def digital_object(req, source_id: str, digital_object_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/holdings/")
@@ -183,4 +183,4 @@ async def holding(req, source_id: str, holding_id: str):
 
 @sources_blueprint.route("/<source_id:str>/holdings/<holding_id:str>/relationships/")
 async def holding_relationships(req, source_id: str, holding_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)

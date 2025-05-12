@@ -1,5 +1,5 @@
 import logging
-from typing import NewType, Any
+from typing import Any, NewType
 
 import yaml
 from small_asc.client import JsonAPIRequest, Results, Solr

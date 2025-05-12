@@ -16,7 +16,7 @@ async def handle_front_request(req) -> response.HTTPResponse:
         request_compiler: SearchRequest = SearchRequest(req, probe=True)
         solr_params: JsonAPIRequest = request_compiler.compile()
     except InvalidQueryException as e:
-        return response.text(f"Invalid search query. {e}", status=400)
+        return response.json({"message": f"Invalid search query. {e}"}, status=400)
 
     solr_res: Results = await SolrConnection.search(solr_params)
 
@@ -24,11 +24,9 @@ async def handle_front_request(req) -> response.HTTPResponse:
         solr_res, context={"request": req, "direct_request": True}
     ).serialized
 
-    response_headers: dict = {"Content-Type": "application/ld+json; charset=utf-8"}
-
     return response.json(
         results,
-        headers=response_headers,
+        content_type="application/ld+json;charset=utf-8",
         option=orjson.OPT_INDENT_2 if req.app.ctx.config["common"]["debug"] else 0,
     )
 

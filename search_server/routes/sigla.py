@@ -15,8 +15,8 @@ async def siglum_redirect(req, siglum: str):
     resp: str | None = await handle_institution_sigla_request(req, siglum)
 
     if not resp:
-        return response.text(
-            f"An institution with the siglum {unquote(siglum)} was not found.",
+        return response.json(
+            {"message": f"An institution with the siglum {unquote(siglum)} was not found."},
             status=404,
         )
 
@@ -24,9 +24,9 @@ async def siglum_redirect(req, siglum: str):
 
 
 @sigla_blueprint.route("/")
-async def siglum_search(req):
+async def siglum_search(req) -> response.HTTPResponse:
     resp: dict | None = await handle_siglum_search_request(req)
     if not resp:
-        response.text("There was a problem with the search query")
+        response.json({"message": "There was a problem with the search query"}, status=400)
 
     return response.json(resp)

@@ -79,13 +79,13 @@ async def handle_suggest_request(
 ) -> response.HTTPResponse:
     alias: str | None = req.args.get("alias")
     if not alias:
-        return response.text(
-            "A suggest request requires an alias parameter", status=400
+        return response.json(
+            {"message": "A suggest request requires an alias parameter"}, status=400
         )
 
     query: str | None = req.args.get("q")
     if not query:
-        return response.text("A suggest request requires a q parameter", status=400)
+        return response.json({"message": "A suggest request requires a q parameter"}, status=400)
 
     cfg: dict = req.app.ctx.config
     # unlike the search handler we don't know what mode we're in, so we
@@ -105,7 +105,7 @@ async def handle_suggest_request(
     except SolrError:
         msg: str = "Error sending suggest request"
         log.exception(msg)
-        return response.text(msg, status=500)
+        return response.json({"message": msg}, status=500)
 
     suggest_results: dict = SuggestionResults(
         solr_res,

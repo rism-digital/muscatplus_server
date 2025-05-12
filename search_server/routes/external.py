@@ -21,4 +21,4 @@ async def external(req, project: str, resource_type: str, ext_id: str):
     "/<project:str>/source/<source_id:str>/holding/<institution_id:str>"
 )
 def external_holding(req, project: str, source_id: str, institution_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)

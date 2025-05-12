@@ -13,4 +13,4 @@ async def work(req, work_id: str):
 
 @works_blueprint.route("/<work_id:str>/sources")
 async def work_sources(req, work_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
