@@ -108,43 +108,46 @@ class SearchResults(BaseSearchResults):
         is_composite: bool = self.context.get("is_composite", False)
 
         for d in obj.docs:
-            if d["type"] == "source":
-                results.append(SourceSearchResult(d, context={"request": req}).serialized)
-            elif d["type"] == "person":
-                results.append(PersonSearchResult(d, context={"request": req}).serialized)
-            elif d["type"] == "institution":
-                results.append(
-                    InstitutionSearchResult(d, context={"request": req}).serialized
-                )
-            elif d["type"] == "incipit":
-                results.append(
-                    IncipitSearchResult(
-                        d,
-                        context={
-                            "request": req,
-                            "query_pae_features": self.context.get(
-                                "query_pae_features"
-                            ),
-                        },
-                    ).serialized
-                )
-            elif d["type"] == "holding" and is_composite is True:
-                # The SLOW path, but there shouldn't be many of these, so hopefully it won't be too bad.
-                # Look up the source based on the ID from the holding, then fetch the doc. This means this will
-                # trigger a Solr lookup for every result in the list that is a holding, but this should only ever
-                # happen when a source is marked as composite, and the relationship to an item in the source is
-                # a holding record.
-                source_id: str = d["source_id"]
-                source_doc: dict | None = await SolrConnection.get(source_id)  # type: ignore
-                if not source_doc:
-                    log.error("Malformed holding %s", d["id"])
-                    continue
+            dtype: str = d["type"]
 
-                results.append(
-                    SourceSearchResult(source_doc, context={"request": req}).serialized
-                )
-            else:
-                return None
+            match dtype:
+                case "source":
+                    results.append(SourceSearchResult(d, context={"request": req}).serialized)
+                case "person":
+                    results.append(PersonSearchResult(d, context={"request": req}).serialized)
+                case "institution":
+                    results.append(
+                        InstitutionSearchResult(d, context={"request": req}).serialized
+                    )
+                case "incipit":
+                    results.append(
+                        IncipitSearchResult(
+                            d,
+                            context={
+                                "request": req,
+                                "query_pae_features": self.context.get(
+                                    "query_pae_features"
+                                ),
+                            },
+                        ).serialized
+                    )
+                case "holding" if is_composite is True:
+                    # The SLOW path, but there shouldn't be many of these, so hopefully it won't be too bad.
+                    # Look up the source based on the ID from the holding, then fetch the doc. This means this will
+                    # trigger a Solr lookup for every result in the list that is a holding, but this should only ever
+                    # happen when a source is marked as composite, and the relationship to an item in the source is
+                    # a holding record.
+                    source_id: str = d["source_id"]
+                    source_doc: dict | None = await SolrConnection.get(source_id)  # type: ignore
+                    if not source_doc:
+                        log.error("Malformed holding %s", d["id"])
+                        continue
+
+                    results.append(
+                        SourceSearchResult(source_doc, context={"request": req}).serialized
+                    )
+                case _:
+                    continue
 
         return results
 

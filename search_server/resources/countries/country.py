@@ -33,18 +33,5 @@ class CountryList(ypres.DictSerializer):
         req = self.context["request"]  # type: ignore
         transl: dict = req.ctx.translations
 
-        res: list = []
-
-        for country_code in obj:
-            # Skip the 'None' entry
-            if not country_code:
-                continue
-
-            res.append(
-                {
-                    "label": country_code_labels_translator(country_code, transl),
-                    "value": country_code,
-                }
-            )
-
-        return res
+        return [{"label": country_code_labels_translator(c, transl), "value": c}
+                for c in obj if c]
