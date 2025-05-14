@@ -76,7 +76,7 @@ class BaseSearchResults(ypres.AsyncSerializer):
     def get_query_fields(self, obj: Results) -> list | None:
         req = self.context["request"]
         cfg: dict = req.app.ctx.config
-        transl: dict = req.app.ctx.translations
+        transl: dict = req.ctx.translations
 
         current_mode: str = req.args.get("mode", cfg["search"]["default_mode"])
         qfields: list = cfg["search"]["modes"][current_mode].get("q_fields", [])
