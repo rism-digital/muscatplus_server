@@ -69,8 +69,8 @@ class ContentsSection(ypres.DictSerializer):
             ),
             "language_notes_sm": ("records.language_note", None),
             "rism_series_identifiers_sm": ("records.series_statement", None),
-            "rism_id": ("records.rism_id_number", rism_source_id_translator),
             "source_fingerprint_s": ("records.fingerprint_identifier", None),
+            "full_rism_id": ("records.rism_id_number", None),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)

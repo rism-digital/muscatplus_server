@@ -154,6 +154,7 @@ class BiographicalDetails(ypres.DictSerializer):
             "other_dates_s": ("records.other_life_dates", None),
             "gender_s": ("records.gender", person_gender_translator),
             "profession_function_sm": ("records.profession_or_function", None),
+            "full_rism_id": ("records.rism_id_number", None),
         }
 
         return get_display_fields(obj, transl, field_config)
