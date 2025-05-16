@@ -611,7 +611,7 @@ def _render_incipit_pae(obj: SolrResult) -> RenderedIncipit:
 
 
 def _render_with_highlighting(
-    obj: SolrResult, query_pae_features: dict | None, search_mode: str
+        obj: SolrResult, query_pae_features: dict | None, search_mode: str
 ) -> RenderedIncipit:
     if not query_pae_features:
         log.error("Could not highlight a search result without query features!")
@@ -621,56 +621,44 @@ def _render_with_highlighting(
     if not svg:
         return None, None
 
-    feature_field: str = "intervals_im"
-    ids_field: str = "interval_ids_json"
-    query_features_field: str = "intervalsChromatic"
-
-    if search_mode == IncipitModeValues.EXACT_PITCHES:
-        feature_field = "pitches_sm"
-        ids_field = "pitches_ids_json"
-        query_features_field = "pitchesChromatic"
-    elif search_mode == IncipitModeValues.CONTOUR:
-        feature_field = "contour_refined_sm"
-        query_features_field = "intervalRefinedContour"
+    mode_fields = {
+        IncipitModeValues.EXACT_PITCHES: ("pitches_sm", "pitches_ids_json", "pitchesChromatic"),
+        IncipitModeValues.CONTOUR: ("contour_refined_sm", "interval_ids_json", "intervalRefinedContour"),
+    }
+    feature_field, ids_field, query_features_field = mode_fields.get(
+        search_mode, ("intervals_im", "interval_ids_json", "intervalsChromatic")
+    )
 
     if feature_field not in obj:
-        # If, for some reason, we don't have the feature field in the Solr object, then
-        # just return the rendered incipit without highlighting. This is a bit of a cop-out,
-        # but it means that edge cases (like single-note incipits that match a result) don't
-        # cause the system to crash.
         return svg, b64midi
 
-    document_interval_features: list = [str(s) for s in obj[feature_field]]
+    document_interval_features: list = list(map(str, obj[feature_field]))
     document_interval_ids: list = obj[ids_field]
     query_interval_feature: list = query_pae_features[query_features_field]
 
     log.debug("Document features: %s", document_interval_features)
     log.debug("Query features: %s", query_interval_feature)
 
-    # Run the query features and the document features through a longest contiguous matching subsequence matcher.
     smtch = difflib.SequenceMatcher(
         a=query_interval_feature, b=document_interval_features
     )
-    all_blks: list = smtch.get_matching_blocks()
+    used_blks = smtch.get_matching_blocks()[:-1]
 
-    # The last block is always a 'dummy' so we throw it away.
-    used_blks: list = all_blks[:-1]
+    highlight_ids = {
+        nid
+        for blk in used_blks
+        for noteids in document_interval_ids[blk.b : blk.b + blk.size]
+        for nid in noteids
+    }
 
-    ids_to_highlight = []
-    for blk in used_blks:
-        seq = document_interval_ids[blk.b : blk.b + blk.size]
-        ids_to_highlight.extend(seq)
+    if not highlight_ids:
+        return svg, b64midi
 
-    highlight_stmts = []
-    for noteids in ids_to_highlight:
-        for nid in noteids:
-            highlight_stmts.append(f'g[data-id="{nid}"] {{ fill: red; color: red; }}')
+    highlight_css_stmt = " ".join(
+        f'g[data-id="{nid}"] {{ fill: red; color: red; }}' for nid in highlight_ids
+    )
 
-    highlight_css_stmt = " ".join(highlight_stmts)
-
-    # Use Regex to insert the highlighting. The other option is to read the SVG in as XML and
-    # manipulate the DOM, which would be more correct, but probably slower for such a simple replacement.
-    highlighted_svg: str = re.sub(
+    highlighted_svg = re.sub(
         CSS_REPLACEMENT_PATTERN,
         rf'<style type="text/css">\1 {highlight_css_stmt}</style>',
         svg,
