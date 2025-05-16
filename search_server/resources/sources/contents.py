@@ -9,7 +9,7 @@ from shared_helpers.display_translators import (
     key_mode_value_translator,
     material_content_types_translator,
     material_source_types_translator,
-    rism_source_id_translator,
+    periodical_value_translator,
     scoring_json_value_translator,
     title_json_value_translator,
 )
@@ -54,6 +54,7 @@ class ContentsSection(ypres.DictSerializer):
             "common_name_s": ("records.additional_title", None),
             "opus_numbers_sm": ("records.opus_number", None),
             "description_summary_sm": ("records.description_summary", None),
+            "periodical_series_json": ("records.periodical_or_series", periodical_value_translator),
             "dramatic_roles_json": (
                 "records.named_dramatic_roles",
                 dramatic_roles_json_value_translator,
