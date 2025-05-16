@@ -202,6 +202,7 @@ class Holding(ypres.AsyncDictSerializer):
                 "records.content_type",
                 material_content_types_translator,
             ),
+            "department_s": ("records.department", None),
             "shelfmark_s": ("records.shelfmark", None),
             "former_shelfmarks_sm": ("records.shelfmark_olim", None),
             "provenance_sm": ("records.provenance", None),
