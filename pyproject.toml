@@ -10,12 +10,12 @@ dependencies = [
     "rdflib (>=7.0.0,<8.0.0)",
     "Jinja2 (>=3.1.2,<4.0.0)",
     "orjson (>=3.9.15,<4.0.0)",
-    "verovio (>=5.1.0,<6.0.0)",
     "small-asc @ git+https://github.com/rism-digital/small-asc.git@main",
     "ypres @ git+https://github.com/rism-digital/ypres.git@main",
     "sanic (>=24.0.0,<26.0.0)",
-    "sentry-sdk[sanic] (>=2.19.0,<3.0.0)",
+    "sentry-sdk[sanic] (>=2.19.0,<4.0.0)",
     "httpx (>=0.28.1,<0.29.0)",
+    "verovio>=5.2.1",
 ]
 
 [dependency-groups]
@@ -32,11 +32,20 @@ dev = [
 
 [tool.uv]
 package = false
+prerelease = "allow"
 
 [[tool.uv.index]]
 name = "PyPI"
 url = "https://pypi.org/simple/"
 default = true
+
+[[tool.uv.index]]
+name = "TestPyPI"
+url = "https://test.pypi.org/simple/"
+explicit = true
+
+[tool.uv.sources]
+verovio = { index = "TestPyPI" }
 
 [tool.ruff]
 target-version = "py311"
