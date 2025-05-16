@@ -120,6 +120,7 @@ class Institution(BaseInstitution):
         d = {
             "siglum": obj.get("siglum_s"),
             "countryCodes": obj.get("country_codes_sm", []),
+            "city": obj.get("city_s")
         }
 
         return {k: v for k, v in d.items() if v} or None
