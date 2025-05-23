@@ -14,6 +14,7 @@ from search_server.routes.incipits import incipits_blueprint
 from search_server.routes.institutions import institutions_blueprint
 from search_server.routes.people import people_blueprint
 from search_server.routes.places import places_blueprint
+from search_server.routes.publications import publications_blueprint
 from search_server.routes.query import query_blueprint
 from search_server.routes.sigla import sigla_blueprint
 from search_server.routes.sources import sources_blueprint
@@ -64,6 +65,7 @@ app.blueprint(query_blueprint)
 app.blueprint(api_blueprint)
 app.blueprint(external_blueprint)
 app.blueprint(sigla_blueprint)
+app.blueprint(publications_blueprint)
 
 app.config.FORWARDED_SECRET = config["common"]["secret"]
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
