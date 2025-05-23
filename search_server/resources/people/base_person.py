@@ -7,16 +7,6 @@ from shared_helpers.formatters import format_person_label
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 
-SOLR_FIELDS_FOR_BASE_PERSON: list = [
-    "id",
-    "type",
-    "created",
-    "updated",
-    "name_s",
-    "name_ans",
-    "date_statement_s",
-]
-
 
 class BasePerson(ypres.AsyncDictSerializer):
     pid = ypres.MethodField(label="id")

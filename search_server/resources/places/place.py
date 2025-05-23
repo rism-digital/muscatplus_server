@@ -5,13 +5,10 @@ import ypres
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.resources.institutions.base_institution import (
-    SOLR_FIELDS_FOR_BASE_INSTITUTION,
     BaseInstitution,
 )
-from search_server.resources.people.base_person import SOLR_FIELDS_FOR_BASE_PERSON
 from search_server.resources.shared.relationship import Relationship
 from search_server.resources.sources.base_source import (
-    SOLR_FIELDS_FOR_BASE_SOURCE,
     BaseSource,
 )
 from shared_helpers.display_fields import LabelConfig, get_display_fields
@@ -76,7 +73,6 @@ class Place(ypres.AsyncDictSerializer):
         q: JsonAPIRequest = {
             "query": "*:*",
             "filter": ["type:source", f"location_of_performance_ids:{place_id}"],
-            "fields": SOLR_FIELDS_FOR_BASE_SOURCE,
             "sort": "main_title_ans asc",
         }
         source_results: Results = await SolrConnection.search(q, cursor=True)
@@ -97,7 +93,6 @@ class Place(ypres.AsyncDictSerializer):
         q: JsonAPIRequest = {
             "query": "*:*",
             "filter": ["type:person", f"place_ids:{place_id}"],
-            "fields": SOLR_FIELDS_FOR_BASE_PERSON,
             "sort": "name_ans desc",
         }
         person_results: Results = await SolrConnection.search(q, cursor=True)
@@ -117,7 +112,6 @@ class Place(ypres.AsyncDictSerializer):
         q: JsonAPIRequest = {
             "query": "*:*",
             "filter": ["type:institution", f"place_ids:{place_id}"],
-            "fields": SOLR_FIELDS_FOR_BASE_INSTITUTION,
             "sort": "name_ans asc",
         }
         institution_results: Results = await SolrConnection.search(q, cursor=True)
