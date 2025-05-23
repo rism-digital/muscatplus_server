@@ -13,7 +13,6 @@ class BaseWork(ypres.AsyncDictSerializer):
     wtype = ypres.StaticField(label="type", value="rism:Work")
     slabel = ypres.MethodField(label="label")
     creator = ypres.MethodField()
-    sources = ypres.MethodField()
 
     def get_wid(self, obj: SolrResult) -> str:
         req = self.context["request"]
@@ -32,15 +31,3 @@ class BaseWork(ypres.AsyncDictSerializer):
             obj["creator_json"][0],
             context={"request": self.context["request"], "reltype": "rism:Creator"},
         ).serialized
-
-    def get_sources(self, obj: SolrResult) -> dict | None:
-        req = self.context["request"]
-        work_id: str = obj["id"]
-        source_count: int = obj.get("source_count_i", 0)
-
-        ident: str = re.sub(ID_SUB, "", work_id)
-
-        return {
-            "url": get_identifier(req, "works.work_sources", work_id=ident),
-            "totalItems": source_count,
-        }
