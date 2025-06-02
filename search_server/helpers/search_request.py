@@ -571,8 +571,8 @@ class SearchRequest:
 
         return sort_statement
 
-    def _compile_fields(self) -> str:
-        return ",".join(self.fields)
+    def _compile_fields(self) -> list[str]:
+        return self.fields
 
     def _compile_query(self) -> str:
         """Returns a validated query string that has been passed through the small-asc query parser. This

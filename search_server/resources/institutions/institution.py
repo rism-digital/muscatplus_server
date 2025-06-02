@@ -11,21 +11,8 @@ from search_server.resources.shared.relationship import RelationshipsSection
 from shared_helpers.display_fields import assemble_label_value
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.languages import merge_language_maps
-from shared_helpers.solr_connection import SolrConnection, SolrResult
+from shared_helpers.solr_connection import SolrResult
 from shared_helpers.utilities import is_number
-
-
-async def handle_institution_request(req, institution_id: str) -> dict | None:
-    institution_record: dict | None = await SolrConnection.get(  # type: ignore
-        f"institution_{institution_id}"
-    )
-
-    if not institution_record:
-        return None
-
-    return await Institution(
-        institution_record, context={"request": req, "direct_request": True}
-    ).serialized
 
 
 class Institution(BaseInstitution):

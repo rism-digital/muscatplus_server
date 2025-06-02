@@ -665,3 +665,45 @@ def _render_with_highlighting(
     )
 
     return highlighted_svg, b64midi
+
+
+class WorkSearchResult(ypres.DictSerializer):
+    srid = ypres.MethodField(label="id")
+    slabel = ypres.MethodField(label="label")
+    result_type = ypres.StaticField(label="type", value="rism:Work")
+    type_label = ypres.MethodField(label="typeLabel")
+    part_of = ypres.MethodField(label="partOf")
+    summary = ypres.MethodField()
+
+    def get_srid(self, obj: SolrResult) -> str:
+        req = self.context["request"]
+        work_id = obj["rism_id"]
+        return get_identifier(req, "works.work", work_id=work_id)
+
+    def get_slabel(self, obj: SolrResult) -> dict:
+        return {"none": [f"{obj['standard_title_s']}"]}
+
+    def get_type_label(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
+        transl = req.ctx.translations
+
+        return transl.get("records.work")
+
+    def get_part_of(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        catalogue_id = obj["catalogue_id"]
+
+        return {
+            "label": transl.get("records.item_part_of"),
+            "publication": {
+                "id": get_identifier(req, "publications.publication", publication_id=catalogue_id),
+                "type": "rism:Source",
+                "typeLabel": transl.get("records.publication"),
+                # "label": {"none": [parent_title]},
+            },
+        }
+
+    def get_summary(self, obj: SolrResult) -> dict:
+        return {}

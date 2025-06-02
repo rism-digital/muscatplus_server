@@ -31,7 +31,21 @@ class Publication(ypres.AsyncDictSerializer):
         return {"none": ["Title"]}
 
     def get_works(self, obj: dict) -> dict | None:
-        pass
+        if not self.context.get("direct_request"):
+            return None
+
+        num_works: int = obj.get("works_count_i", 0)
+        if num_works == 0:
+            return None
+
+        publication_id: str = obj["rism_id"]
+
+        return {
+            "url": get_identifier(
+                self.context["request"], "publications.publication_works", publication_id=publication_id
+            ),
+            "totalItems": num_works
+        }
 
     def get_record_history(self, obj: dict) -> dict | None:
         req = self.context["request"]
