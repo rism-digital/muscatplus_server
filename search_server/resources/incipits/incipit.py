@@ -51,7 +51,7 @@ async def handle_incipits_list_request(req, source_id: str) -> dict | None:
 
     return await IncipitsSection(
         record.docs[0], context={"request": req, "direct_request": True}
-    ).data
+    ).serialized
 
 
 async def handle_incipit_request(req, source_id: str, work_num: str) -> dict | None:
@@ -62,7 +62,7 @@ async def handle_incipit_request(req, source_id: str, work_num: str) -> dict | N
 
     return await Incipit(
         incipit_record, context={"request": req, "direct_request": True}
-    ).data
+    ).serialized
 
 
 async def handle_mei_download(req, source_id: str, work_num: str) -> dict | None:
@@ -121,13 +121,13 @@ class IncipitsSection(ypres.AsyncDictSerializer):
     items = ypres.MethodField()
 
     def get_isid(self, obj: SolrResult):
-        source_id = re.sub(ID_SUB, "", obj.get("id"))
-        req = self.context.get("request")
+        source_id = re.sub(ID_SUB, "", obj["id"])
+        req = self.context["request"]
 
         return get_identifier(req, "sources.incipits_list", source_id=source_id)
 
     def get_section_label(self, obj: SolrResult):
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return transl.get("records.incipits")
@@ -136,7 +136,7 @@ class IncipitsSection(ypres.AsyncDictSerializer):
         if not self.context.get("direct_request"):
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
         ident: str = get_identifier(req, "sources.source", source_id=obj.get("id"))
 
@@ -183,15 +183,15 @@ class IncipitsSection(ypres.AsyncDictSerializer):
             results,
             many=True,
             context={
-                "request": self.context.get("request"),
+                "request": self.context["request"],
             },
-        ).data
+        ).serialized_many
 
 
 class Incipit(ypres.AsyncDictSerializer):
     incip_id = ypres.MethodField(label="id")
     itype = ypres.StaticField(label="type", value="rism:Incipit")
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     part_of = ypres.MethodField(label="partOf")
     summary = ypres.MethodField()
     rendered = ypres.MethodField()
@@ -199,7 +199,7 @@ class Incipit(ypres.AsyncDictSerializer):
     properties = ypres.MethodField()
 
     def get_incip_id(self, obj: dict) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
         source_id: str = re.sub(ID_SUB, "", obj["source_id"])
         work_num: str = f"{obj.get('work_num_s')}"
 
@@ -207,22 +207,23 @@ class Incipit(ypres.AsyncDictSerializer):
             req, "sources.incipit", source_id=source_id, work_num=work_num
         )
 
-    def get_label(self, obj: SolrResult) -> dict | None:
+    def get_slabel(self, obj: SolrResult) -> dict | None:
         label: str = format_incipit_label(obj)
 
         return {"none": [label]}
 
     async def get_part_of(self, obj: SolrResult) -> dict | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
+        # TODO: This should probably be changed to 'incipit part of'
         return {
             "label": transl.get(
                 "records.item_part_of"
-            ),  # TODO: This should probably be changed to 'incipit part of'
+            ),
             "source": await BaseSource(
                 obj, context={"request": req,}
-            ).data,
+            ).serialized,
         }
 
     def get_properties(self, obj: SolrResult) -> dict | None:
@@ -240,7 +241,7 @@ class Incipit(ypres.AsyncDictSerializer):
         return {k: v for k, v in d.items() if v}
 
     def get_summary(self, obj: SolrResult) -> list[dict] | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {}
@@ -281,7 +282,7 @@ class Incipit(ypres.AsyncDictSerializer):
         if not pae_code:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         is_mensural: bool = obj.get("is_mensural_b", False)
 
         # Set Verovio to render random IDs for this so that we don't have any ID collisions with
@@ -296,7 +297,7 @@ class Incipit(ypres.AsyncDictSerializer):
 
         svg, b64midi = rendered_pae
 
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+        source_id: str = re.sub(ID_SUB, "", obj.get("source_id", ""))
         work_num: str = obj.get("work_num_s", "")
         png_download_url: str = get_identifier(
             req, "sources.incipit_png_rendering", source_id=source_id, work_num=work_num
@@ -312,11 +313,11 @@ class Incipit(ypres.AsyncDictSerializer):
         if "music_incipit_s" not in obj:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         pae_encoding: dict = {}
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_id"))
+        source_id: str = re.sub(ID_SUB, "", obj.get("source_id", ""))
         work_num: str = obj.get("work_num_s", "")
         mei_download_url: str = get_identifier(
             req, "sources.incipit_mei_encoding", source_id=source_id, work_num=work_num

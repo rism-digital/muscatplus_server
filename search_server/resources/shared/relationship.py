@@ -18,22 +18,21 @@ from shared_helpers.identifiers import (
     PROJECT_ID_SUB,
     get_identifier,
 )
-from shared_helpers.utilities import to_aiter
 
 log = logging.getLogger("mp_server")
 
 
-class RelationshipsSection(ypres.AsyncDictSerializer):
+class RelationshipsSection(ypres.DictSerializer):
     section_label = ypres.MethodField(label="sectionLabel")
     items = ypres.MethodField()
 
     def get_section_label(self, obj: dict) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return transl.get("records.relations", {})
 
-    async def get_items(self, obj: dict) -> list[dict]:
+    def get_items(self, obj: dict) -> list[dict]:
         now_in: list = obj.get("now_in_json", [])
         contains: list = obj.get("contains_json", [])
         people: list = obj.get("related_people_json", [])
@@ -42,20 +41,18 @@ class RelationshipsSection(ypres.AsyncDictSerializer):
         sources: list = obj.get("related_sources_json", [])
         contributing_projects: list = obj.get("contributing_projects_json", [])
 
-        all_relationships = to_aiter(
-            itertools.chain(now_in, contains, people, institutions, sources, places, contributing_projects)
-        )
+        all_relationships = itertools.chain(now_in, contains, people, institutions, sources, places, contributing_projects)
 
-        return await Relationship(
+        return Relationship(
             all_relationships,
             many=True,
             context={
-                "request": self.context.get("request"),
+                "request": self.context["request"],
             },
-        ).data
+        ).serialized_many
 
 
-class Relationship(ypres.AsyncDictSerializer):
+class Relationship(ypres.DictSerializer):
     role = ypres.MethodField()
     qualifier = ypres.MethodField()
     related_to = ypres.MethodField(label="relatedTo")
@@ -68,7 +65,7 @@ class Relationship(ypres.AsyncDictSerializer):
             return None
 
         relationship_value: str = obj["relationship"]
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
         relationship_translator: Callable | None = _relationship_translator(obj)
         if not relationship_translator:
@@ -91,7 +88,7 @@ class Relationship(ypres.AsyncDictSerializer):
         if "qualifier" not in obj:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return {
@@ -101,7 +98,7 @@ class Relationship(ypres.AsyncDictSerializer):
         }
 
     def get_related_to(self, obj: dict) -> dict | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         if "person_id" in obj:
             return _related_to_person(req, obj)
         elif "institution_id" in obj:
@@ -163,8 +160,6 @@ def _related_to_person(req, obj: dict) -> dict:
 
 def _related_to_institution(req, obj: dict) -> dict:
     name: str = f"{obj['name']}"
-    if "department" in obj:
-        name = f"{name}, {obj.get('department')}"
 
     if "place" in obj:
         name = f"{name}, {obj['place']}"

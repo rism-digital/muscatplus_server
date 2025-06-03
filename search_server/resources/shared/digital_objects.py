@@ -18,7 +18,7 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
     items = ypres.MethodField()
 
     def get_doid(self, obj: SolrResult) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
         obj_type: str = obj["type"]
         obj_id: str = re.sub(ID_SUB, "", obj["id"])
         # linked_record_type: str = obj["linked_type_s"]
@@ -38,7 +38,7 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
             return "no-id"
 
     def get_section_label(self, obj: SolrResult):
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return transl.get("records.digital_objects")
@@ -58,9 +58,9 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
             results,
             many=True,
             context={
-                "request": self.context.get("request"),
+                "request": self.context["request"],
             },
-        ).data
+        ).serialized_many
 
 
 class DigitalObject(ypres.AsyncDictSerializer):
@@ -69,12 +69,12 @@ class DigitalObject(ypres.AsyncDictSerializer):
     # part_of = ypres.MethodField(
     #     label="partOf"
     # )
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     format = ypres.MethodField()
     body = ypres.MethodField()
 
     def get_doid(self, obj: SolrResult) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
         linked_record_type: str = obj["linked_type_s"]
         linked_id_val: str = obj["linked_id"]
         linked_id: str = re.sub(ID_SUB, "", linked_id_val)
@@ -103,7 +103,7 @@ class DigitalObject(ypres.AsyncDictSerializer):
             log.error("Could not determine ID for %s", obj["id"])
             return "no-id"
 
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_slabel(self, obj: SolrResult) -> dict:
         return {"none": [f"{obj.get('description_s')}"]}
 
     def get_part_of(self, obj: SolrResult) -> dict | None:
@@ -111,7 +111,7 @@ class DigitalObject(ypres.AsyncDictSerializer):
         pass
 
     def get_format(self, obj: SolrResult) -> str | None:
-        return obj.get("media_type_s")
+        return obj["media_type_s"]
 
     async def get_body(self, obj: SolrResult) -> dict:
         d = {}

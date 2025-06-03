@@ -5,8 +5,8 @@ import tempfile
 import urllib.parse
 
 import httpx
+import orjson
 import verovio
-from orjson import orjson
 
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.resvg import render_svg
@@ -38,10 +38,11 @@ VEROVIO_BASE_OPTIONS: dict = {
 vrv_tk = verovio.toolkit()
 vrv_tk.setOptions(VEROVIO_BASE_OPTIONS)
 
+type RenderedIncipit = tuple[str | None, str | None]
 
 def render_pae(
     pae: str, use_crc: bool = False, enlarged: bool = False, is_mensural: bool = False
-) -> tuple | None:
+) -> RenderedIncipit:
     """
     Renders Plaine and Easie to SVG and MIDI. Returns None if there was a problem loading the data.
 
@@ -77,7 +78,7 @@ def render_pae(
 
     # If loading failed, return None
     if not load_status:
-        return None
+        return None, None
 
     svg: str = vrv_tk.renderToSVG()
 
@@ -187,7 +188,11 @@ def render_mei(req, incipit: dict) -> str | None:
 
 
 def render_png(req, incipit: str) -> bytes | None:
-    rendered_svg, _ = render_pae(incipit)
+    rendered: tuple | None = render_pae(incipit)
+    if not rendered:
+        return None
+
+    rendered_svg, _ = rendered
     cfg: dict = req.app.ctx.config
     # Create the temporary image file
     fd, tmpfile = tempfile.mkstemp()

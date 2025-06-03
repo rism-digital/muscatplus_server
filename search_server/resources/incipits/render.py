@@ -23,22 +23,19 @@ async def handle_incipit_render(req) -> response.HTTPResponse:
     # Generate random IDs to avoid ID collisions on the page.
     rendered_pae: tuple | None = render_pae(pae, use_crc=False, enlarged=True)
     if not rendered_pae:
-        return response.text(
-            "There was a problem rendering the Plaine and Easie notation", status=500
+        return response.json(
+            {"message": "There was a problem rendering the Plaine and Easie notation"}, status=500
         )
 
     svg, _ = rendered_pae
-    response_headers = {"Content-Type": "image/svg+xml;charset=utf8"}
-
-    return response.text(svg, headers=response_headers)
+    return response.text(svg, content_type="image/svg+xml;charset=utf8")
 
 
 async def handle_incipit_validate(req) -> response.HTTPResponse:
-    response_headers: dict = {"Content-Type": "application/json; charset=utf-8"}
     data_obj: dict = validate_pae(req)
 
     return response.json(
         data_obj,
-        headers=response_headers,
+        content_type="application/json; charset=utf-8",
         option=orjson.OPT_INDENT_2 if req.app.ctx.config["common"]["debug"] else 0,
     )

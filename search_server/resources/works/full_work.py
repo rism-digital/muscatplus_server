@@ -16,8 +16,8 @@ class FullWork(BaseWork):
     sources = ypres.MethodField()
 
     async def get_sources(self, obj: SolrResult) -> dict | None:
-        req = self.context.get("request")
-        work_id: str = obj.get("id")
+        req = self.context["request"]
+        work_id: str = obj["id"]
         source_count: int = obj.get("source_count_i", 0)
 
         ident: str = re.sub(ID_SUB, "", work_id)
@@ -54,6 +54,6 @@ async def get_source_objects(req, work_id: str) -> list | None:
     items: list[dict] = []
 
     async for res in source_results:
-        items.append(await BaseSource(res, context={"request": req}).data)
+        items.append(await BaseSource(res, context={"request": req}).serialized)
 
     return items or None

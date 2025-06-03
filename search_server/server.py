@@ -115,9 +115,9 @@ async def front(req):
 
 
 @app.route("/about")
-async def about(req):
+async def about(req) -> response.JSONResponse:
     cfg: dict = req.app.ctx.config
-    idx_result: dict | None = await SolrConnection.get("rism-online-index-info")
+    idx_result: dict | None = await SolrConnection.get("rism-online-index-info")  # type: ignore
 
     # If, for some reason, we don't have a result for the last indexed
     # value, then return Jan 1, 1970.

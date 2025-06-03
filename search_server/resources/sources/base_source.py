@@ -50,7 +50,7 @@ class BaseSource(ypres.AsyncDictSerializer):
     sid = ypres.MethodField(label="id")
     stype = ypres.StaticField(label="type", value="rism:Source")
     type_label = ypres.MethodField(label="typeLabel")
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     creator = ypres.MethodField()
     part_of = ypres.MethodField(label="partOf")
     summary = ypres.MethodField()
@@ -58,41 +58,41 @@ class BaseSource(ypres.AsyncDictSerializer):
     record_history = ypres.MethodField(label="recordHistory")
 
     def get_sid(self, obj: SolrResult) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
         source_id_val = (
-            obj.get("id") if obj.get("type") == "source" else obj.get("source_id")
+            obj["id"] if obj.get("type") == "source" else obj["source_id"]
         )
         source_id: str = re.sub(ID_SUB, "", source_id_val)
 
         return get_identifier(req, "sources.source", source_id=source_id)
 
-    def get_label(self, obj: SolrResult) -> dict:
+    def get_slabel(self, obj: SolrResult) -> dict:
         if "standard_titles_json" not in obj:
             return {"none": [obj.get("main_title_s", "[No title]")]}
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
         label = format_source_label(obj["standard_titles_json"], transl)
 
         return label
 
     def get_type_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.source")
+        return transl["records.source"]
 
-    async def get_creator(self, obj: SolrResult) -> dict | None:
+    def get_creator(self, obj: SolrResult) -> dict | None:
         if "creator_json" not in obj:
             return None
 
-        return await Relationship(
+        return Relationship(
             obj["creator_json"][0],
             context={
-                "request": self.context.get("request"),
+                "request": self.context["request"],
                 "reltype": "rism:Creator",
             },
-        ).data
+        ).serialized
 
     def get_part_of(self, obj: SolrResult) -> dict | None:
         # This source is not part of another source; return None
@@ -100,8 +100,8 @@ class BaseSource(ypres.AsyncDictSerializer):
             return None
 
         source_membership: dict = obj.get("source_membership_json", {})
-        req = self.context.get("request")
-        parent_source_id: str = re.sub(ID_SUB, "", source_membership.get("source_id"))
+        req = self.context["request"]
+        parent_source_id: str = re.sub(ID_SUB, "", source_membership.get("source_id", ""))
         ident: str = get_identifier(req, "sources.source", source_id=parent_source_id)
         transl: dict = req.ctx.translations
 
@@ -143,7 +143,7 @@ class BaseSource(ypres.AsyncDictSerializer):
     # the summary is part of the 'contents' section. But in the base source view it will deliver some basic
     # identification fields.
     def get_summary(self, obj: SolrResult) -> list[dict] | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
@@ -166,7 +166,7 @@ class BaseSource(ypres.AsyncDictSerializer):
         return get_display_fields(obj, transl, field_config=field_config)
 
     def get_source_types(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
         source_type: str = obj.get("source_type_s", "unspecified")
         content_identifiers: list[str] = obj.get("content_types_sm", [])
@@ -176,8 +176,8 @@ class BaseSource(ypres.AsyncDictSerializer):
             record_type, source_type, content_identifiers, transl
         )
 
-    def get_record_history(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+    def get_record_history(self, obj: SolrResult) -> dict | None:
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return get_record_history(obj, transl)

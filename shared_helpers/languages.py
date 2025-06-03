@@ -196,11 +196,11 @@ def negotiate_languages(req, translations: dict) -> dict:
         return translations
 
     lang_values: str = req.headers.get("X-API-Accept-Language")
-    split_vals: set = {f.strip() for f in lang_values.split(",")}
+    split_vals: set[str] = {f.strip() for f in lang_values.split(",")}
 
     # Take the intersection of requested languages and supported languages. This
     # determines which ones will be in the output.
-    acceptable_vals: set = split_vals & set(SUPPORTED_LANGUAGES)
+    acceptable_vals: set[str] = split_vals & set(SUPPORTED_LANGUAGES)
 
     # If no languages provided are acceptable, return all languages
     if not acceptable_vals:

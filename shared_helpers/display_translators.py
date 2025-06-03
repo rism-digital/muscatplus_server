@@ -640,6 +640,15 @@ def dramatic_roles_json_value_translator(values: list, translations: dict) -> di
         roles.append(role)
     return {"none": roles}
 
+def periodical_value_translator(values: list, translations: dict) -> dict:
+    periodicals: list = []
+    for r in values:
+        ptitle = r.get("title", "")
+        pnum = f", {r["number"]}" if r.get("number") else ""
+        periodicals.append(f"{ptitle}{pnum}")
+    return {"none": periodicals}
+
+
 
 def title_json_value_translator(values: list, translations: dict) -> dict:
     """

@@ -18,7 +18,7 @@ async def handle_institution_geojson_request(
     if not institution_record:
         return None
 
-    return await InstitutionGeoJson(institution_record, context={"request": req}).data
+    return await InstitutionGeoJson(institution_record, context={"request": req}).serialized
 
 
 class InstitutionGeoJson(ypres.AsyncDictSerializer):
@@ -36,11 +36,11 @@ class InstitutionGeoJson(ypres.AsyncDictSerializer):
         if not is_number(lat) or not is_number(lon):
             return None
 
-        main_org = await GeoJsonFeature(obj, context={"is_primary": True}).data
+        main_org = await GeoJsonFeature(obj, context={"is_primary": True}).serialized
         if not main_org:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         all_features: list[dict] = await get_nearby_orgs(
             req, [lat, lon], primary_obj_id
         )
@@ -50,7 +50,7 @@ class InstitutionGeoJson(ypres.AsyncDictSerializer):
 
 async def get_nearby_orgs(req, coordinates: list, pimary_obj_id: str) -> list[dict]:
     locval = ",".join(coordinates)
-    nearby_orgs_query = {
+    nearby_orgs_query: dict = {
         "query": "*:*",
         "filter": [
             "type:institution",
@@ -61,14 +61,14 @@ async def get_nearby_orgs(req, coordinates: list, pimary_obj_id: str) -> list[di
     }
 
     results = await SolrConnection.search(
-        nearby_orgs_query, cursor=True, handler="/query"
+        nearby_orgs_query, cursor=True, handler="/query"  # type: ignore
     )
     if not results:
         return []
 
     return await GeoJsonFeature(
         results, many=True, context={"is_primary": False, "request": req}
-    ).data
+    ).serialized_many
 
 
 class GeoJsonFeature(ypres.AsyncDictSerializer):
@@ -79,13 +79,13 @@ class GeoJsonFeature(ypres.AsyncDictSerializer):
 
     def get_properties(self, obj: dict) -> dict:
         label: str = format_institution_label(obj)
-        orgtypes: list = obj.get("institution_types_sm")
+        orgtypes: list = obj.get("institution_types_sm", [])
         is_primary: bool = self.context.get("is_primary", False)
 
         props = {"name": label, "organizationTypes": orgtypes, "primary": is_primary}
 
         if not is_primary:
-            req = self.context.get("request")
+            req = self.context["request"]
             org_ident = obj["id"]
             ident = re.sub(ID_SUB, "", org_ident)
             props["url"] = get_identifier(

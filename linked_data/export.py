@@ -78,14 +78,12 @@ serializer_map: dict = {
 }
 
 
-def to_turtle(data: dict) -> str:
+def to_ntriples(data: dict) -> str:
     json_serialized: str = orjson.dumps(data).decode("utf-8")
     graph_object: rdflib.Graph = rdflib.Graph().parse(
         data=json_serialized, format="application/ld+json"
     )
-    turtle: str = graph_object.serialize(format="nt")
-
-    return turtle
+    return graph_object.serialize(format="nt")
 
 
 async def create_id_groups(
@@ -151,14 +149,14 @@ async def run_serializer(
             return None
 
         serialized.update(ctx_val)
-        turtle: str = to_turtle(serialized)
-        if not turtle:
+        ntrips: str = to_ntriples(serialized)
+        if not ntrips:
             log.critical("No output! %s", docid)
 
         with sqlconn:
             sqlconn.execute(
                 "INSERT INTO serialized VALUES (?, ?, ?)",
-                (docid, this_doc["type"], turtle),  # type: ignore
+                (docid, this_doc["type"], ntrips),  # type: ignore
             )
 
         sqlconn.commit()

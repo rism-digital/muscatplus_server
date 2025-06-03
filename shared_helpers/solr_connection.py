@@ -1,8 +1,8 @@
 import logging
-from typing import NewType
+from typing import Any, NewType
 
 import yaml
-from small_asc.client import Results, Solr
+from small_asc.client import JsonAPIRequest, Results, Solr
 
 """
 A Singleton for a global Solr connection. Methods that wish
@@ -26,10 +26,10 @@ SolrConnection: Solr = Solr(solr_url)
 
 log.debug("Solr connection set to %s", solr_url)
 
-SolrResult = NewType("SolrResult", dict)
+SolrResult = NewType("SolrResult", dict[str, Any])
 
 
-async def execute_query(solr_params: dict, handler: str | None = None) -> Results:
+async def execute_query(solr_params: JsonAPIRequest, handler: str | None = None) -> Results:
     """
     Executes a search query. Expects a pre-compiled dictionary of parameters to pass to Solr. Raises SolrError
     if there was a problem with the query.
@@ -41,7 +41,7 @@ async def execute_query(solr_params: dict, handler: str | None = None) -> Result
     extra_args = {}
     if handler:
         extra_args["handler"] = handler
-    solr_res: Results = await SolrConnection.search(solr_params, **extra_args)
+    solr_res: Results = await SolrConnection.search(solr_params, **extra_args)  # type: ignore
     return solr_res
 
 
@@ -59,7 +59,7 @@ async def result_count(**kwargs) -> int:
 
 
 async def is_composite(source_id: str) -> bool:
-    res: dict | None = await SolrConnection.get(source_id, ["record_type_s"])
+    res: dict | None = await SolrConnection.get(source_id, ["record_type_s"])  # type: ignore
     return (
         res["record_type_s"] == "composite" if res and "record_type_s" in res else False
     )

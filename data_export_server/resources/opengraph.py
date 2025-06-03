@@ -55,14 +55,15 @@ class OpenGraph(ypres.DictSerializer):
     def get_record_description(self, obj: dict) -> str:
         objtype: str = obj["type"]
 
-        if objtype == "source":
-            return format_source_description(obj)
-        elif objtype == "person":
-            return format_person_description(obj)
-        elif objtype == "institution":
-            return format_institution_description(obj)
-        else:
-            return "RISM Online"
+        match objtype:
+            case "source":
+                return format_source_description(obj)
+            case "person":
+                return format_person_description(obj)
+            case "institution":
+                return format_institution_description(obj)
+            case _:
+                return "RISM Online"
 
     def get_record_image_url(self, obj: dict) -> str:
         """

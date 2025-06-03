@@ -17,7 +17,7 @@ institutions_blueprint: Blueprint = Blueprint(
 
 @institutions_blueprint.route("/")
 async def institution_list(req):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @institutions_blueprint.route("/<institution_id:str>")
@@ -51,24 +51,24 @@ async def institution_probe(req, institution_id: str):
 
 @institutions_blueprint.route("/<institution_id:str>/relationships/")
 async def relationships(req, institution_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @institutions_blueprint.route(
     "/<institution_id:str>/relationships/<relationship_id:str>"
 )
 async def relationship(req, institution_id: str, relationship_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @institutions_blueprint.route("/<institution_id:str>/digital-objects/")
 async def digital_object_list(req, institution_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @institutions_blueprint.route("/<institution_id:str>/digital-objects/<dobject_id:str>")
 async def digital_object(req, institution_id: str, dobject_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @institutions_blueprint.route("/<institution_id:str>/location.geojson")

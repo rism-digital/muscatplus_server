@@ -8,20 +8,20 @@ from shared_helpers.display_translators import (
 from shared_helpers.solr_connection import SolrResult
 
 
-class NotesSection(ypres.AsyncDictSerializer):
-    label = ypres.MethodField()
+class NotesSection(ypres.DictSerializer):
+    slabel = ypres.MethodField(label="label")
     ntype = ypres.StaticField(label="type", value="rism:NotesSection")
     notes = ypres.MethodField()
 
-    def get_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+    def get_slabel(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         # TODO: Change this to just 'notes' when the translation is available.
-        return transl.get("records.references_and_notes")
+        return transl["records.references_and_notes"]
 
     def get_notes(self, obj: SolrResult) -> list | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {

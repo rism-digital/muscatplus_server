@@ -11,45 +11,44 @@ from shared_helpers.display_translators import (
     printing_techniques_translator,
 )
 from shared_helpers.solr_connection import SolrResult
-from shared_helpers.utilities import to_aiter
 
 log = logging.getLogger("mp_server")
 
 
-class MaterialGroupsSection(ypres.AsyncDictSerializer):
+class MaterialGroupsSection(ypres.DictSerializer):
     section_label = ypres.MethodField(label="sectionLabel")
     items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return transl.get("records.material_description", {})
 
-    async def get_items(self, obj: SolrResult) -> list[dict]:
+    def get_items(self, obj: SolrResult) -> list[dict]:
         mgdata: list = obj.get("material_groups_json", [])
         # NB: The regular list needs to be converted to an async iterator
-        return await MaterialGroup(
-            to_aiter(mgdata),
+        return MaterialGroup(
+            mgdata,
             many=True,
-            context={"request": self.context.get("request")},
-        ).data
+            context={"request": self.context["request"]},
+        ).serialized_many
 
 
-class MaterialGroup(ypres.AsyncDictSerializer):
-    label = ypres.MethodField()
+class MaterialGroup(ypres.DictSerializer):
+    slabel = ypres.MethodField(label="label")
     summary = ypres.MethodField()
     notes = ypres.MethodField()
     relationships = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
 
-    def get_label(self, obj: dict) -> dict:
+    def get_slabel(self, obj: dict) -> dict:
         # TODO: Translate this header into the languages
-        group_num: str = obj.get("group_num")
+        group_num: str = obj["group_num"]
         return {"none": [f"Group {group_num}"]}
 
     def get_summary(self, obj: dict) -> list | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
@@ -84,7 +83,7 @@ class MaterialGroup(ypres.AsyncDictSerializer):
         return get_display_fields(obj, transl, field_config=field_config)
 
     def get_notes(self, obj: dict) -> list | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
@@ -95,20 +94,20 @@ class MaterialGroup(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    async def get_relationships(self, obj: dict) -> dict | None:
+    def get_relationships(self, obj: dict) -> dict | None:
         # a set is disjoint if there are no keys in common. Check if these keys exist in the
         # record; if they are disjoint, then we don't need to process them.
         if {"related_people_json", "related_institutions_json"}.isdisjoint(obj.keys()):
             return None
 
-        return await RelationshipsSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+        return RelationshipsSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
-    async def get_external_resources(self, obj: dict) -> dict | None:
+    def get_external_resources(self, obj: dict) -> dict | None:
         if "external_resources" not in obj:
             return None
 
-        return await ExternalResourcesSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+        return ExternalResourcesSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized

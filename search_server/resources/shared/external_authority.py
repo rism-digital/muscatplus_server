@@ -5,19 +5,20 @@ from shared_helpers.identifiers import EXTERNAL_IDS
 
 
 class ExternalAuthoritiesSection(ypres.DictSerializer):
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     etype = ypres.StaticField(label="type", value="rism:ExternalAuthoritiesSection")
     items = ypres.MethodField()
 
-    def get_label(self, obj: list) -> dict:
-        req = self.context.get("request")  # type: ignore
+    def get_slabel(self, obj: dict) -> dict:
+        req = self.context["request"]  # type: ignore
         transl: dict = req.ctx.translations  # type: ignore
 
         return transl.get("records.other_standard_identifier", {})
 
-    def get_items(self, obj: list) -> list[dict]:
+    def get_items(self, obj: dict) -> list[dict]:
         externals: list = []
-        for ext in obj:
+        external_ids: list = obj["external_ids"]
+        for ext in external_ids:
             source, ident = ext.split(":", 1)
             base = EXTERNAL_IDS.get(source)
             if not base:

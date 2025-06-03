@@ -51,7 +51,7 @@ class Pagination(ypres.DictSerializer):
         #  if 19 results and 20 rows, then 1 page (19 / 20) = ceil(0.95) = 1
         #  if 0 results and 20 rows, then 1 page (0 / 20) = ceil(0) = 0 == 1 (with no results).
 
-        req = self.context.get("request")
+        req = self.context["request"]
         rows: int = parse_row_number_from_request(req)
         pages: int = int(math.ceil(total / rows))
         # we always have at least 1 page, even if there are zero results
@@ -69,7 +69,7 @@ class Pagination(ypres.DictSerializer):
         :param obj: A Results object
         :return: The current page number
         """
-        req = self.context.get("request")
+        req = self.context["request"]
 
         return parse_page_number_from_request(req)
 
@@ -82,7 +82,7 @@ class Pagination(ypres.DictSerializer):
         :param total_results: The total number of results
         :return: The URL to the first page.
         """
-        req = self.context.get("request")
+        req = self.context["request"]
         # Vary the query dictionary for the first result page
         return remove_query_param(req.url, PAGE_QUERY_PARAM)
 
@@ -95,7 +95,7 @@ class Pagination(ypres.DictSerializer):
         :param obj: A Results object
         :return: The URL to the next page, or None if it is beyond the end of all pages.
         """
-        req = self.context.get("request")
+        req = self.context["request"]
 
         this_page: int = parse_page_number_from_request(req)
         next_page: int = this_page + 1
@@ -117,7 +117,7 @@ class Pagination(ypres.DictSerializer):
         :param obj: The total number of results
         :return: The URL to the previous page, or None if it is on the first page.
         """
-        req = self.context.get("request")
+        req = self.context["request"]
         url: str = req.url
 
         this_page: int = parse_page_number_from_request(req)
@@ -148,7 +148,7 @@ class Pagination(ypres.DictSerializer):
         :param obj: a Results object
         :return: The URL to the next page, or None if the last page is also the first page.
         """
-        req = self.context.get("request")
+        req = self.context["request"]
 
         last_page: int = self._number_of_pages(obj.hits)
         this_page: int = parse_page_number_from_request(req)
@@ -160,7 +160,7 @@ class Pagination(ypres.DictSerializer):
         if last_page <= 1 or this_page == last_page:
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
 
         return replace_query_param(req.url, PAGE_QUERY_PARAM, last_page)
 

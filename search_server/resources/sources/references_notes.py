@@ -11,10 +11,9 @@ from shared_helpers.display_translators import (
     url_detecting_translator,
 )
 from shared_helpers.solr_connection import SolrResult
-from shared_helpers.utilities import to_aiter
 
 
-class ReferencesNotesSection(ypres.AsyncDictSerializer):
+class ReferencesNotesSection(ypres.DictSerializer):
     section_label = ypres.MethodField(label="sectionLabel")
     stype = ypres.StaticField(label="type", value="rism:ReferencesNotesSection")
     notes = ypres.MethodField()
@@ -22,14 +21,14 @@ class ReferencesNotesSection(ypres.AsyncDictSerializer):
     liturgical_festivals = ypres.MethodField(label="liturgicalFestivals")
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.references_and_notes")
+        return transl["records.references_and_notes"]
 
-    def get_notes(self, obj: SolrResult) -> dict | None:
+    def get_notes(self, obj: SolrResult) -> list | None:
         # 500, 505, 518, 525
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
@@ -53,14 +52,14 @@ class ReferencesNotesSection(ypres.AsyncDictSerializer):
 
         return get_display_fields(obj, transl, field_config=field_config)
 
-    async def get_performance_locations(self, obj: SolrResult) -> dict | None:
+    def get_performance_locations(self, obj: SolrResult) -> dict | None:
         # 651
         if "location_of_performance_json" not in obj:
             return None
 
-        return await PerformanceLocationsSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+        return PerformanceLocationsSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
     def get_liturgical_festivals(self, obj: SolrResult) -> dict | None:
         # 657
@@ -68,29 +67,29 @@ class ReferencesNotesSection(ypres.AsyncDictSerializer):
             return None
 
         return LiturgicalFestivalsSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
 
-class PerformanceLocationsSection(ypres.AsyncDictSerializer):
+class PerformanceLocationsSection(ypres.DictSerializer):
     section_label = ypres.MethodField(label="sectionLabel")
     stype = ypres.StaticField(label="type", value="rism:PerformanceLocationsSection")
     items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.location_performance")
+        return transl["records.location_performance"]
 
-    async def get_items(self, obj: dict) -> list[dict]:
+    def get_items(self, obj: dict) -> list[dict]:
         performance_locations = obj.get("location_of_performance_json", [])
 
-        return await Relationship(
-            to_aiter(performance_locations),
+        return Relationship(
+            performance_locations,
             many=True,
-            context={"request": self.context.get("request")},
-        ).data
+            context={"request": self.context["request"]},
+        ).serialized_many
 
 
 class LiturgicalFestivalsSection(ypres.DictSerializer):
@@ -99,10 +98,10 @@ class LiturgicalFestivalsSection(ypres.DictSerializer):
     items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.liturgical_festivals")
+        return transl["records.liturgical_festivals"]
 
     def get_items(self, obj: SolrResult) -> list | None:
         liturgical_festivals = obj.get("liturgical_festivals_json", [])
@@ -110,5 +109,5 @@ class LiturgicalFestivalsSection(ypres.DictSerializer):
         return LiturgicalFestival(
             liturgical_festivals,
             many=True,
-            context={"request": self.context.get("request")},
-        ).data
+            context={"request": self.context["request"]},
+        ).serialized_many

@@ -1,3 +1,4 @@
+---
 afr:
   label: languages.afrikaans
 alb:
@@ -138,6 +139,8 @@ pol:
   label: languages.polish
 por:
   label: languages.portugese
+roa:
+  label: languages.romance_other
 roh:
   label: languages.romansh
 rom:

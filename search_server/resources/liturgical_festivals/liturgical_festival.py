@@ -25,7 +25,7 @@ class LiturgicalFestival(ypres.DictSerializer):
     summary = ypres.MethodField()
 
     def get_fid(self, obj: dict) -> str:
-        req = self.context.get("request")
+        req = self.context["request"]
         festival_id: str = re.sub(ID_SUB, "", obj.get("id"))
 
         return get_identifier(req, "festivals.festival", festival_id=festival_id)
@@ -42,7 +42,7 @@ class LiturgicalFestival(ypres.DictSerializer):
         if not self.context.get("direct_request"):
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {

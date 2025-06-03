@@ -9,7 +9,7 @@ from shared_helpers.display_translators import (
     key_mode_value_translator,
     material_content_types_translator,
     material_source_types_translator,
-    rism_source_id_translator,
+    periodical_value_translator,
     scoring_json_value_translator,
     title_json_value_translator,
 )
@@ -24,13 +24,13 @@ class ContentsSection(ypres.DictSerializer):
     subjects = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.title_content_description")
+        return transl["records.title_content_description"]
 
     def get_summary(self, obj: SolrResult) -> list[dict] | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
@@ -54,6 +54,7 @@ class ContentsSection(ypres.DictSerializer):
             "common_name_s": ("records.additional_title", None),
             "opus_numbers_sm": ("records.opus_number", None),
             "description_summary_sm": ("records.description_summary", None),
+            "periodical_series_json": ("records.periodical_or_series", periodical_value_translator),
             "dramatic_roles_json": (
                 "records.named_dramatic_roles",
                 dramatic_roles_json_value_translator,
@@ -69,8 +70,8 @@ class ContentsSection(ypres.DictSerializer):
             ),
             "language_notes_sm": ("records.language_note", None),
             "rism_series_identifiers_sm": ("records.series_statement", None),
-            "rism_id": ("records.rism_id_number", rism_source_id_translator),
             "source_fingerprint_s": ("records.fingerprint_identifier", None),
+            "full_rism_id": ("records.rism_id_number", None),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
@@ -82,9 +83,9 @@ class ContentsSection(ypres.DictSerializer):
         return SourceSubjectsSection(
             obj,
             context={
-                "request": self.context.get("request"),
+                "request": self.context["request"],
             },
-        ).data
+        ).serialized
 
 
 class SourceSubjectsSection(ypres.DictSerializer):
@@ -92,19 +93,19 @@ class SourceSubjectsSection(ypres.DictSerializer):
     items = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.subject_headings")
+        return transl["records.subject_headings"]
 
     def get_items(self, obj: SolrResult) -> list:
         return SourceSubject(
             obj["subjects_json"],
             many=True,
             context={
-                "request": self.context.get("request"),
+                "request": self.context["request"],
             },
-        ).data
+        ).serialized_many
 
 
 # A minimal subject serializer. This is because the data for the subjects
@@ -113,16 +114,16 @@ class SourceSubjectsSection(ypres.DictSerializer):
 class SourceSubject(ypres.DictSerializer):
     sid = ypres.MethodField(label="id")
     stype = ypres.StaticField(label="type", value="rism:Subject")
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     value = ypres.MethodField()
 
     def get_sid(self, obj: dict) -> str:
-        req = self.context.get("request")
-        subject_id: str = re.sub(ID_SUB, "", obj.get("id"))
+        req = self.context["request"]
+        subject_id: str = re.sub(ID_SUB, "", obj["id"])
 
         return get_identifier(req, "subjects.subject", subject_id=subject_id)
 
-    def get_label(self, obj: dict) -> dict:
+    def get_slabel(self, obj: dict) -> dict:
         return {"none": [obj.get("subject")]}
 
     def get_value(self, obj: dict) -> str:

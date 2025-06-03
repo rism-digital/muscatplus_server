@@ -9,7 +9,7 @@ from shared_helpers.solr_connection import SolrResult
 log = logging.getLogger("mp_server")
 
 
-class ExternalResourcesSection(ypres.AsyncDictSerializer):
+class ExternalResourcesSection(ypres.DictSerializer):
     """
     Returns a formatted object of external links.
 
@@ -24,7 +24,7 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
     # sites = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return transl.get("records.related_resources", {})
@@ -40,14 +40,14 @@ class ExternalResourcesSection(ypres.AsyncDictSerializer):
             return None
 
         return ExternalResource(
-            res, many=True, context={"request": self.context.get("request")}
-        ).data
+            res, many=True, context={"request": self.context["request"]}
+        ).serialized_many
 
     def get_external_records(self, obj: dict) -> list[dict] | None:
         if not obj.get("has_external_record_b", False):
             return None
 
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         external_records = obj.get("external_records_jsonm", [])
@@ -69,7 +69,10 @@ def _create_external_record_link(record: dict, translations: dict) -> dict | Non
     if not ident:
         return None
 
-    project_type: str = record.get("project_type")
+    project_type: str | None = record.get("project_type")
+    if not project_type:
+        return None
+
     sfx = f"{project_type}/{record['id']}"
     record_type = record["type"]
 
@@ -111,13 +114,13 @@ def _create_external_record_link(record: dict, translations: dict) -> dict | Non
 class ExternalResource(ypres.DictSerializer):
     rtype = ypres.StaticField(label="type", value="rism:ExternalResource")
     url = ypres.MethodField()
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
     resource_type = ypres.MethodField(label="resourceType")
 
     def get_url(self, obj: dict) -> str | None:
         return obj.get("url")
 
-    def get_label(self, obj: dict) -> dict:
+    def get_slabel(self, obj: dict) -> dict:
         label: str
 
         if "note" in obj:

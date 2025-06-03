@@ -15,7 +15,8 @@ __BASE_CONTEXT = {
     # "dctypes": "http://purl.org/dc/dcmitype/",
     # "as": "http://www.w3.org/ns/activitystreams#",
     # "hydra": "http://www.w3.org/ns/hydra/core#",
-    # "geojson": "https://purl.org/geojson/vocab#",
+    "geo": "http://www.w3.org/2003/01/geo/wgs84_pos#",
+    "geojson": "https://purl.org/geojson/vocab#",
     "schemaorg": "https://schema.org/",
     "rdau": "http://rdaregistry.info/Elements/u/",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
@@ -102,6 +103,30 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
         "@id": "rism:hasCountryCodes",
         "@container": "@set",
     },
+    "city": {
+        "@id": "rism:hasCityName",
+    },
+    "location": {
+        "@id": "rism:hasLocation",
+        "@type": "@id",
+        "@context": {
+            "coordinates": {
+                "@id": "geojson:coordinates"
+            },
+            "geometry": {
+                "@id": "geojson:geometry",
+                "@type": "@id"
+            },
+            "lat": {
+                "@id": "geo:lat",
+                "@type": "xsd:float"
+            },
+            "long": {
+                "@id": "geo:long",
+                "@type": "xsd:float"
+            },
+        }
+    }
 }
 
 RISM_JSONLD_WORK_CONTEXT: ContextDocument = {**__BASE_CONTEXT}

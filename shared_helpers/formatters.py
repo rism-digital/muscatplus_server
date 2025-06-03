@@ -1,10 +1,9 @@
-
 from shared_helpers.display_translators import title_json_value_translator
 
 
 def format_work_label(obj: dict) -> str:
-    title: str = obj.get("standard_title_s")
-    catalogue: str = f" {obj.get('catalogue_s', '')}."
+    title: str = obj.get("standard_title_s", "")
+    catalogue: str = f" {obj.get("catalogue_s", '')}."
     catalogue_num: str = f" {obj.get('number_page_s')}"
 
     return f"{title} {catalogue}{catalogue_num}"
@@ -15,7 +14,7 @@ def format_source_label(std_title: list, translations: dict) -> dict:
 
 
 def format_institution_label(obj: dict) -> str:
-    city = siglum = department = ""
+    city = siglum = ""
 
     # prefer institution records with 'name_s', but if used in
     # holdings, then the field is 'institution_name_s'. Fall back
@@ -24,18 +23,16 @@ def format_institution_label(obj: dict) -> str:
     if not name:
         name = obj.get("institution_name_s", "[No name]")
 
-    if "department_s" in obj:
-        department = f", {obj['department_s']}"
     if "city_s" in obj:
         city = f", {obj['city_s']}"
     if "siglum_s" in obj:
         siglum = f" ({obj['siglum_s']})"
 
-    return f"{name}{department}{city}{siglum}"
+    return f"{name}{city}{siglum}"
 
 
 def format_person_label(obj: dict) -> str:
-    name: str = obj.get("name_s")
+    name: str = obj.get("name_s", "[No name]")
     dates: str = f" ({d})" if (d := obj.get("date_statement_s")) else ""
 
     return f"{name}{dates}"

@@ -8,7 +8,7 @@ places_blueprint: Blueprint = Blueprint("places", url_prefix="/places")
 
 @places_blueprint.route("/")
 async def place_list(req):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @places_blueprint.route("/<place_id:str>/")
@@ -18,4 +18,4 @@ async def place(req, place_id: str):
 
 @places_blueprint.route("/<place_id:str>/relationships/<relationship_id:str>")
 async def relationship(req, place_id: str, relationship_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)

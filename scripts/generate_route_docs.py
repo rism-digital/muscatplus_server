@@ -44,11 +44,11 @@ select_filter_description_tmpl: str = """
 
 For select facets, you can change the behaviour of the facet with the `fb` parameter, which takes the
 alias and a value of either `intersection` or `union`. For example:
- 
+
     ?fq={alias}:"Some value"&fq={alias}:"Some other value"&fb={alias}:union
 
 This would change the behaviour of the select facet to choose records with either the first or the second (a.k.a "OR")
-rather than records with both values (a.k.a. "AND"). 
+rather than records with both values (a.k.a. "AND").
 
 Alias
 : `{alias}`
@@ -57,7 +57,7 @@ Type
 : `{type}`
 
 Values
-: Any string value 
+: Any string value
 
 Default behaviour
 : `{default_behaviour}`
@@ -70,7 +70,7 @@ toggle_filter_description_tmpl: str = """
 #### {label}
 
 The active value indicates the value that should be passed to activate the toggle. Toggles may be
-used to filter results out of a list (an active value of `false`) or indicate that only results matching a filter 
+used to filter results out of a list (an active value of `false`) or indicate that only results matching a filter
 should be kept (an active value of `true`).
 
 Alias
@@ -83,7 +83,7 @@ Values
 : Boolean, `true` or `false`.
 
 Active value
-: `{active_value}`.  
+: `{active_value}`.
 
 Example
 : `?fq={alias}:false`
@@ -117,7 +117,7 @@ Type
 
 Values
 : A fixed value, or a value using a wildcard to retrieve all matching values. For example, a value of `Mozart*` will
-filter the results for any results in this field that start with `Mozart` but vary in their ending. 
+filter the results for any results in this field that start with `Mozart` but vary in their ending.
 
 Example
 : `?fq={alias}:Mozart*`
@@ -136,7 +136,7 @@ def main() -> None:
     all_routes: dict = app.router.routes_all
     sorted_routes = sorted(all_routes.items(), key=lambda tup: tup[1].path)
     with open("routes.md", "w") as opn:
-        for rt, fn in sorted_routes:
+        for _, fn in sorted_routes:
             print(f"Route: {fn.path}")
             if fn.path not in INCLUDE_ROUTES:
                 print(f"Skipping {fn.path}.")
@@ -151,7 +151,9 @@ def main() -> None:
             opn.writelines(tpl)
 
     with open("modes.md", "w") as opn:
-        config: dict = yaml.safe_load(open("configuration.yml", "r"))
+        with open("configuration.yml") as cfile:
+            config: dict = yaml.safe_load(cfile)
+
         for section, sectcfg in config["search"]["modes"].items():
             sname = section.capitalize()
 

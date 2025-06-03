@@ -13,8 +13,8 @@ from search_server.resources.sources.contents_search import (
     handle_contents_search_request,
 )
 from search_server.resources.sources.exemplars import (
-    handle_exemplar_request,
     handle_exemplar_section_request,
+    handle_holdings_request,
 )
 from search_server.resources.sources.handlers import (
     handle_source_request,
@@ -51,23 +51,23 @@ async def incipit(req, source_id: str, work_num: str):
 
     if accept and "application/mei+xml" in accept:
         # Handle the request differently if the Accept type is MEI
-        resp: dict | None = await handle_mei_download(
+        mei_resp: dict | None = await handle_mei_download(
             req, source_id=source_id, work_num=work_num
         )
-        if not resp:
-            return response.text(
-                "The requested resource could not be found", status=404
+        if not mei_resp:
+            return response.json(
+                {"message": "The requested resource could not be found"}, status=404
             )
-        return response.text(resp["content"], headers=resp["headers"])
+        return response.text(mei_resp["content"], headers=mei_resp["headers"])
     elif accept and "image/png" in accept:
-        resp: dict | None = await handle_png_download(
+        png_resp: dict | None = await handle_png_download(
             req, source_id=source_id, work_num=work_num
         )
-        if not resp:
-            return response.text(
-                "An error occurred when downloading this PNG", status=400
+        if not png_resp:
+            return response.json(
+                {"message": "An error occurred when downloading this PNG"}, status=400
             )
-        return response.raw(resp["content"], headers=resp["headers"])
+        return response.raw(png_resp["content"], headers=png_resp["headers"])
 
     return await handle_request(
         req, handle_incipit_request, source_id=source_id, work_num=work_num
@@ -86,7 +86,7 @@ async def incipit_mei_encoding(req, source_id: str, work_num: str):
         req, source_id=source_id, work_num=work_num
     )
     if not resp:
-        return response.text("The requested resource could not be found", status=404)
+        return response.json({"message": "The requested resource could not be found"}, status=404)
 
     return response.text(resp["content"], headers=resp["headers"])
 
@@ -103,7 +103,7 @@ async def incipit_png_rendering(req, source_id: str, work_num: str):
         req, source_id=source_id, work_num=work_num
     )
     if not resp:
-        return response.text("The requested resource could not be found", status=404)
+        return response.json({"message": "The requested resource could not be found"}, status=404)
 
     return response.raw(resp["content"], headers=resp["headers"])
 
@@ -129,42 +129,42 @@ async def probe(req, source_id: str):
 
 @sources_blueprint.route("/<source_id:str>/creator/")
 async def creator(req, source_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/relationships/")
 async def relationships(req, source_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/relationships/<relationship_id:str>")
 async def relationship(req, source_id: str, relationship_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/material-groups/")
 async def material_groups_list(req, source_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/material-groups/<mg_id:str>/")
 async def material_group(req, source_id: str, mg_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/material-groups/<mg_id:str>/relationships/")
 async def material_group_relationships(req, source_id: str, mg_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/digital-objects/")
 async def digital_object_list(req, source_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/digital-objects/<dobject_id:str>")
 async def digital_object(req, source_id: str, digital_object_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route("/<source_id:str>/holdings/")
@@ -177,10 +177,10 @@ async def holdings(req, source_id: str):
 @sources_blueprint.route("/<source_id:str>/holdings/<holding_id:str>/")
 async def holding(req, source_id: str, holding_id: str):
     return await handle_request(
-        req, handle_exemplar_request, source_id=source_id, holding_id=holding_id
+        req, handle_holdings_request, source_id=source_id, holding_id=holding_id
     )
 
 
 @sources_blueprint.route("/<source_id:str>/holdings/<holding_id:str>/relationships/")
 async def holding_relationships(req, source_id: str, holding_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)

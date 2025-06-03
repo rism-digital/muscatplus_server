@@ -10,7 +10,7 @@ incipits_blueprint: Blueprint = Blueprint("incipits", url_prefix="/incipits")
 
 @incipits_blueprint.route("/<incipit_id:str>")
 async def incipit(req, incipit_id: str):
-    return response.text("Not implemented", status=501)
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @incipits_blueprint.route("/render")

@@ -1,5 +1,7 @@
 import re
 
+import sanic
+
 ID_SUB: re.Pattern = re.compile(
     r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_|work_"
 )
@@ -69,7 +71,7 @@ EXTERNAL_IDS: dict = {
 }
 
 
-def get_identifier(request: "sanic.request.Request", viewname: str, **kwargs) -> str:  # noqa: F821
+def get_identifier(request: sanic.request.Request, viewname: str, **kwargs) -> str:  # noqa: F821
     """
     Takes a request object, parses it out, and returns a templated identifier suitable
     for use in an "id" field, including the incoming request information on host and scheme (http/https).

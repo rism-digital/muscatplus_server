@@ -26,7 +26,7 @@ async def handle_person_request(req, person_id: str) -> dict | None:
 
     return await Person(
         person_record, context={"request": req, "direct_request": True}
-    ).data
+    ).serialized
 
 
 class Person(BasePerson):
@@ -41,29 +41,29 @@ class Person(BasePerson):
 
     def get_biographical_details(self, obj: SolrResult) -> dict | None:
         bio_details: dict = BiographicalDetails(
-            obj, context={"request": self.context.get("request")}
-        ).data
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
         if not bio_details.get("summary"):
             return None
 
         return bio_details
 
-    def get_external_authorities(self, obj: SolrResult) -> list[dict] | None:
+    def get_external_authorities(self, obj: SolrResult) -> dict | None:
         if "external_ids" not in obj:
             return None
 
         return ExternalAuthoritiesSection(
-            obj["external_ids"], context={"request": self.context.get("request")}
-        ).data
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
-    def get_name_variants(self, obj: SolrResult) -> list | None:
+    def get_name_variants(self, obj: SolrResult) -> dict | None:
         if "variant_names_json" not in obj:
             return None
 
         return VariantNamesSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
     def get_sources(self, obj: SolrResult) -> dict | None:
         # Do not show a link to sources if this serializer is used for embedded results
@@ -81,12 +81,12 @@ class Person(BasePerson):
 
         return {
             "url": get_identifier(
-                self.context.get("request"), "people.person_sources", person_id=ident
+                self.context["request"], "people.person_sources", person_id=ident
             ),
             "totalItems": source_count,
         }
 
-    async def get_relationships(self, obj: SolrResult) -> dict | None:
+    def get_relationships(self, obj: SolrResult) -> dict | None:
         if not self.context.get("direct_request"):
             return None
 
@@ -102,13 +102,13 @@ class Person(BasePerson):
         }.isdisjoint(obj.keys()):
             return None
 
-        req = self.context.get("request")
-        return await RelationshipsSection(obj, context={"request": req}).data
+        req = self.context["request"]
+        return RelationshipsSection(obj, context={"request": req}).serialized
 
-    async def get_notes(self, obj: SolrResult) -> dict | None:
-        notelist: dict = await NotesSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+    def get_notes(self, obj: SolrResult) -> dict | None:
+        notelist: dict = NotesSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
         # Check that the items is not empty; if not, return the note list object.
         if "notes" in notelist:
@@ -121,18 +121,18 @@ class Person(BasePerson):
             return None
 
         return WorksSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
-    async def get_external_resources(self, obj: SolrResult) -> dict | None:
+    def get_external_resources(self, obj: SolrResult) -> dict | None:
         if "external_resources_json" not in obj and not obj.get(
             "has_external_record_b", False
         ):
             return None
 
-        return await ExternalResourcesSection(
-            obj, context={"request": self.context.get("request")}
-        ).data
+        return ExternalResourcesSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
 
 class BiographicalDetails(ypres.DictSerializer):
@@ -140,13 +140,13 @@ class BiographicalDetails(ypres.DictSerializer):
     summary = ypres.MethodField()
 
     def get_section_label(self, obj: SolrResult) -> dict:
-        req = self.context.get("request")
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("rism_online.biographical_details")
+        return transl["rism_online.biographical_details"]
 
-    def get_summary(self, obj: SolrResult) -> list[dict]:
-        req = self.context.get("request")
+    def get_summary(self, obj: SolrResult) -> list[dict] | None:
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         field_config: dict = {
@@ -154,6 +154,7 @@ class BiographicalDetails(ypres.DictSerializer):
             "other_dates_s": ("records.other_life_dates", None),
             "gender_s": ("records.gender", person_gender_translator),
             "profession_function_sm": ("records.profession_or_function", None),
+            "full_rism_id": ("records.rism_id_number", None),
         }
 
         return get_display_fields(obj, transl, field_config)
