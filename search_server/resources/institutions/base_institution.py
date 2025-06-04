@@ -9,21 +9,6 @@ from shared_helpers.formatters import format_institution_label
 from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 
-SOLR_FIELDS_FOR_BASE_INSTITUTION: list = [
-    "id",
-    "type",
-    "created",
-    "updated",
-    "name_s",
-    "city_s",
-    "countries_sm",
-    "siglum_s",
-    "alternate_names_sm",
-    "parallel_names_sm",
-    "institution_types_sm",
-    "name_ans",
-]
-
 
 class BaseInstitution(ypres.AsyncDictSerializer):
     iid = ypres.MethodField(label="id")

@@ -3,7 +3,7 @@ import re
 import sanic
 
 ID_SUB: re.Pattern = re.compile(
-    r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_|work_"
+    r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_|work_|publication_"
 )
 
 PROJECT_PATT: str = (

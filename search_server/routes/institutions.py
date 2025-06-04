@@ -4,9 +4,9 @@ from search_server.request_handlers import handle_request, handle_search
 from search_server.resources.institutions.geojson import (
     handle_institution_geojson_request,
 )
-from search_server.resources.institutions.institution import handle_institution_request
-from search_server.resources.institutions.institution_search import (
+from search_server.resources.institutions.handlers import (
     handle_institution_probe_request,
+    handle_institution_request,
     handle_institution_search_request,
 )
 

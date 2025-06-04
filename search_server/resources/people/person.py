@@ -4,29 +4,20 @@ import re
 import ypres
 
 from search_server.resources.people.base_person import BasePerson
-from search_server.resources.people.variant_name import VariantNamesSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.works import WorksSection
 from shared_helpers.display_fields import get_display_fields
-from shared_helpers.display_translators import person_gender_translator
+from shared_helpers.display_translators import (
+    person_gender_translator,
+    person_name_variant_labels_translator,
+)
 from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult
+from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger("mp_server")
-
-
-async def handle_person_request(req, person_id: str) -> dict | None:
-    person_record = await SolrConnection.get(f"person_{person_id}")
-
-    if not person_record:
-        return None
-
-    return await Person(
-        person_record, context={"request": req, "direct_request": True}
-    ).serialized
 
 
 class Person(BasePerson):
@@ -158,3 +149,37 @@ class BiographicalDetails(ypres.DictSerializer):
         }
 
         return get_display_fields(obj, transl, field_config)
+
+
+class VariantNamesSection(ypres.DictSerializer):
+    ntype = ypres.StaticField(label="type", value="rism:VariantNamesSection")
+    slabel = ypres.MethodField(label="label")
+    items = ypres.MethodField()
+
+    def get_slabel(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return transl["records.name_variants"]
+
+    def get_items(self, obj: SolrResult) -> list[dict]:
+        return NameVariant(
+            obj["variant_names_json"],
+            many=True,
+            context={"request": self.context["request"]},
+        ).serialized_many
+
+
+class NameVariant(ypres.DictSerializer):
+    vtype = ypres.StaticField(label="type", value="rism:VariantName")
+    slabel = ypres.MethodField(label="label")
+    value = ypres.MethodField()
+
+    def get_slabel(self, obj: dict) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return person_name_variant_labels_translator(obj["type"], transl)
+
+    def get_value(self, obj: dict) -> dict:
+        return {"none": obj["variants"]}

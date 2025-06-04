@@ -1,9 +1,9 @@
 from sanic import Blueprint, response
 
 from search_server.request_handlers import handle_request, handle_search
-from search_server.resources.people.person import handle_person_request
-from search_server.resources.people.person_search import (
+from search_server.resources.people.handlers import (
     handle_person_probe_request,
+    handle_person_request,
     handle_person_search_request,
 )
 

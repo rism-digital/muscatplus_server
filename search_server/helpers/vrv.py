@@ -50,7 +50,9 @@ def render_pae(
     then the IDs will be randomly generated.
 
     :param pae: A plaine and easie-formatted input string
-    :param use_crc: The ID seed to use for Verovio's ID generator
+    :param use_crc: Use the CRC of the input for Verovio's ID generator
+    :param enlarged: Render the output slightly larger
+    :param is_mensural: Set a different spacing for mensural notation
     :return: A named tuple containing SVG and MIDI.
     """
     custom_options: dict = {"xmlIdChecksum": use_crc}

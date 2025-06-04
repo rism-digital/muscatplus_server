@@ -45,7 +45,6 @@ url = "https://test.pypi.org/simple/"
 explicit = true
 
 [tool.uv.sources]
-#verovio = { index = "TestPyPI" }
 
 [tool.ruff]
 target-version = "py311"

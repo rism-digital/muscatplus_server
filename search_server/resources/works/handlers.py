@@ -12,3 +12,7 @@ async def handle_work_request(req, work_id: str) -> dict | None:
     return await FullWork(
         work_record, context={"request": req, "direct_request": True}
     ).serialized
+
+
+async def handle_work_search(req, work_id: str) -> dict | None:
+    return {"works": "yeah"}

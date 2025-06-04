@@ -52,7 +52,7 @@ async def incipit(req, source_id: str, work_num: str):
     if accept and "application/mei+xml" in accept:
         # Handle the request differently if the Accept type is MEI
         mei_resp: dict | None = await handle_mei_download(
-            req, source_id=source_id, work_num=work_num
+            req, record_id=source_id, record_type="source", work_num=work_num
         )
         if not mei_resp:
             return response.json(
@@ -61,7 +61,7 @@ async def incipit(req, source_id: str, work_num: str):
         return response.text(mei_resp["content"], headers=mei_resp["headers"])
     elif accept and "image/png" in accept:
         png_resp: dict | None = await handle_png_download(
-            req, source_id=source_id, work_num=work_num
+            req, record_id=source_id, record_type="source", work_num=work_num
         )
         if not png_resp:
             return response.json(
@@ -69,8 +69,9 @@ async def incipit(req, source_id: str, work_num: str):
             )
         return response.raw(png_resp["content"], headers=png_resp["headers"])
 
+    # return the JSON-LD representation of the incipit
     return await handle_request(
-        req, handle_incipit_request, source_id=source_id, work_num=work_num
+        req, handle_incipit_request, record_id=source_id, record_type="source", work_num=work_num
     )
 
 
@@ -83,7 +84,7 @@ async def incipit_mei_encoding(req, source_id: str, work_num: str):
     for both.
     """
     resp: dict | None = await handle_mei_download(
-        req, source_id=source_id, work_num=work_num
+        req, record_id=source_id, record_type="source", work_num=work_num
     )
     if not resp:
         return response.json({"message": "The requested resource could not be found"}, status=404)
@@ -100,7 +101,7 @@ async def incipit_png_rendering(req, source_id: str, work_num: str):
     for both.
     """
     resp: dict | None = await handle_png_download(
-        req, source_id=source_id, work_num=work_num
+        req, record_id=source_id, record_type="source", work_num=work_num
     )
     if not resp:
         return response.json({"message": "The requested resource could not be found"}, status=404)

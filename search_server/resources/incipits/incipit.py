@@ -1,5 +1,6 @@
 import logging
 import re
+from functools import lru_cache
 
 import ypres
 from small_asc.client import JsonAPIRequest, Results
@@ -7,6 +8,7 @@ from small_asc.client import JsonAPIRequest, Results
 from search_server.helpers.record_types import create_source_types_block
 from search_server.helpers.vrv import render_mei, render_pae, render_png
 from search_server.resources.sources.base_source import BaseSource
+from search_server.resources.works.base_work import BaseWork
 from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.display_translators import (
     clef_translator,
@@ -19,14 +21,18 @@ from shared_helpers.solr_connection import SolrConnection, SolrResult
 log = logging.getLogger("mp_server")
 
 
-async def _fetch_incipit(source_id: str, work_num: str) -> SolrResult | None:
+@lru_cache
+async def _fetch_incipit(record_id: str, record_type: str, work_num: str) -> SolrResult | None:
+    filters = ["type:incipit", f"work_num_s:{work_num}"]
+
+    if record_type == "work":
+        filters.append(f"work_id:work_{record_id}")
+    else:
+        filters.append(f"source_id:source_{record_id}")
+
     json_request: JsonAPIRequest = {
         "query": "*:*",
-        "filter": [
-            "type:incipit",
-            f"source_id:source_{source_id}",
-            f"work_num_s:{work_num}",
-        ],
+        "filter": filters,
         "sort": "work_num_ans asc",
         "limit": 1,
     }
@@ -54,8 +60,8 @@ async def handle_incipits_list_request(req, source_id: str) -> dict | None:
     ).serialized
 
 
-async def handle_incipit_request(req, source_id: str, work_num: str) -> dict | None:
-    incipit_record: SolrResult | None = await _fetch_incipit(source_id, work_num)
+async def handle_incipit_request(req, record_id: str, record_type: str, work_num: str) -> dict | None:
+    incipit_record: SolrResult | None = await _fetch_incipit(record_id, record_type, work_num)
 
     if not incipit_record:
         return None
@@ -65,12 +71,12 @@ async def handle_incipit_request(req, source_id: str, work_num: str) -> dict | N
     ).serialized
 
 
-async def handle_mei_download(req, source_id: str, work_num: str) -> dict | None:
+async def handle_mei_download(req, record_id: str, record_type: str, work_num: str) -> dict | None:
     """
     Handle MEI file download for a given incipit. Returns a dictionary containing the
     attachment filename and the MEI content sent in the body of the response.
     """
-    incipit_record: SolrResult | None = await _fetch_incipit(source_id, work_num)
+    incipit_record: SolrResult | None = await _fetch_incipit(record_id, record_type, work_num)
 
     if not incipit_record:
         return None
@@ -78,7 +84,7 @@ async def handle_mei_download(req, source_id: str, work_num: str) -> dict | None
     if "music_incipit_s" not in incipit_record:
         return None
 
-    filename: str = f"rism-source-{source_id}-{work_num}.mei"
+    filename: str = f"rism-{record_type}-{record_id}-{work_num}.mei"
     response_headers: dict = {
         "Content-Disposition": f"attachment; filename={filename}",
         "Content-Type": "application/mei+xml",
@@ -91,8 +97,8 @@ async def handle_mei_download(req, source_id: str, work_num: str) -> dict | None
     return {"headers": response_headers, "content": mei_content}
 
 
-async def handle_png_download(req, source_id: str, work_num: str) -> dict | None:
-    incipit_record: SolrResult | None = await _fetch_incipit(source_id, work_num)
+async def handle_png_download(req, record_id: str, record_type: str, work_num: str) -> dict | None:
+    incipit_record: SolrResult | None = await _fetch_incipit(record_id, record_type, work_num)
 
     if not incipit_record:
         return None
@@ -100,7 +106,7 @@ async def handle_png_download(req, source_id: str, work_num: str) -> dict | None
     if "original_pae_sni" not in incipit_record:
         return None
 
-    filename: str = f"rism-source-{source_id}-{work_num}.png"
+    filename: str = f"rism-{record_type}-{record_id}-{work_num}.png"
     response_headers: dict = {
         "Content-Disposition": f"attachment; filename={filename}",
         "Content-Type": "image/png",
@@ -126,19 +132,19 @@ class IncipitsSection(ypres.AsyncDictSerializer):
 
         return get_identifier(req, "sources.incipits_list", source_id=source_id)
 
-    def get_section_label(self, obj: SolrResult):
+    def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.incipits")
+        return transl["records.incipits"]
 
-    def get_part_of(self, obj: SolrResult):
+    def get_part_of(self, obj: SolrResult) -> dict | None:
         if not self.context.get("direct_request"):
             return None
 
         req = self.context["request"]
         transl: dict = req.ctx.translations
-        ident: str = get_identifier(req, "sources.source", source_id=obj.get("id"))
+        ident: str = get_identifier(req, "sources.source", source_id=obj["id"])
 
         if "standard_titles_json" not in obj:
             label = {"none": [obj.get("main_title_s", "[No title]")]}
@@ -184,7 +190,68 @@ class IncipitsSection(ypres.AsyncDictSerializer):
             many=True,
             context={
                 "request": self.context["request"],
+                "parent_type": "source"
             },
+        ).serialized_many
+
+
+class WorkIncipitsSection(ypres.AsyncDictSerializer):
+    iwid = ypres.MethodField(label="id")
+    section_label = ypres.MethodField(label="sectionLabel")
+    stype = ypres.StaticField(label="type", value="rism:WorkIncipitsSection")
+    part_of = ypres.MethodField(label="partOf")
+    items = ypres.MethodField()
+
+    def get_iwid(self, obj: SolrResult) -> str:
+        req = self.context["request"]
+        work_id: str = re.sub(ID_SUB, "", obj["id"])
+
+        return get_identifier(req, "works.incipits_list", work_id=work_id)
+
+    def get_section_label(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return transl["records.incipits"]
+
+
+    def get_part_of(self, obj: SolrResult) -> dict | None:
+        if not self.context.get("direct_request"):
+            return None
+
+        req = self.context["request"]
+        transl = req.ctx.translations
+        ident: str = get_identifier(req, "works.work", work_id=obj["id"])
+
+        return {
+            "label": transl["records.item_part_of"],
+            "work": {
+                "id": ident,
+                "type": "rism:Work",
+                "typeLabel": transl["records.work"],
+                "label": {"none": [obj.get("standard_title_s")]}
+            }
+        }
+
+    async def get_items(self, obj: SolrResult) -> list | None:
+        fq: list = [f"work_id:{obj.get("id")}", "type:incipit"]
+        sort: str = "work_num_ans asc"
+
+        results: Results = await SolrConnection.search(
+            {"query": "*:*", "filter": fq, "sort": sort},
+            cursor=True
+        )
+
+        if results.hits == 0:
+            return None
+
+        return await Incipit(
+            results,
+            many=True,
+            context={
+                "request": self.context["request"],
+                "parent_type": "work"
+            }
         ).serialized_many
 
 
@@ -200,9 +267,15 @@ class Incipit(ypres.AsyncDictSerializer):
 
     def get_incip_id(self, obj: dict) -> str:
         req = self.context["request"]
-        source_id: str = re.sub(ID_SUB, "", obj["source_id"])
+        parent_type = self.context["parent_type"]
         work_num: str = f"{obj.get('work_num_s')}"
 
+        if parent_type == "work":
+            work_id: str = re.sub(ID_SUB, "", obj["work_id"])
+            return get_identifier(req, "works.incipit", work_id=work_id, work_num=work_num)
+
+        # assume that it's a source incipit.
+        source_id: str = re.sub(ID_SUB, "", obj["source_id"])
         return get_identifier(
             req, "sources.incipit", source_id=source_id, work_num=work_num
         )
@@ -214,17 +287,22 @@ class Incipit(ypres.AsyncDictSerializer):
 
     async def get_part_of(self, obj: SolrResult) -> dict | None:
         req = self.context["request"]
+        parent_type = self.context["parent_type"]
         transl: dict = req.ctx.translations
 
         # TODO: This should probably be changed to 'incipit part of'
-        return {
+        d = {
             "label": transl.get(
                 "records.item_part_of"
             ),
-            "source": await BaseSource(
-                obj, context={"request": req,}
-            ).serialized,
         }
+
+        if parent_type == "work":
+            d["work"] = await BaseWork(obj, context={"request": req}).serialized
+        else:
+            d["source"] = await BaseSource(obj, context={"request": req}).serialized
+
+        return d
 
     def get_properties(self, obj: SolrResult) -> dict | None:
         # If no notation info in the Solr result, don't bother with this.
@@ -278,6 +356,8 @@ class Incipit(ypres.AsyncDictSerializer):
 
     def get_rendered(self, obj: SolrResult) -> list | None:
         # Use the pre-cached version.
+        parent_type: str = self.context["parent_type"]
+
         pae_code: str | None = obj.get("original_pae_sni")
         if not pae_code:
             return None
@@ -296,12 +376,19 @@ class Incipit(ypres.AsyncDictSerializer):
             return None
 
         svg, b64midi = rendered_pae
-
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_id", ""))
         work_num: str = obj.get("work_num_s", "")
-        png_download_url: str = get_identifier(
-            req, "sources.incipit_png_rendering", source_id=source_id, work_num=work_num
-        )
+        png_download_url: str
+
+        if parent_type == "work":
+            work_id: str = re.sub(ID_SUB, "", obj.get("work_id", ""))
+            png_download_url = get_identifier(
+                req, "works.incipit_png_rendering", work_id=work_id, work_num=work_num
+            )
+        else:
+            source_id: str = re.sub(ID_SUB, "", obj.get("source_id", ""))
+            png_download_url = get_identifier(
+                req, "sources.incipit_png_rendering", source_id=source_id, work_num=work_num
+            )
 
         return [
             {"format": "image/svg+xml", "data": svg},
@@ -314,14 +401,23 @@ class Incipit(ypres.AsyncDictSerializer):
             return None
 
         req = self.context["request"]
+        parent_type = self.context["parent_type"]
         transl: dict = req.ctx.translations
 
         pae_encoding: dict = {}
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_id", ""))
         work_num: str = obj.get("work_num_s", "")
-        mei_download_url: str = get_identifier(
-            req, "sources.incipit_mei_encoding", source_id=source_id, work_num=work_num
-        )
+        mei_download_url: str
+
+        if parent_type == "work":
+            work_id: str = re.sub(ID_SUB, "", obj.get("work_id", ""))
+            mei_download_url = get_identifier(
+                req, "works.incipit_mei_encoding", work_id=work_id, work_num=work_num
+            )
+        else:
+            source_id: str = re.sub(ID_SUB, "", obj.get("source_id", ""))
+            mei_download_url = get_identifier(
+                req, "sources.incipit_mei_encoding", source_id=source_id, work_num=work_num
+            )
 
         if c := obj.get("clef_s"):
             pae_encoding["clef"] = c
@@ -346,3 +442,4 @@ class Incipit(ypres.AsyncDictSerializer):
                 "url": mei_download_url,
             },
         ]
+
