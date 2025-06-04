@@ -50,7 +50,11 @@ async def handle_request(
     """
     accept: str | None = req.headers.get("Accept")
 
-    data_obj: dict | None = await handler(req, **kwargs)
+    try:
+        data_obj: dict | None = await handler(req, **kwargs)
+    except SolrError as err:
+        error_message: str = f"Error sending search to Solr. {err}"
+        return response.json({"message": error_message}, status=500)
 
     # This will return a 404 for both the cases where the response is None, and where
     # it is an empty dictionary.
