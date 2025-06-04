@@ -1,6 +1,5 @@
 import ypres
 from sanic import request
-from small_asc.client import Results
 
 from shared_helpers.identifiers import get_identifier
 from shared_helpers.solr_connection import SolrConnection, SolrResult
@@ -12,7 +11,7 @@ async def handle_tombstone(req: request.Request) -> dict | None:
     if not route_name:
         return None
 
-    fq: list = ["type:tombstone"]
+    record_id: str
 
     match route_name:
         case "mp_server.sources.source":
@@ -20,30 +19,30 @@ async def handle_tombstone(req: request.Request) -> dict | None:
             source_id = match_info.get("source_id")
             if not source_id:
                 return None
-            fq += ["record_type_s:source", f"record_id:{source_id}"]
+            record_id = f"tombstone_source_{source_id}"
         case "mp_server.sources.holding":
             holding_id = match_info.get("holding_id")
             if not holding_id:
                 return None
-            fq += ["record_type_s:holding", f"record_id:{holding_id}"]
+            record_id = f"tombstone_holding_{holding_id}"
         case "mp_server.people.person":
             person_id = match_info.get("person_id")
             if not person_id:
                 return None
-            fq += ["record_type_s:person", f"record_id:{person_id}"]
+            record_id = f"tombstone_person_{person_id}"
         case "mp_server.institutions.institution":
             institution_id = match_info.get("institution_id")
             if not institution_id:
                 return None
-            fq += ["record_type_s:institution", f"record_id:{institution_id}"]
+            record_id = f"tombstone_institution_{institution_id}"
         case _:
             return None
 
-    tombstone_q: Results = await SolrConnection.search({"query": "*:*", "filter": fq})
-    if tombstone_q.hits == 0:
+    tombstone_record: dict | None = await SolrConnection.get(record_id)  # type: ignore
+    if not tombstone_record:
         return None
 
-    return Tombstone(tombstone_q.docs[0], context={"request": req}).serialized
+    return Tombstone(tombstone_record, context={"request": req}).serialized
 
 
 class Tombstone(ypres.DictSerializer):
