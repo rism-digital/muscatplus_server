@@ -3,6 +3,10 @@ import re
 import ypres
 
 from search_server.resources.shared.record_history import get_record_history
+from search_server.resources.shared.relationship import (
+    Relationship,
+    RelationshipsSection,
+)
 from shared_helpers.identifiers import ID_SUB, get_identifier
 
 
@@ -11,6 +15,8 @@ class Publication(ypres.AsyncDictSerializer):
     stype = ypres.StaticField(label="type", value="rism:Publication")
     type_label = ypres.MethodField(label="typeLabel")
     slabel = ypres.MethodField(label="label")
+    creator = ypres.MethodField()
+    relationships = ypres.MethodField()
     record_history = ypres.MethodField(label="recordHistory")
     works = ypres.MethodField()
 
@@ -28,7 +34,30 @@ class Publication(ypres.AsyncDictSerializer):
         return {"none": ["Publication"]}
 
     def get_slabel(self, obj: dict) -> dict:
-        return {"none": ["Title"]}
+        return {"none": [f"{obj["title_s"]}"]}
+
+    def get_creator(self, obj: dict) -> dict | None:
+        if "creator_json" not in obj:
+            return None
+
+        return Relationship(
+            obj["creator_json"][0],
+            context={
+                "request": self.context["request"],
+                "reltype": "rism:Creator"
+            }).serialized
+
+    def get_relationships(self, obj: dict) -> dict | None:
+        if {"related_people_json",
+            "related_institutions_json"
+        }.isdisjoint(obj.keys()):
+            return None
+
+        return RelationshipsSection(
+            obj,
+            context={
+                "request": self.context["request"]
+            }).serialized
 
     def get_works(self, obj: dict) -> dict | None:
         if not self.context.get("direct_request"):
@@ -52,3 +81,5 @@ class Publication(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         return get_record_history(obj, transl)
+
+
