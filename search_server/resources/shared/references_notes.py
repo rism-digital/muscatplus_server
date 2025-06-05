@@ -36,6 +36,10 @@ class ReferencesNotesSection(ypres.DictSerializer):
                 "records.general_note",
                 url_detecting_translator,
             ),
+            "publication_general_notes_smni": (
+                "records.general_note",
+                url_detecting_translator,
+            ),
             "contents_notes_sm": ("records.contents_note", None),
             "source_of_description_notes_sm": ("records.copy_examined", None),
             "performance_notes_sm": ("records.note_on_performance", None),

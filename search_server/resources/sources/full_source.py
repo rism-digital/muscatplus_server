@@ -6,12 +6,12 @@ import ypres
 from search_server.resources.incipits.incipit import IncipitsSection
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
+from search_server.resources.shared.references_notes import ReferencesNotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.contents import ContentsSection
 from search_server.resources.sources.exemplars import ExemplarsSection
 from search_server.resources.sources.material_groups import MaterialGroupsSection
-from search_server.resources.sources.references_notes import ReferencesNotesSection
 from search_server.resources.sources.source_items import SourceItemsSection
 from search_server.resources.sources.works import WorksSection
 from shared_helpers.identifiers import ID_SUB, get_identifier

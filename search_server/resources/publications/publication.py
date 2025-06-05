@@ -3,6 +3,7 @@ import re
 import ypres
 
 from search_server.resources.shared.record_history import get_record_history
+from search_server.resources.shared.references_notes import ReferencesNotesSection
 from search_server.resources.shared.relationship import (
     Relationship,
     RelationshipsSection,
@@ -17,6 +18,7 @@ class Publication(ypres.AsyncDictSerializer):
     slabel = ypres.MethodField(label="label")
     creator = ypres.MethodField()
     relationships = ypres.MethodField()
+    references_notes = ypres.MethodField(label="referencesNotes")
     record_history = ypres.MethodField(label="recordHistory")
     works = ypres.MethodField()
 
@@ -58,6 +60,22 @@ class Publication(ypres.AsyncDictSerializer):
             context={
                 "request": self.context["request"]
             }).serialized
+
+    def get_references_notes(self, obj: dict) -> dict | None:
+        req = self.context["request"]
+        refnotes: dict = ReferencesNotesSection(
+            obj, context={"request": req}
+        ).serialized
+
+        # if the only two keys in the references and notes section is 'label' and 'type'
+        # then there is no content and we can hide this section.
+        if {"notes", "performanceLocations", "liturgicalFestivals"}.isdisjoint(
+                refnotes.keys()
+        ):
+            return None
+
+        return refnotes
+
 
     def get_works(self, obj: dict) -> dict | None:
         if not self.context.get("direct_request"):
