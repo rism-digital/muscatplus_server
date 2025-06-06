@@ -15,8 +15,9 @@ from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 
 async def _fetch_incipit(record_id: str, record_type: str, work_num: str) -> SolrResult | None:
-    filters = ["type:incipit", f"work_num_s:{work_num}"]
+    filters = ["type:incipit", f"work_num_s:{work_num}", "parent_type_s:source"]
 
+    # For future use -- should only be source record type now.
     if record_type == "work":
         filters.append(f"work_id:work_{record_id}")
     else:
