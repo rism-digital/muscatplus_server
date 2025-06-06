@@ -2,7 +2,7 @@
 from sanic import Blueprint, response
 
 from search_server.request_handlers import handle_request, handle_search
-from search_server.resources.incipits.incipit import (
+from search_server.resources.incipits.handlers import (
     handle_incipit_request,
     handle_incipits_list_request,
     handle_mei_download,

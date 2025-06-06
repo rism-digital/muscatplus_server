@@ -1,7 +1,7 @@
 from sanic import Blueprint, response
 
 from search_server.request_handlers import handle_request, handle_search
-from search_server.resources.incipits.incipit import (
+from search_server.resources.incipits.handlers import (
     handle_mei_download,
     handle_png_download,
 )
