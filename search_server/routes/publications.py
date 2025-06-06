@@ -13,6 +13,9 @@ publications_blueprint: Blueprint = Blueprint("publications", url_prefix="/publi
 async def publication(req, publication_id: str) -> response.HTTPResponse:
     return await handle_request(req, handle_publication_request, publication_id=publication_id)
 
+@publications_blueprint.route("/")
+async def publications_list(req) -> response.HTTPResponse:
+    return response.json({"message": "Not implemented"}, status=501)
 
 @publications_blueprint.route("/<publication_id:str>/works/")
 async def publication_works(req, publication_id: str) -> response.HTTPResponse:

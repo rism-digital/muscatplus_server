@@ -2,8 +2,8 @@ import re
 
 import ypres
 
+from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.record_history import get_record_history
-from search_server.resources.shared.references_notes import ReferencesNotesSection
 from search_server.resources.shared.relationship import (
     Relationship,
     RelationshipsSection,
@@ -18,9 +18,9 @@ class Publication(ypres.AsyncDictSerializer):
     slabel = ypres.MethodField(label="label")
     creator = ypres.MethodField()
     relationships = ypres.MethodField()
-    references_notes = ypres.MethodField(label="referencesNotes")
-    record_history = ypres.MethodField(label="recordHistory")
+    notes = ypres.MethodField()
     works = ypres.MethodField()
+    record_history = ypres.MethodField(label="recordHistory")
 
     def get_pid(self, obj: dict) -> str:
         req = self.context["request"]
@@ -29,9 +29,6 @@ class Publication(ypres.AsyncDictSerializer):
         return get_identifier(req, "publications.publication", publication_id=pub_id)
 
     def get_type_label(self, obj: dict) -> dict:
-        # req = self.context["request"]
-        # transl: dict = req.ctx.translations
-
         # TODO: Translations
         return {"none": ["Publication"]}
 
@@ -61,20 +58,18 @@ class Publication(ypres.AsyncDictSerializer):
                 "request": self.context["request"]
             }).serialized
 
-    def get_references_notes(self, obj: dict) -> dict | None:
+    def get_notes(self, obj: dict) -> dict | None:
         req = self.context["request"]
-        refnotes: dict = ReferencesNotesSection(
+        notelist: dict = NotesSection(
             obj, context={"request": req}
         ).serialized
 
         # if the only two keys in the references and notes section is 'label' and 'type'
         # then there is no content and we can hide this section.
-        if {"notes", "performanceLocations", "liturgicalFestivals"}.isdisjoint(
-                refnotes.keys()
-        ):
+        if "notes" not in notelist:
             return None
 
-        return refnotes
+        return notelist
 
 
     def get_works(self, obj: dict) -> dict | None:
@@ -88,6 +83,7 @@ class Publication(ypres.AsyncDictSerializer):
         publication_id: str = obj["rism_id"]
 
         return {
+            "sectionLabel": {"none": ["Works in this publication"]},
             "url": get_identifier(
                 self.context["request"], "publications.publication_works", publication_id=publication_id
             ),
