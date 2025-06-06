@@ -4,6 +4,7 @@ import orjson
 import sentry_sdk
 import yaml
 from sanic import Sanic, response
+from sanic.exceptions import NotFound, ServerError
 
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.api import api_blueprint
@@ -143,3 +144,8 @@ async def about(req) -> response.JSONResponse:
     }
 
     return response.json(resp)
+
+
+@app.exception(NotFound, ServerError)
+async def json_error(req, exc) -> response.HTTPResponse:
+    return response.json({"message": exc.message})
