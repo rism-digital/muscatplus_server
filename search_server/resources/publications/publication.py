@@ -33,7 +33,7 @@ class Publication(ypres.AsyncDictSerializer):
         return {"none": ["Publication"]}
 
     def get_slabel(self, obj: dict) -> dict:
-        return {"none": [f"{obj["title_s"]}"]}
+        return {"none": [f"{obj['title_s']}"]}
 
     def get_creator(self, obj: dict) -> dict | None:
         if "creator_json" not in obj:
@@ -41,28 +41,20 @@ class Publication(ypres.AsyncDictSerializer):
 
         return Relationship(
             obj["creator_json"][0],
-            context={
-                "request": self.context["request"],
-                "reltype": "rism:Creator"
-            }).serialized
+            context={"request": self.context["request"], "reltype": "rism:Creator"},
+        ).serialized
 
     def get_relationships(self, obj: dict) -> dict | None:
-        if {"related_people_json",
-            "related_institutions_json"
-        }.isdisjoint(obj.keys()):
+        if {"related_people_json", "related_institutions_json"}.isdisjoint(obj.keys()):
             return None
 
         return RelationshipsSection(
-            obj,
-            context={
-                "request": self.context["request"]
-            }).serialized
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
     def get_notes(self, obj: dict) -> dict | None:
         req = self.context["request"]
-        notelist: dict = NotesSection(
-            obj, context={"request": req}
-        ).serialized
+        notelist: dict = NotesSection(obj, context={"request": req}).serialized
 
         # if the only two keys in the references and notes section is 'label' and 'type'
         # then there is no content and we can hide this section.
@@ -70,7 +62,6 @@ class Publication(ypres.AsyncDictSerializer):
             return None
 
         return notelist
-
 
     def get_works(self, obj: dict) -> dict | None:
         if not self.context.get("direct_request"):
@@ -85,9 +76,11 @@ class Publication(ypres.AsyncDictSerializer):
         return {
             "sectionLabel": {"none": ["Works in this publication"]},
             "url": get_identifier(
-                self.context["request"], "publications.publication_works", publication_id=publication_id
+                self.context["request"],
+                "publications.publication_works",
+                publication_id=publication_id,
             ),
-            "totalItems": num_works
+            "totalItems": num_works,
         }
 
     def get_record_history(self, obj: dict) -> dict | None:
@@ -95,5 +88,3 @@ class Publication(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         return get_record_history(obj, transl)
-
-
