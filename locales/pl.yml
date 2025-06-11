@@ -280,7 +280,7 @@ pl:
     alternate_spelling: Alternatywna pisownia
     alternative_work_title: Alternatywny tytuł dzieła
     amount: Liczba
-    annex: Annex
+    annex: Dodatek
     appendix: Załącznik
     archive: Archiwum
     arrangement: Aranżacja
@@ -678,6 +678,7 @@ pl:
     name_family: Nazwa rodziny
     name_of_part: Nazwa części/sekcji utworu
     name_printer: Nazwa drukarni
+    name_titles_words: Tytuły i słowa powiązane z nazwą
     name_variant: Alternatywna nazwa osoby
     name_variants: Alternatywne nazwy osoby
     named_dramatic_roles: Postaci
@@ -777,9 +778,11 @@ pl:
     print_with_non_autograph_annotations: Druk z adnotacjami nieautorskimi
     printer: Drukarnia
     printing_technique: Technika druku
+    private_collection: Private collection
     production: Produkcja
     production_personnel: Personel produkcyjny
     profession_or_function: Zawód lub funkcja
+    project_url: Adres URL projektu
     provenance: Pochodzenie
     provenance_notes: Uwaga o proweniencji
     pseudonym: Pseudonim
@@ -928,7 +931,7 @@ pl:
     woodwinds: Instrumenty dęte drewniane
     work: Dzieło
     work_catalog_note: Notatka do katalogu utworów
-    work_list: Work list
+    work_list: Lista Dzieł
     work_node: Odniesienie do Dzieła zewnętrznego (Work node)
     work_number: Numer dzieła
     work_tag: tag edycji Dzieła

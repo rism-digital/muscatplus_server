@@ -462,7 +462,7 @@ de:
     excerpts: Ausschnitte
     exemplar: Exemplar
     exemplars: Exemplars
-    expansion: Expansion
+    expansion: Erweiterung
     extent: Umfang
     extent_parts: Umfang Stimmenmaterial
     external_resource: Elektronische Lokalisierung und Zugriff
@@ -585,7 +585,7 @@ de:
     language_codes: Sprachcodes
     language_libretto: Sprachcode von Libretti
     language_note: Sprachenvermerk
-    language_of_cataloging: Katalogisierungssprache
+    language_of_cataloging: Katalogisierungsspache
     language_original_text: Sprachcode des Originaltextes
     language_text: Sprachcode
     later_entry: Späterer Eintrag
@@ -678,6 +678,7 @@ de:
     name_family: Familienname
     name_of_part: Anzahl Teile oder Abschnitte eines Werks
     name_printer: Drucker, Druckerei
+    name_titles_words: Mit einem Namen verknüpfte Titel und Zusätze
     name_variant: Namensvarianten
     name_variants: Namensvarianten
     named_dramatic_roles: 'Rollennamen: Schreibweise'
@@ -777,9 +778,11 @@ de:
     print_with_non_autograph_annotations: Druck mit nicht-autographen Eintragungen
     printer: Drucker
     printing_technique: Drucktechnik
+    private_collection: Privatsammlung
     production: Verlauf
     production_personnel: Produktionspersonal
     profession_or_function: Beruf oder Funktion
+    project_url: Projekt-URL
     provenance: Bestandsname
     provenance_notes: Provenienzvermerk
     pseudonym: Pseudonym
