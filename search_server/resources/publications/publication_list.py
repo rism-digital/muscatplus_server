@@ -17,12 +17,14 @@ class PublicationList(ypres.AsyncDictSerializer):
         return get_identifier(req, "publications.publications_list")
 
     def get_plabel(self, obj: dict) -> dict:
-        return {"none": ["Work Catalogs"]}
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+        return transl["records.work_catalogs"]
 
     async def get_items(self, obj) -> list[dict] | None:
         fq: list = ["type:publication", "is_work_catalogue_b:true"]
         results: Results = await SolrConnection.search(
-            {"query": "*:*", "filter": fq}, cursor=True
+            {"query": "*:*", "filter": fq, "sort": "title_s asc"}, cursor=True
         )
 
         if results.hits == 0:

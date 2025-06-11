@@ -29,8 +29,9 @@ class Publication(ypres.AsyncDictSerializer):
         return get_identifier(req, "publications.publication", publication_id=pub_id)
 
     def get_type_label(self, obj: dict) -> dict:
-        # TODO: Translations
-        return {"none": ["Publication"]}
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+        return transl["records.work_catalog"]
 
     def get_slabel(self, obj: dict) -> dict:
         return {"none": [f"{obj['title_s']}"]}
