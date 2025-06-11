@@ -174,6 +174,8 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     "arr": "records.arranger",
     "asg": "records.assignee",
     "asn": "records.associated_name",
+    # NB: att is used to provide a cross-reference to a composer
+    "att": "records.composer_cross_reference",
     "aut": "records.author",
     "bnd": "records.binder",
     "bsl": "records.bookseller",
