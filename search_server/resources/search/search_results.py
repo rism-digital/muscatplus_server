@@ -32,6 +32,7 @@ CSS_REPLACEMENT_PATTERN: re.Pattern = re.compile(
     r'<style type="text/css">(?P<existing_style>.*)</style>'
 )
 
+
 class SearchResults(BaseSearchResults):
     query_validation = ypres.MethodField(label="queryValidation")
 
@@ -112,9 +113,13 @@ class SearchResults(BaseSearchResults):
 
             match dtype:
                 case "source":
-                    results.append(SourceSearchResult(d, context={"request": req}).serialized)
+                    results.append(
+                        SourceSearchResult(d, context={"request": req}).serialized
+                    )
                 case "person":
-                    results.append(PersonSearchResult(d, context={"request": req}).serialized)
+                    results.append(
+                        PersonSearchResult(d, context={"request": req}).serialized
+                    )
                 case "institution":
                     results.append(
                         InstitutionSearchResult(d, context={"request": req}).serialized
@@ -144,7 +149,9 @@ class SearchResults(BaseSearchResults):
                         continue
 
                     results.append(
-                        SourceSearchResult(source_doc, context={"request": req}).serialized
+                        SourceSearchResult(
+                            source_doc, context={"request": req}
+                        ).serialized
                     )
                 case _:
                     continue
@@ -313,7 +320,6 @@ class SourceSearchResult(ypres.DictSerializer):
             project_url: str = obj.get("record_uri_sni", "")
             result_flags.update({"externalProjectURL": project_url})
 
-
         # return None if flags are empty.
         return result_flags or None
 
@@ -360,7 +366,7 @@ class PersonSearchResult(ypres.DictSerializer):
         field_config = {
             "profession_function_sm": ("roles", "records.profession_or_function", None),
             "total_sources_i": ("numSources", "records.sources", None),
-            "gender_s": ("gender", "records.gender", None)
+            "gender_s": ("gender", "records.gender", None),
         }
 
         req = self.context["request"]
@@ -611,7 +617,7 @@ def _render_incipit_pae(obj: SolrResult) -> RenderedIncipit:
 
 
 def _render_with_highlighting(
-        obj: SolrResult, query_pae_features: dict | None, search_mode: str
+    obj: SolrResult, query_pae_features: dict | None, search_mode: str
 ) -> RenderedIncipit:
     if not query_pae_features:
         log.error("Could not highlight a search result without query features!")
@@ -622,8 +628,16 @@ def _render_with_highlighting(
         return None, None
 
     mode_fields = {
-        IncipitModeValues.EXACT_PITCHES: ("pitches_sm", "pitches_ids_json", "pitchesChromatic"),
-        IncipitModeValues.CONTOUR: ("contour_refined_sm", "interval_ids_json", "intervalRefinedContour"),
+        IncipitModeValues.EXACT_PITCHES: (
+            "pitches_sm",
+            "pitches_ids_json",
+            "pitchesChromatic",
+        ),
+        IncipitModeValues.CONTOUR: (
+            "contour_refined_sm",
+            "interval_ids_json",
+            "intervalRefinedContour",
+        ),
     }
     feature_field, ids_field, query_features_field = mode_fields.get(
         search_mode, ("intervals_im", "interval_ids_json", "intervalsChromatic")
@@ -693,17 +707,34 @@ class WorkSearchResult(ypres.DictSerializer):
         req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        catalogue_id = obj["catalogue_id"]
+        catalogue_id: str = re.sub(ID_SUB, "", obj["catalogue_id"])
 
         return {
             "label": transl.get("records.item_part_of"),
             "publication": {
-                "id": get_identifier(req, "publications.publication", publication_id=catalogue_id),
-                "type": "rism:Source",
-                "typeLabel": transl.get("records.publication"),
+                "id": get_identifier(
+                    req, "publications.publication", publication_id=catalogue_id
+                ),
+                "type": "rism:Publication",
+                "typeLabel": transl.get("records.work_catalog"),
                 # "label": {"none": [parent_title]},
             },
         }
 
-    def get_summary(self, obj: SolrResult) -> dict:
-        return {}
+    def get_summary(self, obj: SolrResult) -> dict | None:
+        field_config: dict = {
+            "creator_name_s": ("incipitComposer", "records.composer_author", None),
+            "standard_titles_json": (
+                "sourceTitle",
+                "records.source",
+                title_json_value_translator,
+            ),
+            "text_incipit_sm": ("textIncipit", "records.text_incipit", None),
+            "voice_instrument_s": ("voiceInstrument", "records.voice_instrument", None),
+            "original_pae_sni": ("paeCode", "records.plaine_and_easie", None),
+        }
+
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return get_search_result_summary(field_config, transl, obj)

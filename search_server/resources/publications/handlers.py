@@ -35,6 +35,7 @@ def _prepare_query(
             "type:work",
             f"catalogue_id:publication_{publication_id}",
         ]
+        request_compiler.sorts += ["number_page_ans asc"]
         solr_params: JsonAPIRequest = request_compiler.compile()
 
     except InvalidQueryException as e:
