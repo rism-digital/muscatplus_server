@@ -24,11 +24,20 @@ async def handle_front_request(req) -> response.HTTPResponse:
         solr_res, context={"request": req, "direct_request": True}
     ).serialized
 
-    return response.json(
-        results,
-        content_type="application/ld+json;charset=utf-8",
-        option=orjson.OPT_INDENT_2 if req.app.ctx.config["common"]["debug"] else 0,
-    )
+    accept: str | None = req.headers.get("Accept")
+
+    if accept and "json" in accept:
+        return response.json(
+            results,
+            content_type="application/ld+json;charset=utf-8",
+            option=orjson.OPT_INDENT_2 if req.app.ctx.config["common"]["debug"] else 0,
+        )
+    else:
+        record_tmpl = req.app.ctx.template_env.get_template("main.html.j2")
+        tmpl_vars = {"record_data": "null"}
+        rendered_template = record_tmpl.render(**tmpl_vars)
+
+        return response.html(rendered_template)
 
 
 class Front(ypres.DictSerializer):

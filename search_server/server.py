@@ -3,6 +3,7 @@ import logging
 import orjson
 import sentry_sdk
 import yaml
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sanic import Sanic, response
 from sanic.exceptions import NotFound, ServerError
 
@@ -92,6 +93,12 @@ app.ctx.context_uri = context_uri
 # Make the application configuration object available in the app context
 app.ctx.config = config
 
+template_env = Environment(
+    loader=FileSystemLoader("search_server/templates"),
+    autoescape=select_autoescape(["xml"]),
+)
+app.ctx.template_env = template_env
+
 
 @app.on_request
 def do_language_negotiation(req):
@@ -118,7 +125,7 @@ async def front(req):
 
 
 @app.route("/about")
-async def about(req) -> response.JSONResponse:
+async def about(req) -> response.HTTPResponse:
     cfg: dict = req.app.ctx.config
     idx_result: dict | None = await SolrConnection.get("rism-online-index-info")  # type: ignore
 
@@ -143,7 +150,16 @@ async def about(req) -> response.JSONResponse:
         "latestFromCantus": cantus_records,
     }
 
-    return response.json(resp)
+    accept: str | None = req.headers.get("Accept")
+
+    if accept and "json" in accept:
+        return response.json(resp)
+    else:
+        record_tmpl = req.app.ctx.template_env.get_template("main.html.j2")
+        tmpl_vars = {"record_data": "null"}
+        rendered_template = record_tmpl.render(**tmpl_vars)
+
+        return response.html(rendered_template)
 
 
 @app.exception(NotFound, ServerError)

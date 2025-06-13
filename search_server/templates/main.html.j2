@@ -1,0 +1,416 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest" crossorigin="use-credentials">
+    <link rel="mask-icon" href="/static/icons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="apple-mobile-web-app-title" content="RISM Online">
+    <meta name="application-name" content="RISM Online">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#000000">
+
+    <title>RISM Online</title>
+    <meta name="description" content="RISM Online provides access to millions of musical records from a global collection of music libraries, archives, and cultural centres.">
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "url": "https://rism.online/",
+            "name": "RISM Online",
+            "description": "RISM Online provides access to millions of musical records from a global collection of music libraries, archives, and cultural centres.",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": "https://rism.online/search?&q={query}"
+                },
+                "query-input": "required name=query"
+            },
+            "maintainer": {
+                "@type": "Organization",
+                "name": "RISM Digital",
+                "url": "https://rism.digital"
+            }
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Noto+Serif:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Noto+Sans+Mono&display=swap">
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        /*
+            Fixes an annoying Safari behaviour where the text was being scaled
+            independently of the font size that was set.
+
+            Fixes a bug with Safari where SVG has to have an explicit
+            width and height set. This selects the browser based on the
+            support for a safari-only attribute, and then sets the w/h
+            of any rendered SVG incipit.
+         */
+        @supports (-webkit-backdrop-filter: blur(1px)) {
+            body {
+                -webkit-text-size-adjust: none;
+            }
+            .svg-rendered-incipit svg {
+                height: 100%;
+                width: 100%;
+            }
+        }
+
+        .result-selected .svg-rendered-incipit svg g {
+            fill: white;
+            stroke: white;
+            color: white;
+        }
+
+    </style>
+    <script defer src="/static/app.js"></script>
+    <script defer src="/static/web-audio.min.js"></script>
+
+    <script type="text/javascript">
+        const LANGUAGE_KEY = "language";
+        const MUSCAT_KEY = "muscat-links";
+        const NATIONAL_COLLECTION_KEY = "national-collection";
+        const SEARCH_PREFERENCES_KEY = "search-preferences";
+
+        /**
+         * These are messages OUTGOING from Elm and INCOMING in JavaScript.
+         */
+        const incomingMessages =
+            {
+                SAVE_LANGUAGE_PREFERENCE: "save-language-preference",
+                SET_NATIONAL_COLLECTION_SELECTION: "set-national-collection-selection",
+                SAVE_SEARCH_PREFERENCE: "save-search-preference",
+                SET_META_INFO: "set-meta-info",
+                GENERATE_PIANO_KEYBOARD_NOTE: "generate-piano-keyboard-note",
+                ENABLE_MUSCAT_LINKS: "enable-muscat-links"
+            }
+
+        /**
+         * Set up a typed object for the message type values.
+         * These are messages OUTGOING from JavaScript and INCOMING to Elm.
+         */
+        const outgoingMessages =
+            {
+                TRIGGER_SEARCH: "trigger-search",
+                SEARCH_PREFERENCES_SET: "search-preferences-set",
+                MUSCAT_LINKS_SET: "muscat-links-set"
+            }
+
+        /**
+         * Gets the stored language code preference, if set.
+         *
+         * @returns {?string}
+         */
+        function getStoredLanguage()
+        {
+            return localStorage.getItem(LANGUAGE_KEY);
+        }
+
+        /**
+         * Receives a string from Elm and sets the user's language preference
+         * in local storage
+         *
+         * @param {string} lang
+         * @return {function}
+         */
+        function setStoredLanguage(lang)
+        {
+            try
+            {
+                localStorage.setItem(LANGUAGE_KEY, lang);
+            }
+            catch (e)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /**
+         * Gets the stored national collection selection (indicated by the country
+         * code of the sigla), or null if not set.
+         *
+         * @returns {?string}
+         */
+        function getNationalCollectionSelection()
+        {
+            return localStorage.getItem(NATIONAL_COLLECTION_KEY);
+        }
+
+        /**
+         *  Receives string or null from Elm and sets the local storage value
+         *  accordingly.
+         *
+         * @param {?string} countryPrefix
+         * @return {function}
+         * **/
+        function setNationalCollectionSelection(countryPrefix)
+        {
+            if (countryPrefix !== null)
+            {
+                try
+                {
+                    localStorage.setItem(NATIONAL_COLLECTION_KEY, countryPrefix);
+                }
+                catch (err)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                localStorage.removeItem(NATIONAL_COLLECTION_KEY);
+            }
+
+            return true
+
+        }
+
+        /**
+         * Detects the currently set language. If the user has set it in
+         * localstorage, returns this. If localstorage is null, then detect
+         * the locale of the browser, and return the first part of it.
+         *
+         * @returns {string}
+         */
+        const detectLanguage = () =>
+        {
+            return getStoredLanguage() || navigator.language.split("-")[0];
+        }
+
+        /**
+         * If the browser does not support localstorage storing (for whatever reason)
+         * then return false; otherwise return true.
+         *
+         * @param incoming {object} The JavaScript object to save. Converted to a string.
+         * @returns {boolean} True if successful; false if setItem raised an error.
+         */
+        const setSearchPreferences = (incoming) =>
+        {
+            try
+            {
+                localStorage.setItem(SEARCH_PREFERENCES_KEY, JSON.stringify(incoming));
+            }
+            catch (err)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /**
+         * Gets any current search preferences, or an empty object if not set.
+         *
+         * @returns {object}
+         */
+        const getSearchPreferences = () =>
+        {
+            let _prefs = localStorage.getItem(SEARCH_PREFERENCES_KEY);
+
+            if (_prefs !== null)
+            {
+                return JSON.parse(_prefs);
+            }
+
+            return {};
+        }
+
+        const resetSearchPreferences = () =>
+        {
+            localStorage.removeItem(SEARCH_PREFERENCES_KEY);
+        }
+
+        /**
+         *   If the user has a specific value set in localStorage,
+         *   then show links to Muscat. The user needs to be logged
+         *   in the Muscat; this won't authenticate them. Its only
+         *   purpose is to ensure that links to Muscat are shown only
+         *   if the user has explicitly enabled them.
+         *
+         *   @returns {boolean}
+         */
+        const detectMuscatLinks = () =>
+        {
+            const linkSet = localStorage.getItem(MUSCAT_KEY);
+            return linkSet !== null && linkSet === "true";
+        }
+
+        /**
+         *  Enables or disables the links to Muscat in the footer.
+         *
+         *  @param {boolean} isEnabled
+         *  @returns {boolean}
+         */
+        const setMuscatLinks = (isEnabled) =>
+        {
+            try
+            {
+                localStorage.setItem(MUSCAT_KEY, JSON.stringify(isEnabled));
+            }
+            catch (err)
+            {
+                console.error("Could not set localstorage item.")
+                return false;
+            }
+
+            // return the value that was successfully set. We'll send this back
+            // to Elm as a confirmation of the value.
+            return isEnabled;
+        }
+
+        /**
+         * Takes an update message of form {updateKey: updateValue} and the
+         * current preferences, and returns a new preference object
+         * with the specific property updated.
+         *
+         * Uses object destructuring and the spread operator to
+         * update the specific key. Also relies on computed property
+         * names for the variable [updateKey].
+         *
+         * @param update {object}
+         * @param currentPrefs {object}
+         * @returns {object}
+         */
+        const applySearchPreferenceUpdate = ({key, value}, currentPrefs) =>
+        {
+            return {...currentPrefs, [key]: value}
+        }
+
+        /**
+         * Checks to see if the page is embedded in an iframe. This
+         * is passed into the application to do things like control
+         * the visibility of the side bar or other navigation controls
+         * that are too complex for viewing when the page is embedded
+         * in an external site.
+         *
+         * @returns {boolean}
+         */
+        const detectIsInFrame = () =>
+        {
+            return window.self !== window.top;
+        }
+
+
+        // define these to be global, but only initialize if we have a
+        // page interaction that requires the audio context to initialize
+        let audioCtx = null;
+        let virtualAudioCtx = null;
+
+        document.addEventListener("DOMContentLoaded", () =>
+        {
+            const app = Elm.Main.init({
+                node: document.getElementById('elm'),
+                flags: {
+                    locale: detectLanguage(),
+                    windowWidth: window.innerWidth,
+                    windowHeight: window.innerHeight,
+                    showMuscatLinks: detectMuscatLinks(),
+                    nationalCollection: getNationalCollectionSelection(),
+                    searchPreferences: getSearchPreferences(),
+                    isFramed: detectIsInFrame(),
+                    cacheBuster: false,
+                    initialData: {{ record_data }}
+                }
+            });
+
+            /**
+             Listen for messages coming from Elm and route them accordingly.
+             */
+            app.ports.sendOutgoingMessageOnPort.subscribe( ({ msg, value }) =>
+            {
+                switch (msg)
+                {
+                    case incomingMessages.SAVE_LANGUAGE_PREFERENCE:
+                        setStoredLanguage(value);
+                        break;
+                    case incomingMessages.SET_NATIONAL_COLLECTION_SELECTION:
+                        setNationalCollectionSelection(value);
+                        // after setting the national collection, send a message
+                        // back to Elm telling the UI to refresh the page and perform
+                        // a search with the new NC parameters. There is no value
+                        // to send, so set it to null.
+                        app.ports.receiveIncomingMessageFromPort.send({
+                            "msg": outgoingMessages.TRIGGER_SEARCH,
+                            "value": null
+                        });
+                        break;
+                    case incomingMessages.SAVE_SEARCH_PREFERENCE:
+                        /*
+                            The incoming value is an object with a key string,
+                            and either a single value string, or a list of strings.
+                         */
+                        let currentPrefs = getSearchPreferences();
+                        let newPrefs = applySearchPreferenceUpdate(value, currentPrefs);
+
+                        let _ = setSearchPreferences(newPrefs);
+
+                        /*
+                            NB: It's Elm that is receiving the incoming messages!
+                         */
+                        app.ports.receiveIncomingMessageFromPort.send({
+                            "msg": outgoingMessages.SEARCH_PREFERENCES_SET,
+                            "value": newPrefs
+                        });
+                        break;
+
+                    case incomingMessages.SET_META_INFO:
+                        /* */
+                        const { description } = value;
+
+                        let descriptionTag = document.querySelector('meta[name="description"]');
+                        if (descriptionTag === null)
+                        {
+                            descriptionTag = document.createElement("meta");
+                            document.head.appendChild(descriptionTag);
+                        }
+                        descriptionTag.setAttribute("name", "description");
+                        descriptionTag.setAttribute("content", description);
+                        break;
+
+                    case incomingMessages.GENERATE_PIANO_KEYBOARD_NOTE:
+                        // if this is the first time we interact with audio, then initialize
+                        // the audioCtx & virtualAudioCtx objects.
+                        if (!audioCtx && !virtualAudioCtx)
+                        {
+                            audioCtx = new AudioContext();
+                            virtualAudioCtx = new VirtualAudioGraph(audioCtx);
+                        }
+
+                        virtualAudioCtx.update(value);
+                        break;
+                    case incomingMessages.ENABLE_MUSCAT_LINKS:
+                        let newValue = setMuscatLinks(value);
+
+                        /*
+                            Send a message back to Elm letting it know that
+                            the muscat links value has been set so that it can
+                            update it's internal state.
+                         */
+                        app.ports.receiveIncomingMessageFromPort.send({
+                            "msg": outgoingMessages.MUSCAT_LINKS_SET,
+                            "value": newValue
+                        });
+
+                        break;
+                    default:
+                        console.log("Could not understand incoming " + msg );
+                }
+            });
+        })
+    </script>
+</head>
+<body>
+<div id="elm"></div>
+</body>
+</html>

@@ -14,11 +14,14 @@ from shared_helpers.jsonld import RouteContextMap
 
 log = logging.getLogger("mp_server")
 
+
 async def tombstone_or_not_found(req: request.Request) -> response.HTTPResponse:
     maybe_tombstone: dict | None = await handle_tombstone(req)
     if maybe_tombstone:
         return response.json(maybe_tombstone, status=410)
-    return response.json({"message": "The requested resource was not found"}, status=404)
+    return response.json(
+        {"message": "The requested resource was not found"}, status=404
+    )
 
 
 async def send_json_response(
@@ -99,24 +102,22 @@ async def handle_request(
         }
 
         async with httpx.AsyncClient(headers=auth_headers) as client:
-            muscat_req = await client.get(f"https://muscat.rism.info/data/{rtype}/{rid}")
+            muscat_req = await client.get(
+                f"https://muscat.rism.info/data/{rtype}/{rid}"
+            )
             muscat_resp = muscat_req.text
             if muscat_req.status_code != 200:
                 return response.json(
                     {"message": "Could not retrieve MARCXML from upstream"}, status=500
                 )
 
-        return response.text(
-            muscat_resp, content_type="application/marcxml+xml"
-        )
+        return response.text(muscat_resp, content_type="application/marcxml+xml")
     elif accept and ";profile=expanded" in accept:
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         exp = to_expanded_jsonld(res)
-        return response.text(
-            exp, content_type="application/ld+json;profile=expanded"
-        )
-    else:
+        return response.text(exp, content_type="application/ld+json;profile=expanded")
+    elif accept and "json" in accept:
         log.debug("Sending JSON-LD")
 
         # We can control the embedding of the context either globally, in the configuration, or
@@ -131,6 +132,12 @@ async def handle_request(
         res = {**ctx_val, **data_obj}
 
         return await send_json_response(res, req.app.ctx.config["common"]["debug"])
+    else:
+        record_tmpl = req.app.ctx.template_env.get_template("main.html.j2")
+        tmpl_vars = {"record_data": orjson.dumps(data_obj).decode("utf-8")}
+        rendered_template = record_tmpl.render(**tmpl_vars)
+
+        return response.html(rendered_template)
 
 
 async def handle_search(
@@ -146,9 +153,6 @@ async def handle_search(
     #     application/ld+json'", status=406)
 
     accept: str | None = req.headers.get("Accept")
-    if accept and "application/ld+json" not in accept:
-        status_msg = f"""Accept header {accept} is not available for this resource. Only application/ld+json is available"""
-        return response.json({"message": status_msg}, status=406)
 
     try:
         data_obj: dict = await handler(req, **kwargs)
@@ -159,6 +163,15 @@ async def handle_search(
         return response.json({"message": error_message}, status=500)
 
     if not data_obj:
-        return response.json({"message": "The requested resource was not found"}, status=404)
+        return response.json(
+            {"message": "The requested resource was not found"}, status=404
+        )
 
-    return await send_json_response(data_obj, req.app.ctx.config["common"]["debug"])
+    if accept and "json" in accept:
+        return await send_json_response(data_obj, req.app.ctx.config["common"]["debug"])
+    else:
+        record_tmpl = req.app.ctx.template_env.get_template("main.html.j2")
+        tmpl_vars = {"record_data": "null"}
+        rendered_template = record_tmpl.render(**tmpl_vars)
+
+        return response.html(rendered_template)
