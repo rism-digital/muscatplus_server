@@ -111,7 +111,10 @@ def get_display_fields(
             continue
 
         label_value: dict = assemble_label_value(
-            record, field, translation_map, translations  # type: ignore
+            record,
+            field,
+            translation_map,
+            translations,  # type: ignore
         )
 
         display.append(label_value)

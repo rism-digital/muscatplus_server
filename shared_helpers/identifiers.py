@@ -66,8 +66,8 @@ EXTERNAL_IDS: dict = {
     },
     "cmo": {
         "label": "Corpus Musicae Ottomanicae (CMO)",
-        "ident": "https://corpus-musicae-ottomanicae.de/receive/{ident}"
-    }
+        "ident": "https://corpus-musicae-ottomanicae.de/receive/{ident}",
+    },
 }
 
 

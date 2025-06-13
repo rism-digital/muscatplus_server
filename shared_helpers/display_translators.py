@@ -486,7 +486,8 @@ def __lookup_translations(
     trans_key: str | None = translations_map.get(value)
     if not trans_key:
         return {"none": [value]}
-    return available_translations.get(trans_key)
+
+    return available_translations[trans_key]
 
 
 def __lookup_translations_list(
@@ -585,9 +586,8 @@ def printing_techniques_translator(values: list, translations: dict) -> dict:
 def secondary_literature_json_value_translator(
     values: list, translations: dict
 ) -> dict:
-    # all_works: { "literature_123": {"formatted": "blah blah", pages: ["12", "13", "14", etc.]} }
+    # all_works: { "publication_123": {"formatted": "blah blah", pages: ["12", "13", "14", etc.]} }
     all_works: dict = {}
-
     for work in values:
         work_id = work.get("id")
         if work_id not in all_works:
@@ -791,5 +791,5 @@ def url_detecting_translator(values: list, translations: dict) -> dict | None:
     return {"none": wrapped_blocks}
 
 
-def rism_source_id_translator(value: str, translations: dict) -> str:
+def rism_source_id_translator(value: str, translations: dict) -> dict:
     return {"none": [f"sources/{value}"]}

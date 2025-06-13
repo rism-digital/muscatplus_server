@@ -3,7 +3,7 @@ from shared_helpers.display_translators import title_json_value_translator
 
 def format_work_label(obj: dict) -> str:
     title: str = obj.get("standard_title_s", "")
-    catalogue: str = f" {obj.get("catalogue_s", '')}."
+    catalogue: str = f" {obj.get('catalogue_s', '')}."
     catalogue_num: str = f" {obj.get('number_page_s')}"
 
     return f"{title} {catalogue}{catalogue_num}"
