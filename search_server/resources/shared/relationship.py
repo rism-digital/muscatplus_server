@@ -41,7 +41,15 @@ class RelationshipsSection(ypres.DictSerializer):
         sources: list = obj.get("related_sources_json", [])
         contributing_projects: list = obj.get("contributing_projects_json", [])
 
-        all_relationships = itertools.chain(now_in, contains, people, institutions, sources, places, contributing_projects)
+        all_relationships = itertools.chain(
+            now_in,
+            contains,
+            people,
+            institutions,
+            sources,
+            places,
+            contributing_projects,
+        )
 
         return Relationship(
             all_relationships,
@@ -99,6 +107,7 @@ class Relationship(ypres.DictSerializer):
 
     def get_related_to(self, obj: dict) -> dict | None:
         req = self.context["request"]
+
         if "person_id" in obj:
             return _related_to_person(req, obj)
         elif "institution_id" in obj:
