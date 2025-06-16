@@ -50,7 +50,12 @@ class Subject(ypres.AsyncDictSerializer):
         if not self.context.get("direct_request"):
             return None
 
-        return {"none": [obj.get("alternate_terms_sm")]}
+        alt_terms: list = obj.get("alternate_terms_sm", [])
+
+        if not alt_terms:
+            return None
+
+        return {"none": alt_terms}
 
     async def get_sources(self, obj: SolrResult) -> dict | None:
         # Only give a list of sources for this term if we are looking at a dedicated page for this subject heading, and
