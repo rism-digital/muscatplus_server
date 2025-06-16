@@ -8,20 +8,20 @@ from shared_helpers.solr_connection import SolrConnection
 
 
 async def handle_festival_request(req, festival_id: str) -> dict | None:
-    record: dict | None = await SolrConnection.get(f"id:festival_{festival_id}")
+    record: dict | None = await SolrConnection.get(f"id:festival_{festival_id}")  # type: ignore
 
     if not record:
         return None
 
     return LiturgicalFestival(
         record, context={"request": req, "direct_request": True}
-    ).data
+    ).serialized
 
 
 class LiturgicalFestival(ypres.DictSerializer):
     fid = ypres.MethodField(label="id")
     ftype = ypres.StaticField(label="type", value="rism:LiturgicalFestival")
-    label = ypres.MethodField()
+    llabel = ypres.MethodField(label="label")
     summary = ypres.MethodField()
 
     def get_fid(self, obj: dict) -> str:
@@ -30,7 +30,7 @@ class LiturgicalFestival(ypres.DictSerializer):
 
         return get_identifier(req, "festivals.festival", festival_id=festival_id)
 
-    def get_label(self, obj: dict) -> dict:
+    def get_llabel(self, obj: dict) -> dict:
         # This serializer can also be used by the 'liturgical festival' section
         # on a source, which has a different name field.
         if "name" in obj:
