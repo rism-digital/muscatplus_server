@@ -133,10 +133,10 @@ class Relationship(ypres.DictSerializer):
             # This will be selected as a non-linked label object
             # if we can't find an id to create a linkable object.
             return {"none": [obj["name"]]}
-        else:
-            # we have neither a related object, nor a name, so how could any reasonable person expect us
-            # to do anything with this? Just bail, and hope someone fixes the data.
-            return None
+
+        # we have neither a related object, nor a name, so how could any reasonable person expect us
+        # to do anything with this? Just bail, and hope someone fixes the data.
+        return None
 
     def get_note(self, obj: dict) -> dict | None:
         if "note" not in obj:
@@ -148,6 +148,7 @@ class Relationship(ypres.DictSerializer):
         # For contributing projects a Project URL is given.
         if "project_url" not in obj:
             return None
+
         return obj.get("project_url")
 
 
@@ -220,7 +221,11 @@ def _related_to_source(req, obj: dict) -> dict:
 
     source_title: dict = title_json_value_translator(obj.get("title", []), transl)
 
-    return {"id": ident, "label": source_title, "type": "rism:Source"}
+    return {
+        "id": ident,
+        "label": source_title,
+        "type": "rism:Source"
+    }
 
 
 def _relationship_translator(obj: dict) -> Callable | None:

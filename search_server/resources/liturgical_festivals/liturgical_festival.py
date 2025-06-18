@@ -26,7 +26,7 @@ class LiturgicalFestival(ypres.DictSerializer):
 
     def get_fid(self, obj: dict) -> str:
         req = self.context["request"]
-        festival_id: str = re.sub(ID_SUB, "", obj.get("id"))
+        festival_id: str = re.sub(ID_SUB, "", obj["id"])
 
         return get_identifier(req, "festivals.festival", festival_id=festival_id)
 
@@ -35,8 +35,8 @@ class LiturgicalFestival(ypres.DictSerializer):
         # on a source, which has a different name field.
         if "name" in obj:
             return {"none": [f"{obj.get('name')}"]}
-        else:
-            return {"none": [f"{obj.get('name_s')}"]}
+
+        return {"none": [f"{obj.get('name_s')}"]}
 
     def get_summary(self, obj: dict) -> list | None:
         if not self.context.get("direct_request"):
