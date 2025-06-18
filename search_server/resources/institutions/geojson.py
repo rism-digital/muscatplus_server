@@ -1,6 +1,7 @@
 import re
 
 import ypres
+from small_asc.client import JsonAPIRequest
 
 from shared_helpers.formatters import format_institution_label
 from shared_helpers.identifiers import ID_SUB, get_identifier
@@ -8,17 +9,17 @@ from shared_helpers.solr_connection import SolrConnection
 from shared_helpers.utilities import is_number
 
 
-async def handle_institution_geojson_request(
-    req, institution_id: str
-) -> dict | None:
+async def handle_institution_geojson_request(req, institution_id: str) -> dict | None:
     institution_record: dict | None = await SolrConnection.get(
         f"institution_{institution_id}"
-    )
+    )  # type: ignore
 
     if not institution_record:
         return None
 
-    return await InstitutionGeoJson(institution_record, context={"request": req}).serialized
+    return await InstitutionGeoJson(
+        institution_record, context={"request": req}
+    ).serialized
 
 
 class InstitutionGeoJson(ypres.AsyncDictSerializer):
@@ -50,7 +51,7 @@ class InstitutionGeoJson(ypres.AsyncDictSerializer):
 
 async def get_nearby_orgs(req, coordinates: list, pimary_obj_id: str) -> list[dict]:
     locval = ",".join(coordinates)
-    nearby_orgs_query: dict = {
+    nearby_orgs_query: JsonAPIRequest = {
         "query": "*:*",
         "filter": [
             "type:institution",
@@ -61,7 +62,9 @@ async def get_nearby_orgs(req, coordinates: list, pimary_obj_id: str) -> list[di
     }
 
     results = await SolrConnection.search(
-        nearby_orgs_query, cursor=True, handler="/query"  # type: ignore
+        nearby_orgs_query,
+        cursor=True,
+        handler="/query",  # type: ignore
     )
     if not results:
         return []

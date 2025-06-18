@@ -1,3 +1,5 @@
+from small_asc.client import JsonAPIRequest
+
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.search_request import SearchRequest
 from search_server.resources.search.base_search import serialize_response
@@ -14,7 +16,7 @@ async def _get_normal_results(req, source_id: str) -> dict:
             f"source_membership_id:{source_id}",
             f"!id:{source_id}",
         ]
-        solr_params: dict = request_compiler.compile()
+        solr_params: JsonAPIRequest = request_compiler.compile()
     except InvalidQueryException:
         raise
 
@@ -34,7 +36,7 @@ async def _get_composite_results(req, source_id: str) -> dict:
 
         # NB: The sort parameter is handled internally from the configuration
         # so we don't need to manually set it here.
-        solr_params: dict = request_compiler.compile()
+        solr_params: JsonAPIRequest = request_compiler.compile()
     except InvalidQueryException:
         raise
 
@@ -73,7 +75,7 @@ async def handle_contents_probe_request(req, source_id: str) -> dict:
             f"source_membership_id:{this_id}",
             f"!id:{this_id}",
         ]
-        solr_params: dict = request_compiler.compile()
+        solr_params: JsonAPIRequest = request_compiler.compile()
     except InvalidQueryException:
         raise
 
