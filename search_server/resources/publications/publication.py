@@ -8,6 +8,7 @@ from search_server.resources.shared.relationship import (
     Relationship,
     RelationshipsSection,
 )
+from shared_helpers.display_fields import LabelConfig, get_display_fields
 from shared_helpers.identifiers import ID_SUB, get_identifier
 
 
@@ -17,6 +18,7 @@ class Publication(ypres.AsyncDictSerializer):
     type_label = ypres.MethodField(label="typeLabel")
     slabel = ypres.MethodField(label="label")
     creator = ypres.MethodField()
+    summary = ypres.MethodField()
     relationships = ypres.MethodField()
     notes = ypres.MethodField()
     works = ypres.MethodField()
@@ -44,6 +46,18 @@ class Publication(ypres.AsyncDictSerializer):
             obj["creator_json"][0],
             context={"request": self.context["request"], "reltype": "rism:Creator"},
         ).serialized
+
+    def get_summary(self, obj: dict) -> list[dict] | None:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        field_config: LabelConfig = {
+            "publication_place_sm": ("records.place_publication", None),
+            "publisher_copyist_sm": ("records.publisher_copyist", None),
+            "date_statements_sm": ("records.date", None),
+        }
+
+        return get_display_fields(obj, transl, field_config=field_config)
 
     def get_relationships(self, obj: dict) -> dict | None:
         if {"related_people_json", "related_institutions_json"}.isdisjoint(obj.keys()):
