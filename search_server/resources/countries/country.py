@@ -1,4 +1,3 @@
-
 import ypres
 
 from shared_helpers.display_translators import (
@@ -33,5 +32,8 @@ class CountryList(ypres.DictSerializer):
         req = self.context["request"]  # type: ignore
         transl: dict = req.ctx.translations
 
-        return [{"label": country_code_labels_translator(c, transl), "value": c}
-                for c in obj if c]
+        return [
+            {"label": country_code_labels_translator(c, transl), "value": c}
+            for c in obj
+            if c
+        ]
