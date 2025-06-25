@@ -24,7 +24,7 @@ class PublicationList(ypres.AsyncDictSerializer):
     async def get_items(self, obj) -> list[dict] | None:
         fq: list = ["type:publication", "is_work_catalogue_b:true"]
         results: Results = await SolrConnection.search(
-            {"query": "*:*", "filter": fq, "sort": "title_s asc"}, cursor=True
+            {"query": "*:*", "filter": fq, "sort": "composer_name_ans asc"}, cursor=True
         )
 
         if results.hits == 0:
