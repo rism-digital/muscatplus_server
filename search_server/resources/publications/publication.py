@@ -18,6 +18,7 @@ class Publication(ypres.AsyncDictSerializer):
     type_label = ypres.MethodField(label="typeLabel")
     slabel = ypres.MethodField(label="label")
     creator = ypres.MethodField()
+    composer = ypres.MethodField()
     summary = ypres.MethodField()
     relationships = ypres.MethodField()
     notes = ypres.MethodField()
@@ -36,7 +37,10 @@ class Publication(ypres.AsyncDictSerializer):
         return transl["records.work_catalog"]
 
     def get_slabel(self, obj: dict) -> dict:
-        return {"none": [f"{obj['title_s']}"]}
+        abbrev: str = f"({t}) " if (t := obj.get("short_title_s")) else ""
+        title: str = f"{abbrev}{obj['title_s']}"
+
+        return {"none": [title]}
 
     def get_creator(self, obj: dict) -> dict | None:
         if "creator_json" not in obj:
@@ -44,8 +48,24 @@ class Publication(ypres.AsyncDictSerializer):
 
         return Relationship(
             obj["creator_json"][0],
-            context={"request": self.context["request"], "reltype": "rism:Creator"},
+            context={"request": self.context["request"]},
         ).serialized
+
+    def get_composer(self, obj: dict) -> dict | None:
+        if "composer_json" not in obj:
+            return None
+
+        jsobj = obj["composer_json"]
+        req = self.context["request"]
+        composer_id = re.sub(ID_SUB, "", jsobj["id"])
+        composer_name: str = jsobj.get("name", "")
+        composer_dates: str = jsobj.get("life_dates")
+
+        name = f"{composer_name}{f' ({composer_dates})' if composer_dates else ''}"
+
+        person_ident = get_identifier(req, "people.person", person_id=composer_id)
+
+        return {"id": person_ident, "label": {"none": [name]}, "type": "rism:Person"}
 
     def get_summary(self, obj: dict) -> list[dict] | None:
         req = self.context["request"]
@@ -99,6 +119,9 @@ class Publication(ypres.AsyncDictSerializer):
         }
 
     def get_record_history(self, obj: dict) -> dict | None:
+        if not self.context.get("direct_request", False):
+            return None
+
         req = self.context["request"]
         transl: dict = req.ctx.translations
 

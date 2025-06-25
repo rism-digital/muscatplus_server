@@ -688,6 +688,7 @@ class WorkSearchResult(ypres.DictSerializer):
     type_label = ypres.MethodField(label="typeLabel")
     part_of = ypres.MethodField(label="partOf")
     summary = ypres.MethodField()
+    flags = ypres.MethodField()
 
     def get_srid(self, obj: SolrResult) -> str:
         req = self.context["request"]
@@ -708,6 +709,7 @@ class WorkSearchResult(ypres.DictSerializer):
         transl: dict = req.ctx.translations
 
         catalogue_id: str = re.sub(ID_SUB, "", obj["catalogue_id"])
+        parent_title: str = ""
 
         return {
             "label": transl.get("records.item_part_of"),
@@ -717,7 +719,7 @@ class WorkSearchResult(ypres.DictSerializer):
                 ),
                 "type": "rism:Publication",
                 "typeLabel": transl.get("records.work_catalog"),
-                # "label": {"none": [parent_title]},
+                "label": {"none": [parent_title]},
             },
         }
 
@@ -738,3 +740,13 @@ class WorkSearchResult(ypres.DictSerializer):
         transl: dict = req.ctx.translations
 
         return get_search_result_summary(field_config, transl, obj)
+
+    def get_flags(self, obj: SolrResult) -> dict:
+        flags: dict = {}
+
+        catalogue_code = obj.get("catalogue_s")
+        catalogue_number = obj.get("number_page_s")
+        if catalogue_code and catalogue_number:
+            flags["catalogNumber"] = f"{catalogue_code} {catalogue_number}"
+
+        return flags

@@ -18,10 +18,10 @@ class WorkResults(BaseSearchResults):
         return None
 
     def get_facets(self, obj: Results) -> dict | None:
-        return None
+        return {}
 
     def get_sorts(self, obj: Results) -> dict | None:
-        return None
+        return {"options": [], "default": ""}
 
     def get_query_fields(self, obj: Results) -> list | None:
         return None

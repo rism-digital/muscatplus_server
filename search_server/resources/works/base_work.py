@@ -29,5 +29,5 @@ class BaseWork(ypres.AsyncDictSerializer):
 
         return Relationship(
             obj["creator_json"][0],
-            context={"request": self.context["request"], "reltype": "rism:Creator"},
+            context={"request": self.context["request"]},
         ).serialized

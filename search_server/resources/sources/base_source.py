@@ -59,9 +59,7 @@ class BaseSource(ypres.AsyncDictSerializer):
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context["request"]
-        source_id_val = (
-            obj["id"] if obj.get("type") == "source" else obj["source_id"]
-        )
+        source_id_val = obj["id"] if obj.get("type") == "source" else obj["source_id"]
         source_id: str = re.sub(ID_SUB, "", source_id_val)
 
         return get_identifier(req, "sources.source", source_id=source_id)
@@ -90,7 +88,6 @@ class BaseSource(ypres.AsyncDictSerializer):
             obj["creator_json"][0],
             context={
                 "request": self.context["request"],
-                "reltype": "rism:Creator",
             },
         ).serialized
 
@@ -101,7 +98,9 @@ class BaseSource(ypres.AsyncDictSerializer):
 
         source_membership: dict = obj.get("source_membership_json", {})
         req = self.context["request"]
-        parent_source_id: str = re.sub(ID_SUB, "", source_membership.get("source_id", ""))
+        parent_source_id: str = re.sub(
+            ID_SUB, "", source_membership.get("source_id", "")
+        )
         ident: str = get_identifier(req, "sources.source", source_id=parent_source_id)
         transl: dict = req.ctx.translations
 
