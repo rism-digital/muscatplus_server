@@ -422,6 +422,7 @@ pl:
     deprecated_fields: Nieaktualne pola (nie uzupełniaj)
     description: Opis
     description_area: Obszar opisu
+    description_conventions: Konwencja opisowa
     description_summary: Podsumowanie
     designer: Projektant
     df_major: Des-dur
@@ -930,8 +931,8 @@ pl:
     watermark_description: Opis znaku wodnego
     woodwinds: Instrumenty dęte drewniane
     work: Dzieło
-    work_catalog: Work catalog
-    work_catalogs: Work catalogs
+    work_catalog: Katalog dzieł
+    work_catalogs: Katalogi dzieł
     work_catalog_note: Notatka do katalogu utworów
     work_list: Lista Dzieł
     work_node: Odniesienie do Dzieła zewnętrznego (Work node)

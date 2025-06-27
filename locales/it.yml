@@ -422,6 +422,7 @@ it:
     deprecated_fields: Campi obsoleti (non usare)
     description: Descrizione
     description_area: Descrizione
+    description_conventions: Convenzioni per la descrizione
     description_summary: Descrizione sommaria
     designer: Progettista
     df_major: Re♭ maggiore
@@ -930,8 +931,8 @@ it:
     watermark_description: Filigrana
     woodwinds: Legni
     work: Opera
-    work_catalog: Work catalog
-    work_catalogs: Work catalogs
+    work_catalog: Catalogo delle opere
+    work_catalogs: Cataloghi delle opere
     work_catalog_note: Nota sul catalogo delle opere
     work_list: Lista di opere
     work_node: Voce di autorità esterna (Work node)
