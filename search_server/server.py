@@ -1,7 +1,6 @@
 import logging
 
 import orjson
-import sentry_sdk
 import yaml
 from sanic import Sanic, response
 from sanic.exceptions import NotFound, ServerError
@@ -39,9 +38,10 @@ app = Sanic("mp_server", dumps=orjson.dumps)
 
 @app.listener("before_server_start")
 async def init_sentry(_):
-    if debug_mode is True:
+    if debug_mode:
         return
 
+    import sentry_sdk
     from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
     sentry_sdk.init(
