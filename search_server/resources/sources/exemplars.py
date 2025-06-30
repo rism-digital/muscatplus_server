@@ -15,7 +15,11 @@ from shared_helpers.display_translators import (
     url_detecting_translator,
 )
 from shared_helpers.formatters import format_institution_label
-from shared_helpers.identifiers import ID_SUB, PROJECT_ID_SUB, get_identifier
+from shared_helpers.identifiers import (
+    PROJECT_ID_SUB,
+    get_identifier,
+    strip_prefix,
+)
 from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 
@@ -30,9 +34,7 @@ async def handle_exemplar_section_request(req, source_id: str) -> dict | None:
     ).serialized
 
 
-async def handle_holdings_request(
-    req, source_id: str, holding_id: str
-) -> dict | None:
+async def handle_holdings_request(req, source_id: str, holding_id: str) -> dict | None:
     holding_record: dict | None = await SolrConnection.get(f"holding_{holding_id}")  # type: ignore
 
     if not holding_record:
@@ -66,7 +68,7 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
         else:
             source_id_val = source_holding_id_val
 
-        source_id = re.sub(ID_SUB, "", source_id_val)
+        source_id = strip_prefix(source_id_val)
 
         return get_identifier(req, "sources.holdings", source_id=source_id)
 
@@ -100,9 +102,7 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
         return await Holding(
             results,
             many=True,
-            context={
-                "request": self.context["request"]
-            },
+            context={"request": self.context["request"]},
         ).serialized_many
 
 
@@ -146,8 +146,8 @@ class Holding(ypres.AsyncDictSerializer):
             holding_id_val = obj["id"]
             source_id_val = obj["source_id"]
 
-        holding_id = re.sub(ID_SUB, "", holding_id_val)
-        source_id = re.sub(ID_SUB, "", source_id_val)
+        holding_id = strip_prefix(holding_id_val)
+        source_id = strip_prefix(source_id_val)
 
         return get_identifier(
             req, "sources.holding", source_id=source_id, holding_id=holding_id
@@ -247,7 +247,7 @@ class Holding(ypres.AsyncDictSerializer):
         institution_id: str
         obj_ident: str
 
-        institution_id = re.sub(ID_SUB, "", obj.get("institution_id", ""))
+        institution_id = strip_prefix(obj["institution_id"])
         obj_ident = get_identifier(
             req, "institutions.institution", institution_id=institution_id
         )
@@ -269,7 +269,10 @@ class Holding(ypres.AsyncDictSerializer):
 
         req = self.context["request"]
         return RelationshipsSection(
-            obj, context={"request": req,}
+            obj,
+            context={
+                "request": req,
+            },
         ).serialized
 
     def get_external_resources(self, obj: SolrResult) -> dict | None:
@@ -310,11 +313,12 @@ class Holding(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         return {
-            "label": transl.get(
-                "records.source_details"
-            ),
+            "label": transl.get("records.source_details"),
             "source": await BaseSource(
-                obj, context={"request": req,}
+                obj,
+                context={
+                    "request": req,
+                },
             ).serialized,
         }
 

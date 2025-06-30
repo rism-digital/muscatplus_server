@@ -1,8 +1,10 @@
-import re
-
 import ypres
 
-from shared_helpers.identifiers import EXTERNAL_IDS, ID_SUB, get_identifier
+from shared_helpers.identifiers import (
+    EXTERNAL_IDS,
+    get_identifier,
+    strip_prefix,
+)
 from shared_helpers.solr_connection import SolrResult
 
 
@@ -87,7 +89,7 @@ class WorksCataloguesSection(ypres.DictSerializer):
 
 
 def format_work_catalogue(req, work_catalogue: dict) -> dict:
-    catalogue_id = re.sub(ID_SUB, "", work_catalogue["id"])
+    catalogue_id = strip_prefix(work_catalogue["id"])
 
     return {
         "id": get_identifier(
@@ -112,7 +114,7 @@ def format_work_node(req, work_node: dict) -> dict:
     base = EXTERNAL_IDS.get(authority, {}).get("ident")
     url = base.format(ident=ident)
 
-    person_id = re.sub(ID_SUB, "", work_node["composer_id"])
+    person_id = strip_prefix(work_node["composer_id"])
 
     return {
         "label": transl.get("records.external_work_reference"),

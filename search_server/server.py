@@ -20,7 +20,11 @@ from search_server.routes.sigla import sigla_blueprint
 from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
 from search_server.routes.works import works_blueprint
-from shared_helpers.languages import load_translations, negotiate_languages
+from shared_helpers.languages import (
+    SUPPORTED_LANGUAGES,
+    filter_languages,
+    load_translations,
+)
 from shared_helpers.solr_connection import SolrConnection
 
 config: dict = yaml.safe_load(open("configuration.yml"))  # noqa: SIM115
@@ -80,7 +84,7 @@ logging.basicConfig(
 
 log = logging.getLogger("mp_server")
 
-translations: dict | None = load_translations("locales/")
+translations: dict = load_translations("locales/")
 if not translations:
     log.critical("No translations can be loaded.")
 
@@ -94,12 +98,12 @@ app.ctx.config = config
 
 
 @app.on_request
-def do_language_negotiation(req):
+def do_language_negotiation(req) -> None:
     """
-    Performs language negotiation on every request. This looks for the presence of the
-    X-API-Accept-Language request header, with values of one or more language codes or "*".
-    If those language codes map to ones that are supported in RISM Online, then the full
-    dictionary of translations is filtered to only include the requested languages.
+    This looks for the presence of the X-API-Accept-Language request header, with values
+    of one or more language codes or "*". If those language codes map to ones that are
+    supported in RISM Online, then the full dictionary of translations is filtered to only
+    include the requested languages.
 
     Serializers will then use the filtered translations dictionary on the request to produce
     the translated values.
@@ -109,7 +113,25 @@ def do_language_negotiation(req):
     :param req: A Sanic Request object
     :return: None
     """
-    req.ctx.translations = negotiate_languages(req, translations)
+    lang_header = req.headers.get("X-API-Accept-Language")
+
+    if not lang_header or lang_header == "*":
+        log.debug("No language negotiation" if not lang_header else "All languages negotiated")
+        accepted = SUPPORTED_LANGUAGES
+    else:
+        requested = {lang.strip() for lang in lang_header.split(",")}
+        accepted = requested & SUPPORTED_LANGUAGES
+
+        if not accepted:
+            log.debug("No acceptable language values requested")
+            accepted = SUPPORTED_LANGUAGES
+        else:
+            log.debug("Filtering languages %s", accepted)
+
+    req.ctx.accepted_languages = list(accepted)
+    req.ctx.translations = (
+        translations if accepted == SUPPORTED_LANGUAGES else filter_languages(accepted, translations)
+    )
 
 
 @app.route("/")

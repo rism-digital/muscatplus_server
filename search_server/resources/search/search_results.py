@@ -12,6 +12,7 @@ from search_server.resources.search.base_search import BaseSearchResults
 from shared_helpers.display_fields import get_search_result_summary
 from shared_helpers.display_translators import (
     gnd_country_code_labels_translator,
+    key_mode_value_translator,
     material_content_types_translator,
     material_source_types_translator,
     title_json_value_translator,
@@ -22,7 +23,12 @@ from shared_helpers.formatters import (
     format_person_label,
     format_source_label,
 )
-from shared_helpers.identifiers import ID_SUB, PROJECT_ID_SUB, get_identifier
+from shared_helpers.identifiers import (
+    ID_SUB,
+    PROJECT_ID_SUB,
+    get_identifier,
+    strip_prefix,
+)
 from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 log = logging.getLogger("mp_server")
@@ -708,11 +714,14 @@ class WorkSearchResult(ypres.DictSerializer):
         req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        catalogue_id: str = re.sub(ID_SUB, "", obj["catalogue_id"])
-        parent_title: str = ""
+        wcg: dict = obj["works_catalogue_json"]
+
+        catalogue_id: str = strip_prefix(wcg["id"])
+        parent_title: str = wcg["formatted"]
 
         return {
             "label": transl.get("records.item_part_of"),
+            "type": "rism:PartOfSection",
             "publication": {
                 "id": get_identifier(
                     req, "publications.publication", publication_id=catalogue_id
@@ -725,15 +734,8 @@ class WorkSearchResult(ypres.DictSerializer):
 
     def get_summary(self, obj: SolrResult) -> dict | None:
         field_config: dict = {
-            "creator_name_s": ("incipitComposer", "records.composer_author", None),
-            "standard_titles_json": (
-                "sourceTitle",
-                "records.source",
-                title_json_value_translator,
-            ),
+            "key_mode_s": ("keyMode", "records.key_or_mode", key_mode_value_translator),
             "text_incipit_sm": ("textIncipit", "records.text_incipit", None),
-            "voice_instrument_s": ("voiceInstrument", "records.voice_instrument", None),
-            "original_pae_sni": ("paeCode", "records.plaine_and_easie", None),
         }
 
         req = self.context["request"]
@@ -742,11 +744,25 @@ class WorkSearchResult(ypres.DictSerializer):
         return get_search_result_summary(field_config, transl, obj)
 
     def get_flags(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
         flags: dict = {}
 
         catalogue_code = obj.get("catalogue_s")
         catalogue_number = obj.get("number_page_s")
         if catalogue_code and catalogue_number:
             flags["catalogNumber"] = f"{catalogue_code} {catalogue_number}"
+
+        number_of_sources: int = obj.get("source_count_i", 0)
+        flags.update({"numberOfSources": number_of_sources})
+
+        key_mode: str | None = obj.get("key_mode_s")
+        if key_mode:
+            key_mode_vals = key_mode_value_translator(key_mode, transl)
+            flags["keyMode"] = key_mode_vals
+
+        scoring: list[str] | None = obj.get("scoring_summary_sm")
+        if scoring:
+            flags["scoringSummary"] = "; ".join(scoring)
 
         return flags

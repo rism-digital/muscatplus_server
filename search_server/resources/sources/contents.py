@@ -1,4 +1,3 @@
-import re
 import urllib.parse
 
 import ypres
@@ -13,7 +12,7 @@ from shared_helpers.display_translators import (
     scoring_json_value_translator,
     title_json_value_translator,
 )
-from shared_helpers.identifiers import ID_SUB, get_identifier
+from shared_helpers.identifiers import get_identifier, strip_prefix
 from shared_helpers.languages import languages_translator
 from shared_helpers.solr_connection import SolrResult
 
@@ -54,7 +53,10 @@ class ContentsSection(ypres.DictSerializer):
             "common_name_s": ("records.additional_title", None),
             "opus_numbers_sm": ("records.opus_number", None),
             "description_summary_sm": ("records.description_summary", None),
-            "periodical_series_json": ("records.periodical_or_series", periodical_value_translator),
+            "periodical_series_json": (
+                "records.periodical_or_series",
+                periodical_value_translator,
+            ),
             "dramatic_roles_json": (
                 "records.named_dramatic_roles",
                 dramatic_roles_json_value_translator,
@@ -119,7 +121,7 @@ class SourceSubject(ypres.DictSerializer):
 
     def get_sid(self, obj: dict) -> str:
         req = self.context["request"]
-        subject_id: str = re.sub(ID_SUB, "", obj["id"])
+        subject_id: str = strip_prefix(obj["id"])
 
         return get_identifier(req, "subjects.subject", subject_id=subject_id)
 

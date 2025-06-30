@@ -1,4 +1,4 @@
-import re
+import urllib.parse
 
 import ypres
 from small_asc.client import Results
@@ -11,7 +11,7 @@ from search_server.resources.sources.base_source import (
     BaseSource,
 )
 from search_server.resources.works.base_work import BaseWork
-from shared_helpers.identifiers import ID_SUB, get_identifier
+from shared_helpers.identifiers import get_identifier, strip_prefix
 from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 
@@ -19,20 +19,18 @@ class FullWork(BaseWork):
     incipits = ypres.MethodField()
     sources = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
-    works_catalogue = ypres.MethodField(label="worksCatalogue")
+    form_of_work = ypres.MethodField(label="formOfWork")
 
     async def get_incipits(self, obj: SolrResult) -> dict | None:
         if not obj.get("has_incipits_b", False):
             return None
 
         req = self.context["request"]
-        return await WorkIncipitsSection(
-            obj, context={"request": req}
-        ).serialized
+        return await WorkIncipitsSection(obj, context={"request": req}).serialized
 
     def get_external_resources(self, obj: SolrResult) -> dict | None:
         if "external_resources_json" not in obj and not obj.get(
-                "has_external_record_b", False
+            "has_external_record_b", False
         ):
             return None
 
@@ -43,19 +41,6 @@ class FullWork(BaseWork):
             },
         ).serialized
 
-    def get_works_catalogue(self, obj: SolrResult) -> dict | None:
-        if "works_catalogue_json" not in obj:
-            return None
-
-        wc = obj["works_catalogue_json"][0]
-        wc_id = re.sub(ID_SUB, "", wc["id"])
-        req = self.context["request"]
-
-        return {
-            "id": get_identifier(req, "publications.publication", publication_id=wc_id),
-            "label": {"none": [wc["formatted"]]},
-        }
-
     def get_sources(self, obj: SolrResult) -> dict | None:
         source_count: int = obj.get("source_count_i", 0)
         if source_count == 0:
@@ -63,7 +48,7 @@ class FullWork(BaseWork):
 
         req = self.context["request"]
         work_id: str = obj["id"]
-        ident: str = re.sub(ID_SUB, "", work_id)
+        ident: str = strip_prefix(work_id)
 
         d: dict = {
             "url": get_identifier(req, "works.work_sources", work_id=ident),
@@ -71,6 +56,37 @@ class FullWork(BaseWork):
         }
 
         return d
+
+    def get_form_of_work(self, obj: SolrResult) -> list[dict] | None:
+        if "work_form_json" not in obj:
+            return None
+
+        return FormOfWork(
+            obj["work_form_json"],
+            many=True,
+            context={"request": self.context["request"]},
+        ).serialized_many
+
+
+class FormOfWork(ypres.DictSerializer):
+    sid = ypres.MethodField(label="id")
+    stype = ypres.StaticField(label="type", value="rism:Subject")
+    slabel = ypres.MethodField(label="label")
+    value = ypres.MethodField()
+
+    def get_sid(self, obj: dict) -> str:
+        req = self.context["request"]
+        subject_id: str = strip_prefix(obj["id"])
+
+        return get_identifier(req, "subjects.subject", subject_id=subject_id)
+
+    def get_slabel(self, obj: dict) -> dict:
+        return {"none": [obj.get("subject")]}
+
+    def get_value(self, obj: dict) -> str:
+        if "subject" not in obj:
+            return ""
+        return urllib.parse.quote_plus(obj["subject"])
 
 
 async def get_source_objects(req, work_id: str) -> list | None:
