@@ -51,7 +51,10 @@ async def handle_publication_search_request(req, publication_id: str) -> dict:
     except InvalidQueryException:
         raise
 
-    extra_context: dict = {"direct_request": True, "query_validation": query_report}
+    extra_context: dict = {
+        "direct_request": True,
+        "query_validation": query_report
+    }
 
     try:
         result_data: dict = await serialize_response(
