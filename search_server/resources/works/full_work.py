@@ -7,6 +7,7 @@ from search_server.resources.incipits.incipit import (
     WorkIncipitsSection,
 )
 from search_server.resources.shared.external_resources import ExternalResourcesSection
+from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import (
     BaseSource,
 )
@@ -20,6 +21,7 @@ class FullWork(BaseWork):
     sources = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
     form_of_work = ypres.MethodField(label="formOfWork")
+    relationships = ypres.MethodField()
 
     async def get_incipits(self, obj: SolrResult) -> dict | None:
         if not obj.get("has_incipits_b", False):
@@ -67,6 +69,16 @@ class FullWork(BaseWork):
             obj,
             context={"request": self.context["request"]},
         ).serialized
+
+    def get_relationships(self, obj: SolrResult) -> dict | None:
+        # sets are cool; two sets are disjoint if they have no keys in common. We
+        # can use this to check whether these keys are in the solr result; if not,
+        # we have no relationships to render, so we can return.
+        if "related_people_json" not in obj:
+            return None
+
+        req = self.context["request"]
+        return RelationshipsSection(obj, context={"request": req}).serialized
 
 
 class FormOfWorkSection(ypres.DictSerializer):
