@@ -492,6 +492,7 @@ de:
     fingerprint_identifier: Fingerprint-Erkennung
     first_entry: Erster Eintrag
     first_second_group: Erste und zweite Zeichengruppe
+    form_of_work: Werkgattung
     form_subdivision: Unterteilung nach der Form
     format_extent: Quellenart, Umfang
     former_sigla: Früheres Sigel
@@ -545,6 +546,7 @@ de:
     identity_area: Identity area
     iiif_manifest: "IIIF-Manifest (digitalisierte Quelle)"
     iiif_manifest_other: "IIIF-Manifest (sonstige)"
+    iiif_manifest_nothing_more: IIIF-Manifest
     illustrator: Illustrator
     immediate_parent_body: Unmittelbarer Elternteil
     import: Fremddateneinspielung
@@ -711,6 +713,7 @@ de:
     octoechos7: 'Octoechos 7: Ēchos barys (Third plagal mode of Byzantine music)'
     octoechos8: 'Octoechos 8: Ēchos plagios tetartos (Fourth plagal mode of Byzantine music)'
     online_finding_aids: Archivführer und andere Publikationen
+    online_resource: Online-Ressource
     opera_houses_concert_halls: Opernhäuser und Konzerthallen
     opus_number: Opus
     opus_thematic_index_number: Opus / WV-Nummer
@@ -728,6 +731,7 @@ de:
     other_instruments: Weitere Instrumente
     other_life_dates: Andere Lebensdaten
     other_physical_details: Zusätzliche Materialbeschreibung
+    other_resource: Weitere Ressourcen
     other_searchform: andere Suchform
     other_shelfmark: Weitere Signatur
     other_standard_identifier: Normdatenverweise
