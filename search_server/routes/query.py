@@ -1,8 +1,8 @@
 from sanic import Blueprint
 
 from search_server.request_handlers import handle_search
+from search_server.resources.search.handlers import handle_search_request
 from search_server.resources.search.probe import handle_probe_request
-from search_server.resources.search.search import handle_search_request
 from search_server.resources.suggest.suggest import handle_suggest_request
 
 query_blueprint: Blueprint = Blueprint("query")

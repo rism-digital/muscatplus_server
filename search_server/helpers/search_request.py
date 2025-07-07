@@ -478,6 +478,11 @@ class SearchRequest:
                 query_string = f"{tag}{solr_field_name}:({value})"
             filter_statements.append(query_string)
 
+        # NB: Restrict incipits to ONLY returning Source records for now.
+        # TODO: Remove this when we open it up to works.
+        if self._requested_mode == "incipits":
+            filter_statements.append("parent_type_s:source")
+
         return filter_statements
 
     def _compile_facets(self) -> dict:
