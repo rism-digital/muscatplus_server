@@ -20,7 +20,6 @@ from shared_helpers.solr_connection import SolrConnection, SolrResult
 log = logging.getLogger("mp_server")
 
 
-
 class IncipitsSection(ypres.AsyncDictSerializer):
     isid = ypres.MethodField(label="id")
     section_label = ypres.MethodField(label="sectionLabel")
@@ -115,7 +114,6 @@ class WorkIncipitsSection(ypres.AsyncDictSerializer):
 
         return transl["records.incipits"]
 
-
     def get_part_of(self, obj: SolrResult) -> dict | None:
         if not self.context.get("direct_request"):
             return None
@@ -130,17 +128,16 @@ class WorkIncipitsSection(ypres.AsyncDictSerializer):
                 "id": ident,
                 "type": "rism:Work",
                 "typeLabel": transl["records.work"],
-                "label": {"none": [obj.get("standard_title_s")]}
-            }
+                "label": {"none": [obj.get("standard_title_s")]},
+            },
         }
 
     async def get_items(self, obj: SolrResult) -> list | None:
-        fq: list = [f"work_id:{obj.get("id")}", "type:incipit"]
+        fq: list = [f"work_id:{obj['id']}", "type:incipit"]
         sort: str = "work_num_ans asc"
 
         results: Results = await SolrConnection.search(
-            {"query": "*:*", "filter": fq, "sort": sort},
-            cursor=True
+            {"query": "*:*", "filter": fq, "sort": sort}, cursor=True
         )
 
         if results.hits == 0:
@@ -149,9 +146,7 @@ class WorkIncipitsSection(ypres.AsyncDictSerializer):
         return await Incipit(
             results,
             many=True,
-            context={
-                "request": self.context["request"],
-            }
+            context={"request": self.context["request"], "direct_request": False},
         ).serialized_many
 
 
@@ -172,7 +167,9 @@ class Incipit(ypres.AsyncDictSerializer):
 
         if parent_type == "work":
             work_id: str = re.sub(ID_SUB, "", obj["work_id"])
-            return get_identifier(req, "works.incipit", work_id=work_id, work_num=work_num)
+            return get_identifier(
+                req, "works.incipit", work_id=work_id, work_num=work_num
+            )
 
         # assume that it's a source incipit.
         source_id: str = re.sub(ID_SUB, "", obj["source_id"])
@@ -186,15 +183,16 @@ class Incipit(ypres.AsyncDictSerializer):
         return {"none": [label]}
 
     async def get_part_of(self, obj: SolrResult) -> dict | None:
+        if not self.context.get("direct_request"):
+            return None
+
         req = self.context["request"]
         parent_type = obj["parent_type_s"]
         transl: dict = req.ctx.translations
 
         # TODO: This should probably be changed to 'incipit part of'
         d = {
-            "label": transl.get(
-                "records.item_part_of"
-            ),
+            "label": transl.get("records.item_part_of"),
         }
 
         if parent_type == "work":
@@ -287,7 +285,10 @@ class Incipit(ypres.AsyncDictSerializer):
         else:
             source_id: str = re.sub(ID_SUB, "", obj.get("source_id", ""))
             png_download_url = get_identifier(
-                req, "sources.incipit_png_rendering", source_id=source_id, work_num=work_num
+                req,
+                "sources.incipit_png_rendering",
+                source_id=source_id,
+                work_num=work_num,
             )
 
         return [
@@ -316,7 +317,10 @@ class Incipit(ypres.AsyncDictSerializer):
         else:
             source_id: str = re.sub(ID_SUB, "", obj.get("source_id", ""))
             mei_download_url = get_identifier(
-                req, "sources.incipit_mei_encoding", source_id=source_id, work_num=work_num
+                req,
+                "sources.incipit_mei_encoding",
+                source_id=source_id,
+                work_num=work_num,
             )
 
         if c := obj.get("clef_s"):
@@ -342,4 +346,3 @@ class Incipit(ypres.AsyncDictSerializer):
                 "url": mei_download_url,
             },
         ]
-

@@ -3,7 +3,10 @@ import ypres
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import Relationship
 from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.display_translators import key_mode_value_translator
+from shared_helpers.display_translators import (
+    key_mode_value_translator,
+    title_json_value_translator,
+)
 from shared_helpers.formatters import format_work_label
 from shared_helpers.identifiers import get_identifier, strip_prefix
 from shared_helpers.solr_connection import SolrResult
@@ -44,6 +47,11 @@ class BaseWork(ypres.AsyncDictSerializer):
             "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
             "scoring_summary_sm": ("records.scoring_summary", None),
             "text_incipit_sm": ("records.text_incipit", None),
+            "creation_places_sm": ("records.place_of_creation", None),
+            "alternative_titles_json": (
+                "records.alternative_work_title",
+                title_json_value_translator,
+            ),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)

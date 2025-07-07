@@ -26,7 +26,9 @@ class FullWork(BaseWork):
             return None
 
         req = self.context["request"]
-        return await WorkIncipitsSection(obj, context={"request": req}).serialized
+        return await WorkIncipitsSection(
+            obj, context={"request": req, "direct_request": False}
+        ).serialized
 
     def get_external_resources(self, obj: SolrResult) -> dict | None:
         if "external_resources_json" not in obj and not obj.get(
@@ -57,10 +59,27 @@ class FullWork(BaseWork):
 
         return d
 
-    def get_form_of_work(self, obj: SolrResult) -> list[dict] | None:
+    def get_form_of_work(self, obj: SolrResult) -> dict | None:
         if "work_form_json" not in obj:
             return None
 
+        return FormOfWorkSection(
+            obj,
+            context={"request": self.context["request"]},
+        ).serialized
+
+
+class FormOfWorkSection(ypres.DictSerializer):
+    section_label = ypres.MethodField(label="sectionLabel")
+    items = ypres.MethodField()
+
+    def get_section_label(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return transl.get("records.form_of_work", {})
+
+    def get_items(self, obj) -> list:
         return FormOfWork(
             obj["work_form_json"],
             many=True,
