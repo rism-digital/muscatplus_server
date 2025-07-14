@@ -73,6 +73,7 @@ class ContentsSection(ypres.DictSerializer):
             "language_notes_sm": ("records.language_note", None),
             "rism_series_identifiers_sm": ("records.series_statement", None),
             "source_fingerprint_s": ("records.fingerprint_identifier", None),
+            "access_restrictions_sm": ("records.access_restrictions", None),
             "full_rism_id": ("records.rism_id_number", None),
         }
 
