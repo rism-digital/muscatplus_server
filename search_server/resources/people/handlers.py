@@ -11,19 +11,21 @@ from shared_helpers.solr_connection import SolrConnection
 
 log = logging.getLogger("mp_server")
 
+
 async def handle_person_request(req, person_id: str) -> dict | None:
     person_record = await SolrConnection.get(f"person_{person_id}")
 
     if not person_record:
         return None
 
-    return await Person(
+    return Person(
         person_record, context={"request": req, "direct_request": True}
     ).serialized
 
 
-
-def _prepare_query(req, person_id: str, probe: bool = False) -> tuple[JsonAPIRequest, dict | None]:
+def _prepare_query(
+    req, person_id: str, probe: bool = False
+) -> tuple[JsonAPIRequest, dict | None]:
     try:
         request_compiler = SearchRequest(req, probe=probe)
         request_compiler.filters += [
@@ -44,12 +46,14 @@ async def handle_person_search_request(req, person_id: str) -> dict:
     except InvalidQueryException:
         raise
 
-    extra_context: dict = {"direct_request": True,
-                           "query_validation": query_report}
+    extra_context: dict = {"direct_request": True, "query_validation": query_report}
 
     try:
         result_data: dict = await serialize_response(
-            req, solr_params, PersonResults, extra_context  # type: ignore
+            req,
+            solr_params,
+            PersonResults,
+            extra_context,  # type: ignore
         )
     except SolrError:
         raise
@@ -71,10 +75,12 @@ async def handle_person_probe_request(req, person_id: str) -> dict:
 
     try:
         result_data: dict = await serialize_response(
-            req, solr_params, PersonResults, extra_context  # type: ignore
+            req,
+            solr_params,
+            PersonResults,
+            extra_context,  # type: ignore
         )
     except SolrError:
         raise
 
     return result_data
-

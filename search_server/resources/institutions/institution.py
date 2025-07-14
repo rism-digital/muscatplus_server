@@ -42,7 +42,7 @@ class Institution(BaseInstitution):
             "totalItems": source_count,
         }
 
-    async def get_location(self, obj: SolrResult) -> dict | None:
+    def get_location(self, obj: SolrResult) -> dict | None:
         if {
             "street_address_sm",
             "city_address_sm",
@@ -56,7 +56,7 @@ class Institution(BaseInstitution):
             obj, context={"request": self.context["request"]}
         ).serialized
 
-    async def get_external_authorities(self, obj: SolrResult) -> dict | None:
+    def get_external_authorities(self, obj: SolrResult) -> dict | None:
         if "external_ids" not in obj:
             return None
 
@@ -75,7 +75,7 @@ class Institution(BaseInstitution):
             "related_sources_json",
             "now_in_json",
             "contains_json",
-            "contributing_projects_json"
+            "contributing_projects_json",
         }.isdisjoint(obj.keys()):
             return None
 
@@ -107,7 +107,7 @@ class Institution(BaseInstitution):
         d = {
             "siglum": obj.get("siglum_s"),
             "countryCodes": obj.get("country_codes_sm", []),
-            "city": obj.get("city_s")
+            "city": obj.get("city_s"),
         }
 
         return {k: v for k, v in d.items() if v} or None
@@ -147,8 +147,8 @@ class LocationAddressSection(ypres.DictSerializer):
         for address in obj.get("addresses_json", []):
             out_addr = {}
             for k, _ in address.items():
-                label: tuple[str, Callable | None] = (
-                    mailing_address_field_config.get(k, ())
+                label: tuple[str, Callable | None] = mailing_address_field_config.get(
+                    k, ()
                 )
                 if not label:
                     continue

@@ -107,9 +107,8 @@ class Person(BasePerson):
 
         return None
 
-    async def get_works(self, obj: SolrResult) -> dict | None:
-        if {"work_nodes_json",
-            "works_catalogue_json"}.isdisjoint(obj.keys()):
+    def get_works(self, obj: SolrResult) -> dict | None:
+        if {"work_nodes_json", "works_catalogue_json"}.isdisjoint(obj.keys()):
             return None
 
         return WorksSection(

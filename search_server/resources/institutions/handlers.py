@@ -22,13 +22,14 @@ async def handle_institution_request(req, institution_id: str) -> dict | None:
     if not institution_record:
         return None
 
-    return await Institution(
+    return Institution(
         institution_record, context={"request": req, "direct_request": True}
     ).serialized
 
 
-
-def _prepare_query(req, institution_id: str, probe: bool = False) -> tuple[JsonAPIRequest, dict | None]:
+def _prepare_query(
+    req, institution_id: str, probe: bool = False
+) -> tuple[JsonAPIRequest, dict | None]:
     try:
         request_compiler = SearchRequest(req, probe=probe)
         request_compiler.filters += [
@@ -54,7 +55,10 @@ async def handle_institution_search_request(req, institution_id: str) -> dict:
 
     try:
         result_data: dict = await serialize_response(
-            req, solr_params, InstitutionResults, extra_context  # type: ignore
+            req,
+            solr_params,
+            InstitutionResults,
+            extra_context,  # type: ignore
         )
     except SolrError:
         raise
@@ -76,7 +80,10 @@ async def handle_institution_probe_request(req, institution_id: str) -> dict:
 
     try:
         result_data: dict = await serialize_response(
-            req, solr_params, InstitutionResults, extra_context  # type: ignore
+            req,
+            solr_params,
+            InstitutionResults,
+            extra_context,  # type: ignore
         )
     except SolrError:
         raise

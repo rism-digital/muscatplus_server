@@ -24,7 +24,9 @@ async def handle_place_request(req, place_id: str) -> dict | None:
     if not record:
         return None
 
-    return await Place(record, context={"request": req, "direct_request": True}).serialized
+    return await Place(
+        record, context={"request": req, "direct_request": True}
+    ).serialized
 
 
 class Place(ypres.AsyncDictSerializer):
@@ -115,7 +117,7 @@ class Place(ypres.AsyncDictSerializer):
             "sort": "name_ans asc",
         }
         institution_results: Results = await SolrConnection.search(q, cursor=True)
-        institution_list: list = await BaseInstitution(
+        institution_list: list = BaseInstitution(
             institution_results, context={"request": req}, many=True
         ).serialized_many
 

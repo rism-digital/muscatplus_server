@@ -10,7 +10,7 @@ from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 
 
-class BaseInstitution(ypres.AsyncDictSerializer):
+class BaseInstitution(ypres.DictSerializer):
     iid = ypres.MethodField(label="id")
     itype = ypres.StaticField(label="type", value="rism:Institution")
     type_label = ypres.MethodField(label="typeLabel")
@@ -76,7 +76,7 @@ class OrganizationDetails(ypres.DictSerializer):
             "institution_types_sm": ("records.type_institution", None),
             "country_codes_sm": ("records.country", country_codes_labels_translator),
             "former_sigla_sm": ("records.former_sigla", None),
-            "full_rism_id": ("records.rism_id_number", None)
+            "full_rism_id": ("records.rism_id_number", None),
         }
 
         return get_display_fields(obj, transl, field_config)
