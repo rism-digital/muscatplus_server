@@ -152,7 +152,6 @@ _QUALIFIER_LABELS_MAP = {
     "Verified": "records.verified",
     "Conjectural": "records.conjectural",
     "Alleged": "records.alleged",
-    "Doubtful": "records.doubtful",
     "Misattributed": "records.misattributed",
 }
 
