@@ -6,6 +6,7 @@ from small_asc.client import Results
 from search_server.resources.incipits.incipit import (
     WorkIncipitsSection,
 )
+from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import (
@@ -20,6 +21,7 @@ class FullWork(BaseWork):
     incipits = ypres.MethodField()
     sources = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
+    external_authorities = ypres.MethodField(label="externalAuthorities")
     form_of_work = ypres.MethodField(label="formOfWork")
     relationships = ypres.MethodField()
 
@@ -43,6 +45,14 @@ class FullWork(BaseWork):
             context={
                 "request": self.context["request"],
             },
+        ).serialized
+
+    def get_external_authorities(self, obj: SolrResult) -> dict | None:
+        if "external_ids" not in obj:
+            return None
+
+        return ExternalAuthoritiesSection(
+            obj, context={"request": self.context["request"]}
         ).serialized
 
     def get_sources(self, obj: SolrResult) -> dict | None:
