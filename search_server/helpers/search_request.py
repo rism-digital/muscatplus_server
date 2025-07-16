@@ -220,6 +220,9 @@ class SearchRequest:
         self.filters: list = []
         self.sorts: list = []
         self.fields: list = ["*"]
+        # Allows the caller to override the number of rows returned.
+        # See self._compile_rows() for more detail.
+        self.rows: str | None = None
         self.query_report: dict | None = None
 
         # A probe request will do all the reqular things EXCEPT it will hard-code the number of responses to 0
@@ -621,6 +624,16 @@ class SearchRequest:
 
         return parsed_query
 
+    def _compile_rows(self) -> int:
+        if self.probe:
+            return 0
+
+        # If the caller sets self.rows, then it will override any request parameters. It can also be
+        # a value that is not one that is permitted in the configuration.
+        if self.rows:
+            return parse_row_number(self._req, self.rows, only_allowed=False)
+        return parse_row_number(self._req, self._return_rows)
+
     def compile(self) -> JsonAPIRequest:
         """
         Assembles the incoming data into a form that is appropriate for
@@ -713,7 +726,7 @@ class SearchRequest:
 
         # These have already been checked in the validation, so they shouldn't raise an exception here.
         page_num: int = parse_page_number(self._page)
-        return_rows: int = parse_row_number(self._req, self._return_rows)
+        return_rows: int = self._compile_rows()
         # Results are 0-indexed, so a request for 'start 0 + 20 rows' will return the first through the 20th result.
         # Then we simply take the page number and multiply it by the rows:
         #  start: page:1 = start:0
@@ -725,7 +738,7 @@ class SearchRequest:
             "query": self._compile_query(),
             "filter": self.filters,
             "offset": start_row,
-            "limit": return_rows if self.probe is False else 0,
+            "limit": return_rows,
             "sort": self._compile_sorts(),
             "facet": self._compile_facets(),
             "fields": self._compile_fields(),

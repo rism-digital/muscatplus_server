@@ -36,6 +36,8 @@ def _prepare_query(
             f"catalogue_id:publication_{publication_id}",
         ]
         request_compiler.sorts += ["number_page_ans asc"]
+        # NB: this value is supposed to be a string!
+        request_compiler.rows = "100"
         solr_params: JsonAPIRequest = request_compiler.compile()
 
     except InvalidQueryException as e:
@@ -51,10 +53,7 @@ async def handle_publication_search_request(req, publication_id: str) -> dict:
     except InvalidQueryException:
         raise
 
-    extra_context: dict = {
-        "direct_request": True,
-        "query_validation": query_report
-    }
+    extra_context: dict = {"direct_request": True, "query_validation": query_report}
 
     try:
         result_data: dict = await serialize_response(
