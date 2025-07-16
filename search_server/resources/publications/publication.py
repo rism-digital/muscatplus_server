@@ -24,6 +24,7 @@ class Publication(ypres.AsyncDictSerializer):
     notes = ypres.MethodField()
     works = ypres.MethodField()
     record_history = ypres.MethodField(label="recordHistory")
+    properties = ypres.MethodField()
 
     def get_pid(self, obj: dict) -> str:
         req = self.context["request"]
@@ -37,10 +38,7 @@ class Publication(ypres.AsyncDictSerializer):
         return transl["records.work_catalog"]
 
     def get_slabel(self, obj: dict) -> dict:
-        abbrev: str = f"({t}) " if (t := obj.get("short_title_s")) else ""
-        title: str = f"{abbrev}{obj['title_s']}"
-
-        return {"none": [title]}
+        return {"none": [obj["title_s"]]}
 
     def get_creator(self, obj: dict) -> dict | None:
         if "creator_json" not in obj:
@@ -72,6 +70,7 @@ class Publication(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
+            "short_title_s": ("records.short_title", None),
             "publication_place_sm": ("records.place_publication", None),
             "publisher_copyist_sm": ("records.publisher_copyist", None),
             "date_statements_sm": ("records.date", None),
@@ -126,3 +125,12 @@ class Publication(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         return get_record_history(obj, transl)
+
+    def get_properties(self, obj: dict) -> dict | None:
+        d = {}
+        if abbrev := obj.get("short_title_s"):
+            d["shortTitle"] = {"none": [abbrev]}
+        if stmt := obj.get("date_statements_sm", []):
+            d["publicationDates"] = {"none": ["; ".join(stmt)]}
+
+        return {k: v for k, v in d.items() if v} or None
