@@ -13,11 +13,13 @@ from search_server.routes.external import external_blueprint
 from search_server.routes.festivals import festivals_blueprint
 from search_server.routes.incipits import incipits_blueprint
 from search_server.routes.institutions import institutions_blueprint
+from search_server.routes.opengraph import opengraph_blueprint
 from search_server.routes.people import people_blueprint
 from search_server.routes.places import places_blueprint
 from search_server.routes.publications import publications_blueprint
 from search_server.routes.query import query_blueprint
 from search_server.routes.sigla import sigla_blueprint
+from search_server.routes.sitemap import sitemap_blueprint
 from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
 from search_server.routes.works import works_blueprint
@@ -78,6 +80,10 @@ app.blueprint(api_blueprint)
 app.blueprint(external_blueprint)
 app.blueprint(sigla_blueprint)
 app.blueprint(publications_blueprint)
+
+app.blueprint(sitemap_blueprint)
+app.blueprint(opengraph_blueprint)
+
 
 app.config.FORWARDED_SECRET = config["common"]["secret"]
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
