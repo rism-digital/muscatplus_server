@@ -19,8 +19,8 @@ debug_mode: bool = config["common"]["debug"]
 
 @app.listener("before_server_start")
 async def init_sentry(_) -> None:
-    if debug_mode is True:
-        return
+    if debug_mode:
+        return None
 
     from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
@@ -36,6 +36,8 @@ async def init_sentry(_) -> None:
         environment=config["sentry"]["environment"],
         release=f"muscatplus_server@{release}",
     )
+
+    return None
 
 
 template_env = Environment(

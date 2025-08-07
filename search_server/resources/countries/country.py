@@ -25,11 +25,11 @@ class CountryList(ypres.DictSerializer):
     items = ypres.MethodField()
 
     def get_clid(self, _) -> str:
-        req = self.context["request"]  # type: ignore
+        req = self.context["request"]
         return req.url
 
     def get_items(self, obj: dict) -> list[dict]:
-        req = self.context["request"]  # type: ignore
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
         return [
