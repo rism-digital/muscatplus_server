@@ -7,7 +7,7 @@ from small_asc.client import JsonAPIRequest, Results
 from search_server.resources.institutions.base_institution import (
     BaseInstitution,
 )
-from search_server.resources.shared.relationship import Relationship
+from search_server.resources.people.base_person import BasePerson
 from search_server.resources.sources.base_source import (
     BaseSource,
 )
@@ -78,9 +78,11 @@ class Place(ypres.AsyncDictSerializer):
             "sort": "main_title_ans asc",
         }
         source_results: Results = await SolrConnection.search(q, cursor=True)
+        if source_results.hits == 0:
+            return None
 
         source_list: list = await BaseSource(
-            source_results, context={"request": req}, many=True
+            source_results.docs, context={"request": req}, many=True
         ).serialized_many
 
         return {"type": "rism:PlaceSourceList", "items": source_list}
@@ -98,8 +100,12 @@ class Place(ypres.AsyncDictSerializer):
             "sort": "name_ans desc",
         }
         person_results: Results = await SolrConnection.search(q, cursor=True)
-        person_list: list = Relationship(
-            person_results, context={"request": req}, many=True
+
+        if person_results.hits == 0:
+            return None
+
+        person_list: list = BasePerson(
+            person_results.docs, context={"request": req}, many=True
         ).serialized_many
 
         return {"type": "rism:PlacePersonList", "items": person_list}
@@ -117,8 +123,11 @@ class Place(ypres.AsyncDictSerializer):
             "sort": "name_ans asc",
         }
         institution_results: Results = await SolrConnection.search(q, cursor=True)
+        if institution_results.hits == 0:
+            return None
+
         institution_list: list = BaseInstitution(
-            institution_results, context={"request": req}, many=True
+            institution_results.docs, context={"request": req}, many=True
         ).serialized_many
 
         return {"type": "rism:PlaceInstitutionList", "items": institution_list}
