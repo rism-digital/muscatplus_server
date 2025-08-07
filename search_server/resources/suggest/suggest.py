@@ -85,7 +85,9 @@ async def handle_suggest_request(
 
     query: str | None = req.args.get("q")
     if not query:
-        return response.json({"message": "A suggest request requires a q parameter"}, status=400)
+        return response.json(
+            {"message": "A suggest request requires a q parameter"}, status=400
+        )
 
     cfg: dict = req.app.ctx.config
     # unlike the search handler we don't know what mode we're in, so we
@@ -118,5 +120,7 @@ async def handle_suggest_request(
     ).serialized
 
     return await send_json_response(
-        suggest_results, req.app.ctx.config["common"]["debug"]
+        req,
+        suggest_results,
+        req.app.ctx.config["common"]["debug"],
     )

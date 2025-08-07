@@ -2,6 +2,7 @@ import logging
 
 import orjson
 import yaml
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sanic import Sanic, response
 from sanic.exceptions import NotFound, ServerError
 
@@ -38,6 +39,12 @@ release: str = ""
 release = version_string[1:] if version_string.startswith("v") else version_string
 
 app = Sanic("mp_server", dumps=orjson.dumps)
+
+template_env = Environment(
+    loader=FileSystemLoader("search_server/templates"),
+    autoescape=select_autoescape(["xml"]),
+)
+app.ctx.template_env = template_env
 
 
 @app.listener("before_server_start")
@@ -116,7 +123,9 @@ def do_language_negotiation(req) -> None:
     lang_header = req.headers.get("X-API-Accept-Language")
 
     if not lang_header or lang_header == "*":
-        log.debug("No language negotiation" if not lang_header else "All languages negotiated")
+        log.debug(
+            "No language negotiation" if not lang_header else "All languages negotiated"
+        )
         accepted = SUPPORTED_LANGUAGES
     else:
         requested = {lang.strip() for lang in lang_header.split(",")}
@@ -130,7 +139,9 @@ def do_language_negotiation(req) -> None:
 
     req.ctx.accepted_languages = list(accepted)
     req.ctx.translations = (
-        translations if accepted == SUPPORTED_LANGUAGES else filter_languages(accepted, translations)
+        translations
+        if accepted == SUPPORTED_LANGUAGES
+        else filter_languages(accepted, translations)
     )
 
 

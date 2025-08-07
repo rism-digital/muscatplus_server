@@ -9,24 +9,50 @@ from small_asc.client import SolrError
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.linked_data import to_expanded_jsonld, to_ntriples, to_turtle
 from search_server.resources.tombstones import handle_tombstone
+from search_server.template_render import render_template
 from shared_helpers.identifiers import get_identifier
 from shared_helpers.jsonld import RouteContextMap
 
 log = logging.getLogger("mp_server")
 
+JSONLD_MEDIA_TYPE = "application/ld+json"
+JSON_MEDIA_TYPE = "application/json"
+TURTLE_MEDIA_TYPE = "text/turtle"
+NTRIPLES_MEDIA_TYPE = "application/n-triples"
+MARCXML_MEDIA_TYPE = "application/marcxml+xml"
+EXPANDED_JSONLD_MEDIA_TYPE = "application/ld+json;profile=expanded"
+HTML_MEDIA_TYPE = "text/html"
+ANY_MEDIA_TYPE = "*/*"
+
+
 async def tombstone_or_not_found(req: request.Request) -> response.HTTPResponse:
     maybe_tombstone: dict | None = await handle_tombstone(req)
     if maybe_tombstone:
         return response.json(maybe_tombstone, status=410)
-    return response.json({"message": "The requested resource was not found"}, status=404)
+
+    return response.json(
+        {"message": "The requested resource was not found"}, status=404
+    )
 
 
 async def send_json_response(
-    serialized_results: dict, debug_response: bool
+    req: request.Request, serialized_results: dict, debug_response: bool
 ) -> response.HTTPResponse:
+    accept: str | None = req.headers.get("Accept")
+
+    # send_json_response should only be called if the only media types are
+    # JSON.
+    if accept:
+        # In case the header has other values in it, take only the first.
+        typ: list[str] = accept.split(";")
+        ct = typ[0] if typ else JSONLD_MEDIA_TYPE
+    else:
+        # assume JSON-LD by default.
+        ct = JSONLD_MEDIA_TYPE
+
     return response.json(
         serialized_results,
-        content_type="application/ld+json;charset=utf-8",
+        content_type=f"{ct};charset=utf-8",
         option=orjson.OPT_INDENT_2 if debug_response else 0,
     )
 
@@ -49,17 +75,36 @@ async def handle_request(
     :return: A JSON Response, or an error if not successful.
     """
     accept: str | None = req.headers.get("Accept")
+    app_context = req.app.ctx
+
+    # assume success unless otherwise
+    response_code: int = 200
+    data_obj: dict | None
 
     try:
-        data_obj: dict | None = await handler(req, **kwargs)
+        data_obj = await handler(req, **kwargs)
     except SolrError as err:
-        error_message: str = f"Error sending search to Solr. {err}"
-        return response.json({"message": error_message}, status=500)
+        data_obj = {"message": f"Error sending search to Solr. {err}"}
+        response_code = 500
 
     # This will return a 404 for both the cases where the response is None, and where
     # it is an empty dictionary.
     if not data_obj:
-        return await tombstone_or_not_found(req)
+        data_obj = await handle_tombstone(req)
+        if data_obj:
+            response_code = 410
+        else:
+            data_obj = {"message": "The requested resource was not found"}
+            response_code = 404
+
+    if accept and (HTML_MEDIA_TYPE in accept or ANY_MEDIA_TYPE in accept):
+        # If we have an HTML request, then this will serve the template with the
+        # appropriate status code. Anything beyond this point is an API request.
+        rendered_template: str = render_template(app_context, req, data_obj)
+        return response.html(rendered_template, status=response_code)
+
+    if response_code in (410, 404, 500):
+        return response.json(data_obj, status=response_code)
 
     # Add the appropriate context to the result dictionary
     if req.route and req.route.name in RouteContextMap:
@@ -68,18 +113,18 @@ async def handle_request(
         ctx_options = RouteContextMap["__default"]
 
     res: dict
-    if accept and "text/turtle" in accept:
+    if accept and TURTLE_MEDIA_TYPE in accept:
         # Always embed the context for turtle, as it avoids a lookup via the URI
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         ttl = to_turtle(res)
-        return response.text(ttl, content_type="text/turtle")
-    elif accept and "application/n-triples" in accept:
+        return response.text(ttl, content_type=TURTLE_MEDIA_TYPE)
+    elif accept and NTRIPLES_MEDIA_TYPE in accept:
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         nt: str = to_ntriples(res)
-        return response.text(nt, content_type="application/n-triples")
-    elif accept and "application/marcxml+xml" in accept:
+        return response.text(nt, content_type=NTRIPLES_MEDIA_TYPE)
+    elif accept and MARCXML_MEDIA_TYPE in accept:
         if sid := req.match_info.get("source_id"):
             rtype = "sources"
             rid = sid
@@ -95,42 +140,42 @@ async def handle_request(
             )
 
         auth_headers: dict = {
-            "Authorization": f"Token {req.app.ctx.config['common']['muscat_auth']}"
+            "Authorization": f"Token {app_context.config['common']['muscat_auth']}"
         }
 
         async with httpx.AsyncClient(headers=auth_headers) as client:
-            muscat_req = await client.get(f"https://muscat.rism.info/data/{rtype}/{rid}")
+            muscat_req = await client.get(
+                f"https://muscat.rism.info/data/{rtype}/{rid}"
+            )
             muscat_resp = muscat_req.text
             if muscat_req.status_code != 200:
                 return response.json(
                     {"message": "Could not retrieve MARCXML from upstream"}, status=500
                 )
 
-        return response.text(
-            muscat_resp, content_type="application/marcxml+xml"
-        )
+        return response.text(muscat_resp, content_type=MARCXML_MEDIA_TYPE)
     elif accept and ";profile=expanded" in accept:
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         exp = to_expanded_jsonld(res)
-        return response.text(
-            exp, content_type="application/ld+json;profile=expanded"
-        )
+        # The response is already encoded as a string, so we just send it as text
+        # with the appropriate content-type.
+        return response.text(exp, content_type=EXPANDED_JSONLD_MEDIA_TYPE)
     else:
-        log.debug("Sending JSON-LD")
+        log.debug("Sending JSON")
 
         # We can control the embedding of the context either globally, in the configuration, or
         # per-request, with the X-Embed-Context header.
         if suppress_context:
             ctx_val = {}
-        elif req.app.ctx.context_uri and "X-Embed-Context" not in req.headers:
+        elif app_context.context_uri and "X-Embed-Context" not in req.headers:
             ctx_val = {"@context": get_identifier(req, ctx_options.route)}
         else:
             ctx_val = {"@context": ctx_options.context}
 
         res = {**ctx_val, **data_obj}
 
-        return await send_json_response(res, req.app.ctx.config["common"]["debug"])
+        return await send_json_response(req, res, app_context.config["common"]["debug"])
 
 
 async def handle_search(
@@ -146,9 +191,16 @@ async def handle_search(
     #     application/ld+json'", status=406)
 
     accept: str | None = req.headers.get("Accept")
-    if accept and "application/ld+json" not in accept:
-        status_msg = f"""Accept header {accept} is not available for this resource. Only application/ld+json is available"""
+    if accept and (
+        JSON_MEDIA_TYPE not in accept
+        and JSONLD_MEDIA_TYPE not in accept
+        and HTML_MEDIA_TYPE not in accept
+        and ANY_MEDIA_TYPE not in accept
+    ):
+        status_msg = f"""Accept header {accept} is not available for this resource."""
         return response.json({"message": status_msg}, status=406)
+
+    app_context = req.app.ctx
 
     try:
         data_obj: dict = await handler(req, **kwargs)
@@ -158,7 +210,15 @@ async def handle_search(
         error_message: str = f"Error sending search to Solr. {e}"
         return response.json({"message": error_message}, status=500)
 
-    if not data_obj:
-        return response.json({"message": "The requested resource was not found"}, status=404)
+    if accept and "json" in accept:
+        if not data_obj:
+            return response.json(
+                {"message": "The requested resource was not found"}, status=404
+            )
 
-    return await send_json_response(data_obj, req.app.ctx.config["common"]["debug"])
+        return await send_json_response(
+            req, data_obj, app_context.config["common"]["debug"]
+        )
+    else:
+        rendered_template: str = render_template(app_context, req, data_obj)
+        return response.html(rendered_template)
