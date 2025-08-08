@@ -1028,8 +1028,8 @@ wheels = [
 
 [[package]]
 name = "small-asc"
-version = "0.30.0"
-source = { git = "https://github.com/rism-digital/small-asc.git?rev=main#874f1b3ee69bb3340bddd565b6b68a561099c032" }
+version = "0.30.1"
+source = { git = "https://github.com/rism-digital/small-asc.git?rev=main#cb259e5d66deb474dec0460e68589968971053bb" }
 dependencies = [
     { name = "httpx" },
     { name = "orjson" },
@@ -1281,7 +1281,7 @@ wheels = [
 [[package]]
 name = "ypres"
 version = "1.1.1"
-source = { git = "https://github.com/rism-digital/ypres.git?rev=main#5e327b93acc8aa3a8f84abbd1966bcf401c4fe2f" }
+source = { git = "https://github.com/rism-digital/ypres.git?rev=main#715284422b3b1d14c73142836cbc21f415b4df48" }
 
 [[package]]
 name = "zipp"
