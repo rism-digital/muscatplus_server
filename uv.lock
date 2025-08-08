@@ -1000,16 +1000,16 @@ dev = [
 
 [[package]]
 name = "sentry-sdk"
-version = "3.0.0a4"
+version = "3.0.0a5"
 source = { registry = "https://pypi.org/simple/" }
 dependencies = [
     { name = "certifi" },
     { name = "opentelemetry-sdk" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b4/8c/aaa361fdd6dc30917aacc8da3776e5e2af5406701aa5920e07e1481d13e1/sentry_sdk-3.0.0a4.tar.gz", hash = "sha256:1a849b63b88d614c11ee68feaa98b3f926529fcc97032b9abd6cddc97207fc0b", size = 318886, upload-time = "2025-07-31T15:02:20.673Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/aa/27/a8d699e7841c6c54886f7c68d3b00414bf959b2b310d2adcd748c78fd0bb/sentry_sdk-3.0.0a5.tar.gz", hash = "sha256:f6ccb2a35cea0b342a22c26647f115d2155b3d7cb0a8f6cec425c6a24a2fda28", size = 319985, upload-time = "2025-08-07T12:34:48.568Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c8/8a/e4db7f2fe736049feeee289fa65da51171b0ba8e8867fcefc1bd5036e10e/sentry_sdk-3.0.0a4-py2.py3-none-any.whl", hash = "sha256:cf0823a710e17019a2d21593ce28199ac957b356a8cec2066b2b061e47237fec", size = 345518, upload-time = "2025-07-31T15:02:18.87Z" },
+    { url = "https://files.pythonhosted.org/packages/0f/09/e3376a6c6b2193f012536136c32cff6275cfe9e130c35bbaeefd42ae42e5/sentry_sdk-3.0.0a5-py2.py3-none-any.whl", hash = "sha256:6e91d9783b3295a2fd431b7987332bd6fd6175f2493b1184ee09e7b7a4167fd0", size = 346558, upload-time = "2025-08-07T12:34:46.683Z" },
 ]
 
 [package.optional-dependencies]
