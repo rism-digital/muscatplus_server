@@ -51,7 +51,8 @@ async def handle_institution_search_request(req, institution_id: str) -> dict:
     except InvalidQueryException:
         raise
 
-    extra_context = {"direct_request": True, "query_validation": query_report}
+    extra_context = {"direct_request": True,
+                     "query_validation": query_report}
 
     try:
         result_data: dict = await serialize_response(
