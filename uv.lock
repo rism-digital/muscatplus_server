@@ -974,7 +974,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "httpx", specifier = ">=0.28.1,<2.0.0" },
+    { name = "httpx", specifier = ">=0.28.1,<0.29.0" },
     { name = "jinja2", specifier = ">=3.1.2,<4.0.0" },
     { name = "orjson", specifier = ">=3.9.15,<4.0.0" },
     { name = "pyyaml", specifier = ">=6.0.1,<7.0.0" },
