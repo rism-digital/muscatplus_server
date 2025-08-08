@@ -1,4 +1,3 @@
-
 from sanic import Blueprint, response
 
 from search_server.request_handlers import handle_request, handle_search
@@ -69,7 +68,11 @@ async def incipit(req, source_id: str, work_num: str):
 
     # return the JSON-LD representation of the incipit
     return await handle_request(
-        req, handle_incipit_request, record_id=source_id, record_type="source", work_num=work_num
+        req,
+        handle_incipit_request,
+        record_id=source_id,
+        record_type="source",
+        work_num=work_num,
     )
 
 
@@ -85,7 +88,9 @@ async def incipit_mei_encoding(req, source_id: str, work_num: str):
         req, record_id=source_id, record_type="source", work_num=work_num
     )
     if not resp:
-        return response.json({"message": "The requested resource could not be found"}, status=404)
+        return response.json(
+            {"message": "The requested resource could not be found"}, status=404
+        )
 
     return response.text(resp["content"], headers=resp["headers"])
 
@@ -102,7 +107,9 @@ async def incipit_png_rendering(req, source_id: str, work_num: str):
         req, record_id=source_id, record_type="source", work_num=work_num
     )
     if not resp:
-        return response.json({"message": "The requested resource could not be found"}, status=404)
+        return response.json(
+            {"message": "The requested resource could not be found"}, status=404
+        )
 
     return response.raw(resp["content"], headers=resp["headers"])
 
@@ -162,7 +169,7 @@ async def digital_object_list(req, source_id: str):
 
 
 @sources_blueprint.route("/<source_id:str>/digital-objects/<dobject_id:str>")
-async def digital_object(req, source_id: str, digital_object_id: str):
+async def digital_object(req, source_id: str, dobject_id: str):
     return response.json({"message": "Not implemented"}, status=501)
 
 
