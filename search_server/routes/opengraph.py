@@ -3,7 +3,6 @@ import tempfile
 
 from sanic import Blueprint, response
 
-from data_export_server.resources.opengraph import OpenGraph, OpenGraphSvg
 from shared_helpers.resvg import render_svg
 from shared_helpers.solr_connection import SolrConnection
 
