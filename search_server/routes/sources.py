@@ -190,3 +190,15 @@ async def holding(req, source_id: str, holding_id: str):
 @sources_blueprint.route("/<source_id:str>/holdings/<holding_id:str>/relationships/")
 async def holding_relationships(req, source_id: str, holding_id: str):
     return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route("/<source_id:str>/holdings/<holding_id:str>/digital-objects")
+async def holding_digital_object_list(req, source_id: str, holding_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/holdings/<holding_id:str>/digital-objects/<dobject_id:str>"
+)
+async def holding_digital_object(req, source_id: str, holding_id: str, dobject_id: str):
+    return response.json({"message": "Not implemented"}, status=501)

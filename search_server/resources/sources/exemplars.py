@@ -3,6 +3,7 @@ import re
 import ypres
 from small_asc.client import Results
 
+from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import RelationshipsSection
@@ -89,6 +90,7 @@ class Holding(ypres.AsyncDictSerializer):
     relationships = ypres.MethodField()
     bound_with = ypres.MethodField(label="boundWith")
     part_of = ypres.MethodField(label="partOf")
+    digital_objects = ypres.MethodField(label="digitalObjects")
     record_history = ypres.MethodField(label="recordHistory")
 
     def get_sid(self, obj: dict) -> str:
@@ -291,6 +293,17 @@ class Holding(ypres.AsyncDictSerializer):
                 },
             ).serialized,
         }
+
+    async def get_digital_objects(self, obj: SolrResult) -> dict | None:
+        if not obj.get("has_digital_objects_b", False):
+            return None
+
+        return await DigitalObjectsSection(
+            obj,
+            context={
+                "request": self.context["request"],
+            },
+        ).serialized
 
     def get_record_history(self, obj: SolrResult) -> dict | None:
         if not self.context.get("direct_request", False):

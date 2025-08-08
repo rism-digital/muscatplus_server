@@ -29,6 +29,14 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
             return get_identifier(req, "sources.digital_object_list", source_id=obj_id)
         elif obj_type == "person":
             return get_identifier(req, "people.digital_object_list", person_id=obj_id)
+        elif obj_type == "holding":
+            source_id = re.sub(ID_SUB, "", obj["source_id"])
+            return get_identifier(
+                req,
+                "sources.holding_digital_object_list",
+                source_id=source_id,
+                holding_id=obj_id,
+            )
         elif obj_type == "institution":
             return get_identifier(
                 req, "institution.digital_object_list", institution_id=obj_id
@@ -54,12 +62,22 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
         if results.hits == 0:
             return None
 
+        ctx = {
+            "request": self.context["request"],
+        }
+
+        # if we have a digital object for a holding, we need the
+        # source id as well to construct the full identifier. We can't get
+        # that from the digital object record, so the context of the serializer
+        # will have to suffice.
+        obj_type: str = obj["type"]
+        if obj_type == "holding":
+            ctx["source_id"] = re.sub(ID_SUB, "", obj["source_id"])
+
         return await DigitalObject(
             results,
             many=True,
-            context={
-                "request": self.context["request"],
-            },
+            context=ctx,
         ).serialized_many
 
 
@@ -91,6 +109,15 @@ class DigitalObject(ypres.AsyncDictSerializer):
         elif linked_record_type == "person":
             return get_identifier(
                 req, "people.digital_object", person_id=linked_id, dobject_id=dobject_id
+            )
+        elif linked_record_type == "holding":
+            source_id: str = self.context.get("source_id", "no-id")
+            return get_identifier(
+                req,
+                "sources.holding_digital_object",
+                source_id=source_id,
+                holding_id=linked_id,
+                dobject_id=dobject_id,
             )
         elif linked_record_type == "institution":
             return get_identifier(
