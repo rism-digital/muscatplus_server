@@ -4,6 +4,7 @@ import re
 import ypres
 
 from search_server.resources.people.base_person import BasePerson
+from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
@@ -123,6 +124,17 @@ class Person(BasePerson):
 
         return ExternalResourcesSection(
             obj, context={"request": self.context["request"]}
+        ).serialized
+
+    async def get_digital_objects(self, obj: SolrResult) -> dict | None:
+        if not obj.get("has_digital_objects_b", False):
+            return None
+
+        return await DigitalObjectsSection(
+            obj,
+            context={
+                "request": self.context["request"],
+            },
         ).serialized
 
 
