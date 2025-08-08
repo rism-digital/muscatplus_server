@@ -12,11 +12,9 @@ from search_server.resources.sources.contents_search import (
     handle_contents_probe_request,
     handle_contents_search_request,
 )
-from search_server.resources.sources.exemplars import (
+from search_server.resources.sources.handlers import (
     handle_exemplar_section_request,
     handle_holdings_request,
-)
-from search_server.resources.sources.handlers import (
     handle_source_request,
 )
 
