@@ -4,6 +4,7 @@ from collections.abc import Callable
 import ypres
 
 from search_server.resources.institutions.base_institution import BaseInstitution
+from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
@@ -22,6 +23,7 @@ class Institution(BaseInstitution):
     relationships = ypres.MethodField()
     notes = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
+    digital_objects = ypres.MethodField(label="digitalObjects")
     properties = ypres.MethodField()
 
     def get_sources(self, obj: SolrResult) -> dict | None:
@@ -102,6 +104,18 @@ class Institution(BaseInstitution):
         return ExternalResourcesSection(
             obj, context={"request": self.context["request"]}
         ).serialized
+
+    async def get_digital_objects(self, obj: SolrResult) -> dict | None:
+        if not obj.get("has_digital_objects_b", False):
+            return None
+
+        return await DigitalObjectsSection(
+            obj,
+            context={
+                "request": self.context["request"],
+            },
+        ).serialized
+
 
     def get_properties(self, obj: SolrResult) -> dict | None:
         d = {

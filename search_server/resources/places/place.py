@@ -104,7 +104,7 @@ class Place(ypres.AsyncDictSerializer):
         if person_results.hits == 0:
             return None
 
-        person_list: list = BasePerson(
+        person_list: list = await BasePerson(
             person_results.docs, context={"request": req}, many=True
         ).serialized_many
 

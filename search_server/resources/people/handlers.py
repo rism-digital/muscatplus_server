@@ -18,7 +18,7 @@ async def handle_person_request(req, person_id: str) -> dict | None:
     if not person_record:
         return None
 
-    return Person(
+    return await Person(
         person_record, context={"request": req, "direct_request": True}
     ).serialized
 

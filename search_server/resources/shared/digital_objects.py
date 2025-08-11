@@ -39,7 +39,7 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
             )
         elif obj_type == "institution":
             return get_identifier(
-                req, "institution.digital_object_list", institution_id=obj_id
+                req, "institutions.digital_object_list", institution_id=obj_id
             )
         else:
             log.error("Could not determine ID for %s", obj["id"])
@@ -122,7 +122,7 @@ class DigitalObject(ypres.AsyncDictSerializer):
         elif linked_record_type == "institution":
             return get_identifier(
                 req,
-                "institution.digital_object",
+                "institutions.digital_object",
                 institution_id=linked_id,
                 dobject_id=dobject_id,
             )

@@ -73,14 +73,14 @@ async def _record_type_router(req, obj: dict) -> dict:
         return source
 
     elif obj_type == "person":
-        person: dict = Person(
+        person: dict = await Person(
             obj, context={"request": req, "direct_request": True}
         ).serialized
         person["id"] = obj["record_uri_sni"]
         return person
 
     elif obj_type == "institution":
-        institution: dict = Institution(
+        institution: dict = await Institution(
             obj, context={"request": req, "direct_request": True}
         ).serialized
         institution["id"] = obj["record_uri_sni"]

@@ -8,7 +8,7 @@ from shared_helpers.identifiers import ID_SUB, get_identifier
 from shared_helpers.solr_connection import SolrResult
 
 
-class BasePerson(ypres.DictSerializer):
+class BasePerson(ypres.AsyncDictSerializer):
     pid = ypres.MethodField(label="id")
     stype = ypres.StaticField(label="type", value="rism:Person")
     type_label = ypres.MethodField(label="typeLabel")

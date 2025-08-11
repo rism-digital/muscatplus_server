@@ -30,6 +30,7 @@ class Person(BasePerson):
     sources = ypres.MethodField()
     works = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
+    digital_objects = ypres.MethodField(label="digitalObjects")
 
     def get_biographical_details(self, obj: SolrResult) -> dict | None:
         bio_details: dict = BiographicalDetails(
