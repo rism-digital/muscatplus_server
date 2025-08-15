@@ -19,7 +19,7 @@ from shared_helpers.solr_connection import SolrResult
 #  A value of `None` for the value translator means to simply take the value verbatim. (Technically, a value of None
 #  passes it through the _default_translator function, but this is largely transparent to the user).
 #
-LabelConfig = dict[str, tuple[str, Callable | None]]
+type LabelConfig = dict[str, tuple[str, Callable | None]]
 
 log = logging.getLogger("mp_server")
 
