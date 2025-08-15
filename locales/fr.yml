@@ -968,6 +968,15 @@ fr:
     P60242: "Est un arragement de"
     P60198: "Est complété par"
     P60313: "Indéfini"
+  relations_institutions:
+    P50008: Hierarchical superior
+    P50010: Hierarchical subordinate
+    P50012: Predecessor of corporate body
+    P50016: Successor of corporate body
+    P50020: Founding family of corporate body
+    P50230: Corporate body member of corporate body
+    P50435: Corporate body member of family
+    P50301: Absorbed corporate body
   verovio:
     position: "Position"
     warning: "Avertissement"

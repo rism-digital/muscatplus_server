@@ -968,6 +968,15 @@ pt:
     P60242: "É arrependimento de"
     P60198: "É complementado por"
     P60313: "Indefinido"
+  relations_institutions:
+    P50008: Hierarquia superior
+    P50010: Subsubordinado hierárquico
+    P50012: Predecessor de corpo corporativo
+    P50016: Sucessor do corpo corporativo
+    P50020: Família fundadora do corpo corporativo
+    P50230: Membro do corpo corporativo do corpo corporativo
+    P50435: Membro do corpo corporativo da família
+    P50301: Corpo corporativo absorvido
   verovio:
     position: "Posição"
     warning: "Aviso"

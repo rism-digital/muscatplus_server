@@ -968,6 +968,15 @@ pl:
     P60242: "Jest aranżacją"
     P60198: "Jest uzupełnione o"
     P60313: "Nieokreślony"
+  relations_institutions:
+    P50008: Hierarchicznie przełożony
+    P50010: Hierarchicznie podwładny
+    P50012: Poprzednik organizacji
+    P50016: Następca organizacji
+    P50020: Rodzina założycieli organizacji
+    P50230: Członek organizacji
+    P50435: Członek rodziny, będący częścią organizacji
+    P50301: Wchłonięta organizacja
   verovio:
     position: "Pozycja"
     warning: "Uwaga"
