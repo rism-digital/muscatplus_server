@@ -84,9 +84,7 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
 class DigitalObject(ypres.AsyncDictSerializer):
     doid = ypres.MethodField(label="id")
     dotype = ypres.StaticField(label="type", value="rism:DigitalObject")
-    # part_of = ypres.MethodField(
-    #     label="partOf"
-    # )
+    part_of = ypres.MethodField(label="partOf")
     slabel = ypres.MethodField(label="label")
     format = ypres.MethodField()
     body = ypres.MethodField()
@@ -134,8 +132,51 @@ class DigitalObject(ypres.AsyncDictSerializer):
         return {"none": [f"{obj.get('description_s')}"]}
 
     def get_part_of(self, obj: SolrResult) -> dict | None:
-        # TODO!
-        pass
+        if not self.context.get("direct_request", False):
+            return None
+
+        req = self.context["request"]
+        linked_record_type: str = obj["linked_type_s"]
+        linked_id_val: str = obj["linked_id"]
+        linked_id: str = re.sub(ID_SUB, "", linked_id_val)
+        label = {"none": [f"{obj.get('linked_name_s', '[No name]')}"]}
+
+        if linked_record_type == "source":
+            return {
+                "id": get_identifier(req, "sources.source", source_id=linked_id),
+                "label": label,
+                "type": "rism:Source",
+            }
+        elif linked_record_type == "person":
+            return {
+                "id": get_identifier(req, "people.person", person_id=linked_id),
+                "label": label,
+                "type": "rism:Person",
+            }
+        elif linked_record_type == "holding":
+            source_id: str = self.context.get("source_id", "no-id")
+            return {
+                "id": get_identifier(
+                    req, "sources.holding", source_id=source_id, holding_id=linked_id
+                ),
+                "label": label,
+                "type": "rism:Exemplar",
+            }
+        elif linked_record_type == "institution":
+            return {
+                "id": get_identifier(
+                    req, "institutions.institution", institution_id=linked_id
+                ),
+                "label": label,
+                "type": "rism:Institution",
+            }
+        else:
+            log.error("Could not determine part-of for %s", obj["id"])
+            return {
+                "id": "no-id",
+                "type": "rism:UnknownObject",
+                "label": label,
+            }
 
     def get_format(self, obj: SolrResult) -> str | None:
         return obj["media_type_s"]
