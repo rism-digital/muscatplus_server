@@ -97,7 +97,7 @@ async def handle_request(
             data_obj = {"message": "The requested resource was not found"}
             response_code = 404
 
-    if accept and (HTML_MEDIA_TYPE in accept or ANY_MEDIA_TYPE in accept):
+    if accept and (HTML_MEDIA_TYPE in accept):
         # If we have an HTML request, then this will serve the template with the
         # appropriate status code. Anything beyond this point is an API request.
         rendered_template: str = render_template(app_context, req, data_obj)
@@ -119,12 +119,14 @@ async def handle_request(
         res = {**ctx_val, **data_obj}
         ttl = to_turtle(res)
         return response.text(ttl, content_type=TURTLE_MEDIA_TYPE)
-    elif accept and NTRIPLES_MEDIA_TYPE in accept:
+
+    if accept and NTRIPLES_MEDIA_TYPE in accept:
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         nt: str = to_ntriples(res)
         return response.text(nt, content_type=NTRIPLES_MEDIA_TYPE)
-    elif accept and MARCXML_MEDIA_TYPE in accept:
+
+    if accept and MARCXML_MEDIA_TYPE in accept:
         if sid := req.match_info.get("source_id"):
             rtype = "sources"
             rid = sid
@@ -154,28 +156,29 @@ async def handle_request(
                 )
 
         return response.text(muscat_resp, content_type=MARCXML_MEDIA_TYPE)
-    elif accept and ";profile=expanded" in accept:
+
+    if accept and ";profile=expanded" in accept:
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         exp = to_expanded_jsonld(res)
         # The response is already encoded as a string, so we just send it as text
         # with the appropriate content-type.
         return response.text(exp, content_type=EXPANDED_JSONLD_MEDIA_TYPE)
+
+    log.debug("Sending JSON")
+
+    # We can control the embedding of the context either globally, in the configuration, or
+    # per-request, with the X-Embed-Context header.
+    if suppress_context:
+        ctx_val = {}
+    elif app_context.context_uri and "X-Embed-Context" not in req.headers:
+        ctx_val = {"@context": get_identifier(req, ctx_options.route)}
     else:
-        log.debug("Sending JSON")
+        ctx_val = {"@context": ctx_options.context}
 
-        # We can control the embedding of the context either globally, in the configuration, or
-        # per-request, with the X-Embed-Context header.
-        if suppress_context:
-            ctx_val = {}
-        elif app_context.context_uri and "X-Embed-Context" not in req.headers:
-            ctx_val = {"@context": get_identifier(req, ctx_options.route)}
-        else:
-            ctx_val = {"@context": ctx_options.context}
+    res = {**ctx_val, **data_obj}
 
-        res = {**ctx_val, **data_obj}
-
-        return await send_json_response(req, res, app_context.config["common"]["debug"])
+    return await send_json_response(req, res, app_context.config["common"]["debug"])
 
 
 async def handle_search(
