@@ -3,7 +3,7 @@ name = "search_server"
 version = "v1.0.5"
 description = "MuscatPlus Search Server"
 authors = [{ name = "Andrew Hankinson", email = "andrew.hankinson@rism.digital" }]
-requires-python = ">=3.11,<4.0"
+requires-python = ">=3.13,<4.0"
 license = "MIT"
 dependencies = [
     "pyyaml (>=6.0.1,<7.0.0)",
@@ -47,7 +47,7 @@ explicit = true
 [tool.uv.sources]
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = [
