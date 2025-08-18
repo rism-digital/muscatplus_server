@@ -4,10 +4,10 @@ from urllib.parse import unquote
 
 from small_asc.client import JsonAPIRequest, Results
 
+from search_server.helpers.identifiers import ID_SUB
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.search.pagination import parse_page_number
 from search_server.resources.search.search_results import SearchResults
-from shared_helpers.identifiers import ID_SUB
-from shared_helpers.solr_connection import SolrConnection
 
 log = logging.getLogger("mp_export")
 

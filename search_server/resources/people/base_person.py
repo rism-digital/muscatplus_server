@@ -2,10 +2,10 @@ import re
 
 import ypres
 
+from search_server.helpers.formatters import format_person_label
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.shared.record_history import get_record_history
-from shared_helpers.formatters import format_person_label
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrResult
 
 
 class BasePerson(ypres.AsyncDictSerializer):

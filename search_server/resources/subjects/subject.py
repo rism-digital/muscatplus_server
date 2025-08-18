@@ -2,8 +2,12 @@ import re
 
 import ypres
 
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult, result_count
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.solr_connection import (
+    SolrConnection,
+    SolrResult,
+    result_count,
+)
 
 
 async def handle_subject_request(req, subject_id: str) -> dict | None:

@@ -21,17 +21,17 @@ from sanic.models.protocol_types import TransportProtocol
 from sanic.request import Request
 from small_asc.client import Solr
 
-from search_server.resources.institutions.institution import Institution
-from search_server.resources.people.person import Person
-from search_server.resources.sources.full_source import FullSource
-from search_server.server import app
-from shared_helpers.jsonld import (
+from search_server.helpers.jsonld import (
     RISM_JSONLD_DEFAULT_CONTEXT,
     RISM_JSONLD_INSTITUTION_CONTEXT,
     RISM_JSONLD_PERSON_CONTEXT,
     RISM_JSONLD_SOURCE_CONTEXT,
 )
-from shared_helpers.languages import filter_languages, load_translations
+from search_server.helpers.languages import filter_languages, load_translations
+from search_server.resources.institutions.institution import Institution
+from search_server.resources.people.person import Person
+from search_server.resources.sources.full_source import FullSource
+from search_server.server import app
 
 with open("linked_data/logging.yml") as lg:
     log_config: dict = yaml.safe_load(lg)
@@ -69,7 +69,7 @@ filt_translations: dict = filter_languages({"en"}, translations)
 
 req = Request(bytes("/foo", "ascii"), headers, "", "GET", TransportProtocol(), app)
 req.ctx.translations = filt_translations
-req.route = MockRoute()    # type: ignore
+req.route = MockRoute()  # type: ignore
 
 serializer_map: dict = {
     "source": FullSource,

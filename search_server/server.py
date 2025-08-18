@@ -6,6 +6,12 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sanic import Sanic, response
 from sanic.exceptions import NotFound, ServerError
 
+from search_server.helpers.languages import (
+    SUPPORTED_LANGUAGES,
+    filter_languages,
+    load_translations,
+)
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.api import api_blueprint
 from search_server.routes.countries import countries_blueprint
@@ -23,12 +29,6 @@ from search_server.routes.sitemap import sitemap_blueprint
 from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
 from search_server.routes.works import works_blueprint
-from shared_helpers.languages import (
-    SUPPORTED_LANGUAGES,
-    filter_languages,
-    load_translations,
-)
-from shared_helpers.solr_connection import SolrConnection
 
 config: dict = yaml.safe_load(open("configuration.yml"))  # noqa: SIM115
 debug_mode: bool = config["common"]["debug"]

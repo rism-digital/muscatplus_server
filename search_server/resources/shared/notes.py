@@ -1,11 +1,10 @@
-
 import ypres
 
-from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.display_translators import (
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
+from search_server.helpers.display_translators import (
     secondary_literature_json_value_translator,
 )
-from shared_helpers.solr_connection import SolrResult
+from search_server.helpers.solr_connection import SolrResult
 
 
 class NotesSection(ypres.DictSerializer):

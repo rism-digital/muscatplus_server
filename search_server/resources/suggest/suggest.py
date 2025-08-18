@@ -8,8 +8,8 @@ from sanic import request, response
 from small_asc.client import SolrError
 
 from search_server.helpers.search_request import suggest_fields_for_alias
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.request_handlers import send_json_response
-from shared_helpers.solr_connection import SolrConnection
 
 log = logging.getLogger("mp_server")
 

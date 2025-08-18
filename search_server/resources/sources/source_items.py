@@ -3,9 +3,9 @@ import logging
 import ypres
 from small_asc.client import Results
 
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.sources.base_source import BaseSource
-from shared_helpers.identifiers import get_identifier, strip_prefix
-from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 log = logging.getLogger("mp_server")
 

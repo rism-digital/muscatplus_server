@@ -4,11 +4,11 @@ from sanic import response
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.exceptions import InvalidQueryException
+from search_server.helpers.identifiers import get_identifier
 from search_server.helpers.search_request import SearchRequest
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.search.facets import get_facets
 from search_server.template_render import render_template
-from shared_helpers.identifiers import get_identifier
-from shared_helpers.solr_connection import SolrConnection
 
 
 async def handle_front_request(req) -> response.HTTPResponse:

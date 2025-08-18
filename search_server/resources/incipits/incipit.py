@@ -4,18 +4,18 @@ import re
 import ypres
 from small_asc.client import Results
 
-from search_server.helpers.record_types import create_source_types_block
-from search_server.helpers.vrv import render_pae
-from search_server.resources.sources.base_source import BaseSource
-from search_server.resources.works.base_work import BaseWork
-from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.display_translators import (
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
+from search_server.helpers.display_translators import (
     clef_translator,
     key_mode_value_translator,
 )
-from shared_helpers.formatters import format_incipit_label, format_source_label
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult
+from search_server.helpers.formatters import format_incipit_label, format_source_label
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.record_types import create_source_types_block
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
+from search_server.helpers.vrv import render_pae
+from search_server.resources.sources.base_source import BaseSource
+from search_server.resources.works.base_work import BaseWork
 
 log = logging.getLogger("mp_server")
 

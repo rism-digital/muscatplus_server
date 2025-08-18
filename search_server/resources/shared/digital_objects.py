@@ -4,9 +4,9 @@ import re
 import ypres
 from small_asc.client import Results
 
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import render_url
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 log = logging.getLogger("mp_server")
 

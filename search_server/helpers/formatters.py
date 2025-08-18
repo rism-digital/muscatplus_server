@@ -1,4 +1,4 @@
-from shared_helpers.display_translators import title_json_value_translator
+from search_server.helpers.display_translators import title_json_value_translator
 
 
 def format_work_label(obj: dict) -> str:

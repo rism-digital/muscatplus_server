@@ -3,17 +3,17 @@ from collections.abc import Callable
 
 import ypres
 
+from search_server.helpers.display_fields import assemble_label_value
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.languages import merge_language_maps
+from search_server.helpers.solr_connection import SolrResult
+from search_server.helpers.utilities import is_number
 from search_server.resources.institutions.base_institution import BaseInstitution
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
-from shared_helpers.display_fields import assemble_label_value
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.languages import merge_language_maps
-from shared_helpers.solr_connection import SolrResult
-from shared_helpers.utilities import is_number
 
 
 class Institution(BaseInstitution):
@@ -115,7 +115,6 @@ class Institution(BaseInstitution):
                 "request": self.context["request"],
             },
         ).serialized
-
 
     def get_properties(self, obj: SolrResult) -> dict | None:
         d = {

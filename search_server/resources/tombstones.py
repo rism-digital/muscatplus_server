@@ -1,8 +1,8 @@
 import ypres
 from sanic import request
 
-from shared_helpers.identifiers import get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult
+from search_server.helpers.identifiers import get_identifier
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 
 
 async def handle_tombstone(req: request.Request) -> dict | None:
@@ -47,13 +47,10 @@ async def handle_tombstone(req: request.Request) -> dict | None:
 
 class Tombstone(ypres.DictSerializer):
     tid = ypres.MethodField(label="id")
-    ttype = ypres.StaticField(label="type",
-                              value="rism:Tombstone")
+    ttype = ypres.StaticField(label="type", value="rism:Tombstone")
     rtype = ypres.MethodField(label="recordType")
-    tname = ypres.MethodField(label="name",
-                              required=False)
-    deleted = ypres.StrField(attr="removed_dt",
-                             required=False)
+    tname = ypres.MethodField(label="name", required=False)
+    deleted = ypres.StrField(attr="removed_dt", required=False)
 
     def get_tid(self, obj: SolrResult) -> str:
         req = self.context["request"]
@@ -67,12 +64,14 @@ class Tombstone(ypres.DictSerializer):
             case "person":
                 return get_identifier(req, "people.person", person_id=record_id)
             case "institution":
-                return get_identifier(req, "institutions.institution", institution_id=record_id)
+                return get_identifier(
+                    req, "institutions.institution", institution_id=record_id
+                )
             case _:
                 return ""
 
     def get_tname(self, obj: SolrResult) -> dict:
-        return { "none": [obj["display_name_s"]]}
+        return {"none": [obj["display_name_s"]]}
 
     def get_rtype(self, obj: SolrResult) -> str:
         match obj["record_type_s"]:

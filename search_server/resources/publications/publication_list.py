@@ -1,9 +1,9 @@
 import ypres
 from small_asc.client import Results
 
+from search_server.helpers.identifiers import get_identifier
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.publications.publication import Publication
-from shared_helpers.identifiers import get_identifier
-from shared_helpers.solr_connection import SolrConnection
 
 
 class PublicationList(ypres.AsyncDictSerializer):

@@ -3,15 +3,15 @@ import re
 
 import ypres
 
-from search_server.resources.institutions.institution import Institution
-from search_server.resources.people.person import Person
-from search_server.resources.sources.full_source import FullSource
-from shared_helpers.identifiers import (
+from search_server.helpers.identifiers import (
     PROJECT_ID_SUB,
     PROJECT_IDENTIFIERS,
     get_identifier,
 )
-from shared_helpers.solr_connection import SolrConnection
+from search_server.helpers.solr_connection import SolrConnection
+from search_server.resources.institutions.institution import Institution
+from search_server.resources.people.person import Person
+from search_server.resources.sources.full_source import FullSource
 
 log = logging.getLogger("mp_server")
 

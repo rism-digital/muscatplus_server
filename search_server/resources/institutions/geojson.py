@@ -3,10 +3,10 @@ import re
 import ypres
 from small_asc.client import JsonAPIRequest
 
-from shared_helpers.formatters import format_institution_label
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection
-from shared_helpers.utilities import is_number
+from search_server.helpers.formatters import format_institution_label
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.solr_connection import SolrConnection
+from search_server.helpers.utilities import is_number
 
 
 async def handle_institution_geojson_request(req, institution_id: str) -> dict | None:

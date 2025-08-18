@@ -2,9 +2,9 @@ from small_asc.client import JsonAPIRequest
 
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.search_request import SearchRequest
+from search_server.helpers.solr_connection import is_composite
 from search_server.resources.search.base_search import serialize_response
 from search_server.resources.search.search_results import SearchResults
-from shared_helpers.solr_connection import is_composite
 
 
 async def _get_normal_results(req, source_id: str) -> dict:

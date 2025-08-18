@@ -8,8 +8,8 @@ import httpx
 import orjson
 import verovio
 
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.resvg import render_svg
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.resvg import render_svg
 
 log = logging.getLogger("mp_server")
 verovio.enableLog(False)
@@ -39,6 +39,7 @@ vrv_tk = verovio.toolkit()
 vrv_tk.setOptions(VEROVIO_BASE_OPTIONS)
 
 type RenderedIncipit = tuple[str | None, str | None]
+
 
 def render_pae(
     pae: str, use_crc: bool = False, enlarged: bool = False, is_mensural: bool = False
@@ -110,7 +111,9 @@ async def render_url(url: str) -> str | None:
             return None
 
         if res.status_code != 200:
-            log.error("Server responded with non-success status code: %s", res.status_code)
+            log.error(
+                "Server responded with non-success status code: %s", res.status_code
+            )
             return None
 
         mei: str = res.text

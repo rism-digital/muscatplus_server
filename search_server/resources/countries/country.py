@@ -1,6 +1,6 @@
 import ypres
 
-from shared_helpers.display_translators import (
+from search_server.helpers.display_translators import (
     SOURCE_SIGLA_COUNTRY_MAP,
     country_code_labels_translator,
 )

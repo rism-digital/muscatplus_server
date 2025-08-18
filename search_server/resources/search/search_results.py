@@ -5,31 +5,31 @@ import re
 import ypres
 from small_asc.client import Results
 
-from search_server.helpers.record_types import create_source_types_block
-from search_server.helpers.search_request import IncipitModeValues
-from search_server.helpers.vrv import RenderedIncipit, render_pae
-from search_server.resources.search.base_search import BaseSearchResults
-from shared_helpers.display_fields import get_search_result_summary
-from shared_helpers.display_translators import (
+from search_server.helpers.display_fields import get_search_result_summary
+from search_server.helpers.display_translators import (
     gnd_country_code_labels_translator,
     key_mode_value_translator,
     material_content_types_translator,
     material_source_types_translator,
     title_json_value_translator,
 )
-from shared_helpers.formatters import (
+from search_server.helpers.formatters import (
     format_incipit_label,
     format_institution_label,
     format_person_label,
     format_source_label,
 )
-from shared_helpers.identifiers import (
+from search_server.helpers.identifiers import (
     ID_SUB,
     PROJECT_ID_SUB,
     get_identifier,
     strip_prefix,
 )
-from shared_helpers.solr_connection import SolrConnection, SolrResult
+from search_server.helpers.record_types import create_source_types_block
+from search_server.helpers.search_request import IncipitModeValues
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
+from search_server.helpers.vrv import RenderedIncipit, render_pae
+from search_server.resources.search.base_search import BaseSearchResults
 
 log = logging.getLogger("mp_server")
 

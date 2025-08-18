@@ -2,9 +2,9 @@ import logging
 
 import ypres
 
+from search_server.helpers.identifiers import EXTERNAL_IDS, PROJECT_IDENTIFIERS
 from search_server.helpers.record_types import create_source_types_block
-from shared_helpers.identifiers import EXTERNAL_IDS, PROJECT_IDENTIFIERS
-from shared_helpers.solr_connection import SolrResult
+from search_server.helpers.solr_connection import SolrResult
 
 log = logging.getLogger("mp_server")
 

@@ -4,11 +4,11 @@ from small_asc.client import JsonAPIRequest, SolrError
 
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.search_request import SearchRequest
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.publications.publication import Publication
 from search_server.resources.publications.publication_list import PublicationList
 from search_server.resources.publications.publications_search import WorkResults
 from search_server.resources.search.base_search import serialize_response
-from shared_helpers.solr_connection import SolrConnection
 
 log = logging.getLogger("mp_server")
 

@@ -1,6 +1,6 @@
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.sources.exemplars import ExemplarsSection, Holding
 from search_server.resources.sources.full_source import FullSource
-from shared_helpers.solr_connection import SolrConnection
 
 
 async def handle_source_request(req, source_id: str) -> dict | None:
@@ -12,7 +12,6 @@ async def handle_source_request(req, source_id: str) -> dict | None:
     return await FullSource(
         source_record, context={"request": req, "direct_request": True}
     ).serialized
-
 
 
 async def handle_exemplar_section_request(req, source_id: str) -> dict | None:
@@ -43,4 +42,3 @@ async def handle_holdings_request(req, source_id: str, holding_id: str) -> dict 
     return await Holding(
         holding_record, context={"request": req, "direct_request": True}
     ).serialized
-

@@ -1,8 +1,8 @@
-
 import orjson
 from sanic import response
 from small_asc.client import JsonAPIRequest, Results
 
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import (
     create_pae_from_request,
     render_mei,
@@ -11,10 +11,11 @@ from search_server.helpers.vrv import (
     validate_pae,
 )
 from search_server.resources.incipits.incipit import Incipit, IncipitsSection
-from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 
-async def _fetch_incipit(record_id: str, record_type: str, work_num: str) -> SolrResult | None:
+async def _fetch_incipit(
+    record_id: str, record_type: str, work_num: str
+) -> SolrResult | None:
     filters = ["type:incipit", f"work_num_s:{work_num}", "parent_type_s:source"]
 
     # For future use -- should only be source record type now.
@@ -40,9 +41,7 @@ async def _fetch_incipit(record_id: str, record_type: str, work_num: str) -> Sol
 async def handle_incipits_list_request(req, source_id: str) -> dict | None:
     json_request: JsonAPIRequest = {
         "query": "*:*",
-        "filter": ["type:source",
-                   f"id:source_{source_id}",
-                   "has_incipits_b:true"],
+        "filter": ["type:source", f"id:source_{source_id}", "has_incipits_b:true"],
     }
 
     record: Results = await SolrConnection.search(json_request)
@@ -55,27 +54,31 @@ async def handle_incipits_list_request(req, source_id: str) -> dict | None:
     ).serialized
 
 
-async def handle_incipit_request(req, record_id: str, record_type: str, work_num: str) -> dict | None:
-    incipit_record: SolrResult | None = await _fetch_incipit(record_id, record_type, work_num)
+async def handle_incipit_request(
+    req, record_id: str, record_type: str, work_num: str
+) -> dict | None:
+    incipit_record: SolrResult | None = await _fetch_incipit(
+        record_id, record_type, work_num
+    )
 
     if not incipit_record:
         return None
 
     return await Incipit(
-        incipit_record,
-        context={
-            "request": req,
-            "direct_request": True
-        }
+        incipit_record, context={"request": req, "direct_request": True}
     ).serialized
 
 
-async def handle_mei_download(req, record_id: str, record_type: str, work_num: str) -> dict | None:
+async def handle_mei_download(
+    req, record_id: str, record_type: str, work_num: str
+) -> dict | None:
     """
     Handle MEI file download for a given incipit. Returns a dictionary containing the
     attachment filename and the MEI content sent in the body of the response.
     """
-    incipit_record: SolrResult | None = await _fetch_incipit(record_id, record_type, work_num)
+    incipit_record: SolrResult | None = await _fetch_incipit(
+        record_id, record_type, work_num
+    )
 
     if not incipit_record:
         return None
@@ -96,8 +99,12 @@ async def handle_mei_download(req, record_id: str, record_type: str, work_num: s
     return {"headers": response_headers, "content": mei_content}
 
 
-async def handle_png_download(req, record_id: str, record_type: str, work_num: str) -> dict | None:
-    incipit_record: SolrResult | None = await _fetch_incipit(record_id, record_type, work_num)
+async def handle_png_download(
+    req, record_id: str, record_type: str, work_num: str
+) -> dict | None:
+    incipit_record: SolrResult | None = await _fetch_incipit(
+        record_id, record_type, work_num
+    )
 
     if not incipit_record:
         return None
@@ -137,7 +144,8 @@ async def handle_incipit_render(req) -> response.HTTPResponse:
     rendered_pae: tuple | None = render_pae(pae, use_crc=False, enlarged=True)
     if not rendered_pae:
         return response.json(
-            {"message": "There was a problem rendering the Plaine and Easie notation"}, status=500
+            {"message": "There was a problem rendering the Plaine and Easie notation"},
+            status=500,
         )
 
     svg, _ = rendered_pae

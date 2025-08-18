@@ -3,17 +3,17 @@ import re
 
 import ypres
 
-from search_server.helpers.record_types import create_source_types_block
-from search_server.resources.shared.record_history import get_record_history
-from search_server.resources.shared.relationship import Relationship
-from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.display_translators import (
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
+from search_server.helpers.display_translators import (
     material_content_types_translator,
     material_source_types_translator,
 )
-from shared_helpers.formatters import format_source_label
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrResult
+from search_server.helpers.formatters import format_source_label
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.record_types import create_source_types_block
+from search_server.helpers.solr_connection import SolrResult
+from search_server.resources.shared.record_history import get_record_history
+from search_server.resources.shared.relationship import Relationship
 
 # The Solr fields necessary to construct a base source record. Helps cut down on internal Solr
 # communication by limiting the fields to only those that are necessary.

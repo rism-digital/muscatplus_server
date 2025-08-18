@@ -2,6 +2,8 @@ import logging
 
 import ypres
 
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.incipits.incipit import IncipitsSection
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
@@ -13,8 +15,6 @@ from search_server.resources.sources.exemplars import ExemplarsSection
 from search_server.resources.sources.material_groups import MaterialGroupsSection
 from search_server.resources.sources.source_items import SourceItemsSection
 from search_server.resources.sources.works import WorksSection
-from shared_helpers.identifiers import get_identifier, strip_prefix
-from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger("mp_server")
 

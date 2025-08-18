@@ -1,7 +1,8 @@
 import orjson
 
+from search_server.helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
 from search_server.resources.countries.country import CountryList
-from shared_helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
+
 
 
 def render_template(app_context, req, data_obj: dict | None) -> str:

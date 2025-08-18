@@ -5,8 +5,8 @@ import sanic
 from sanic import Blueprint, response
 from small_asc.client import Results
 
-from shared_helpers.identifiers import ID_SUB, get_site, get_url_from_type
-from shared_helpers.solr_connection import SolrConnection
+from search_server.helpers.identifiers import ID_SUB, get_site, get_url_from_type
+from search_server.helpers.solr_connection import SolrConnection
 
 sitemap_blueprint: Blueprint = Blueprint("sitemap")
 

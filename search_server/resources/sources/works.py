@@ -1,11 +1,11 @@
 import ypres
 
-from shared_helpers.identifiers import (
+from search_server.helpers.identifiers import (
     EXTERNAL_IDS,
     get_identifier,
     strip_prefix,
 )
-from shared_helpers.solr_connection import SolrResult
+from search_server.helpers.solr_connection import SolrResult
 
 
 class WorksSection(ypres.DictSerializer):

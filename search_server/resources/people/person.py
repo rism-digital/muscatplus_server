@@ -3,6 +3,13 @@ import re
 
 import ypres
 
+from search_server.helpers.display_fields import get_display_fields
+from search_server.helpers.display_translators import (
+    person_gender_translator,
+    person_name_variant_labels_translator,
+)
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
@@ -10,13 +17,6 @@ from search_server.resources.shared.external_resources import ExternalResourcesS
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.works import WorksSection
-from shared_helpers.display_fields import get_display_fields
-from shared_helpers.display_translators import (
-    person_gender_translator,
-    person_name_variant_labels_translator,
-)
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger("mp_server")
 

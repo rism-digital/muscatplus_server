@@ -3,6 +3,8 @@ import urllib.parse
 import ypres
 from small_asc.client import Results
 
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.incipits.incipit import (
     WorkIncipitsSection,
 )
@@ -13,8 +15,6 @@ from search_server.resources.sources.base_source import (
     BaseSource,
 )
 from search_server.resources.works.base_work import BaseWork
-from shared_helpers.identifiers import get_identifier, strip_prefix
-from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 
 class FullWork(BaseWork):

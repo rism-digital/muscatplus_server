@@ -4,6 +4,9 @@ import re
 import ypres
 from small_asc.client import JsonAPIRequest, Results
 
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
+from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.institutions.base_institution import (
     BaseInstitution,
 )
@@ -11,9 +14,6 @@ from search_server.resources.people.base_person import BasePerson
 from search_server.resources.sources.base_source import (
     BaseSource,
 )
-from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 log = logging.getLogger("mp_server")
 

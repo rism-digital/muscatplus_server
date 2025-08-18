@@ -1,6 +1,5 @@
-
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.works.full_work import FullWork
-from shared_helpers.solr_connection import SolrConnection
 
 
 async def handle_work_request(req, work_id: str) -> dict | None:

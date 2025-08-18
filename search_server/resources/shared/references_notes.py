@@ -1,16 +1,15 @@
-
 import ypres
 
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
+from search_server.helpers.display_translators import (
+    secondary_literature_json_value_translator,
+    url_detecting_translator,
+)
+from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.liturgical_festivals.liturgical_festival import (
     LiturgicalFestival,
 )
 from search_server.resources.shared.relationship import Relationship
-from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.display_translators import (
-    secondary_literature_json_value_translator,
-    url_detecting_translator,
-)
-from shared_helpers.solr_connection import SolrResult
 
 
 class ReferencesNotesSection(ypres.DictSerializer):

@@ -5,14 +5,14 @@ from collections.abc import Callable
 
 import ypres
 
-from shared_helpers.display_translators import (
+from search_server.helpers.display_translators import (
     person_institution_relationship_labels_translator,
     place_relationship_labels_translator,
     qualifier_labels_translator,
     source_relationship_labels_translator,
     title_json_value_translator,
 )
-from shared_helpers.identifiers import (
+from search_server.helpers.identifiers import (
     EXTERNAL_IDS,
     ID_SUB,
     PROJECT_ID_SUB,
@@ -221,11 +221,7 @@ def _related_to_source(req, obj: dict) -> dict:
 
     source_title: dict = title_json_value_translator(obj.get("title", []), transl)
 
-    return {
-        "id": ident,
-        "label": source_title,
-        "type": "rism:Source"
-    }
+    return {"id": ident, "label": source_title, "type": "rism:Source"}
 
 
 def _relationship_translator(obj: dict) -> Callable | None:

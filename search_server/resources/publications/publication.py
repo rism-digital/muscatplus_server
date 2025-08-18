@@ -2,14 +2,14 @@ import re
 
 import ypres
 
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
+from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import (
     Relationship,
     RelationshipsSection,
 )
-from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.identifiers import ID_SUB, get_identifier
 
 
 class Publication(ypres.AsyncDictSerializer):

@@ -1,15 +1,15 @@
 import ypres
 
-from search_server.resources.shared.record_history import get_record_history
-from search_server.resources.shared.relationship import Relationship
-from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.display_translators import (
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
+from search_server.helpers.display_translators import (
     key_mode_value_translator,
     title_json_value_translator,
 )
-from shared_helpers.formatters import format_work_label
-from shared_helpers.identifiers import get_identifier, strip_prefix
-from shared_helpers.solr_connection import SolrResult
+from search_server.helpers.formatters import format_work_label
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrResult
+from search_server.resources.shared.record_history import get_record_history
+from search_server.resources.shared.relationship import Relationship
 
 
 class BaseWork(ypres.AsyncDictSerializer):

@@ -5,6 +5,7 @@ from re import Pattern
 
 from small_asc.client import Results
 
+from search_server.helpers.identifiers import get_identifier
 from search_server.helpers.search_request import (
     FacetBehaviourValues,
     FacetSortValues,
@@ -14,7 +15,6 @@ from search_server.helpers.search_request import (
     filters_for_mode,
     types_alias_map,
 )
-from shared_helpers.identifiers import get_identifier
 
 log = logging.getLogger("mp_server")
 RANGE_PARSING_REGEX: Pattern = re.compile(
@@ -141,6 +141,7 @@ def _get_facet_type(val) -> str:
             return "rism:SingleChoiceFacet"
         case _:
             return "rism:Facet"
+
 
 def __get_key_signature(value: str) -> dict:
     if value == "n":
@@ -282,17 +283,26 @@ def _create_toggle_facet(res) -> dict:
     toggle_fields: dict = {"value": "true"}
     return toggle_fields
 
+
 def _create_single_choice_facet(res, cfg: dict):
     items = []
     for bucket in res["buckets"]:
         solr_value = bucket["val"]
         value = str(solr_value).lower() if isinstance(solr_value, bool) else solr_value
 
-        items.append({
-            "label": {"none": [cfg["translation_values"].get(value, f"[Unknown label for {value}]")]},
-            "value": value,
-            "count": bucket["count"]
-        })
+        items.append(
+            {
+                "label": {
+                    "none": [
+                        cfg["translation_values"].get(
+                            value, f"[Unknown label for {value}]"
+                        )
+                    ]
+                },
+                "value": value,
+                "count": bucket["count"],
+            }
+        )
 
     return {"items": items}
 

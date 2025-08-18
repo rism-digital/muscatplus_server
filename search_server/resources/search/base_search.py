@@ -4,10 +4,10 @@ from abc import abstractmethod
 import ypres
 from small_asc.client import JsonAPIRequest, Results, SolrError
 
+from search_server.helpers.solr_connection import execute_query
 from search_server.resources.search.facets import get_facets
 from search_server.resources.search.pagination import Pagination
 from search_server.resources.search.sorting import get_sorting
-from shared_helpers.solr_connection import execute_query
 
 log = logging.getLogger("mp_server")
 
