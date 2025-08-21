@@ -154,6 +154,7 @@ class BiographicalDetails(ypres.DictSerializer):
         transl: dict = req.ctx.translations
 
         field_config: dict = {
+            "authentication_code_s": ("records.authentication_code", None),
             "date_statement_s": ("records.life_dates", None),
             "other_dates_s": ("records.other_life_dates", None),
             "gender_s": ("records.gender", person_gender_translator),
