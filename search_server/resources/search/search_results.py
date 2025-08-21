@@ -695,6 +695,7 @@ class WorkSearchResult(ypres.DictSerializer):
     part_of = ypres.MethodField(label="partOf")
     summary = ypres.MethodField()
     flags = ypres.MethodField()
+    rendered = ypres.MethodField()
 
     def get_srid(self, obj: SolrResult) -> str:
         req = self.context["request"]
@@ -766,3 +767,14 @@ class WorkSearchResult(ypres.DictSerializer):
             flags["scoringSummary"] = "; ".join(scoring)
 
         return flags
+
+    def get_rendered(self, obj: SolrResult) -> dict | None:
+        if not obj.get("has_notation_b", False):
+            return None
+
+        svg, _ = _render_incipit_pae(obj)
+
+        if not svg:
+            return None
+
+        return {"format": "image/svg+xml", "data": svg}
