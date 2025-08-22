@@ -16,6 +16,7 @@ dependencies = [
     "sentry-sdk[sanic] (>=2.19.0,<4.0.0)",
     "httpx (>=0.28.1,<0.29.0)",
     "verovio>=5.2.1",
+    "async-lru>=2.0.5",
 ]
 
 [dependency-groups]
