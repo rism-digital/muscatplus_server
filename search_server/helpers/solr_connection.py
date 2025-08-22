@@ -1,5 +1,5 @@
 import logging
-from typing import Any, NewType
+from typing import Any
 
 import yaml
 from small_asc.client import JsonAPIRequest, Results, Solr
@@ -26,10 +26,12 @@ SolrConnection: Solr = Solr(solr_url)
 
 log.debug("Solr connection set to %s", solr_url)
 
-SolrResult = NewType("SolrResult", dict[str, Any])
+type SolrResult = dict[str, Any]
 
 
-async def execute_query(solr_params: JsonAPIRequest, handler: str | None = None) -> Results:
+async def execute_query(
+    solr_params: JsonAPIRequest, handler: str | None = None
+) -> Results:
     """
     Executes a search query. Expects a pre-compiled dictionary of parameters to pass to Solr. Raises SolrError
     if there was a problem with the query.
