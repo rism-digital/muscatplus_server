@@ -1,5 +1,4 @@
 import logging
-import re
 
 import ypres
 from small_asc.client import Results
@@ -10,7 +9,7 @@ from search_server.helpers.display_translators import (
     key_mode_value_translator,
 )
 from search_server.helpers.formatters import format_incipit_label, format_source_label
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.record_types import create_source_types_block
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import render_pae
@@ -28,7 +27,7 @@ class IncipitsSection(ypres.AsyncDictSerializer):
     items = ypres.MethodField()
 
     def get_isid(self, obj: SolrResult):
-        source_id = re.sub(ID_SUB, "", obj["id"])
+        source_id = strip_prefix(obj["id"])
         req = self.context["request"]
 
         return get_identifier(req, "sources.incipits_list", source_id=source_id)
@@ -104,7 +103,7 @@ class WorkIncipitsSection(ypres.AsyncDictSerializer):
 
     def get_iwid(self, obj: SolrResult) -> str:
         req = self.context["request"]
-        work_id: str = re.sub(ID_SUB, "", obj["id"])
+        work_id: str = strip_prefix(obj["id"])
 
         return get_identifier(req, "works.incipits_list", work_id=work_id)
 
@@ -166,13 +165,13 @@ class Incipit(ypres.AsyncDictSerializer):
         work_num: str = f"{obj.get('work_num_s')}"
 
         if parent_type == "work":
-            work_id: str = re.sub(ID_SUB, "", obj["work_id"])
+            work_id: str = strip_prefix(obj["work_id"])
             return get_identifier(
                 req, "works.incipit", work_id=work_id, work_num=work_num
             )
 
         # assume that it's a source incipit.
-        source_id: str = re.sub(ID_SUB, "", obj["source_id"])
+        source_id: str = strip_prefix(obj["source_id"])
         return get_identifier(
             req, "sources.incipit", source_id=source_id, work_num=work_num
         )
@@ -278,12 +277,12 @@ class Incipit(ypres.AsyncDictSerializer):
         png_download_url: str
 
         if parent_type == "work":
-            work_id: str = re.sub(ID_SUB, "", obj.get("work_id", ""))
+            work_id: str = strip_prefix(obj["work_id"])
             png_download_url = get_identifier(
                 req, "works.incipit_png_rendering", work_id=work_id, work_num=work_num
             )
         else:
-            source_id: str = re.sub(ID_SUB, "", obj.get("source_id", ""))
+            source_id: str = strip_prefix(obj["source_id"])
             png_download_url = get_identifier(
                 req,
                 "sources.incipit_png_rendering",
@@ -310,12 +309,12 @@ class Incipit(ypres.AsyncDictSerializer):
         mei_download_url: str
 
         if parent_type == "work":
-            work_id: str = re.sub(ID_SUB, "", obj.get("work_id", ""))
+            work_id: str = strip_prefix(obj["work_id"])
             mei_download_url = get_identifier(
                 req, "works.incipit_mei_encoding", work_id=work_id, work_num=work_num
             )
         else:
-            source_id: str = re.sub(ID_SUB, "", obj.get("source_id", ""))
+            source_id: str = strip_prefix(obj["source_id"])
             mei_download_url = get_identifier(
                 req,
                 "sources.incipit_mei_encoding",

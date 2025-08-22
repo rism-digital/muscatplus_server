@@ -1,10 +1,8 @@
-import re
-
 import ypres
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
-from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.display_translators import work_catalogue_status_translator
+from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import (
@@ -18,6 +16,7 @@ class Publication(ypres.AsyncDictSerializer):
     stype = ypres.StaticField(label="type", value="rism:Publication")
     type_label = ypres.MethodField(label="typeLabel")
     slabel = ypres.MethodField(label="label")
+    status = ypres.MethodField()
     creator = ypres.MethodField()
     composer = ypres.MethodField()
     summary = ypres.MethodField()
@@ -29,7 +28,7 @@ class Publication(ypres.AsyncDictSerializer):
 
     def get_pid(self, obj: dict) -> str:
         req = self.context["request"]
-        pub_id: str = re.sub(ID_SUB, "", obj["id"])
+        pub_id: str = strip_prefix(obj["id"])
 
         return get_identifier(req, "publications.publication", publication_id=pub_id)
 
@@ -63,7 +62,7 @@ class Publication(ypres.AsyncDictSerializer):
 
         jsobj = obj["composer_json"]
         req = self.context["request"]
-        composer_id = re.sub(ID_SUB, "", jsobj["id"])
+        composer_id = strip_prefix(jsobj["id"])
         composer_name: str = jsobj.get("name", "")
         composer_dates: str = jsobj.get("life_dates")
 

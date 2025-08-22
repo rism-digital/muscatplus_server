@@ -20,8 +20,6 @@ from search_server.helpers.formatters import (
     format_source_label,
 )
 from search_server.helpers.identifiers import (
-    ID_SUB,
-    PROJECT_ID_SUB,
     get_identifier,
     strip_prefix,
 )
@@ -180,12 +178,12 @@ class SourceSearchResult(ypres.DictSerializer):
         # Formulate a different ID if we have an external project
         # resource.
         if "project_s" not in obj:
-            id_value = re.sub(ID_SUB, "", obj["id"])
+            id_value = strip_prefix(obj["id"])
             return get_identifier(req, "sources.source", source_id=id_value)
 
         project: str = obj["project_s"]
         srtype: str = obj["type"]
-        id_value = re.sub(PROJECT_ID_SUB, "", obj["id"])
+        id_value = strip_prefix(obj["id"])
         return get_identifier(
             req,
             "external.external",
@@ -244,7 +242,7 @@ class SourceSearchResult(ypres.DictSerializer):
         transl: dict = req.ctx.translations
 
         parent_title: str = obj["source_membership_title_s"]
-        parent_source_id: str = re.sub(ID_SUB, "", obj["source_membership_id"])
+        parent_source_id: str = strip_prefix(obj["source_membership_id"])
 
         source_membership: dict = obj.get("source_membership_json", {})
         record_type: str = source_membership.get("record_type", "item")
@@ -343,12 +341,12 @@ class PersonSearchResult(ypres.DictSerializer):
 
         id_value: str
         if "project_s" not in obj:
-            id_value = re.sub(ID_SUB, "", obj["id"])
+            id_value = strip_prefix(obj["id"])
             return get_identifier(req, "people.person", person_id=id_value)
 
         project: str = obj["project_s"]
         srtype: str = obj["type"]
-        id_value = re.sub(PROJECT_ID_SUB, "", obj["id"])
+        id_value = strip_prefix(obj["id"])
         return get_identifier(
             req,
             "external.external",
@@ -421,14 +419,14 @@ class InstitutionSearchResult(ypres.DictSerializer):
 
         id_value: str
         if "project_s" not in obj:
-            id_value = re.sub(ID_SUB, "", obj["id"])
+            id_value = strip_prefix(obj["id"])
             return get_identifier(
                 req, "institutions.institution", institution_id=id_value
             )
 
         project: str = obj["project_s"]
         srtype = obj["project_type_s"] if "project_type_s" in obj else obj["type"]
-        id_value = re.sub(PROJECT_ID_SUB, "", obj["id"])
+        id_value = strip_prefix(obj["id"])
 
         return get_identifier(
             req,
@@ -509,8 +507,8 @@ class IncipitSearchResult(ypres.DictSerializer):
 
     def get_srid(self, obj: dict) -> str:
         req = self.context["request"]
-        work_num: str = re.sub(ID_SUB, "", obj["work_num_s"])
-        source_id: str = re.sub(ID_SUB, "", obj["source_id"])
+        work_num: str = strip_prefix(obj["work_num_s"])
+        source_id: str = strip_prefix(obj["source_id"])
 
         return get_identifier(
             req, "sources.incipit", source_id=source_id, work_num=work_num
@@ -550,7 +548,7 @@ class IncipitSearchResult(ypres.DictSerializer):
         """
         req = self.context["request"]
         parent_title: str = obj["main_title_s"]
-        parent_source_id: str = re.sub(ID_SUB, "", obj["source_id"])
+        parent_source_id: str = strip_prefix(obj["source_id"])
         transl: dict = req.ctx.translations
 
         record_type: str = obj.get("record_type_s", "item")
@@ -574,7 +572,7 @@ class IncipitSearchResult(ypres.DictSerializer):
         }
 
     def get_rendered(self, obj: SolrResult) -> list | None:
-        if not obj.get("music_incipit_s"):
+        if not obj.get("has_notation_b", False):
             log.debug("No music incipit")
             return None
 
@@ -603,7 +601,7 @@ class IncipitSearchResult(ypres.DictSerializer):
         return obj.get("custom_score")
 
 
-def _render_incipit_pae(obj: SolrResult) -> RenderedIncipit:
+def _render_incipit_pae(obj: dict) -> RenderedIncipit:
     pae_code: str | None = obj.get("original_pae_sni")
 
     if not pae_code:
