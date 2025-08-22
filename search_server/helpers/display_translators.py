@@ -2,6 +2,14 @@ import re
 from collections import defaultdict
 from re import Match
 
+_WORK_CATALOGUE_STATUS_MAP: dict = {
+    "completed": "work_catalogue.work_catalogue_complete",
+    "partial": "work_catalogue.work_catalogue_partial",
+    "alternate": "work_catalogue.work_catalogue_alternate",
+    "eligible": "work_catalogue.work_catalogue_in_preparation",
+    "not-a-work-catalogue": "work_catalogue.not_work_catalogue",
+}
+
 _MATERIAL_SOURCE_TYPE_MAP: dict = {
     "Manuscript copy": "records.manuscript_copy",
     "Print": "records.print",
@@ -523,6 +531,10 @@ def __lookup_translations_list(
                 result[lcode].extend([trans_itm])
 
     return dict(result)
+
+
+def work_catalogue_status_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, _WORK_CATALOGUE_STATUS_MAP)
 
 
 def record_type_translator(value: str, translations: dict) -> dict:

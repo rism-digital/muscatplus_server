@@ -4,6 +4,7 @@ import ypres
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.display_translators import work_catalogue_status_translator
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import (
@@ -39,6 +40,13 @@ class Publication(ypres.AsyncDictSerializer):
 
     def get_slabel(self, obj: dict) -> dict:
         return {"none": [obj["title_s"]]}
+
+    def get_status(self, obj: dict) -> dict:
+        req = self.context["request"]
+        status = obj["work_catalogue_status_s"]
+        transl: dict = req.ctx.translations
+        labels = work_catalogue_status_translator(status, transl)
+        return {"label": labels, "value": status}
 
     def get_creator(self, obj: dict) -> dict | None:
         if "creator_json" not in obj:
