@@ -1,4 +1,5 @@
 import orjson
+from async_lru import alru_cache
 from sanic import response
 from small_asc.client import JsonAPIRequest, Results
 
@@ -13,29 +14,9 @@ from search_server.helpers.vrv import (
 from search_server.resources.incipits.incipit import Incipit, IncipitsSection
 
 
-async def _fetch_incipit(
-    record_id: str, record_type: str, work_num: str
-) -> SolrResult | None:
-    filters = ["type:incipit", f"work_num_s:{work_num}", "parent_type_s:source"]
-
-    # For future use -- should only be source record type now.
-    if record_type == "work":
-        filters.append(f"work_id:work_{record_id}")
-    else:
-        filters.append(f"source_id:source_{record_id}")
-
-    json_request: JsonAPIRequest = {
-        "query": "*:*",
-        "filter": filters,
-        "sort": "work_num_ans asc",
-        "limit": 1,
-    }
-    record: Results = await SolrConnection.search(json_request)
-
-    if record.hits == 0:
-        return None
-
-    return record.docs[0]
+@alru_cache
+async def _fetch_incipit(doc_id: str) -> dict | None:
+    return await SolrConnection.get(doc_id)
 
 
 async def handle_incipits_list_request(req, source_id: str) -> dict | None:
@@ -57,9 +38,8 @@ async def handle_incipits_list_request(req, source_id: str) -> dict | None:
 async def handle_incipit_request(
     req, record_id: str, record_type: str, work_num: str
 ) -> dict | None:
-    incipit_record: SolrResult | None = await _fetch_incipit(
-        record_id, record_type, work_num
-    )
+    doc_id: str = f"{record_type}_{record_id}_incipit_{work_num}"
+    incipit_record: SolrResult | None = await _fetch_incipit(doc_id)
 
     if not incipit_record:
         return None
@@ -76,9 +56,8 @@ async def handle_mei_download(
     Handle MEI file download for a given incipit. Returns a dictionary containing the
     attachment filename and the MEI content sent in the body of the response.
     """
-    incipit_record: SolrResult | None = await _fetch_incipit(
-        record_id, record_type, work_num
-    )
+    doc_id: str = f"{record_type}_{record_id}_incipit_{work_num}"
+    incipit_record: SolrResult | None = await _fetch_incipit(doc_id)
 
     if not incipit_record:
         return None
@@ -102,9 +81,8 @@ async def handle_mei_download(
 async def handle_png_download(
     req, record_id: str, record_type: str, work_num: str
 ) -> dict | None:
-    incipit_record: SolrResult | None = await _fetch_incipit(
-        record_id, record_type, work_num
-    )
+    doc_id: str = f"{record_type}_{record_id}_incipit_{work_num}"
+    incipit_record: SolrResult | None = await _fetch_incipit(doc_id)
 
     if not incipit_record:
         return None
