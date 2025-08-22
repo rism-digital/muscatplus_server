@@ -126,7 +126,7 @@ class Place(ypres.AsyncDictSerializer):
         if institution_results.hits == 0:
             return None
 
-        institution_list: list = BaseInstitution(
+        institution_list: list = await BaseInstitution(
             institution_results.docs, context={"request": req}, many=True
         ).serialized_many
 
