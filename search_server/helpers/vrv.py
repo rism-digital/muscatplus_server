@@ -273,7 +273,7 @@ def get_pae_features(req) -> dict | None:
     pae: str = create_pae_from_request(req)
     vrv_tk.setInputFrom("pae")
     load_success: bool = vrv_tk.loadData(pae)
-    if load_success is False:
+    if not load_success:
         log.warning("Could not load PAE for %s", pae)
         return None
     return vrv_tk.getDescriptiveFeatures({})
