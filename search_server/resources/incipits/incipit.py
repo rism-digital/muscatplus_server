@@ -169,6 +169,15 @@ class Incipit(ypres.AsyncDictSerializer):
             return get_identifier(
                 req, "works.incipit", work_id=work_id, work_num=work_num
             )
+        elif parent_type == "inventory_item":
+            inventory_source_id: str = strip_prefix(obj["source_id"])
+            inventory_item_id = strip_prefix(obj["inventory_item_id"])
+            return get_identifier(
+                req,
+                "sources.inventory_item",
+                source_id=inventory_source_id,
+                inventory_item_id=inventory_item_id,
+            )
 
         # assume that it's a source incipit.
         source_id: str = strip_prefix(obj["source_id"])
@@ -196,6 +205,8 @@ class Incipit(ypres.AsyncDictSerializer):
 
         if parent_type == "work":
             d["work"] = await BaseWork(obj, context={"request": req}).serialized
+        elif parent_type == "inventory_item":
+            d["inventory"] = {"message": "TODO"}  # TODO!
         else:
             d["source"] = await BaseSource(obj, context={"request": req}).serialized
 
@@ -312,6 +323,16 @@ class Incipit(ypres.AsyncDictSerializer):
             work_id: str = strip_prefix(obj["work_id"])
             mei_download_url = get_identifier(
                 req, "works.incipit_mei_encoding", work_id=work_id, work_num=work_num
+            )
+        elif parent_type == "inventory_item":
+            ii_source_id: str = strip_prefix(obj["source_id"])
+            inventory_item_id: str = obj["rism_id"]
+            mei_download_url = get_identifier(
+                req,
+                "sources.inventory_incipit_mei_encoding",
+                source_id=ii_source_id,
+                inventory_item_id=inventory_item_id,
+                work_num=work_num,
             )
         else:
             source_id: str = strip_prefix(obj["source_id"])
