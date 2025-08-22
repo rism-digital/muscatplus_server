@@ -14,6 +14,7 @@ def render_svg(
     :param outpath: The full path, including the filename, to write the PNG.
     :param resvg_path: The path to the resvg binary
     :param font_path: The path to the fonts to use when rendering
+    :param zoom_factor: The zoom factor to use when rendering
     :return: True if successful; else False.
     """
     command = [
