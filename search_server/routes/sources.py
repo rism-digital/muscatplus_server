@@ -202,3 +202,65 @@ async def holding_digital_object_list(req, source_id: str, holding_id: str):
 )
 async def holding_digital_object(req, source_id: str, holding_id: str, dobject_id: str):
     return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route("/<source_id:str>/inventory-items/")
+async def inventory_items(req, source_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route("/<source_id:str>/inventory-items/<inventory_item_id:str>")
+async def inventory_item(req, source_id: str, inventory_item_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/inventory-items/<inventory_item_id:str>/incipits/<work_num:str>/mei"
+)
+async def inventory_incipit_mei_encoding(
+    req, source_id: str, inventory_item_id: str, work_num: str
+):
+    """
+    Retrieve an individual incipit encoded as MEI, based on the suffix.
+    It is also possible to pass an `Accept:` header for a content-negotiated
+    response to the main incipit retrieve function, so we use the same handler
+    for both.
+    """
+    resp: dict | None = await handle_mei_download(
+        req,
+        record_id=inventory_item_id,
+        record_type="inventory_item",
+        work_num=work_num,
+    )
+    if not resp:
+        return response.json(
+            {"message": "The requested resource could not be found"}, status=404
+        )
+
+    return response.text(resp["content"], headers=resp["headers"])
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/inventory-items/<inventory_item_id:str>/incipits/<work_num:str>/png"
+)
+async def inventory_incipit_png_rendering(
+    req, source_id: str, inventory_item_id: str, work_num: str
+):
+    """
+    Retrieve an individual incipit encoded as MEI, based on the suffix.
+    It is also possible to pass an `Accept:` header for a content-negotiated
+    response to the main incipit retrieve function, so we use the same handler
+    for both.
+    """
+    resp: dict | None = await handle_png_download(
+        req,
+        record_id=inventory_item_id,
+        record_type="inventory_item",
+        work_num=work_num,
+    )
+    if not resp:
+        return response.json(
+            {"message": "The requested resource could not be found"}, status=404
+        )
+
+    return response.raw(resp["content"], headers=resp["headers"])
