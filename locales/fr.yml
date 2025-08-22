@@ -1047,6 +1047,12 @@ fr:
     ERR_064_LIGATURE_DURATION: La durée dans une ligature ne peut pas être plus courte qu'une semi-brève.
     ERR_065_MREST_INVALID_MEASURE: Une mesure avec une pause ne peut pas inclure autre chose.
     ERR_066_EMPTY_CONTAINER: Un groupe d'appoggiatures ou une liaison ne peut pas être vide.
+  work_catalogue:
+    not_work_catalogue: Not work catalog
+    work_catalogue_alternate: Alternate
+    work_catalogue_complete: Completed
+    work_catalogue_in_preparation: Eligible
+    work_catalogue_partial: Partially completed
   rism_online:
     manuscript: "Manuscrit"
     printed: "Imprimé"
