@@ -11,6 +11,7 @@ from small_asc.query import (
 
 from search_server.exceptions import InvalidQueryException, PaginationParseException
 from search_server.helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
+from search_server.helpers.incipit_search_fields import IncipitModeValues
 from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import (
     parse_page_number,
@@ -54,12 +55,6 @@ class FacetTypeValues:
 class FacetSortValues:
     ALPHA = "alpha"
     COUNT = "count"
-
-
-class IncipitModeValues:
-    INTERVALS = "intervals"
-    EXACT_PITCHES = "exact-pitches"
-    CONTOUR = "contour"
 
 
 def sorting_for_mode(cfg: dict, mode: str) -> list:
