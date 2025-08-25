@@ -94,7 +94,7 @@ def load_translations(path: str) -> dict:
         log.error("The path for loading the language files does not exist: %s", path)
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
 
-    output: dict = collections.defaultdict(dict)
+    output: collections.defaultdict = collections.defaultdict(dict)
 
     for langcode in SUPPORTED_LANGUAGES:
         locale_file: Path = Path(path, f"{langcode}.yml")
@@ -104,7 +104,7 @@ def load_translations(path: str) -> dict:
             continue
 
         with locale_file.open("r") as file_contents:
-            locale_contents = yaml.safe_load(file_contents)
+            locale_contents: dict = yaml.safe_load(file_contents) or {}
 
         if langcode not in locale_contents:
             log.error(
@@ -113,7 +113,7 @@ def load_translations(path: str) -> dict:
             )
             continue
 
-        translations: dict = locale_contents[langcode]
+        translations: dict = locale_contents.get(langcode, {})
         flattened_translations: dict = __flatten(translations)
 
         for translation_key, translation_value in flattened_translations.items():
@@ -186,3 +186,33 @@ def filter_languages(langcodes: set, translations: dict) -> dict:
 
 def merge_language_maps(d1: dict[str, list], d2: dict[str, list]) -> dict[str, list]:
     return {key: [", ".join(value + d2[key])] for key, value in d1.items()}
+
+
+# Pass a singular and a plural key, and the value of the numeric label. Will return the key for the language
+# map value based on the number. Optionally, the when_zero parameter can be passed to return the
+# key for the language map when the value is less than or equal to zero.
+def choose_plural(
+    singular_key: str, plural_key: str, number: int, when_zero: str | None = None
+) -> str:
+    if number <= 0 and when_zero:
+        return when_zero
+    elif number == 1:
+        return singular_key
+    elif number > 1:
+        return plural_key
+    else:
+        return singular_key
+
+
+def add_to_each_translation(
+    translations: dict[str, list[str]],
+    prepend_str: str | None = None,
+    append_str: str | None = None,
+) -> dict:
+    out = {}
+    for lang, trans_list in translations.items():
+        outlist: list[str] = []
+        for trn in trans_list:
+            outlist.append(f"{prepend_str or ''}{trn}{append_str or ''}")
+        out[lang] = outlist
+    return out
