@@ -2,7 +2,7 @@ import ypres
 from small_asc.client import Results
 
 from search_server.resources.search.base_search import BaseSearchResults
-from search_server.resources.search.search_results import WorkSearchResult
+from search_server.resources.search.work_result import WorkSearchResult
 
 
 class WorkResults(BaseSearchResults):

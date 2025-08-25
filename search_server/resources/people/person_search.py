@@ -5,8 +5,8 @@ from small_asc.client import Results
 
 from search_server.resources.search.search_results import (
     BaseSearchResults,
-    SourceSearchResult,
 )
+from search_server.resources.search.source_result import SourceSearchResult
 
 log = logging.getLogger("mp_server")
 
