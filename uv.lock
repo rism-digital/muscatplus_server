@@ -46,6 +46,15 @@ wheels = [
 ]
 
 [[package]]
+name = "cdifflib"
+version = "1.2.9"
+source = { registry = "https://pypi.org/simple/" }
+sdist = { url = "https://files.pythonhosted.org/packages/52/aa/daefb1236e47561ca53f469f4832f625b38ad6db4e5c68e589dd72928d61/cdifflib-1.2.9.tar.gz", hash = "sha256:6286da08f72b7ddb5b40145dcb8f214ad913a86d72b1f62cc8d6cf7a92029590", size = 12323, upload-time = "2025-01-13T22:18:04.625Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7c/05/5071e0757237e7aa79a6256c1ddddebebab500e1807a1603739f777f37b1/cdifflib-1.2.9-cp313-cp313-macosx_15_0_arm64.whl", hash = "sha256:c7113c018e1d8190ce6c00318ae5afe7e99c8e4e0b4b631ee79acde74949c2e8", size = 11039, upload-time = "2025-01-13T22:18:01.439Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2025.8.3"
 source = { registry = "https://pypi.org/simple/" }
@@ -771,6 +780,7 @@ version = "1.0.5"
 source = { virtual = "." }
 dependencies = [
     { name = "async-lru" },
+    { name = "cdifflib" },
     { name = "httpx" },
     { name = "jinja2" },
     { name = "orjson" },
@@ -798,6 +808,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "async-lru", specifier = ">=2.0.5" },
+    { name = "cdifflib", specifier = ">=1.2.9" },
     { name = "httpx", specifier = ">=0.28.1,<0.29.0" },
     { name = "jinja2", specifier = ">=3.1.2,<4.0.0" },
     { name = "orjson", specifier = ">=3.9.15,<4.0.0" },
