@@ -3,13 +3,18 @@ import os
 import re
 import tempfile
 import urllib.parse
+from difflib import Match
+from functools import lru_cache
 
+import cdifflib  # type: ignore
 import httpx
 import orjson
 import verovio
 
 from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.incipit_search_fields import MODE_FIELDS
 from search_server.helpers.resvg import render_svg
+from search_server.helpers.solr_connection import SolrResult
 
 log = logging.getLogger("mp_server")
 verovio.enableLog(False)
@@ -40,9 +45,30 @@ vrv_tk.setOptions(VEROVIO_BASE_OPTIONS)
 
 type RenderedIncipit = tuple[str | None, str | None]
 
+CSS_REPLACEMENT_PATTERN: re.Pattern = re.compile(
+    r'<style type="text/css">(?P<existing_style>.*)</style>'
+)
 
+
+@lru_cache(maxsize=256)
+def _render_incipit_pae(pae_code: str, is_mensural: bool) -> RenderedIncipit:
+    rendered_pae: RenderedIncipit = render_pae(
+        pae_code, use_crc=True, is_mensural=is_mensural
+    )
+
+    if not rendered_pae[0]:
+        return None, None
+
+    return rendered_pae
+
+
+@lru_cache(maxsize=256)
 def render_pae(
-    pae: str, use_crc: bool = False, enlarged: bool = False, is_mensural: bool = False
+    pae: str,
+    use_crc: bool = False,
+    enlarged: bool = False,
+    is_mensural: bool = False,
+    hard_truncate: bool = False,
 ) -> RenderedIncipit:
     """
     Renders Plaine and Easie to SVG and MIDI. Returns None if there was a problem loading the data.
@@ -54,12 +80,19 @@ def render_pae(
     :param use_crc: Use the CRC of the input for Verovio's ID generator
     :param enlarged: Render the output slightly larger
     :param is_mensural: Set a different spacing for mensural notation
+    :param hard_truncate: Truncates the incipit. If it's too long for the set "page", the incipit will
+        render the rest on the second page, but since we never render the second page, it effectively
+        truncates the incipit.
     :return: A named tuple containing SVG and MIDI.
     """
     custom_options: dict = {"xmlIdChecksum": use_crc}
 
     if not use_crc:
         vrv_tk.resetXmlIdSeed(0)
+
+    if hard_truncate:
+        custom_options["adjustPageWidth"] = False
+        custom_options["pageHeight"] = 100
 
     if enlarged:
         custom_options["pageWidth"] = 1200
@@ -84,6 +117,8 @@ def render_pae(
         return None, None
 
     svg: str = vrv_tk.renderToSVG()
+    if not svg:
+        return None, None
 
     # NB: MIDI is disabled until a Verovio bug is fixed.
     # mid: str = vrv_tk.renderToMIDI()
@@ -307,3 +342,80 @@ def validate_pae(req) -> dict:
         translated_messages.append({"value": error_msg})
 
     return {"valid": False, "messages": translated_messages}
+
+
+# Handles both highlighted and non-highlighted incipits for search results. Will
+# not highight if there is no query_pae_features provided.
+def render_incipit(
+    obj: SolrResult,
+    query_pae_features: dict | None = None,
+    search_mode: str | None = None,
+) -> RenderedIncipit:
+    pae_code: str | None = obj.get("original_pae_sni")
+    if not pae_code:
+        log.debug("no PAE code")
+        return None, None
+
+    is_mensural: bool = obj.get("is_mensural_b", False)
+
+    if query_pae_features is None:
+        # If we don't do the highlighting phase, exit now. We don't need to use
+        # the CRC for the incipit.
+        log.info("No query features provided, skipping highlighting")
+        return render_pae(pae_code, use_crc=False, is_mensural=is_mensural)
+
+    svg, b64midi = render_pae(pae_code, is_mensural=is_mensural)
+    if not svg:
+        log.error("Could not load music incipit for %s", obj.get("id"))
+        return None, None
+
+    if search_mode is None or search_mode not in MODE_FIELDS:
+        log.info("No search mode, skipping highlighting")
+        return svg, b64midi
+
+    # We need to know the search mode so that we know what set of values in the
+    # Solr document and in the Query to compare for the longest subsequence.
+    feature_field, ids_field, query_features_field = MODE_FIELDS[search_mode]
+
+    if feature_field not in obj:
+        log.info("no feature field, skipping highlighting")
+        return svg, b64midi
+
+    document_interval_features: list = list(map(str, obj[feature_field]))
+    document_interval_ids: list = obj[ids_field]
+    query_interval_feature: list = query_pae_features[query_features_field]
+
+    log.debug("Document features: %s", document_interval_features)
+    log.debug("Query features: %s", query_interval_feature)
+
+    smtch = cdifflib.CSequenceMatcher(
+        a=query_interval_feature, b=document_interval_features
+    )
+
+    # Matches the longest subsequence in the two lists, starting at the beginning.
+    matched_blk: Match = smtch.find_longest_match(
+        0, len(query_interval_feature), 0, len(document_interval_features)
+    )
+
+    highlight_ids = {
+        nid
+        for noteids in document_interval_ids[
+            matched_blk.b : matched_blk.b + matched_blk.size
+        ]
+        for nid in noteids
+    }
+
+    if not highlight_ids:
+        return svg, b64midi
+
+    highlight_css_stmt = " ".join(
+        f'g[data-id="{nid}"] {{ fill: red; color: red; }}' for nid in highlight_ids
+    )
+
+    highlighted_svg = re.sub(
+        CSS_REPLACEMENT_PATTERN,
+        rf'<style type="text/css">\1 {highlight_css_stmt}</style>',
+        svg,
+    )
+
+    return highlighted_svg, b64midi
