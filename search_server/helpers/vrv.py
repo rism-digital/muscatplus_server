@@ -62,7 +62,6 @@ def _render_incipit_pae(pae_code: str, is_mensural: bool) -> RenderedIncipit:
     return rendered_pae
 
 
-@lru_cache(maxsize=256)
 def render_pae(
     pae: str,
     use_crc: bool = False,
