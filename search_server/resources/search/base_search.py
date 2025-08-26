@@ -41,11 +41,13 @@ class BaseSearchResults(ypres.AsyncSerializer):
         return req.url
 
     def get_view(self, obj: Results) -> dict | None:
-        # is_probe: bool = self.context.get("probe_request", False)
-        # if is_probe:
-        #     return None
-
-        return Pagination(obj, context={"request": self.context["request"]}).serialized
+        return Pagination(
+            obj,
+            context={
+                "request": self.context["request"],
+                "custom_row_number": self.context.get("custom_row_number"),
+            },
+        ).serialized
 
     def get_facets(self, obj: Results) -> dict | None:
         is_probe: bool = self.context.get("probe_request", False)
