@@ -6,8 +6,9 @@ from search_server.resources.incipits.handlers import (
     handle_png_download,
 )
 from search_server.resources.works.handlers import (
+    handle_work_probe_request,
     handle_work_request,
-    handle_work_search,
+    handle_work_search_request,
 )
 
 works_blueprint: Blueprint = Blueprint("works", url_prefix="/works")
@@ -20,7 +21,12 @@ async def work(req, work_id: str):
 
 @works_blueprint.route("/<work_id:str>/sources/")
 async def work_sources(req, work_id: str):
-    return await handle_search(req, handle_work_search, work_id=work_id)
+    return await handle_search(req, handle_work_search_request, work_id=work_id)
+
+
+@works_blueprint.route("/<work_id:str>/probe/")
+async def work_probe(req, work_id: str):
+    return handle_search(req, handle_work_probe_request, work_id=work_id)
 
 
 @works_blueprint.route("/<work_id:str>/incipits/")
@@ -45,7 +51,9 @@ async def incipit_mei_encoding(req, work_id: str, work_num: str):
         req, record_id=work_id, record_type="work", work_num=work_num
     )
     if not resp:
-        return response.json({"message": "The requested resource could not be found"}, status=404)
+        return response.json(
+            {"message": "The requested resource could not be found"}, status=404
+        )
 
     return response.text(resp["content"], headers=resp["headers"])
 
@@ -62,6 +70,8 @@ async def incipit_png_rendering(req, work_id: str, work_num: str):
         req, record_id=work_id, record_type="work", work_num=work_num
     )
     if not resp:
-        return response.json({"message": "The requested resource could not be found"}, status=404)
+        return response.json(
+            {"message": "The requested resource could not be found"}, status=404
+        )
 
     return response.raw(resp["content"], headers=resp["headers"])
