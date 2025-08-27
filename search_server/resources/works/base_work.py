@@ -4,6 +4,7 @@ from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.display_translators import (
     key_mode_value_translator,
     title_json_value_translator,
+    work_catalogue_status_translator,
 )
 from search_server.helpers.formatters import format_work_label
 from search_server.helpers.identifiers import get_identifier, strip_prefix
@@ -62,12 +63,33 @@ class BaseWork(ypres.AsyncDictSerializer):
 
         req = self.context["request"]
         transl: dict = req.ctx.translations
-
+        type_label: dict = transl["records.work_catalog"]
         wc = obj["works_catalogue_json"]
         wc_id = strip_prefix(wc["id"])
-        req = self.context["request"]
 
-        return {
+        alt_publications: list = obj.get("secondary_works_catalogue_json", [])
+        secondary: list = []
+        for pub in alt_publications:
+            secondary.append(
+                {
+                    "id": get_identifier(
+                        req,
+                        "publications.publication",
+                        publication_id=strip_prefix(pub["id"]),
+                    ),
+                    "label": {"none": [pub["formatted"]]},
+                    "type": "rism:Publication",
+                    "typeLabel": type_label,
+                    "status": {
+                        "label": work_catalogue_status_translator(
+                            pub["work_catalogue_status"], transl
+                        ),
+                        "value": pub["work_catalogue_status"],
+                    },
+                }
+            )
+
+        part_of = {
             "label": transl.get("records.item_part_of"),
             "type": "rism:PartOfSection",
             "publication": {
@@ -76,9 +98,19 @@ class BaseWork(ypres.AsyncDictSerializer):
                 ),
                 "label": {"none": [wc["formatted"]]},
                 "type": "rism:Publication",
-                "typeLabel": transl.get("records.work_catalog"),
+                "typeLabel": type_label,
+                "status": {
+                    "label": work_catalogue_status_translator(
+                        wc["work_catalogue_status"], transl
+                    ),
+                    "value": wc["work_catalogue_status"],
+                },
             },
         }
+        if secondary:
+            part_of["other"] = secondary
+
+        return part_of
 
     def get_record_history(self, obj: SolrResult) -> dict | None:
         req = self.context["request"]

@@ -33,7 +33,10 @@ class WorkSearchResult(ypres.DictSerializer):
 
         return transl.get("records.work")
 
-    def get_part_of(self, obj: SolrResult) -> dict:
+    def get_part_of(self, obj: SolrResult) -> dict | None:
+        if "works_catalogue_json" not in obj:
+            return None
+
         req = self.context["request"]
         transl: dict = req.ctx.translations
 
