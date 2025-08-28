@@ -7,6 +7,7 @@ from small_asc.client import Results
 from search_server.helpers.identifiers import ID_SUB, get_identifier
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import render_url
+from search_server.resources.shared.part_of import PartOfSection
 
 log = logging.getLogger("mp_server")
 
@@ -62,22 +63,12 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
         if results.hits == 0:
             return None
 
-        ctx = {
-            "request": self.context["request"],
-        }
-
-        # if we have a digital object for a holding, we need the
-        # source id as well to construct the full identifier. We can't get
-        # that from the digital object record, so the context of the serializer
-        # will have to suffice.
-        obj_type: str = obj["type"]
-        if obj_type == "holding":
-            ctx["source_id"] = re.sub(ID_SUB, "", obj["source_id"])
-
         return await DigitalObject(
             results,
             many=True,
-            context=ctx,
+            context={
+                "request": self.context["request"],
+            },
         ).serialized_many
 
 
@@ -109,7 +100,8 @@ class DigitalObject(ypres.AsyncDictSerializer):
                 req, "people.digital_object", person_id=linked_id, dobject_id=dobject_id
             )
         elif linked_record_type == "holding":
-            source_id: str = self.context.get("source_id", "no-id")
+            # we can get the source ID from the request path.
+            source_id: str = req.match_info.get("source_id", "no-id")
             return get_identifier(
                 req,
                 "sources.holding_digital_object",
@@ -135,55 +127,16 @@ class DigitalObject(ypres.AsyncDictSerializer):
         if not self.context.get("direct_request", False):
             return None
 
-        req = self.context["request"]
-        linked_record_type: str = obj["linked_type_s"]
-        linked_id_val: str = obj["linked_id"]
-        linked_id: str = re.sub(ID_SUB, "", linked_id_val)
-        label = {"none": [f"{obj.get('linked_name_s', '[No name]')}"]}
-
-        if linked_record_type == "source":
-            return {
-                "id": get_identifier(req, "sources.source", source_id=linked_id),
-                "label": label,
-                "type": "rism:Source",
-            }
-        elif linked_record_type == "person":
-            return {
-                "id": get_identifier(req, "people.person", person_id=linked_id),
-                "label": label,
-                "type": "rism:Person",
-            }
-        elif linked_record_type == "holding":
-            source_id: str = self.context.get("source_id", "no-id")
-            return {
-                "id": get_identifier(
-                    req, "sources.holding", source_id=source_id, holding_id=linked_id
-                ),
-                "label": label,
-                "type": "rism:Exemplar",
-            }
-        elif linked_record_type == "institution":
-            return {
-                "id": get_identifier(
-                    req, "institutions.institution", institution_id=linked_id
-                ),
-                "label": label,
-                "type": "rism:Institution",
-            }
-        else:
-            log.error("Could not determine part-of for %s", obj["id"])
-            return {
-                "id": "no-id",
-                "type": "rism:UnknownObject",
-                "label": label,
-            }
+        return PartOfSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
     def get_format(self, obj: SolrResult) -> str | None:
         return obj["media_type_s"]
 
-    async def get_body(self, obj: SolrResult) -> dict:
+    async def get_body(self, obj: SolrResult) -> dict | None:
         d = {}
-        mt: str | None = obj.get("media_type_s")
+        mt: str = obj["media_type_s"]
         if mt in ("image/jpeg", "image/png"):
             d.update(
                 {
@@ -205,5 +158,4 @@ class DigitalObject(ypres.AsyncDictSerializer):
                     "rendered": {"format": "image/svg+xml", "data": svg},
                 }
             )
-
-        return d
+        return d or None

@@ -9,6 +9,7 @@ from search_server.helpers.display_translators import (
 from search_server.helpers.formatters import format_work_label
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrResult
+from search_server.resources.shared.part_of import PartOfSection
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import Relationship
 
@@ -62,55 +63,7 @@ class BaseWork(ypres.AsyncDictSerializer):
             return None
 
         req = self.context["request"]
-        transl: dict = req.ctx.translations
-        type_label: dict = transl["records.work_catalog"]
-        wc = obj["works_catalogue_json"]
-        wc_id = strip_prefix(wc["id"])
-
-        alt_publications: list = obj.get("secondary_works_catalogue_json", [])
-        secondary: list = []
-        for pub in alt_publications:
-            secondary.append(
-                {
-                    "id": get_identifier(
-                        req,
-                        "publications.publication",
-                        publication_id=strip_prefix(pub["id"]),
-                    ),
-                    "label": {"none": [pub["formatted"]]},
-                    "type": "rism:Publication",
-                    "typeLabel": type_label,
-                    "status": {
-                        "label": work_catalogue_status_translator(
-                            pub["work_catalogue_status"], transl
-                        ),
-                        "value": pub["work_catalogue_status"],
-                    },
-                }
-            )
-
-        part_of = {
-            "label": transl.get("records.item_part_of"),
-            "type": "rism:PartOfSection",
-            "publication": {
-                "id": get_identifier(
-                    req, "publications.publication", publication_id=wc_id
-                ),
-                "label": {"none": [wc["formatted"]]},
-                "type": "rism:Publication",
-                "typeLabel": type_label,
-                "status": {
-                    "label": work_catalogue_status_translator(
-                        wc["work_catalogue_status"], transl
-                    ),
-                    "value": wc["work_catalogue_status"],
-                },
-            },
-        }
-        if secondary:
-            part_of["other"] = secondary
-
-        return part_of
+        return PartOfSection(obj, context={"request": req}).serialized
 
     def get_record_history(self, obj: SolrResult) -> dict | None:
         req = self.context["request"]

@@ -1,5 +1,4 @@
 import logging
-import re
 
 import ypres
 
@@ -9,9 +8,10 @@ from search_server.helpers.display_translators import (
     material_source_types_translator,
 )
 from search_server.helpers.formatters import format_source_label
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.record_types import create_source_types_block
 from search_server.helpers.solr_connection import SolrResult
+from search_server.resources.shared.part_of import PartOfSection
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import Relationship
 
@@ -60,7 +60,7 @@ class BaseSource(ypres.AsyncDictSerializer):
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context["request"]
         source_id_val = obj["id"] if obj.get("type") == "source" else obj["source_id"]
-        source_id: str = re.sub(ID_SUB, "", source_id_val)
+        source_id: str = strip_prefix(source_id_val)
 
         return get_identifier(req, "sources.source", source_id=source_id)
 
@@ -96,47 +96,9 @@ class BaseSource(ypres.AsyncDictSerializer):
         if "source_membership_json" not in obj:
             return None
 
-        source_membership: dict = obj.get("source_membership_json", {})
-        req = self.context["request"]
-        parent_source_id: str = re.sub(
-            ID_SUB, "", source_membership.get("source_id", "")
-        )
-        ident: str = get_identifier(req, "sources.source", source_id=parent_source_id)
-        transl: dict = req.ctx.translations
-
-        parent_title: str = source_membership.get("main_title", "[No title]")
-        parent_shelfmark: str | None = source_membership.get("shelfmark")
-        parent_siglum: str | None = source_membership.get("siglum")
-        parent_material_types: list | None = source_membership.get("material_types")
-
-        # NB: This should match the format in formatters.format_source_label! But since
-        # we're dealing with a JSON field the names are different, and we only do this
-        # once in the whole app.
-        label: str = parent_title
-        if parent_material_types:
-            label = f"{label}; {', '.join(parent_material_types)}"
-        if parent_siglum and parent_shelfmark:
-            label = f"{label}; {parent_siglum} {parent_shelfmark}"
-
-        record_type: str = source_membership.get("record_type", "item")
-        source_type: str = source_membership.get("source_type", "unspecified")
-        content_types: list[str] = source_membership.get("content_types", [])
-
-        source_types_block: dict = create_source_types_block(
-            record_type, source_type, content_types, transl
-        )
-
-        return {
-            "label": transl.get("records.item_part_of"),
-            "type": "rism:PartOfSection",
-            "source": {
-                "id": ident,
-                "type": "rism:Source",
-                "typeLabel": transl.get("records.source"),
-                "sourceTypes": source_types_block,
-                "label": {"none": [label]},
-            },
-        }
+        return PartOfSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
     # This method will get overridden in the 'full source' class, and will be returned as 'None' since
     # the summary is part of the 'contents' section. But in the base source view it will deliver some basic

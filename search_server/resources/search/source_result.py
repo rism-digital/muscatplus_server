@@ -9,6 +9,7 @@ from search_server.helpers.formatters import format_source_label
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.record_types import create_source_types_block
 from search_server.helpers.solr_connection import SolrResult
+from search_server.resources.shared.part_of import PartOfSection
 
 
 class SourceSearchResult(ypres.DictSerializer):
@@ -86,31 +87,33 @@ class SourceSearchResult(ypres.DictSerializer):
         if not is_contents_record:
             return None
 
-        req = self.context["request"]
-        transl: dict = req.ctx.translations
+        return PartOfSection(obj, context=self.context).serialized
 
-        parent_title: str = obj["source_membership_title_s"]
-        parent_source_id: str = strip_prefix(obj["source_membership_id"])
-
-        source_membership: dict = obj.get("source_membership_json", {})
-        record_type: str = source_membership.get("record_type", "item")
-        source_type: str = source_membership.get("source_type", "unspecified")
-        content_types: list[str] = source_membership.get("content_types", [])
-
-        source_types_block: dict = create_source_types_block(
-            record_type, source_type, content_types, transl
-        )
-
-        return {
-            "label": transl.get("records.item_part_of"),
-            "source": {
-                "id": get_identifier(req, "sources.source", source_id=parent_source_id),
-                "type": "rism:Source",
-                "typeLabel": transl.get("records.source"),
-                "sourceTypes": source_types_block,
-                "label": {"none": [parent_title]},
-            },
-        }
+        # req = self.context["request"]
+        # transl: dict = req.ctx.translations
+        #
+        # parent_title: str = obj["source_membership_title_s"]
+        # parent_source_id: str = strip_prefix(obj["source_membership_id"])
+        #
+        # source_membership: dict = obj.get("source_membership_json", {})
+        # record_type: str = source_membership.get("record_type", "item")
+        # source_type: str = source_membership.get("source_type", "unspecified")
+        # content_types: list[str] = source_membership.get("content_types", [])
+        #
+        # source_types_block: dict = create_source_types_block(
+        #     record_type, source_type, content_types, transl
+        # )
+        #
+        # return {
+        #     "label": transl.get("records.item_part_of"),
+        #     "source": {
+        #         "id": get_identifier(req, "sources.source", source_id=parent_source_id),
+        #         "type": "rism:Source",
+        #         "typeLabel": transl.get("records.source"),
+        #         "sourceTypes": source_types_block,
+        #         "label": {"none": [parent_title]},
+        #     },
+        # }
 
     def get_flags(self, obj: dict) -> dict | None:
         req = self.context["request"]

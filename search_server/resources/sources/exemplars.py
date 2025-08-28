@@ -19,6 +19,7 @@ from search_server.helpers.identifiers import (
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
+from search_server.resources.shared.part_of import PartOfSection
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import BaseSource
@@ -277,22 +278,22 @@ class Holding(ypres.AsyncDictSerializer):
             ).serialized,
         }
 
-    async def get_part_of(self, obj: SolrResult) -> dict | None:
+    def get_part_of(self, obj: SolrResult) -> dict | None:
         if not self.context.get("direct_request", False):
             return None
 
-        req = self.context["request"]
-        transl: dict = req.ctx.translations
-
-        return {
-            "label": transl.get("records.source_details"),
-            "source": await BaseSource(
-                obj,
-                context={
-                    "request": req,
-                },
-            ).serialized,
-        }
+        return PartOfSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
+        # return {
+        #     "label": transl.get("records.source_details"),
+        #     "source": await BaseSource(
+        #         obj,
+        #         context={
+        #             "request": req,
+        #         },
+        #     ).serialized,
+        # }
 
     async def get_digital_objects(self, obj: SolrResult) -> dict | None:
         if not obj.get("has_digital_objects_b", False):

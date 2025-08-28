@@ -7,9 +7,9 @@ from search_server.helpers.display_translators import title_json_value_translato
 from search_server.helpers.formatters import format_incipit_label
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.incipit_search_fields import IncipitModeValues
-from search_server.helpers.record_types import create_source_types_block
 from search_server.helpers.solr_connection import SolrResult
 from search_server.helpers.vrv import render_incipit
+from search_server.resources.shared.part_of import PartOfSection
 
 log = logging.getLogger("mp_server")
 
@@ -65,30 +65,7 @@ class IncipitSearchResult(ypres.DictSerializer):
         """
         Provides a pointer back to the parent for this incipit
         """
-        req = self.context["request"]
-        parent_title: str = obj["main_title_s"]
-        parent_source_id: str = strip_prefix(obj["source_id"])
-        transl: dict = req.ctx.translations
-
-        record_type: str = obj.get("record_type_s", "item")
-        source_type: str = obj.get("source_type_s", "unspecified")
-        content_types: list[str] = obj.get("content_types_sm", [])
-
-        source_types_block: dict = create_source_types_block(
-            record_type, source_type, content_types, transl
-        )
-
-        return {
-            "sectionLabel": transl.get("records.item_part_of"),
-            "type": "rism:PartOfSection",
-            "source": {
-                "id": get_identifier(req, "sources.source", source_id=parent_source_id),
-                "type": "rism:Source",
-                "typeLabel": transl.get("records.source"),
-                "sourceTypes": source_types_block,
-                "label": {"none": [parent_title]},
-            },
-        }
+        return PartOfSection(obj, context=self.context).serialized
 
     def get_rendered(self, obj: SolrResult) -> list | None:
         if not obj.get("has_notation_b", False):

@@ -8,13 +8,11 @@ from search_server.helpers.display_translators import (
     clef_translator,
     key_mode_value_translator,
 )
-from search_server.helpers.formatters import format_incipit_label, format_source_label
+from search_server.helpers.formatters import format_incipit_label
 from search_server.helpers.identifiers import get_identifier, strip_prefix
-from search_server.helpers.record_types import create_source_types_block
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import render_pae
-from search_server.resources.sources.base_source import BaseSource
-from search_server.resources.works.base_work import BaseWork
+from search_server.resources.shared.part_of import PartOfSection
 
 log = logging.getLogger("mp_server")
 
@@ -42,33 +40,9 @@ class IncipitsSection(ypres.AsyncDictSerializer):
         if not self.context.get("direct_request"):
             return None
 
-        req = self.context["request"]
-        transl: dict = req.ctx.translations
-        ident: str = get_identifier(req, "sources.source", source_id=obj["id"])
-
-        if "standard_titles_json" not in obj:
-            label = {"none": [obj.get("main_title_s", "[No title]")]}
-        else:
-            label = format_source_label(obj["standard_titles_json"], transl)
-
-        source_type: str = obj.get("source_type_s", "unspecified")
-        content_identifiers: list[str] = obj.get("content_types_sm", [])
-        record_type: str = obj.get("record_type_s", "item")
-
-        source_types_block = create_source_types_block(
-            record_type, source_type, content_identifiers, transl
-        )
-
-        return {
-            "label": transl.get("records.item_part_of"),
-            "source": {
-                "id": ident,
-                "type": "rism:Source",
-                "typeLabel": transl.get("records.source"),
-                "sourceTypes": source_types_block,
-                "label": {"none": [label]},
-            },
-        }
+        return PartOfSection(
+            obj, context={"request": self.context["request"], "primary": "incipit"}
+        ).serialized
 
     async def get_items(self, obj: SolrResult) -> list | None:
         fq: list = [f"source_id:{obj.get('id')}", "type:incipit"]
@@ -118,18 +92,8 @@ class WorkIncipitsSection(ypres.AsyncDictSerializer):
             return None
 
         req = self.context["request"]
-        transl = req.ctx.translations
-        ident: str = get_identifier(req, "works.work", work_id=obj["id"])
 
-        return {
-            "label": transl["records.item_part_of"],
-            "work": {
-                "id": ident,
-                "type": "rism:Work",
-                "typeLabel": transl["records.work"],
-                "label": {"none": [obj.get("standard_title_s")]},
-            },
-        }
+        return PartOfSection(obj, context={"request": req}).serialized
 
     async def get_items(self, obj: SolrResult) -> list | None:
         fq: list = [f"work_id:{obj['id']}", "type:incipit"]
@@ -190,27 +154,30 @@ class Incipit(ypres.AsyncDictSerializer):
 
         return {"none": [label]}
 
-    async def get_part_of(self, obj: SolrResult) -> dict | None:
+    def get_part_of(self, obj: SolrResult) -> dict | None:
         if not self.context.get("direct_request"):
             return None
 
-        req = self.context["request"]
-        parent_type = obj["parent_type_s"]
-        transl: dict = req.ctx.translations
-
-        # TODO: This should probably be changed to 'incipit part of'
-        d = {
-            "label": transl.get("records.item_part_of"),
-        }
-
-        if parent_type == "work":
-            d["work"] = await BaseWork(obj, context={"request": req}).serialized
-        elif parent_type == "inventory_item":
-            d["inventory"] = {"message": "TODO"}  # TODO!
-        else:
-            d["source"] = await BaseSource(obj, context={"request": req}).serialized
-
-        return d
+        return PartOfSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
+        # req = self.context["request"]
+        # parent_type = obj["parent_type_s"]
+        # transl: dict = req.ctx.translations
+        #
+        # # TODO: This should probably be changed to 'incipit part of'
+        # d = {
+        #     "label": transl.get("records.item_part_of"),
+        # }
+        #
+        # if parent_type == "work":
+        #     d["work"] = await BaseWork(obj, context={"request": req}).serialized
+        # elif parent_type == "inventory_item":
+        #     d["inventory"] = {"message": "TODO"}  # TODO!
+        # else:
+        #     d["source"] = await BaseSource(obj, context={"request": req}).serialized
+        #
+        # return d
 
     def get_properties(self, obj: SolrResult) -> dict | None:
         # If no notation info in the Solr result, don't bother with this.

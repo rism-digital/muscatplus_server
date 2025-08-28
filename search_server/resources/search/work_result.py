@@ -6,6 +6,7 @@ from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.languages import add_to_each_translation, choose_plural
 from search_server.helpers.solr_connection import SolrResult
 from search_server.helpers.vrv import render_pae
+from search_server.resources.shared.part_of import PartOfSection
 
 
 class WorkSearchResult(ypres.DictSerializer):
@@ -13,7 +14,7 @@ class WorkSearchResult(ypres.DictSerializer):
     slabel = ypres.MethodField(label="label")
     result_type = ypres.StaticField(label="type", value="rism:Work")
     type_label = ypres.MethodField(label="typeLabel")
-    part_of = ypres.MethodField(label="partOf")
+    # part_of = ypres.MethodField(label="partOf")
     summary = ypres.MethodField()
     flags = ypres.MethodField()
     rendered = ypres.MethodField()
@@ -33,30 +34,14 @@ class WorkSearchResult(ypres.DictSerializer):
 
         return transl.get("records.work")
 
-    def get_part_of(self, obj: SolrResult) -> dict | None:
-        if "works_catalogue_json" not in obj:
-            return None
-
-        req = self.context["request"]
-        transl: dict = req.ctx.translations
-
-        wcg: dict = obj["works_catalogue_json"]
-
-        catalogue_id: str = strip_prefix(wcg["id"])
-        parent_title: str = wcg["formatted"]
-
-        return {
-            "label": transl.get("records.item_part_of"),
-            "type": "rism:PartOfSection",
-            "publication": {
-                "id": get_identifier(
-                    req, "publications.publication", publication_id=catalogue_id
-                ),
-                "type": "rism:Publication",
-                "typeLabel": transl.get("records.work_catalog"),
-                "label": {"none": [parent_title]},
-            },
-        }
+    # TBD if this is needed.
+    # def get_part_of(self, obj: SolrResult) -> dict | None:
+    #     if "works_catalogue_json" not in obj:
+    #         return None
+    #
+    #     return PartOfSection(
+    #         obj, context={"request": self.context["request"]}
+    #     ).serialized
 
     def get_summary(self, obj: SolrResult) -> dict | None:
         field_config: dict = {
