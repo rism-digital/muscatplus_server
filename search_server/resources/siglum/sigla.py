@@ -72,7 +72,7 @@ async def handle_siglum_search_request(req) -> dict | None:
 
     query_solr_fields: dict[str, str] = {
         "name": "name_al",
-        "siglum": "siglum_s",
+        "siglum": "siglum_kwf",  # This is case-sensitive but folding
         "city": "city_ft",
         "country": "country_names_ft",
         "all": "",
@@ -87,8 +87,8 @@ async def handle_siglum_search_request(req) -> dict | None:
     if query_type == "all":
         solr_query = f"{query}"
     elif query_type == "siglum":
-        # We need to do strict left-edge matching, which we can get if we do a regex search.
-        solr_query = f"{query_field}:/{query}.*/"
+        # We need to do left-edge matching, so add a wildcard at the end.
+        solr_query = f"{query_field}:{query}*"
     else:
         solr_query = f"{query_field}:{query}"
 
