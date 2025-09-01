@@ -177,7 +177,6 @@ def parse_row_number_from_request(req, custom_row_number: str | None) -> int:
     this_page_qstr: str | None = (
         custom_row_number if custom_row_number else req.args.get(ROWS_QUERY_PARAM, None)
     )
-    print(this_page_qstr)
     return parse_row_number(req, this_page_qstr)
 
 
