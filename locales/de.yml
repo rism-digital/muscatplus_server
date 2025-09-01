@@ -1048,11 +1048,11 @@ de:
     ERR_065_MREST_INVALID_MEASURE: Ein Takt Pause kann nichts anderes enthalten.
     ERR_066_EMPTY_CONTAINER: Zwischen den Sonderzeichen für Gruppen von Vorschlagsnoten oder Balken müssen Noten stehen.
   work_catalogue:
-    not_work_catalogue: Not work catalog
-    work_catalogue_alternate: Alternate
-    work_catalogue_complete: Completed
-    work_catalogue_in_preparation: Eligible
-    work_catalogue_partial: Partially completed
+    not_work_catalogue: Kein Werkverzeichnis
+    work_catalogue_alternate: Alternative
+    work_catalogue_complete: Abgeschlossen
+    work_catalogue_in_preparation: Geeignet
+    work_catalogue_partial: Teilweise abgeschlossen
   rism_online:
     manuscript: "Handschrift"
     printed: "Gedruckt"

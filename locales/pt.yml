@@ -1048,11 +1048,11 @@ pt:
     ERR_065_MREST_INVALID_MEASURE: Uma medida com um repouso não pode incluir mais nada.
     ERR_066_EMPTY_CONTAINER: Uma apogiatura ou uma ligadura não podem ser eliminados.
   work_catalogue:
-    not_work_catalogue: Not work catalog
-    work_catalogue_alternate: Alternate
-    work_catalogue_complete: Completed
-    work_catalogue_in_preparation: Eligible
-    work_catalogue_partial: Partially completed
+    not_work_catalogue: Não é catálogo das obras
+    work_catalogue_alternate: Alternativo
+    work_catalogue_complete: Concluído
+    work_catalogue_in_preparation: Elegível
+    work_catalogue_partial: Parcialmente concluído
   rism_online:
     manuscript: "Manuscrito"
     printed: "Impresso"

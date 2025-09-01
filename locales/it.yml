@@ -1048,11 +1048,11 @@ it:
     ERR_065_MREST_INVALID_MEASURE: Una battuta con una pausa per l'intera battuta non può includere altro.
     ERR_066_EMPTY_CONTAINER: Un gruppetto o una travatura non possono essere vuoti.
   work_catalogue:
-    not_work_catalogue: Not work catalog
-    work_catalogue_alternate: Alternate
-    work_catalogue_complete: Completed
-    work_catalogue_in_preparation: Eligible
-    work_catalogue_partial: Partially completed
+    not_work_catalogue: Non un catalogo delle opere
+    work_catalogue_alternate: Catalogo alternativo
+    work_catalogue_complete: Completato
+    work_catalogue_in_preparation: Idoneo
+    work_catalogue_partial: Parzialmente processato
   rism_online:
     manuscript: "Manoscritto"
     printed: "A stampa"

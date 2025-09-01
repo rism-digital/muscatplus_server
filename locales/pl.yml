@@ -1048,11 +1048,11 @@ pl:
     ERR_065_MREST_INVALID_MEASURE: Miara taktu pustego nie może zawierać innych znaków.
     ERR_066_EMPTY_CONTAINER: Grupa ozdobników lub belkowanie nie mogą być puste.
   work_catalogue:
-    not_work_catalogue: Not work catalog
-    work_catalogue_alternate: Alternate
-    work_catalogue_complete: Completed
-    work_catalogue_in_preparation: Eligible
-    work_catalogue_partial: Partially completed
+    not_work_catalogue: To nie jest katalog dzieł
+    work_catalogue_alternate: Alternatywne
+    work_catalogue_complete: Kompletne
+    work_catalogue_in_preparation: Kwalifikujące się
+    work_catalogue_partial: Częściowo kompletne
   rism_online:
     manuscript: "Rękopis"
     printed: "Druk"
