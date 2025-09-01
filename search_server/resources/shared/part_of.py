@@ -14,85 +14,89 @@ log = logging.getLogger("mp_server")
 class PartOfSection(ypres.DictSerializer):
     slabel = ypres.MethodField(label="label")
     stype = ypres.StaticField(label="type", value="rism:PartOfSection")
-    related = ypres.MethodField()
+    items = ypres.MethodField()
 
     def get_slabel(self, obj: dict) -> dict:
         req = self.context["request"]
         transl: dict = req.ctx.translations
         return transl["records.item_part_of"]
 
-    def get_related(self, obj: dict) -> dict:
-        return RelatedBlock(obj, context=self.context).serialized
-
-
-class RelatedBlock(ypres.DictSerializer):
-    primary = ypres.MethodField()
-    secondary = ypres.MethodField()
-
-    def get_primary(self, obj: dict) -> dict:
+    def get_items(self, obj: dict) -> list | None:
         req = self.context["request"]
-        transl = req.ctx.translations
-        obj_type = obj["type"]
+        transl: dict = req.ctx.translations
 
+        obj_type = obj["type"]
         match obj_type:
             case "work":
-                return _get_work_part_of(req, obj, transl)
+                all_catalogues = [_get_work_part_of(req, obj, transl)]
+                alt_publications: list | None = obj.get(
+                    "secondary_works_catalogue_json"
+                )
+                if not alt_publications:
+                    return all_catalogues
+
+                for wp in alt_publications:
+                    all_catalogues.append(_get_work_block(req, wp, transl))
+
+                return all_catalogues
             case "source":
                 # A special case where the list of incipits for a source is rendered from the Source record.
                 # The context will have "primary": "incipit" on it to differentiate.
                 if self.context.get("primary") == "incipit":
-                    return _get_source_part_of(req, obj, transl)
-                return _get_source_member_part_of(req, obj, transl)
+                    return [_get_source_part_of(req, obj, transl)]
+                return [_get_source_member_part_of(req, obj, transl)]
 
             case "incipit":
-                return _get_incipit_part_of(req, obj, transl)
+                return [_get_incipit_part_of(req, obj, transl)]
             case "holding":
-                return _get_source_part_of(req, obj, transl)
+                return [_get_source_part_of(req, obj, transl)]
             case "dobject":
-                return _get_dobject_part_of(req, obj, transl)
+                return [_get_dobject_part_of(req, obj, transl)]
             case _:
                 log.error(
                     "Could not determine object type %s for %s", obj_type, obj["id"]
                 )
-                return {}
 
-    def get_secondary(self, obj: dict) -> list[dict] | None:
-        req = self.context["request"]
-        transl = req.ctx.translations
-
-        alt_publications: list | None = obj.get("secondary_works_catalogue_json")
-        if not alt_publications:
-            return None
-
-        secondary: list = []
-        for wp in alt_publications:
-            print(wp)
-            secondary.append(_get_work_block(req, wp, transl))
-
-        return secondary
+        return None
 
 
 def _get_work_part_of(req, obj: dict, translations: dict) -> dict:
     wc = obj["works_catalogue_json"]
-    print(wc)
-    return _get_work_block(req, wc, translations)
+    return _get_work_block(req, wc, translations, is_primary=True)
 
 
-def _get_work_block(req, wc: dict, translations: dict) -> dict:
+def _get_work_block(
+    req, wc: dict, translations: dict, is_primary: bool = False
+) -> dict:
     wc_id = strip_prefix(wc["id"])
     type_label: dict = translations["records.work_catalog"]
 
+    short_name: str | None = wc.get("short_name")
+    page_number: str | None = wc.get("pages")
+
+    work_number: str
+    if short_name and page_number:
+        work_number = f"{short_name} {page_number}"
+    else:
+        work_number = "[No identifier]"
+
     return {
-        "id": get_identifier(req, "publications.publication", publication_id=wc_id),
-        "label": {"none": [wc["formatted"]]},
-        "type": "rism:Publication",
-        "typeLabel": type_label,
-        "status": {
-            "label": work_catalogue_status_translator(
-                wc["work_catalogue_status"], translations
-            ),
-            "value": wc["work_catalogue_status"],
+        "relationshipType": "rism:PrimaryPartOf"
+        if is_primary
+        else "rism:SecondaryPartOf",
+        "relatedTo": {
+            "id": get_identifier(req, "publications.publication", publication_id=wc_id),
+            "label": {"none": [wc["title"]]},
+            "type": "rism:Publication",
+            "typeLabel": type_label,
+            "status": {
+                "label": work_catalogue_status_translator(
+                    wc["work_catalogue_status"], translations
+                ),
+                "value": wc["work_catalogue_status"],
+            },
         },
+        "workNumber": work_number,
     }
 
 
@@ -118,11 +122,14 @@ def _get_source_part_of(req, obj: dict, translations: dict) -> dict:
     )
 
     return {
-        "id": ident,
-        "type": "rism:Source",
-        "typeLabel": translations.get("records.source"),
-        "sourceTypes": source_types_block,
-        "label": label,
+        "relationshipType": "rism:PrimaryPartOf",
+        "relatedTo": {
+            "id": ident,
+            "type": "rism:Source",
+            "typeLabel": translations.get("records.source"),
+            "sourceTypes": source_types_block,
+            "label": label,
+        },
     }
 
 
@@ -154,11 +161,14 @@ def _get_source_member_part_of(req, obj: dict, translations: dict) -> dict:
     )
 
     return {
-        "id": ident,
-        "type": "rism:Source",
-        "typeLabel": translations.get("records.source"),
-        "sourceTypes": source_types_block,
-        "label": {"none": [label]},
+        "relationshipType": "rism:PrimaryPartOf",
+        "relatedTo": {
+            "id": ident,
+            "type": "rism:Source",
+            "typeLabel": translations.get("records.source"),
+            "sourceTypes": source_types_block,
+            "label": {"none": [label]},
+        },
     }
 
 
@@ -177,19 +187,25 @@ def _get_incipit_part_of(req, obj: dict, translations: dict) -> dict:
                 record_type, source_type, content_types, translations
             )
             return {
-                "id": get_identifier(req, "sources.source", source_id=source_id),
-                "type": "rism:Source",
-                "typeLabel": translations.get("records.source"),
-                "sourceTypes": source_types_block,
-                "label": {"none": [label]},
+                "relationshipType": "rism:PrimaryPartOf",
+                "relatedTo": {
+                    "id": get_identifier(req, "sources.source", source_id=source_id),
+                    "type": "rism:Source",
+                    "typeLabel": translations.get("records.source"),
+                    "sourceTypes": source_types_block,
+                    "label": {"none": [label]},
+                },
             }
         case "work":
             work_id: str = strip_prefix(obj["id"])
             return {
-                "id": get_identifier(req, "works.work", work_id=work_id),
-                "type": "rism:Work",
-                "typeLabel": translations["records.work"],
-                "label": {"none": [obj.get("standard_title_s")]},
+                "relationshipType": "rism:PrimaryPartOf",
+                "relatedTo": {
+                    "id": get_identifier(req, "works.work", work_id=work_id),
+                    "type": "rism:Work",
+                    "typeLabel": translations["records.work"],
+                    "label": {"none": [obj.get("standard_title_s")]},
+                },
             }
         case _:
             return {}
@@ -201,21 +217,23 @@ def _get_dobject_part_of(req, obj: dict, translations: dict) -> dict:
     linked_id: str = strip_prefix(linked_id_val)
     label = {"none": [f"{obj.get('linked_name_s', '[No name]')}"]}
 
+    related_to: dict
     if linked_record_type == "source":
-        return {
+        related_to = {
             "id": get_identifier(req, "sources.source", source_id=linked_id),
             "label": label,
             "type": "rism:Source",
         }
     elif linked_record_type == "person":
-        return {
+        related_to = {
             "id": get_identifier(req, "people.person", person_id=linked_id),
             "label": label,
             "type": "rism:Person",
         }
     elif linked_record_type == "holding":
+        # Get the source ID from the request path.
         source_id: str = req.match_info.get("source_id", "no-id")
-        return {
+        related_to = {
             "id": get_identifier(
                 req, "sources.holding", source_id=source_id, holding_id=linked_id
             ),
@@ -223,7 +241,7 @@ def _get_dobject_part_of(req, obj: dict, translations: dict) -> dict:
             "type": "rism:Exemplar",
         }
     elif linked_record_type == "institution":
-        return {
+        related_to = {
             "id": get_identifier(
                 req, "institutions.institution", institution_id=linked_id
             ),
@@ -232,8 +250,13 @@ def _get_dobject_part_of(req, obj: dict, translations: dict) -> dict:
         }
     else:
         log.error("Could not determine part-of for %s", obj["id"])
-        return {
+        related_to = {
             "id": "no-id",
             "type": "rism:UnknownObject",
             "label": label,
         }
+
+    return {
+        "relationshipType": "rism:PrimaryPartOf",
+        "relatedTo": related_to,
+    }
