@@ -94,7 +94,7 @@ def render_pae(
         custom_options["pageHeight"] = 100
 
     if enlarged:
-        custom_options["pageWidth"] = 1200
+        custom_options["pageWidth"] = 1400
     else:
         custom_options["pageWidth"] = 2000
 

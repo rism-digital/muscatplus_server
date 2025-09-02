@@ -6,7 +6,6 @@ from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.languages import add_to_each_translation, choose_plural
 from search_server.helpers.solr_connection import SolrResult
 from search_server.helpers.vrv import render_pae
-from search_server.resources.shared.part_of import PartOfSection
 
 
 class WorkSearchResult(ypres.DictSerializer):
@@ -88,7 +87,9 @@ class WorkSearchResult(ypres.DictSerializer):
 
         is_mensural: bool = obj.get("is_mensural_b", False)
 
-        svg, _ = render_pae(pae_code, is_mensural=is_mensural, hard_truncate=True)
+        svg, _ = render_pae(
+            pae_code, is_mensural=is_mensural, hard_truncate=True, enlarged=True
+        )
 
         if not svg:
             return None
