@@ -11,7 +11,7 @@ from search_server.helpers.display_translators import (
 from search_server.helpers.formatters import format_incipit_label
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
-from search_server.helpers.vrv import render_pae
+from search_server.helpers.vrv import RenderedIncipit, render_pae
 from search_server.resources.shared.part_of import PartOfSection
 
 log = logging.getLogger("mp_server")
@@ -240,11 +240,9 @@ class Incipit(ypres.AsyncDictSerializer):
         req = self.context["request"]
         is_mensural: bool = obj.get("is_mensural_b", False)
 
-        # Set Verovio to render random IDs for this so that we don't have any ID collisions with
-        # search result highlighting
-        rendered_pae: tuple | None = render_pae(
-            pae_code, use_crc=False, is_mensural=is_mensural
-        )
+        # NB: Do not use the CRC for the incipit, since it will likely conflict with
+        # other rendered instances of the same incipit on the same page.
+        rendered_pae: RenderedIncipit = render_pae(pae_code, is_mensural=is_mensural)
 
         if not rendered_pae:
             log.error("Could not load music incipit for %s", obj.get("id"))

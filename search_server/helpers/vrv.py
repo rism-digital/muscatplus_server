@@ -4,7 +4,6 @@ import re
 import tempfile
 import urllib.parse
 from difflib import Match
-from functools import lru_cache
 
 import cdifflib  # type: ignore
 import httpx
@@ -48,18 +47,6 @@ type RenderedIncipit = tuple[str | None, str | None]
 CSS_REPLACEMENT_PATTERN: re.Pattern = re.compile(
     r'<style type="text/css">(?P<existing_style>.*)</style>'
 )
-
-
-@lru_cache(maxsize=256)
-def _render_incipit_pae(pae_code: str, is_mensural: bool) -> RenderedIncipit:
-    rendered_pae: RenderedIncipit = render_pae(
-        pae_code, use_crc=True, is_mensural=is_mensural
-    )
-
-    if not rendered_pae[0]:
-        return None, None
-
-    return rendered_pae
 
 
 def render_pae(
@@ -227,11 +214,11 @@ def render_mei(req, incipit: dict) -> str | None:
 
 
 def render_png(req, incipit: str) -> bytes | None:
-    rendered: tuple | None = render_pae(incipit)
-    if not rendered:
+    rendered: RenderedIncipit = render_pae(incipit)
+    rendered_svg, _ = rendered
+    if not rendered_svg:
         return None
 
-    rendered_svg, _ = rendered
     cfg: dict = req.app.ctx.config
     # Create the temporary image file
     fd, tmpfile = tempfile.mkstemp()
@@ -361,9 +348,9 @@ def render_incipit(
         # If we don't do the highlighting phase, exit now. We don't need to use
         # the CRC for the incipit.
         log.info("No query features provided, skipping highlighting")
-        return render_pae(pae_code, use_crc=False, is_mensural=is_mensural)
+        return render_pae(pae_code, is_mensural=is_mensural)
 
-    svg, b64midi = render_pae(pae_code, is_mensural=is_mensural)
+    svg, b64midi = render_pae(pae_code, use_crc=True, is_mensural=is_mensural)
     if not svg:
         log.error("Could not load music incipit for %s", obj.get("id"))
         return None, None

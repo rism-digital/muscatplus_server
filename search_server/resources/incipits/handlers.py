@@ -5,6 +5,7 @@ from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import (
+    RenderedIncipit,
     create_pae_from_request,
     render_mei,
     render_pae,
@@ -119,14 +120,15 @@ async def handle_incipit_render(req) -> response.HTTPResponse:
     pae: str = create_pae_from_request(req)
 
     # Generate random IDs to avoid ID collisions on the page.
-    rendered_pae: tuple | None = render_pae(pae, use_crc=False, enlarged=True)
-    if not rendered_pae:
+    rendered_pae: RenderedIncipit = render_pae(pae, enlarged=True)
+    svg, _ = rendered_pae
+
+    if not svg:
         return response.json(
             {"message": "There was a problem rendering the Plaine and Easie notation"},
             status=500,
         )
 
-    svg, _ = rendered_pae
     return response.text(svg, content_type="image/svg+xml;charset=utf8")
 
 
