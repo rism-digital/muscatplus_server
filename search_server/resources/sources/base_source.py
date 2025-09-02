@@ -15,28 +15,6 @@ from search_server.resources.shared.part_of import PartOfSection
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import Relationship
 
-# The Solr fields necessary to construct a base source record. Helps cut down on internal Solr
-# communication by limiting the fields to only those that are necessary.
-SOLR_FIELDS_FOR_BASE_SOURCE: list = [
-    "id",
-    "type",
-    "main_title_s",
-    "material_source_types_sm",
-    "material_content_types_sm",
-    "shelfmark_s",
-    "siglum_s",
-    "source_membership_json",
-    "source_id",
-    "creator_name_s",
-    "source_type_s",
-    "content_types_sm",
-    "record_type_s",
-    "created",
-    "updated",
-    "main_title_ans",
-    "standard_titles_json",
-]
-
 log = logging.getLogger("mp_server")
 
 
