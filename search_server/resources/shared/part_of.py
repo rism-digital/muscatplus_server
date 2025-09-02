@@ -108,10 +108,10 @@ def _get_source_part_of(req, obj: dict, translations: dict) -> dict:
         obj_id = strip_prefix(obj["id"])
     ident: str = get_identifier(req, "sources.source", source_id=obj_id)
 
-    if "standard_titles_json" not in obj:
-        label = {"none": [obj.get("main_title_s", "[No title]")]}
-    else:
-        label = format_source_label(obj["standard_titles_json"], translations)
+    # if "standard_titles_json" not in obj:
+    #     label = {"none": [obj.get("main_title_s", "[No title]")]}
+    # else:
+    label = format_source_label(obj["standard_titles_json"], translations)
 
     source_type: str = obj.get("source_type_s", "unspecified")
     content_identifiers: list[str] = obj.get("content_types_sm", [])
@@ -177,7 +177,7 @@ def _get_incipit_part_of(req, obj: dict, translations: dict) -> dict:
 
     match parent_object_type:
         case "source":
-            label = obj["main_title_s"]
+            label = format_source_label(obj["standard_titles_json"], translations)
             source_id: str = strip_prefix(obj["source_id"])
             record_type: str = obj.get("record_type", "item")
             source_type: str = obj.get("source_type", "unspecified")
@@ -193,7 +193,7 @@ def _get_incipit_part_of(req, obj: dict, translations: dict) -> dict:
                     "type": "rism:Source",
                     "typeLabel": translations.get("records.source"),
                     "sourceTypes": source_types_block,
-                    "label": {"none": [label]},
+                    "label": label,
                 },
             }
         case "work":
