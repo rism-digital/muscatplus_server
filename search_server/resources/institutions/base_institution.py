@@ -73,7 +73,10 @@ class OrganizationDetails(ypres.DictSerializer):
             "city_s": ("records.city", None),
             "alternate_names_sm": ("records.other_form_of_name", None),
             "parallel_names_sm": ("records.parallel_form", None),
-            "institution_types_sm": ("records.type_institution", None),
+            "institution_types_sm": (
+                "records.type_institution",
+                institution_type_translator,
+            ),
             "country_codes_sm": ("records.country", country_codes_labels_translator),
             "former_sigla_sm": ("records.former_sigla", None),
             "full_rism_id": ("records.rism_id_number", None),

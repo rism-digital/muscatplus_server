@@ -2,6 +2,25 @@ import re
 from collections import defaultdict
 from re import Match
 
+_INSTITUTION_TYPE_MAP: dict = {
+    "Archive": "records.archive",
+    "Bookseller": "records.bookseller",
+    "Congress": "records.congress",
+    "Copyist": "records.copyist",
+    "Documentation center": "records.documentation_center",
+    "Institution": "records.institution",
+    "Library": "records.library",
+    "Museum": "records.museum",
+    "Papermaker": "records.papermaker",
+    "Performer": "records.performer",
+    "Publisher": "records.publisher",
+    "Other": "records.other",
+    "Printer": "records.printer",
+    "Research institute": "records.research_institute",
+    "Private collection": "records.private_collection",
+    "Project": "records.project",
+}
+
 _WORK_CATALOGUE_STATUS_MAP: dict = {
     "completed": "work_catalogue.work_catalogue_complete",
     "partial": "work_catalogue.work_catalogue_partial",
@@ -531,6 +550,10 @@ def __lookup_translations_list(
                 result[lcode].extend([trans_itm])
 
     return dict(result)
+
+
+def institution_type_translator(values: list, translations: dict) -> dict:
+    return __lookup_translations_list(values, translations, _INSTITUTION_TYPE_MAP)
 
 
 def work_catalogue_status_translator(value: str, translations: dict) -> dict:
