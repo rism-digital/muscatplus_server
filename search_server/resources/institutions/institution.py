@@ -1,10 +1,9 @@
-import re
 from collections.abc import Callable
 
 import ypres
 
 from search_server.helpers.display_fields import assemble_label_value
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.languages import merge_language_maps
 from search_server.helpers.solr_connection import SolrResult
 from search_server.helpers.utilities import is_number
@@ -28,7 +27,7 @@ class Institution(BaseInstitution):
 
     def get_sources(self, obj: SolrResult) -> dict | None:
         institution_id = obj["institution_id"]
-        ident: str = re.sub(ID_SUB, "", institution_id)
+        ident: str = strip_prefix(institution_id)
         source_count: int = obj.get("total_sources_i", 0)
 
         # if no sources are attached OR this is the 's.n.' record, return 0 sources attached.
@@ -185,7 +184,7 @@ class LocationAddressSection(ypres.DictSerializer):
             return None
 
         institution_id: str = obj["id"]
-        ident: str = re.sub(ID_SUB, "", institution_id)
+        ident: str = strip_prefix(institution_id)
 
         geojson_uri: str = get_identifier(
             req, "institutions.geo_coordinates", institution_id=ident

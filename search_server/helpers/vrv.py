@@ -10,7 +10,7 @@ import httpx
 import orjson
 import verovio
 
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.incipit_search_fields import MODE_FIELDS
 from search_server.helpers.resvg import render_svg
 from search_server.helpers.solr_connection import SolrResult
@@ -170,7 +170,7 @@ def render_mei(req, incipit: dict) -> str | None:
     vrv_tk.setOptions(vrv_opts)
     vrv_tk.setInputFrom("pae")
 
-    source_id: str = re.sub(ID_SUB, "", incipit["source_id"])
+    source_id: str = strip_prefix(incipit["source_id"])
     work_num: str = incipit["work_num_s"]
 
     source_url: str = get_identifier(req, "sources.source", source_id=source_id)

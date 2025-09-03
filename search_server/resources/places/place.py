@@ -1,11 +1,10 @@
 import logging
-import re
 
 import ypres
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.institutions.base_institution import (
     BaseInstitution,
@@ -41,7 +40,7 @@ class Place(ypres.AsyncDictSerializer):
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context["request"]
-        place_id: str = re.sub(ID_SUB, "", obj["id"])
+        place_id: str = strip_prefix(obj["id"])
 
         return get_identifier(req, "places.place", place_id=place_id)
 

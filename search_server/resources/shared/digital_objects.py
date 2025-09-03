@@ -1,10 +1,9 @@
 import logging
-import re
 
 import ypres
 from small_asc.client import Results
 
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import render_url
 from search_server.resources.shared.part_of import PartOfSection
@@ -21,7 +20,7 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
     def get_doid(self, obj: SolrResult) -> str:
         req = self.context["request"]
         obj_type: str = obj["type"]
-        obj_id: str = re.sub(ID_SUB, "", obj["id"])
+        obj_id: str = strip_prefix(obj["id"])
         # linked_record_type: str = obj["linked_type_s"]
         # linked_id_val: str = obj["linked_id"]
         # linked_id: str = re.sub(ID_SUB, "", linked_id_val)
@@ -31,7 +30,7 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
         elif obj_type == "person":
             return get_identifier(req, "people.digital_object_list", person_id=obj_id)
         elif obj_type == "holding":
-            source_id = re.sub(ID_SUB, "", obj["source_id"])
+            source_id = strip_prefix(obj["source_id"])
             return get_identifier(
                 req,
                 "sources.holding_digital_object_list",
@@ -84,9 +83,9 @@ class DigitalObject(ypres.AsyncDictSerializer):
         req = self.context["request"]
         linked_record_type: str = obj["linked_type_s"]
         linked_id_val: str = obj["linked_id"]
-        linked_id: str = re.sub(ID_SUB, "", linked_id_val)
+        linked_id: str = strip_prefix(linked_id_val)
         dobject_id_val: str = obj["id"]
-        dobject_id: str = re.sub(ID_SUB, "", dobject_id_val)
+        dobject_id: str = strip_prefix(dobject_id_val)
 
         if linked_record_type == "source":
             return get_identifier(

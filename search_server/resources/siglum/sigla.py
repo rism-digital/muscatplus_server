@@ -4,7 +4,7 @@ from urllib.parse import unquote
 
 from small_asc.client import JsonAPIRequest, Results
 
-from search_server.helpers.identifiers import ID_SUB
+from search_server.helpers.identifiers import strip_prefix
 from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.search.pagination import parse_page_number
 from search_server.resources.search.search_results import SearchResults
@@ -18,7 +18,7 @@ async def handle_institution_sigla_request(req, siglum: str) -> str | None:
     incoming_sig: str = unquote(siglum)
 
     # \w in the pattern matches the underscore, which we don't want to match here.
-    # If the regex doesn't match the return value will be None, in which case it's
+    # If the regex doesn't match, the return value will be None, in which case it's
     # a problematic siglum.
     if "_" in incoming_sig or re.fullmatch(INVALID_SIGLUM, incoming_sig) is None:
         log.warning(
@@ -43,7 +43,7 @@ async def handle_institution_sigla_request(req, siglum: str) -> str | None:
         )
 
     institution_record_id: str = institution_record.docs[0]["id"]
-    institution_id = re.sub(ID_SUB, "", institution_record_id)
+    institution_id = strip_prefix(institution_record_id)
 
     return f"/institutions/{institution_id}"
 

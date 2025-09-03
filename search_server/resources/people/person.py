@@ -1,5 +1,4 @@
 import logging
-import re
 
 import ypres
 
@@ -8,7 +7,7 @@ from search_server.helpers.display_translators import (
     person_gender_translator,
     person_name_variant_labels_translator,
 )
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
@@ -70,7 +69,7 @@ class Person(BasePerson):
             return None
 
         person_id: str = obj["person_id"]
-        ident: str = re.sub(ID_SUB, "", person_id)
+        ident: str = strip_prefix(person_id)
 
         return {
             "url": get_identifier(

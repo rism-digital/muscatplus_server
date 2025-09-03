@@ -1,6 +1,5 @@
 import itertools
 import logging
-import re
 from collections.abc import Callable
 
 import ypres
@@ -14,9 +13,8 @@ from search_server.helpers.display_translators import (
 )
 from search_server.helpers.identifiers import (
     EXTERNAL_IDS,
-    ID_SUB,
-    PROJECT_ID_SUB,
     get_identifier,
+    strip_prefix,
 )
 
 log = logging.getLogger("mp_server")
@@ -159,7 +157,7 @@ def _related_to_person(req, obj: dict) -> dict:
     else:
         name = f"{obj.get('name')}"
 
-    person_id = re.sub(ID_SUB, "", obj["person_id"])
+    person_id = strip_prefix(obj["person_id"])
 
     return {
         "id": get_identifier(req, "people.person", person_id=person_id),
@@ -177,7 +175,7 @@ def _related_to_institution(req, obj: dict) -> dict:
     if "siglum" in obj:
         name = f"{name} ({obj.get('siglum')})"
 
-    institution_id = re.sub(ID_SUB, "", obj["institution_id"])
+    institution_id = strip_prefix(obj["institution_id"])
 
     return {
         "id": get_identifier(
@@ -189,7 +187,7 @@ def _related_to_institution(req, obj: dict) -> dict:
 
 
 def _related_to_place(req, obj: dict) -> dict:
-    place_id = re.sub(ID_SUB, "", obj["place_id"])
+    place_id = strip_prefix(obj["place_id"])
 
     return {
         "id": get_identifier(req, "places.place", place_id=place_id),
@@ -206,7 +204,7 @@ def _related_to_source(req, obj: dict) -> dict:
     proj: str | None = obj.get("project")
 
     if proj and proj in {"diamm", "cantus"}:
-        source_id = re.sub(PROJECT_ID_SUB, "", obj["source_id"])
+        source_id = strip_prefix(obj["source_id"])
         prefix: str | None = EXTERNAL_IDS.get(obj["project"], {}).get("ident")
         if not prefix:
             # If, for some reason this isn't found, return the empty dict.
@@ -216,7 +214,7 @@ def _related_to_source(req, obj: dict) -> dict:
         suffix = f"{spath}/{source_id}"
         ident = prefix.format(ident=suffix)
     else:
-        source_id = re.sub(ID_SUB, "", obj["source_id"])
+        source_id = strip_prefix(obj["source_id"])
         ident = get_identifier(req, "sources.source", source_id=source_id)
 
     source_title: dict = title_json_value_translator(obj.get("title", []), transl)

@@ -1,4 +1,3 @@
-import re
 import textwrap
 from urllib.parse import urljoin
 
@@ -11,7 +10,11 @@ from search_server.helpers.formatters import (
     format_person_label,
     format_source_description,
 )
-from search_server.helpers.identifiers import ID_SUB, get_site, get_url_from_type
+from search_server.helpers.identifiers import (
+    get_site,
+    get_url_from_type,
+    strip_prefix,
+)
 
 
 class OpenGraph(ypres.DictSerializer):
@@ -24,7 +27,7 @@ class OpenGraph(ypres.DictSerializer):
 
     def get_record_url(self, obj: dict) -> str | None:
         req = self.context.get("request")
-        record_id: str = re.sub(ID_SUB, "", obj["id"])
+        record_id: str = strip_prefix(obj["id"])
         url = get_url_from_type(req, obj["type"], record_id)
 
         return url

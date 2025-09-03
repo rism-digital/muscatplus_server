@@ -1,5 +1,3 @@
-import re
-
 import ypres
 from small_asc.client import Results
 
@@ -12,7 +10,6 @@ from search_server.helpers.display_translators import (
 )
 from search_server.helpers.formatters import format_institution_label
 from search_server.helpers.identifiers import (
-    PROJECT_ID_SUB,
     get_identifier,
     strip_prefix,
 )
@@ -101,8 +98,8 @@ class Holding(ypres.AsyncDictSerializer):
             external_inst_val = obj["external_institution_id"]
             source_id_val = obj["source_id"]
 
-            institution_id = re.sub(PROJECT_ID_SUB, "", external_inst_val)
-            source_id = re.sub(PROJECT_ID_SUB, "", source_id_val)
+            institution_id: str = strip_prefix(external_inst_val)
+            source_id: str = strip_prefix(source_id_val)
 
             return get_identifier(
                 req,

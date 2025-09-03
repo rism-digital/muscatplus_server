@@ -1,23 +1,10 @@
-import re
-
 import sanic
-
-ID_SUB: re.Pattern = re.compile(
-    r"source_|person_|holding_|institution_|subject_|related_|place_|festival_|mg_|dobject_|work_|publication_"
-)
 
 
 def strip_prefix(ident: str) -> str:
     # Returns the last component of a solr document identifier,
     # the actual ID number.
     return ident.split("_")[-1]
-
-
-PROJECT_PATT: str = (
-    r"(?:diamm|cantus)_(?:source|person|holding|institution|organization|archive)_"
-)
-
-PROJECT_ID_SUB: re.Pattern = re.compile(PROJECT_PATT, re.VERBOSE)
 
 
 PROJECT_IDENTIFIERS = {

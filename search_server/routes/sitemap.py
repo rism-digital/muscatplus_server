@@ -1,11 +1,14 @@
 import math
-import re
 
 import sanic
 from sanic import Blueprint, response
 from small_asc.client import Results
 
-from search_server.helpers.identifiers import ID_SUB, get_site, get_url_from_type
+from search_server.helpers.identifiers import (
+    get_site,
+    get_url_from_type,
+    strip_prefix,
+)
 from search_server.helpers.solr_connection import SolrConnection
 
 sitemap_blueprint: Blueprint = Blueprint("sitemap")
@@ -67,7 +70,7 @@ async def sitemap_page(req, page_num: str):
     urlentries: list = []
     for result in res.docs:
         restype: str = result["type"]
-        resid: str = re.sub(ID_SUB, "", result["id"])
+        resid: str = strip_prefix(result["id"])
 
         url: str | None = get_url_from_type(req, restype, resid)
         if not url:

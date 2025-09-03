@@ -1,12 +1,11 @@
 import logging
-import re
 
 import ypres
 
 from search_server.helpers.identifiers import (
-    PROJECT_ID_SUB,
     PROJECT_IDENTIFIERS,
     get_identifier,
+    strip_prefix,
 )
 from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.institutions.institution import Institution
@@ -44,7 +43,7 @@ class ExternalRecord(ypres.AsyncDictSerializer):
         req = self.context["request"]
         project: str = obj["project_s"]
         srtype: str = obj["type"]
-        id_value: str = re.sub(PROJECT_ID_SUB, "", obj["id"])
+        id_value: str = strip_prefix(obj["id"])
 
         return get_identifier(
             req,

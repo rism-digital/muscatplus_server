@@ -1,10 +1,8 @@
-import re
-
 import ypres
 from small_asc.client import JsonAPIRequest
 
 from search_server.helpers.formatters import format_institution_label
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrConnection
 from search_server.helpers.utilities import is_number
 
@@ -90,7 +88,7 @@ class GeoJsonFeature(ypres.AsyncDictSerializer):
         if not is_primary:
             req = self.context["request"]
             org_ident = obj["id"]
-            ident = re.sub(ID_SUB, "", org_ident)
+            ident = strip_prefix(org_ident)
             props["url"] = get_identifier(
                 req, "institutions.institution", institution_id=ident
             )

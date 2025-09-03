@@ -1,8 +1,6 @@
-import re
-
 import ypres
 
-from search_server.helpers.identifiers import ID_SUB, get_identifier
+from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import (
     SolrConnection,
     SolrResult,
@@ -29,7 +27,7 @@ class Subject(ypres.AsyncDictSerializer):
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context["request"]
-        subject_id: str = re.sub(ID_SUB, "", obj["id"])
+        subject_id: str = strip_prefix(obj["id"])
 
         return get_identifier(req, "subjects.subject", subject_id=subject_id)
 
@@ -75,7 +73,7 @@ class Subject(ypres.AsyncDictSerializer):
         if num_results == 0:
             return None
 
-        ident: str = re.sub(ID_SUB, "", subject_id)
+        ident: str = strip_prefix(subject_id)
 
         return {
             "id": get_identifier(
