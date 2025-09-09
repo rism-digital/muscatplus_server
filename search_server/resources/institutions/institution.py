@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 
 import ypres
@@ -5,7 +6,7 @@ import ypres
 from search_server.helpers.display_fields import assemble_label_value
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.languages import merge_language_maps
-from search_server.helpers.solr_connection import SolrResult
+from search_server.helpers.solr_connection import SolrResult, result_count
 from search_server.helpers.utilities import is_number
 from search_server.resources.institutions.base_institution import BaseInstitution
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
@@ -13,6 +14,8 @@ from search_server.resources.shared.external_authority import ExternalAuthoritie
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
+
+log = logging.getLogger("mp_server")
 
 
 class Institution(BaseInstitution):
@@ -25,15 +28,33 @@ class Institution(BaseInstitution):
     digital_objects = ypres.MethodField(label="digitalObjects")
     properties = ypres.MethodField()
 
-    def get_sources(self, obj: SolrResult) -> dict | None:
+    async def get_sources(self, obj: SolrResult) -> dict | None:
         institution_id = obj["institution_id"]
-        ident: str = strip_prefix(institution_id)
-        source_count: int = obj.get("total_sources_i", 0)
-
-        # if no sources are attached OR this is the 's.n.' record, return 0 sources attached.
-        if source_count == 0 or ident == "40009305" or obj.get("project_s") == "diamm":
+        # if this is the 's.n.' record return 0 sources attached.
+        if institution_id == "institution_40009305":
             return None
 
+        source_count: int
+        if "total_source_count" in obj:
+            # The institution record lookup adds a field to the result that
+            # contains the total number of sources attached to this institution
+            # as a "total term frequency" value.
+            log.info("Using field 'total_source_count' for source count")
+            source_count = obj["total_source_count"]
+        else:
+            # If this serializer is used in places where we can't / don't
+            # use the function field, then fall back to a Solr query.
+            log.info("Using Solr query for source count")
+            fq: list[str] = [
+                "type:source",
+                f"all_related_institutions_ids:institution_{institution_id}",
+            ]
+            source_count = await result_count(fq=fq)
+
+        if source_count == 0:
+            return None
+
+        ident: str = strip_prefix(institution_id)
         return {
             "url": get_identifier(
                 self.context["request"],
