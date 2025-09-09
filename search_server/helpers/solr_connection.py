@@ -49,7 +49,7 @@ async def execute_query(
 
 async def result_count(**kwargs) -> int:
     """
-    Takes a Solr query and returns the number of results, but does not actually retrieve them.
+    Takes a Solr query and returns the number of results but does not actually retrieve them.
 
     :param kwargs: Keyword arguments to pass to the Solr query
     :return: The number of hits
