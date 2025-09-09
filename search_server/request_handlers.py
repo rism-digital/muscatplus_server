@@ -136,6 +136,9 @@ async def handle_request(
         elif pid := req.match_info.get("person_id"):
             rtype = "people"
             rid = pid
+        elif pid := req.match_info.get("work_id"):
+            rtype = "works"
+            rid = pid
         else:
             return response.json(
                 {"message": "Cannot retrieve MARCXML for this resource."}, status=406
