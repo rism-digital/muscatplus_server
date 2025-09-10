@@ -4,7 +4,6 @@ from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.display_translators import (
     key_mode_value_translator,
     title_json_value_translator,
-    work_catalogue_status_translator,
 )
 from search_server.helpers.formatters import format_work_label
 from search_server.helpers.identifiers import get_identifier, strip_prefix

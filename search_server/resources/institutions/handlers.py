@@ -16,9 +16,7 @@ log = logging.getLogger("mp_server")
 
 async def handle_institution_request(req, institution_id: str) -> dict | None:
     solr_id: str = f"institution_{institution_id}"
-    institution_record: dict | None = await SolrConnection.get(  # type: ignore
-        solr_id, [f"total_source_count:ttf(all_related_institutions_ids, '{solr_id}')"]
-    )
+    institution_record: dict | None = await SolrConnection.get(solr_id)
 
     if not institution_record:
         return None

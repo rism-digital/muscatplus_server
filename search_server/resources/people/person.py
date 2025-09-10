@@ -8,7 +8,7 @@ from search_server.helpers.display_translators import (
     person_name_variant_labels_translator,
 )
 from search_server.helpers.identifiers import get_identifier, strip_prefix
-from search_server.helpers.solr_connection import SolrResult
+from search_server.helpers.solr_connection import SolrResult, result_count
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
@@ -57,18 +57,29 @@ class Person(BasePerson):
             obj, context={"request": self.context["request"]}
         ).serialized
 
-    def get_sources(self, obj: SolrResult) -> dict | None:
+    async def get_sources(self, obj: SolrResult) -> dict | None:
         # Do not show a link to sources if this serializer is used for embedded results
-        if not self.context.get("direct_request") or obj.get("project_s") == "diamm":
-            return None
-
-        # if no sources are attached to this organization, don't show this section. NB: This will
-        # omit the anonymous user since that is manually set to 0 sources.
-        source_count: int = obj.get("total_sources_i", 0)
-        if source_count == 0:
+        if not self.context.get("direct_request") or obj.get("project_s") in (
+            "diamm",
+            "cantus",
+        ):
             return None
 
         person_id: str = obj["person_id"]
+
+        # Don't show sources for the anonymous person record.
+        if person_id == "person_30004985":
+            return None
+
+        fq: list[str] = [
+            "type:source",
+            f"all_related_people_ids:{person_id}",
+        ]
+        source_count = await result_count(fq=fq)
+
+        if source_count == 0:
+            return None
+
         ident: str = strip_prefix(person_id)
 
         return {

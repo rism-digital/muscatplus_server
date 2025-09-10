@@ -35,21 +35,11 @@ class Institution(BaseInstitution):
             return None
 
         source_count: int
-        if "total_source_count" in obj:
-            # The institution record lookup adds a field to the result that
-            # contains the total number of sources attached to this institution
-            # as a "total term frequency" value.
-            log.info("Using field 'total_source_count' for source count")
-            source_count = obj["total_source_count"]
-        else:
-            # If this serializer is used in places where we can't / don't
-            # use the function field, then fall back to a Solr query.
-            log.info("Using Solr query for source count")
-            fq: list[str] = [
-                "type:source",
-                f"all_related_institutions_ids:institution_{institution_id}",
-            ]
-            source_count = await result_count(fq=fq)
+        fq: list[str] = [
+            "type:source",
+            f"all_related_institutions_ids:institution_{institution_id}",
+        ]
+        source_count = await result_count(fq=fq)
 
         if source_count == 0:
             return None

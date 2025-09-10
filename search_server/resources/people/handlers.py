@@ -13,7 +13,8 @@ log = logging.getLogger("mp_server")
 
 
 async def handle_person_request(req, person_id: str) -> dict | None:
-    person_record = await SolrConnection.get(f"person_{person_id}")
+    solr_id: str = f"person_{person_id}"
+    person_record = await SolrConnection.get(solr_id)
 
     if not person_record:
         return None
@@ -30,7 +31,8 @@ def _prepare_query(
         request_compiler = SearchRequest(req, probe=probe)
         request_compiler.filters += [
             "type:source",
-            f"creator_id:person_{person_id} OR related_people_ids:person_{person_id}",
+            # f"creator_id:person_{person_id} OR related_people_ids:person_{person_id}",
+            f"all_related_people_ids:person_{person_id}",
         ]
         solr_params: JsonAPIRequest = request_compiler.compile()
     except InvalidQueryException as e:
