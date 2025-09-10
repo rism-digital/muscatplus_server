@@ -230,9 +230,6 @@ class Incipit(ypres.AsyncDictSerializer):
         return get_display_fields(obj, transl, field_config)
 
     def get_rendered(self, obj: SolrResult) -> list | None:
-        # Use the pre-cached version.
-        parent_type: str = obj["parent_type_s"]
-
         pae_code: str | None = obj.get("original_pae_sni")
         if not pae_code:
             return None
@@ -251,6 +248,7 @@ class Incipit(ypres.AsyncDictSerializer):
         svg, b64midi = rendered_pae
         work_num: str = obj.get("work_num_s", "")
         png_download_url: str
+        parent_type: str = obj["parent_type_s"]
 
         if parent_type == "work":
             work_id: str = strip_prefix(obj["work_id"])
@@ -277,13 +275,13 @@ class Incipit(ypres.AsyncDictSerializer):
             return None
 
         req = self.context["request"]
-        parent_type = obj["parent_type_s"]
         transl: dict = req.ctx.translations
 
         pae_encoding: dict = {}
         work_num: str = obj.get("work_num_s", "")
         mei_download_url: str
 
+        parent_type = obj["parent_type_s"]
         if parent_type == "work":
             work_id: str = strip_prefix(obj["work_id"])
             mei_download_url = get_identifier(

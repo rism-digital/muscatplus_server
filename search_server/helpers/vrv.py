@@ -169,16 +169,31 @@ def render_mei(req, incipit: dict) -> str | None:
     vrv_opts: dict = VEROVIO_BASE_OPTIONS.copy()
     vrv_tk.setOptions(vrv_opts)
     vrv_tk.setInputFrom("pae")
+    incipit_parent_type: str = incipit["parent_type_s"]
 
-    source_id: str = strip_prefix(incipit["source_id"])
     work_num: str = incipit["work_num_s"]
 
-    source_url: str = get_identifier(req, "sources.source", source_id=source_id)
-    incipit_url: str = get_identifier(
-        req, "sources.incipit_mei_encoding", source_id=source_id, work_num=work_num
-    )
+    incipit_url: str
+    record_url: str
+    if incipit_parent_type == "source":
+        source_id: str = strip_prefix(incipit["source_id"])
+        record_url = get_identifier(req, "sources.source", source_id=source_id)
+        incipit_url = get_identifier(
+            req, "sources.incipit_mei_encoding", source_id=source_id, work_num=work_num
+        )
+    elif incipit_parent_type == "work":
+        work_id: str = strip_prefix(incipit["work_id"])
+        record_url = get_identifier(req, "works.work", work_id=work_id)
+        incipit_url = get_identifier(
+            req, "works.incipit_mei_encoding", work_id=work_id, work_num=work_num
+        )
+    else:
+        log.error(
+            "Unknown parent type %s for incipit %s", incipit_parent_type, incipit["id"]
+        )
+        return None
 
-    metadata_header: dict = {"source_url": source_url, "download_url": incipit_url}
+    metadata_header: dict = {"record_url": record_url, "download_url": incipit_url}
 
     if t := incipit.get("titles_sm", []):
         metadata_header["title"] = " ".join(t)
