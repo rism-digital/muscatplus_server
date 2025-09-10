@@ -394,7 +394,7 @@ class SearchRequest:
             # TODO: Check how this works with the new query grammar!
             quoted_values: list[str] = []
             for v in unquoted_values:
-                if v and (set(v) & {":", " ", "[", "]", "\\"}):
+                if v and (set(v) & {":", " ", "[", "]", "\\", "(", ")"}):
                     quoted_values.append(f'"{v}"')
                 elif v:
                     quoted_values.append(f"{v}")
