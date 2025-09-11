@@ -196,8 +196,6 @@ class SearchRequest:
 
     """
 
-    default_sort = "id asc"
-
     def __init__(
         self,
         req,
@@ -684,7 +682,9 @@ class SearchRequest:
             f"div(query($qq), sub(add({incipit_len_field}, {query_len}), query($qq)))"
         )
 
-        self.sorts.insert(0, f"{score_stmt} desc, id desc")
+        if not self._result_sorting or self._result_sorting == "relevance":
+            self.sorts.insert(0, f"{score_stmt} desc")
+
         self.fields.append(f"custom_score:scale({score_stmt},0,100)")
 
     def compile(self) -> JsonAPIRequest:
