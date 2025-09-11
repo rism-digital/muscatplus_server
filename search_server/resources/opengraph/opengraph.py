@@ -26,7 +26,7 @@ class OpenGraph(ypres.DictSerializer):
     record_updated = ypres.StrField("updated")
 
     def get_record_url(self, obj: dict) -> str | None:
-        req = self.context.get("request")
+        req = self.context["request"]
         record_id: str = strip_prefix(obj["id"])
         url = get_url_from_type(req, obj["type"], record_id)
 
@@ -77,7 +77,7 @@ class OpenGraph(ypres.DictSerializer):
         :param obj:
         :return:
         """
-        req = self.context.get("request")
+        req = self.context["request"]
         site = get_site(req)
 
         return urljoin(site, f"og/img/{obj['id']}.png")
