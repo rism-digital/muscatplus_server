@@ -21,7 +21,7 @@ async def handle_subject_source_request(req, subject_id: str) -> dict:
 
 
 class SubjectResults(BaseSearchResults):
-    def get_modes(self, _) -> None:
+    def get_modes(self, obj: Results) -> None:
         pass
 
     async def get_items(self, obj: Results) -> list | None:

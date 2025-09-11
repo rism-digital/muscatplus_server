@@ -1,5 +1,6 @@
 import logging
 
+from sanic import request
 from small_asc.client import JsonAPIRequest, SolrError
 
 from search_server.exceptions import InvalidQueryException
@@ -60,7 +61,7 @@ async def handle_work_search_request(req, work_id: str) -> dict | None:
     return result_data
 
 
-async def handle_work_probe_request(req, person_id: str) -> dict:
+async def handle_work_probe_request(req: request.Request, person_id: str) -> dict:
     try:
         solr_params, query_report = _prepare_query(req, person_id, probe=True)
     except InvalidQueryException:
