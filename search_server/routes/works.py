@@ -26,7 +26,7 @@ async def work_sources(req, work_id: str):
 
 @works_blueprint.route("/<work_id:str>/probe/")
 async def work_probe(req, work_id: str):
-    return handle_search(req, handle_work_probe_request, work_id=work_id)
+    return await handle_search(req, handle_work_probe_request, work_id=work_id)
 
 
 @works_blueprint.route("/<work_id:str>/incipits/")
