@@ -1,4 +1,4 @@
-import sanic
+from sanic import request
 
 
 def strip_prefix(ident: str) -> str:
@@ -65,28 +65,28 @@ EXTERNAL_IDS: dict = {
 }
 
 
-def get_identifier(request: sanic.request.Request, viewname: str, **kwargs) -> str:  # noqa: F821
+def get_identifier(req: request.Request, viewname: str, **kwargs) -> str:  # noqa: F821
     """
     Takes a request object, parses it out, and returns a templated identifier suitable
     for use in an "id" field, including the incoming request information on host and scheme (http/https).
 
-    :param request: A Sanic request object
+    :param req: A Sanic request object
     :param viewname: A string of the view for which we will retrieve the URL. Matches the function name in server.py.
     :param kwargs: A set of keywords matching the template formatting variables
     :return: A templated string
     """
-    fwd_scheme_header = request.headers.get("X-Forwarded-Proto")
-    fwd_host_header = request.headers.get("X-Forwarded-Host")
+    fwd_scheme_header = req.headers.get("X-Forwarded-Proto")
+    fwd_host_header = req.headers.get("X-Forwarded-Host")
 
-    scheme: str = fwd_scheme_header if fwd_scheme_header else request.scheme
-    server: str = fwd_host_header if fwd_host_header else request.host
+    scheme: str = fwd_scheme_header if fwd_scheme_header else req.scheme
+    server: str = fwd_host_header if fwd_host_header else req.host
 
-    return request.app.url_for(
+    return req.app.url_for(
         viewname, _external=True, _scheme=scheme, _server=server, **kwargs
     )
 
 
-def get_site(req) -> str:
+def get_site(req: request.Request) -> str:
     """
     Takes a request object, parses it out, and returns the base URL for the site.
     Works even behind a proxy by looking at the X-Forwarded headers. Similar to the
@@ -107,7 +107,9 @@ def get_site(req) -> str:
     return f"{scheme}://{server}"
 
 
-def get_url_from_type(req, record_type: str, record_id: str) -> str | None:
+def get_url_from_type(
+    req: request.Request, record_type: str, record_id: str
+) -> str | None:
     site: str = get_site(req)
     url: str
 
