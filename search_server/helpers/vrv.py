@@ -382,15 +382,20 @@ def render_incipit(
         log.info("no feature field, skipping highlighting")
         return svg, b64midi
 
-    document_interval_features: list = list(map(str, obj[feature_field]))
-    document_interval_ids: list = obj[ids_field]
-    query_interval_feature: list = query_pae_features[query_features_field]
+    document_interval_features: list[str] = list(map(str, obj[feature_field]))
+    document_interval_ids: list[list[str]] = obj[ids_field]
+    query_interval_feature: list[str] = query_pae_features[query_features_field]
 
     log.debug("Document features: %s", document_interval_features)
     log.debug("Query features: %s", query_interval_feature)
 
+    # The type checker will emit an error here because the default types for
+    # a and b are strings, not lists. However, the documentation only says that
+    # these need to be iterables, and their contents hashable, so lists should
+    # be fine. So we ignore any type checker errors here.
     smtch = cdifflib.CSequenceMatcher(
-        a=query_interval_feature, b=document_interval_features
+        a=query_interval_feature,  # type: ignore
+        b=document_interval_features,  # type: ignore
     )
 
     # Matches the longest subsequence in the two lists, starting at the beginning.
