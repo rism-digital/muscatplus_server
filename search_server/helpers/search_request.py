@@ -25,7 +25,7 @@ TERM_FACET_LIMIT: int = 200  # The maximum number of results to return with a se
 
 # The set of fields that should always pass through the query validation because they are injected manually
 # and do not come from the user interface. Mostly used in incipit queries.
-RAW_FIELDS: set = {"intervals_bi", "pitches_bi", "contour_refined_bi"}
+RAW_FIELDS: set = {"intervals_bi", "pitches_bi", "contour_refined_bi", "text"}
 
 
 # Some of the facets and filters need to have a solr `{!tag}` prepended. We'll
@@ -673,6 +673,11 @@ class SearchRequest:
             intervals: list = self.pae_features.get("intervalsChromatic", [])
             incipit_query = " ".join(str(s) for s in intervals)
             query_len = len(intervals)
+
+        if self._requested_query:
+            # Since we are injecting the query for the incipits into this list, we need to specify that any incoming
+            # queries that are already present are prefixed with the text query field.
+            self._requested_query = [f"text:{q}" for q in self._requested_query]
 
         self._requested_query.insert(0, f'{incipit_query_field}:"{incipit_query}"')
         self._extra_params["qq"] = f'{incipit_query_field}:"{incipit_query}"'
