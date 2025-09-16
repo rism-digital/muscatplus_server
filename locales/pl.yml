@@ -787,6 +787,7 @@ pl:
     production: Produkcja
     production_personnel: Personel produkcyjny
     profession_or_function: Zawód lub funkcja
+    project: Projekt
     project_url: Adres URL projektu
     provenance: Pochodzenie
     provenance_notes: Uwaga o proweniencji
@@ -961,7 +962,7 @@ pl:
     P60183: "Wstawić"
   relations_works:
     P60250: "Posiada derywatywę"
-    P60305: "Posiada źródło"
+    P60305: "Is based on"
     P60216: "Jest rozszerzony jako"
     P60294: "Jest rozszerzoną wersją"
     P60274: "Jest zaaranżowane jako"

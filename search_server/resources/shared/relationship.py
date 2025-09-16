@@ -10,6 +10,7 @@ from search_server.helpers.display_translators import (
     qualifier_labels_translator,
     source_relationship_labels_translator,
     title_json_value_translator,
+    work_relationship_labels_translator,
 )
 from search_server.helpers.identifiers import (
     EXTERNAL_IDS,
@@ -37,6 +38,7 @@ class RelationshipsSection(ypres.DictSerializer):
         institutions: list = obj.get("related_institutions_json", [])
         places: list = obj.get("related_places_json", [])
         sources: list = obj.get("related_sources_json", [])
+        works: list = obj.get("related_works_json", [])
         contributing_projects: list = obj.get("contributing_projects_json", [])
 
         all_relationships = itertools.chain(
@@ -45,6 +47,7 @@ class RelationshipsSection(ypres.DictSerializer):
             people,
             institutions,
             sources,
+            works,
             places,
             contributing_projects,
         )
@@ -114,6 +117,8 @@ class Relationship(ypres.DictSerializer):
             return _related_to_place(req, obj)
         elif "source_id" in obj:
             return _related_to_source(req, obj)
+        elif "work_id" in obj:
+            return _related_to_work(req, obj)
         else:
             # Something is wrong, but we can't find out what to display.
             return None
@@ -124,7 +129,9 @@ class Relationship(ypres.DictSerializer):
         # if any of these keys are in the object, then we have a relationship and it should be handled
         # by the 'related_to' function. This is done by seeing if the set of expected keys, and the set
         # of actual keys, have any overlap. If they do, bail.
-        if not {"person_id", "institution_id", "place_id"}.isdisjoint(obj.keys()):
+        if not {"person_id", "institution_id", "place_id", "work_id"}.isdisjoint(
+            obj.keys()
+        ):
             return None
 
         elif "name" in obj:
@@ -191,7 +198,7 @@ def _related_to_place(req, obj: dict) -> dict:
 
     return {
         "id": get_identifier(req, "places.place", place_id=place_id),
-        "label": {"none": [obj.get("name")]},
+        "label": {"none": [obj.get("name", "[No name]")]},
         "type": "rism:Place",
     }
 
@@ -222,6 +229,14 @@ def _related_to_source(req, obj: dict) -> dict:
     return {"id": ident, "label": source_title, "type": "rism:Source"}
 
 
+def _related_to_work(req, obj: dict) -> dict:
+    work_id: str = strip_prefix(obj["work_id"])
+    ident: str = get_identifier(req, "works.work", work_id=work_id)
+    work_title: dict = {"none": [obj.get("title", "[No title]")]}
+
+    return {"id": ident, "label": work_title, "type": "rism:Work"}
+
+
 def _relationship_translator(obj: dict) -> Callable | None:
     """
     We need different role translator functions for different types
@@ -241,6 +256,8 @@ def _relationship_translator(obj: dict) -> Callable | None:
         return place_relationship_labels_translator
     elif "source_id" in obj:
         return source_relationship_labels_translator
+    elif "work_id" in obj:
+        return work_relationship_labels_translator
     elif "relationship" in obj:
         # To get around a bug where place IDs are not stored in Muscat, but the relationship
         # to them is. TODO: Fix this when the Muscat bug is fixed.

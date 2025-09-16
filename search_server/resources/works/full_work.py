@@ -83,8 +83,8 @@ class FullWork(BaseWork):
     def get_relationships(self, obj: SolrResult) -> dict | None:
         # sets are cool; two sets are disjoint if they have no keys in common. We
         # can use this to check whether these keys are in the solr result; if not,
-        # we have no relationships to render, so we can return.
-        if "related_people_json" not in obj:
+        # we have no relationships to render, so we can return None.
+        if {"related_people_json", "related_works_json"}.isdisjoint(obj.keys()):
             return None
 
         req = self.context["request"]

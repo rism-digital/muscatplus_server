@@ -261,6 +261,17 @@ _SOURCE_RELATIONSHIP_LABELS_MAP = {
     "rdau:P60183": "relations.P60183",
 }
 
+_WORKS_RELATIONSHIP_LABELS_MAP = {
+    "rdau:P60250": "relations_works.P60250",
+    "rdau:P60305": "relations_works.P60305",
+    "rdau:P60216": "relations_works.P60216",
+    "rdau:P60294": "relations_works.P60294",
+    "rdau:P60274": "relations_works.P60274",
+    "rdau:P60242": "relations_works.P60242",
+    "rdau:P60198": "relations_works.P60198",
+    "rdau:P60313": "relations_works.P60313"
+}
+
 _PERSON_NAME_VARIANT_TYPES_MAP = {
     None: "records.unknown",
     "bn": "records.nickname",
@@ -607,6 +618,9 @@ def place_relationship_labels_translator(value: str, translations: dict) -> dict
 def source_relationship_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _SOURCE_RELATIONSHIP_LABELS_MAP)
 
+
+def work_relationship_labels_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, _WORKS_RELATIONSHIP_LABELS_MAP)
 
 def qualifier_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _QUALIFIER_LABELS_MAP)
