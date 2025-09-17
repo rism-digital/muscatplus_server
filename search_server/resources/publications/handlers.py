@@ -26,9 +26,6 @@ async def handle_publication_request(req, publication_id: str) -> dict | None:
     ).serialized
 
 
-NUM_WORKS_PER_PAGE: str = "100"
-
-
 def _prepare_query(
     req, publication_id: str, probe: bool = False
 ) -> tuple[JsonAPIRequest, dict | None]:
@@ -40,7 +37,6 @@ def _prepare_query(
         ]
         request_compiler.sorts += ["number_page_ans asc"]
         # NB: this value is supposed to be a string!
-        request_compiler.rows = NUM_WORKS_PER_PAGE
         solr_params: JsonAPIRequest = request_compiler.compile()
 
     except InvalidQueryException as e:
@@ -59,7 +55,6 @@ async def handle_publication_search_request(req, publication_id: str) -> dict:
     extra_context: dict = {
         "direct_request": True,
         "query_validation": query_report,
-        "custom_row_number": NUM_WORKS_PER_PAGE,
     }
 
     try:

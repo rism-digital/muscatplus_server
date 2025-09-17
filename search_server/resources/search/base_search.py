@@ -45,7 +45,6 @@ class BaseSearchResults(ypres.AsyncSerializer):
             obj,
             context={
                 "request": self.context["request"],
-                "custom_row_number": self.context.get("custom_row_number"),
             },
         ).serialized
 

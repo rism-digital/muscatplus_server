@@ -52,8 +52,7 @@ class Pagination(ypres.DictSerializer):
         #  if 0 results and 20 rows, then 1 page (0 / 20) = ceil(0) = 0 == 1 (with no results).
 
         req = self.context["request"]
-        custom_row_numbers: str | None = self.context.get("custom_row_number")
-        rows: int = parse_row_number_from_request(req, custom_row_numbers)
+        rows: int = parse_row_number_from_request(req)
         pages: int = int(math.ceil(total / rows))
         # we always have at least 1 page, even if there are zero results
         return max(1, pages)
@@ -166,7 +165,7 @@ class Pagination(ypres.DictSerializer):
         return replace_query_param(req.url, PAGE_QUERY_PARAM, last_page)
 
 
-def parse_row_number_from_request(req, custom_row_number: str | None) -> int:
+def parse_row_number_from_request(req) -> int:
     """
     Parses the row parameter from the request. If it's None, return the default rows
     Any invalid cases (rows not in the permitted list, rows not an int etc.) will raise a PaginationParseError
@@ -174,9 +173,7 @@ def parse_row_number_from_request(req, custom_row_number: str | None) -> int:
     :param req:
     :return: the number of rows (i.e. the page size)
     """
-    this_page_qstr: str | None = (
-        custom_row_number if custom_row_number else req.args.get(ROWS_QUERY_PARAM, None)
-    )
+    this_page_qstr: str | None = req.args.get(ROWS_QUERY_PARAM)
     return parse_row_number(req, this_page_qstr)
 
 
