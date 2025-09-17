@@ -477,7 +477,7 @@ class SearchRequest:
         # NB: Restrict incipits to ONLY returning Source records for now.
         # TODO: Remove this when we open it up to works.
         if self._requested_mode == "incipits":
-            filter_statements.append("parent_type_s:source")
+            filter_statements.append(f"{{!tag={SolrQueryTags.MODE_FILTER_TAG}}}parent_type_s:source")
 
         return filter_statements
 
