@@ -22,7 +22,7 @@ async def sitemap_root(req) -> sanic.HTTPResponse:
     solr_query = {
         "query": "*:*",
         "filter": [
-            "type:person OR type:source OR type:institution",
+            "type:person OR type:source OR type:institution OR type:work",
             "!project_s:[* TO *]",
         ],
         "limit": 0,
@@ -56,7 +56,7 @@ async def sitemap_page(req, page_num: str):
     solr_query = {
         "query": "*:*",
         "filter": [
-            "type:person OR type:source OR type:institution",
+            "type:person OR type:source OR type:institution OR type:work",
             "!project_s:[* TO *]",
         ],
         "limit": page_size,
