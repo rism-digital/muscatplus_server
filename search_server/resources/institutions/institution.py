@@ -37,7 +37,7 @@ class Institution(BaseInstitution):
         source_count: int
         fq: list[str] = [
             "type:source",
-            f"all_related_institutions_ids:institution_{institution_id}",
+            f"all_related_institutions_ids:{institution_id}",
         ]
         source_count = await result_count(fq=fq)
 
