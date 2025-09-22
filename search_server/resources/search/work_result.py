@@ -75,6 +75,12 @@ class WorkSearchResult(ypres.DictSerializer):
         if scoring:
             flags["scoringSummary"] = "; ".join(scoring)
 
+        secondary_catalogue_codes: list[str] | None = obj.get(
+            "secondary_catalogue_numbers_sm"
+        )
+        if secondary_catalogue_codes:
+            flags["secondaryCatalogNumbers"] = secondary_catalogue_codes
+
         return flags
 
     def get_rendered(self, obj: SolrResult) -> dict | None:
