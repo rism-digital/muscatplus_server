@@ -33,7 +33,7 @@ def _prepare_query(
         request_compiler = SearchRequest(req, probe=probe)
         request_compiler.filters += [
             "type:work",
-            f"catalogue_id:publication_{publication_id}",
+            f"catalogue_id:publication_{publication_id} OR secondary_catalogue_ids:publication_{publication_id}",
         ]
         request_compiler.sorts += ["number_page_ans asc"]
         # NB: this value is supposed to be a string!
