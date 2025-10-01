@@ -462,7 +462,7 @@ de:
     event_place: Veranstaltungsort
     excerpts: Ausschnitte
     exemplar: Exemplar
-    exemplars: Exemplars
+    exemplars: Exemplare
     expansion: Erweiterung
     extent: Umfang
     extent_parts: Umfang Stimmenmaterial
@@ -962,7 +962,7 @@ de:
     P60183: "Einfügen"
   relations_works:
     P60250: "Hat Derivate"
-    P60305: "Is based on"
+    P60305: "Basiert auf"
     P60216: "Wird erweitert als"
     P60294: "Ist erweiterte Version von"
     P60274: "Bearbeitung als"
