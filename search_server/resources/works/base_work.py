@@ -53,6 +53,7 @@ class BaseWork(ypres.AsyncDictSerializer):
                 "records.alternative_work_title",
                 title_json_value_translator,
             ),
+            "date_statement_s": ("records.dates", None),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
