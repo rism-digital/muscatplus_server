@@ -71,6 +71,7 @@ _CONTENT_TYPE_TRANSLATION_MAP: dict = {
     "treatise": "records.treatise",
     "musical": "records.notated_music",
     "mixed": "records.mixed",
+    "inventory": "records.inventory",
     "other": "records.other",
 }
 

@@ -24,6 +24,7 @@ CONTENT_TYPE_MAP: dict = {
     "musical": "rism:MusicalContent",
     "mixed": "rism:MixedContent",
     "other": "rism:OtherContent",
+    "inventory": "rism:InventoryContent",
 }
 
 
