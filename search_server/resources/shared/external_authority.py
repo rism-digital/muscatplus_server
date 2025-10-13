@@ -1,7 +1,6 @@
-
 import ypres
 
-from shared_helpers.identifiers import EXTERNAL_IDS
+from search_server.helpers.identifiers import EXTERNAL_IDS
 
 
 class ExternalAuthoritiesSection(ypres.DictSerializer):

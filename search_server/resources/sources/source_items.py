@@ -1,12 +1,11 @@
 import logging
-import re
 
 import ypres
 from small_asc.client import Results
 
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.sources.base_source import BaseSource
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 log = logging.getLogger("mp_server")
 
@@ -25,7 +24,7 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
 
     def get_url(self, obj: SolrResult) -> str:
         source_id: str = obj["id"]
-        ident: str = re.sub(ID_SUB, "", source_id)
+        ident: str = strip_prefix(source_id)
 
         return get_identifier(
             self.context["request"], "sources.contents", source_id=ident

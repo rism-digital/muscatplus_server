@@ -4,10 +4,10 @@ from urllib.parse import unquote
 
 from small_asc.client import JsonAPIRequest, Results
 
+from search_server.helpers.identifiers import strip_prefix
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.search.pagination import parse_page_number
 from search_server.resources.search.search_results import SearchResults
-from shared_helpers.identifiers import ID_SUB
-from shared_helpers.solr_connection import SolrConnection
 
 log = logging.getLogger("mp_export")
 
@@ -18,7 +18,7 @@ async def handle_institution_sigla_request(req, siglum: str) -> str | None:
     incoming_sig: str = unquote(siglum)
 
     # \w in the pattern matches the underscore, which we don't want to match here.
-    # If the regex doesn't match the return value will be None, in which case it's
+    # If the regex doesn't match, the return value will be None, in which case it's
     # a problematic siglum.
     if "_" in incoming_sig or re.fullmatch(INVALID_SIGLUM, incoming_sig) is None:
         log.warning(
@@ -43,7 +43,7 @@ async def handle_institution_sigla_request(req, siglum: str) -> str | None:
         )
 
     institution_record_id: str = institution_record.docs[0]["id"]
-    institution_id = re.sub(ID_SUB, "", institution_record_id)
+    institution_id = strip_prefix(institution_record_id)
 
     return f"/institutions/{institution_id}"
 
@@ -72,7 +72,7 @@ async def handle_siglum_search_request(req) -> dict | None:
 
     query_solr_fields: dict[str, str] = {
         "name": "name_al",
-        "siglum": "siglum_s",
+        "siglum": "siglum_kwf",  # This is case-sensitive but folding
         "city": "city_ft",
         "country": "country_names_ft",
         "all": "",
@@ -87,8 +87,8 @@ async def handle_siglum_search_request(req) -> dict | None:
     if query_type == "all":
         solr_query = f"{query}"
     elif query_type == "siglum":
-        # We need to do strict left-edge matching, which we can get if we do a regex search.
-        solr_query = f"{query_field}:/{query}.*/"
+        # We need to do left-edge matching, so add a wildcard at the end.
+        solr_query = f"{query_field}:{query}*"
     else:
         solr_query = f"{query_field}:{query}"
 

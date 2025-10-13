@@ -3,13 +3,17 @@ import os
 import re
 import tempfile
 import urllib.parse
+from difflib import Match
 
+import cdifflib  # type: ignore
 import httpx
 import orjson
 import verovio
 
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.resvg import render_svg
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.incipit_search_fields import MODE_FIELDS
+from search_server.helpers.resvg import render_svg
+from search_server.helpers.solr_connection import SolrResult
 
 log = logging.getLogger("mp_server")
 verovio.enableLog(False)
@@ -40,8 +44,17 @@ vrv_tk.setOptions(VEROVIO_BASE_OPTIONS)
 
 type RenderedIncipit = tuple[str | None, str | None]
 
+CSS_REPLACEMENT_PATTERN: re.Pattern = re.compile(
+    r'<style type="text/css">(?P<existing_style>.*)</style>'
+)
+
+
 def render_pae(
-    pae: str, use_crc: bool = False, enlarged: bool = False, is_mensural: bool = False
+    pae: str,
+    use_crc: bool = False,
+    enlarged: bool = False,
+    is_mensural: bool = False,
+    hard_truncate: bool = False,
 ) -> RenderedIncipit:
     """
     Renders Plaine and Easie to SVG and MIDI. Returns None if there was a problem loading the data.
@@ -50,7 +63,12 @@ def render_pae(
     then the IDs will be randomly generated.
 
     :param pae: A plaine and easie-formatted input string
-    :param use_crc: The ID seed to use for Verovio's ID generator
+    :param use_crc: Use the CRC of the input for Verovio's ID generator
+    :param enlarged: Render the output slightly larger
+    :param is_mensural: Set a different spacing for mensural notation
+    :param hard_truncate: Truncates the incipit. If it's too long for the set "page", the incipit will
+        render the rest on the second page, but since we never render the second page, it effectively
+        truncates the incipit.
     :return: A named tuple containing SVG and MIDI.
     """
     custom_options: dict = {"xmlIdChecksum": use_crc}
@@ -58,8 +76,12 @@ def render_pae(
     if not use_crc:
         vrv_tk.resetXmlIdSeed(0)
 
+    if hard_truncate:
+        custom_options["adjustPageWidth"] = False
+        custom_options["pageHeight"] = 100
+
     if enlarged:
-        custom_options["pageWidth"] = 1200
+        custom_options["pageWidth"] = 1400
     else:
         custom_options["pageWidth"] = 2000
 
@@ -81,6 +103,8 @@ def render_pae(
         return None, None
 
     svg: str = vrv_tk.renderToSVG()
+    if not svg:
+        return None, None
 
     # NB: MIDI is disabled until a Verovio bug is fixed.
     # mid: str = vrv_tk.renderToMIDI()
@@ -108,7 +132,9 @@ async def render_url(url: str) -> str | None:
             return None
 
         if res.status_code != 200:
-            log.error("Server responded with non-success status code: %s", res.status_code)
+            log.error(
+                "Server responded with non-success status code: %s", res.status_code
+            )
             return None
 
         mei: str = res.text
@@ -143,16 +169,31 @@ def render_mei(req, incipit: dict) -> str | None:
     vrv_opts: dict = VEROVIO_BASE_OPTIONS.copy()
     vrv_tk.setOptions(vrv_opts)
     vrv_tk.setInputFrom("pae")
+    incipit_parent_type: str = incipit["parent_type_s"]
 
-    source_id: str = re.sub(ID_SUB, "", incipit["source_id"])
     work_num: str = incipit["work_num_s"]
 
-    source_url: str = get_identifier(req, "sources.source", source_id=source_id)
-    incipit_url: str = get_identifier(
-        req, "sources.incipit_mei_encoding", source_id=source_id, work_num=work_num
-    )
+    incipit_url: str
+    record_url: str
+    if incipit_parent_type == "source":
+        source_id: str = strip_prefix(incipit["source_id"])
+        record_url = get_identifier(req, "sources.source", source_id=source_id)
+        incipit_url = get_identifier(
+            req, "sources.incipit_mei_encoding", source_id=source_id, work_num=work_num
+        )
+    elif incipit_parent_type == "work":
+        work_id: str = strip_prefix(incipit["work_id"])
+        record_url = get_identifier(req, "works.work", work_id=work_id)
+        incipit_url = get_identifier(
+            req, "works.incipit_mei_encoding", work_id=work_id, work_num=work_num
+        )
+    else:
+        log.error(
+            "Unknown parent type %s for incipit %s", incipit_parent_type, incipit["id"]
+        )
+        return None
 
-    metadata_header: dict = {"source_url": source_url, "download_url": incipit_url}
+    metadata_header: dict = {"record_url": record_url, "download_url": incipit_url}
 
     if t := incipit.get("titles_sm", []):
         metadata_header["title"] = " ".join(t)
@@ -188,11 +229,11 @@ def render_mei(req, incipit: dict) -> str | None:
 
 
 def render_png(req, incipit: str) -> bytes | None:
-    rendered: tuple | None = render_pae(incipit)
-    if not rendered:
+    rendered: RenderedIncipit = render_pae(incipit)
+    rendered_svg, _ = rendered
+    if not rendered_svg:
         return None
 
-    rendered_svg, _ = rendered
     cfg: dict = req.app.ctx.config
     # Create the temporary image file
     fd, tmpfile = tempfile.mkstemp()
@@ -268,7 +309,7 @@ def get_pae_features(req) -> dict | None:
     pae: str = create_pae_from_request(req)
     vrv_tk.setInputFrom("pae")
     load_success: bool = vrv_tk.loadData(pae)
-    if load_success is False:
+    if not load_success:
         log.warning("Could not load PAE for %s", pae)
         return None
     return vrv_tk.getDescriptiveFeatures({})
@@ -302,3 +343,85 @@ def validate_pae(req) -> dict:
         translated_messages.append({"value": error_msg})
 
     return {"valid": False, "messages": translated_messages}
+
+
+# Handles both highlighted and non-highlighted incipits for search results. Will
+# not highight if there is no query_pae_features provided.
+def render_incipit(
+    obj: SolrResult,
+    query_pae_features: dict | None = None,
+    search_mode: str | None = None,
+) -> RenderedIncipit:
+    pae_code: str | None = obj.get("original_pae_sni")
+    if not pae_code:
+        log.debug("no PAE code")
+        return None, None
+
+    is_mensural: bool = obj.get("is_mensural_b", False)
+
+    if query_pae_features is None:
+        # If we don't do the highlighting phase, exit now. We don't need to use
+        # the CRC for the incipit.
+        log.info("No query features provided, skipping highlighting")
+        return render_pae(pae_code, is_mensural=is_mensural)
+
+    svg, b64midi = render_pae(pae_code, use_crc=True, is_mensural=is_mensural)
+    if not svg:
+        log.error("Could not load music incipit for %s", obj.get("id"))
+        return None, None
+
+    if search_mode is None or search_mode not in MODE_FIELDS:
+        log.info("No search mode, skipping highlighting")
+        return svg, b64midi
+
+    # We need to know the search mode so that we know what set of values in the
+    # Solr document and in the Query to compare for the longest subsequence.
+    feature_field, ids_field, query_features_field = MODE_FIELDS[search_mode]
+
+    if feature_field not in obj:
+        log.info("no feature field, skipping highlighting")
+        return svg, b64midi
+
+    document_interval_features: list[str] = list(map(str, obj[feature_field]))
+    document_interval_ids: list[list[str]] = obj[ids_field]
+    query_interval_feature: list[str] = query_pae_features[query_features_field]
+
+    log.debug("Document features: %s", document_interval_features)
+    log.debug("Query features: %s", query_interval_feature)
+
+    # The type checker will emit an error here because the default types for
+    # a and b are strings, not lists. However, the documentation only says that
+    # these need to be iterables, and their contents hashable, so lists should
+    # be fine. So we ignore any type checker errors here.
+    smtch = cdifflib.CSequenceMatcher(
+        a=query_interval_feature,  # type: ignore
+        b=document_interval_features,  # type: ignore
+    )
+
+    # Matches the longest subsequence in the two lists, starting at the beginning.
+    matched_blk: Match = smtch.find_longest_match(
+        0, len(query_interval_feature), 0, len(document_interval_features)
+    )
+
+    highlight_ids = {
+        nid
+        for noteids in document_interval_ids[
+            matched_blk.b : matched_blk.b + matched_blk.size
+        ]
+        for nid in noteids
+    }
+
+    if not highlight_ids:
+        return svg, b64midi
+
+    highlight_css_stmt = " ".join(
+        f'g[data-id="{nid}"] {{ fill: red; color: red; }}' for nid in highlight_ids
+    )
+
+    highlighted_svg = re.sub(
+        CSS_REPLACEMENT_PATTERN,
+        rf'<style type="text/css">\1 {highlight_css_stmt}</style>',
+        svg,
+    )
+
+    return highlighted_svg, b64midi

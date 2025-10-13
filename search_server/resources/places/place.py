@@ -1,22 +1,18 @@
 import logging
-import re
 
 import ypres
 from small_asc.client import JsonAPIRequest, Results
 
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.institutions.base_institution import (
-    SOLR_FIELDS_FOR_BASE_INSTITUTION,
     BaseInstitution,
 )
-from search_server.resources.people.base_person import SOLR_FIELDS_FOR_BASE_PERSON
-from search_server.resources.shared.relationship import Relationship
+from search_server.resources.people.base_person import BasePerson
 from search_server.resources.sources.base_source import (
-    SOLR_FIELDS_FOR_BASE_SOURCE,
     BaseSource,
 )
-from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 log = logging.getLogger("mp_server")
 
@@ -27,7 +23,9 @@ async def handle_place_request(req, place_id: str) -> dict | None:
     if not record:
         return None
 
-    return await Place(record, context={"request": req, "direct_request": True}).serialized
+    return await Place(
+        record, context={"request": req, "direct_request": True}
+    ).serialized
 
 
 class Place(ypres.AsyncDictSerializer):
@@ -42,7 +40,7 @@ class Place(ypres.AsyncDictSerializer):
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context["request"]
-        place_id: str = re.sub(ID_SUB, "", obj["id"])
+        place_id: str = strip_prefix(obj["id"])
 
         return get_identifier(req, "places.place", place_id=place_id)
 
@@ -76,13 +74,14 @@ class Place(ypres.AsyncDictSerializer):
         q: JsonAPIRequest = {
             "query": "*:*",
             "filter": ["type:source", f"location_of_performance_ids:{place_id}"],
-            "fields": SOLR_FIELDS_FOR_BASE_SOURCE,
             "sort": "main_title_ans asc",
         }
         source_results: Results = await SolrConnection.search(q, cursor=True)
+        if source_results.hits == 0:
+            return None
 
         source_list: list = await BaseSource(
-            source_results, context={"request": req}, many=True
+            source_results.docs, context={"request": req}, many=True
         ).serialized_many
 
         return {"type": "rism:PlaceSourceList", "items": source_list}
@@ -97,12 +96,15 @@ class Place(ypres.AsyncDictSerializer):
         q: JsonAPIRequest = {
             "query": "*:*",
             "filter": ["type:person", f"place_ids:{place_id}"],
-            "fields": SOLR_FIELDS_FOR_BASE_PERSON,
             "sort": "name_ans desc",
         }
         person_results: Results = await SolrConnection.search(q, cursor=True)
-        person_list: list = Relationship(
-            person_results, context={"request": req}, many=True
+
+        if person_results.hits == 0:
+            return None
+
+        person_list: list = await BasePerson(
+            person_results.docs, context={"request": req}, many=True
         ).serialized_many
 
         return {"type": "rism:PlacePersonList", "items": person_list}
@@ -117,12 +119,14 @@ class Place(ypres.AsyncDictSerializer):
         q: JsonAPIRequest = {
             "query": "*:*",
             "filter": ["type:institution", f"place_ids:{place_id}"],
-            "fields": SOLR_FIELDS_FOR_BASE_INSTITUTION,
             "sort": "name_ans asc",
         }
         institution_results: Results = await SolrConnection.search(q, cursor=True)
+        if institution_results.hits == 0:
+            return None
+
         institution_list: list = await BaseInstitution(
-            institution_results, context={"request": req}, many=True
+            institution_results.docs, context={"request": req}, many=True
         ).serialized_many
 
         return {"type": "rism:PlaceInstitutionList", "items": institution_list}

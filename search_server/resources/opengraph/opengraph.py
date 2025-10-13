@@ -1,17 +1,20 @@
-import re
 import textwrap
 from urllib.parse import urljoin
 
 import ypres
 
-from shared_helpers.formatters import (
+from search_server.helpers.formatters import (
     format_institution_description,
     format_institution_label,
     format_person_description,
     format_person_label,
     format_source_description,
 )
-from shared_helpers.identifiers import ID_SUB, get_site, get_url_from_type
+from search_server.helpers.identifiers import (
+    get_site,
+    get_url_from_type,
+    strip_prefix,
+)
 
 
 class OpenGraph(ypres.DictSerializer):
@@ -23,8 +26,8 @@ class OpenGraph(ypres.DictSerializer):
     record_updated = ypres.StrField("updated")
 
     def get_record_url(self, obj: dict) -> str | None:
-        req = self.context.get("request")
-        record_id: str = re.sub(ID_SUB, "", obj["id"])
+        req = self.context["request"]
+        record_id: str = strip_prefix(obj["id"])
         url = get_url_from_type(req, obj["type"], record_id)
 
         return url
@@ -74,7 +77,7 @@ class OpenGraph(ypres.DictSerializer):
         :param obj:
         :return:
         """
-        req = self.context.get("request")
+        req = self.context["request"]
         site = get_site(req)
 
         return urljoin(site, f"og/img/{obj['id']}.png")

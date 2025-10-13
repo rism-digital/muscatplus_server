@@ -1,9 +1,11 @@
-import re
-
 import ypres
 
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult, result_count
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import (
+    SolrConnection,
+    SolrResult,
+    result_count,
+)
 
 
 async def handle_subject_request(req, subject_id: str) -> dict | None:
@@ -25,7 +27,7 @@ class Subject(ypres.AsyncDictSerializer):
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context["request"]
-        subject_id: str = re.sub(ID_SUB, "", obj["id"])
+        subject_id: str = strip_prefix(obj["id"])
 
         return get_identifier(req, "subjects.subject", subject_id=subject_id)
 
@@ -50,7 +52,12 @@ class Subject(ypres.AsyncDictSerializer):
         if not self.context.get("direct_request"):
             return None
 
-        return {"none": [obj.get("alternate_terms_sm")]}
+        alt_terms: list = obj.get("alternate_terms_sm", [])
+
+        if not alt_terms:
+            return None
+
+        return {"none": alt_terms}
 
     async def get_sources(self, obj: SolrResult) -> dict | None:
         # Only give a list of sources for this term if we are looking at a dedicated page for this subject heading, and
@@ -66,7 +73,7 @@ class Subject(ypres.AsyncDictSerializer):
         if num_results == 0:
             return None
 
-        ident: str = re.sub(ID_SUB, "", subject_id)
+        ident: str = strip_prefix(subject_id)
 
         return {
             "id": get_identifier(

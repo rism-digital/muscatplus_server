@@ -2,6 +2,33 @@ import re
 from collections import defaultdict
 from re import Match
 
+_INSTITUTION_TYPE_MAP: dict = {
+    "Archive": "records.archive",
+    "Bookseller": "records.bookseller",
+    "Congress": "records.congress",
+    "Copyist": "records.copyist",
+    "Documentation center": "records.documentation_center",
+    "Institution": "records.institution",
+    "Library": "records.library",
+    "Museum": "records.museum",
+    "Papermaker": "records.papermaker",
+    "Performer": "records.performer",
+    "Publisher": "records.publisher",
+    "Other": "records.other",
+    "Printer": "records.printer",
+    "Research institute": "records.research_institute",
+    "Private collection": "records.private_collection",
+    "Project": "records.project",
+}
+
+_WORK_CATALOGUE_STATUS_MAP: dict = {
+    "completed": "work_catalogue.work_catalogue_complete",
+    "partial": "work_catalogue.work_catalogue_partial",
+    "alternate": "work_catalogue.work_catalogue_alternate",
+    "eligible": "work_catalogue.work_catalogue_in_preparation",
+    "not-a-work-catalogue": "work_catalogue.not_work_catalogue",
+}
+
 _MATERIAL_SOURCE_TYPE_MAP: dict = {
     "Manuscript copy": "records.manuscript_copy",
     "Print": "records.print",
@@ -44,6 +71,7 @@ _CONTENT_TYPE_TRANSLATION_MAP: dict = {
     "treatise": "records.treatise",
     "musical": "records.notated_music",
     "mixed": "records.mixed",
+    "inventory": "records.inventory",
     "other": "records.other",
 }
 
@@ -152,7 +180,6 @@ _QUALIFIER_LABELS_MAP = {
     "Verified": "records.verified",
     "Conjectural": "records.conjectural",
     "Alleged": "records.alleged",
-    "Doubtful": "records.doubtful",
     "Misattributed": "records.misattributed",
 }
 
@@ -174,6 +201,8 @@ _PERSON_INSTITUTION_RELATIONSHIP_LABELS_MAP = {
     "arr": "records.arranger",
     "asg": "records.assignee",
     "asn": "records.associated_name",
+    # NB: att is used to provide a cross-reference to a composer
+    "att": "records.composer_cross_reference",
     "aut": "records.author",
     "bnd": "records.binder",
     "bsl": "records.bookseller",
@@ -231,6 +260,17 @@ _SOURCE_RELATIONSHIP_LABELS_MAP = {
     "rdau:P60274": "relations.P60274",
     "rdau:P60194": "relations.P60194",
     "rdau:P60183": "relations.P60183",
+}
+
+_WORKS_RELATIONSHIP_LABELS_MAP = {
+    "rdau:P60250": "relations_works.P60250",
+    "rdau:P60305": "relations_works.P60305",
+    "rdau:P60216": "relations_works.P60216",
+    "rdau:P60294": "relations_works.P60294",
+    "rdau:P60274": "relations_works.P60274",
+    "rdau:P60242": "relations_works.P60242",
+    "rdau:P60198": "relations_works.P60198",
+    "rdau:P60313": "relations_works.P60313"
 }
 
 _PERSON_NAME_VARIANT_TYPES_MAP = {
@@ -367,6 +407,7 @@ _GND_COUNTRY_CODE_MAP: dict = {
     "XA-AT-6": "places.austria_styria",
     "XA-AT-7": "places.austria_tyrol",
     "XA-AT-9": "places.austria_vienna",
+    "XA-BA": "places.bosnia_and_herzegovina",
     "XA-BE": "places.belgium",
     "XA-BG": "places.bulgaria",
     "XA-BY": "places.belarus",
@@ -397,6 +438,7 @@ _GND_COUNTRY_CODE_MAP: dict = {
     "XA-MC": "places.monaco",
     "XA-MD": "places.moldavia",
     "XA-ME": "places.montenegro",
+    "XA-MK": "places.north_macedonia",
     "XA-MT": "places.malta",
     "XA-NL": "places.netherlands",
     "XA-NO": "places.norway",
@@ -411,7 +453,10 @@ _GND_COUNTRY_CODE_MAP: dict = {
     "XA-SK": "places.slovakia",
     "XA-UA": "places.ukraine",
     "XA-VA": "places.holy_see",
+    "XB-AF": "places.afghanistan",
     "XB-AM": "places.armenia",
+    "XB-AZ": "places.azerbaijan",
+    "XB-BD": "places.bangladesh",
     "XB-CN": "places.china",
     "XB-GE": "places.georgia",
     "XB-HK": "places.hong_kong",
@@ -423,6 +468,7 @@ _GND_COUNTRY_CODE_MAP: dict = {
     "XB-JP": "places.japan",
     "XB-KH": "places.cambodia",
     "XB-KR": "places.korea",
+    "XB-LB": "places.lebanon",
     "XB-PH": "places.philippines",
     "XB-SA": "places.saudi_arabia",
     "XB-SY": "places.syrian_arab_republic",
@@ -444,6 +490,7 @@ _GND_COUNTRY_CODE_MAP: dict = {
     "XD-CL": "places.chile",
     "XD-CO": "places.colombia",
     "XD-CU": "places.cuba",
+    "XD-CR": "places.costa_rica",
     "XD-EC": "places.ecuador",
     "XD-GT": "places.guatemala",
     "XD-HN": "places.honduras",
@@ -484,7 +531,8 @@ def __lookup_translations(
     trans_key: str | None = translations_map.get(value)
     if not trans_key:
         return {"none": [value]}
-    return available_translations.get(trans_key)
+
+    return available_translations[trans_key]
 
 
 def __lookup_translations_list(
@@ -514,6 +562,14 @@ def __lookup_translations_list(
                 result[lcode].extend([trans_itm])
 
     return dict(result)
+
+
+def institution_type_translator(values: list, translations: dict) -> dict:
+    return __lookup_translations_list(values, translations, _INSTITUTION_TYPE_MAP)
+
+
+def work_catalogue_status_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, _WORK_CATALOGUE_STATUS_MAP)
 
 
 def record_type_translator(value: str, translations: dict) -> dict:
@@ -564,6 +620,9 @@ def source_relationship_labels_translator(value: str, translations: dict) -> dic
     return __lookup_translations(value, translations, _SOURCE_RELATIONSHIP_LABELS_MAP)
 
 
+def work_relationship_labels_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, _WORKS_RELATIONSHIP_LABELS_MAP)
+
 def qualifier_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _QUALIFIER_LABELS_MAP)
 
@@ -583,9 +642,8 @@ def printing_techniques_translator(values: list, translations: dict) -> dict:
 def secondary_literature_json_value_translator(
     values: list, translations: dict
 ) -> dict:
-    # all_works: { "literature_123": {"formatted": "blah blah", pages: ["12", "13", "14", etc.]} }
+    # all_works: { "publication_123": {"formatted": "blah blah", pages: ["12", "13", "14", etc.]} }
     all_works: dict = {}
-
     for work in values:
         work_id = work.get("id")
         if work_id not in all_works:
@@ -640,14 +698,14 @@ def dramatic_roles_json_value_translator(values: list, translations: dict) -> di
         roles.append(role)
     return {"none": roles}
 
+
 def periodical_value_translator(values: list, translations: dict) -> dict:
     periodicals: list = []
     for r in values:
         ptitle = r.get("title", "")
-        pnum = f", {r["number"]}" if r.get("number") else ""
+        pnum = f", {r['number']}" if r.get("number") else ""
         periodicals.append(f"{ptitle}{pnum}")
     return {"none": periodicals}
-
 
 
 def title_json_value_translator(values: list, translations: dict) -> dict:
@@ -789,5 +847,5 @@ def url_detecting_translator(values: list, translations: dict) -> dict | None:
     return {"none": wrapped_blocks}
 
 
-def rism_source_id_translator(value: str, translations: dict) -> str:
+def rism_source_id_translator(value: str, translations: dict) -> dict:
     return {"none": [f"sources/{value}"]}

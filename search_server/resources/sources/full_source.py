@@ -1,21 +1,20 @@
 import logging
-import re
 
 import ypres
 
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.incipits.incipit import IncipitsSection
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
+from search_server.resources.shared.references_notes import ReferencesNotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import BaseSource
 from search_server.resources.sources.contents import ContentsSection
 from search_server.resources.sources.exemplars import ExemplarsSection
 from search_server.resources.sources.material_groups import MaterialGroupsSection
-from search_server.resources.sources.references_notes import ReferencesNotesSection
 from search_server.resources.sources.source_items import SourceItemsSection
 from search_server.resources.sources.works import WorksSection
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrResult
 
 log = logging.getLogger("mp_server")
 
@@ -26,7 +25,7 @@ class SourceItemList(ypres.DictSerializer):
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context["request"]
-        source_id: str = re.sub(ID_SUB, "", obj.get("source_id", ""))
+        source_id: str = strip_prefix(obj["source_id"])
 
         return get_identifier(req, "sources.sourceitem_list", source_id=source_id)
 
@@ -67,9 +66,7 @@ class FullSource(BaseSource):
             return None
 
         req = self.context["request"]
-        return MaterialGroupsSection(
-            obj, context={"request": req}
-        ).serialized
+        return MaterialGroupsSection(obj, context={"request": req}).serialized
 
     def get_relationships(self, obj: SolrResult) -> dict | None:
         # sets are cool; two sets are disjoint if they have no keys in common. We
@@ -85,18 +82,14 @@ class FullSource(BaseSource):
             return None
 
         req = self.context["request"]
-        return RelationshipsSection(
-            obj, context={"request": req}
-        ).serialized
+        return RelationshipsSection(obj, context={"request": req}).serialized
 
     async def get_incipits(self, obj: SolrResult) -> dict | None:
         if not obj.get("has_incipits_b", False):
             return None
 
         req = self.context["request"]
-        return await IncipitsSection(
-            obj, context={"request": req}
-        ).serialized
+        return await IncipitsSection(obj, context={"request": req}).serialized
 
     def get_references_notes(self, obj: SolrResult) -> dict | None:
         req = self.context["request"]

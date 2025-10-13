@@ -14,7 +14,7 @@ REMOVE_ACTIVESUPPORT: re.Pattern = re.compile(
     r"!map:ActiveSupport::HashWithIndifferentAccess"
 )
 # A list of the languages we support
-SUPPORTED_LANGUAGES: list = ["de", "en", "es", "fr", "it", "pl", "pt"]
+SUPPORTED_LANGUAGES: set = {"de", "en", "es", "fr", "it", "pl", "pt"}
 
 
 def language_labels(translations: dict) -> dict:
@@ -76,7 +76,7 @@ def __flatten(d: dict) -> dict:
     return out
 
 
-def load_translations(path: str) -> dict | None:
+def load_translations(path: str) -> dict:
     """Takes a path to a set of locale yml files, and returns a dictionary of translations, with each unique key
      pointing to all available translations of that key. For example:
 
@@ -94,7 +94,7 @@ def load_translations(path: str) -> dict | None:
         log.error("The path for loading the language files does not exist: %s", path)
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
 
-    output: dict = collections.defaultdict(dict)
+    output: collections.defaultdict = collections.defaultdict(dict)
 
     for langcode in SUPPORTED_LANGUAGES:
         locale_file: Path = Path(path, f"{langcode}.yml")
@@ -104,7 +104,7 @@ def load_translations(path: str) -> dict | None:
             continue
 
         with locale_file.open("r") as file_contents:
-            locale_contents = yaml.safe_load(file_contents)
+            locale_contents: dict = yaml.safe_load(file_contents) or {}
 
         if langcode not in locale_contents:
             log.error(
@@ -113,7 +113,7 @@ def load_translations(path: str) -> dict | None:
             )
             continue
 
-        translations: dict = locale_contents[langcode]
+        translations: dict = locale_contents.get(langcode, {})
         flattened_translations: dict = __flatten(translations)
 
         for translation_key, translation_value in flattened_translations.items():
@@ -124,7 +124,7 @@ def load_translations(path: str) -> dict | None:
 
     # combine the translations with the values of the language codes, to keep everything in the same spot.
     # namespace the language codes with 'langcodes' (similar to 'general' or 'records'). Language labels
-    # can then be looked up with "langcodes.ger".
+    # can then be looked up with "langcodes.get".
     labels: dict = language_labels(tr_out)
     namespaced_labels: dict = {f"langcodes.{k}": v for k, v in labels.items()}
     tr_out.update(namespaced_labels)
@@ -184,32 +184,35 @@ def filter_languages(langcodes: set, translations: dict) -> dict:
     }
 
 
-def negotiate_languages(req, translations: dict) -> dict:
-    # If we're not doing any filtering, just return all translations
-    if "X-API-Accept-Language" not in req.headers:
-        log.debug("No language negotiation")
-        return translations
-
-    # If we're requesting all languages anyway
-    elif req.headers.get("X-API-Accept-Language") == "*":
-        log.debug("All languages negotiated")
-        return translations
-
-    lang_values: str = req.headers.get("X-API-Accept-Language")
-    split_vals: set[str] = {f.strip() for f in lang_values.split(",")}
-
-    # Take the intersection of requested languages and supported languages. This
-    # determines which ones will be in the output.
-    acceptable_vals: set[str] = split_vals & set(SUPPORTED_LANGUAGES)
-
-    # If no languages provided are acceptable, return all languages
-    if not acceptable_vals:
-        log.debug("No acceptable language values requested")
-        return translations
-
-    log.debug("filtering languages %s", acceptable_vals)
-    return filter_languages(acceptable_vals, translations)
-
-
 def merge_language_maps(d1: dict[str, list], d2: dict[str, list]) -> dict[str, list]:
     return {key: [", ".join(value + d2[key])] for key, value in d1.items()}
+
+
+# Pass a singular and a plural key, and the value of the numeric label. Will return the key for the language
+# map value based on the number. Optionally, the when_zero parameter can be passed to return the
+# key for the language map when the value is less than or equal to zero.
+def choose_plural(
+    singular_key: str, plural_key: str, number: int, when_zero: str | None = None
+) -> str:
+    if number <= 0 and when_zero:
+        return when_zero
+    elif number == 1:
+        return singular_key
+    elif number > 1:
+        return plural_key
+    else:
+        return singular_key
+
+
+def add_to_each_translation(
+    translations: dict[str, list[str]],
+    prepend_str: str | None = None,
+    append_str: str | None = None,
+) -> dict:
+    out = {}
+    for lang, trans_list in translations.items():
+        outlist: list[str] = []
+        for trn in trans_list:
+            outlist.append(f"{prepend_str or ''}{trn}{append_str or ''}")
+        out[lang] = outlist
+    return out

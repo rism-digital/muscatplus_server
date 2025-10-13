@@ -1,21 +1,9 @@
-import re
-
 import ypres
 
+from search_server.helpers.formatters import format_person_label
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.shared.record_history import get_record_history
-from shared_helpers.formatters import format_person_label
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrResult
-
-SOLR_FIELDS_FOR_BASE_PERSON: list = [
-    "id",
-    "type",
-    "created",
-    "updated",
-    "name_s",
-    "name_ans",
-    "date_statement_s",
-]
 
 
 class BasePerson(ypres.AsyncDictSerializer):
@@ -27,7 +15,7 @@ class BasePerson(ypres.AsyncDictSerializer):
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context["request"]
-        person_id: str = re.sub(ID_SUB, "", obj["id"])
+        person_id: str = strip_prefix(obj["id"])
 
         return get_identifier(req, "people.person", person_id=person_id)
 

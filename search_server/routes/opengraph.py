@@ -3,9 +3,8 @@ import tempfile
 
 from sanic import Blueprint, response
 
-from data_export_server.resources.opengraph import OpenGraph, OpenGraphSvg
-from shared_helpers.resvg import render_svg
-from shared_helpers.solr_connection import SolrConnection
+from search_server.helpers.resvg import render_svg
+from search_server.helpers.solr_connection import SolrConnection
 
 opengraph_blueprint: Blueprint = Blueprint("opengraph", url_prefix="/og")
 

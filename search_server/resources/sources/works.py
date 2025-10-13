@@ -1,9 +1,11 @@
-import re
-
 import ypres
 
-from shared_helpers.identifiers import EXTERNAL_IDS, ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrResult
+from search_server.helpers.identifiers import (
+    EXTERNAL_IDS,
+    get_identifier,
+    strip_prefix,
+)
+from search_server.helpers.solr_connection import SolrResult
 
 
 class WorksSection(ypres.DictSerializer):
@@ -13,6 +15,7 @@ class WorksSection(ypres.DictSerializer):
     work_reference = ypres.MethodField(label="workReference")
     # for people, they can have multiple work references
     work_references = ypres.MethodField(label="workReferences")
+    works_catalogues = ypres.MethodField(label="worksCatalogs")
 
     def get_section_label(self, obj: SolrResult) -> dict:
         req = self.context["request"]
@@ -20,6 +23,14 @@ class WorksSection(ypres.DictSerializer):
 
         # TODO: Check label
         return transl["records.work"]
+
+    def get_works_catalogues(self, obj: SolrResult) -> dict | None:
+        if "works_catalogue_json" not in obj:
+            return None
+
+        return WorksCataloguesSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
     def get_work_reference(self, obj: SolrResult) -> dict | None:
         if "work_node_json" not in obj:
@@ -57,6 +68,38 @@ class ExternalWorkReferencesSection(ypres.DictSerializer):
         return [format_work_node(req, work_node) for work_node in work_nodes]
 
 
+class WorksCataloguesSection(ypres.DictSerializer):
+    stype = ypres.StaticField(label="type", value="rism:WorksCataloguesSection")
+    section_label = ypres.MethodField(label="sectionLabel")
+    items = ypres.MethodField()
+
+    def get_section_label(self, obj: dict) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+        return transl["records.work_catalogs"]
+
+    def get_items(self, obj: dict) -> list[dict]:
+        work_catalogues = obj["works_catalogue_json"]
+        req = self.context["request"]
+
+        return [
+            format_work_catalogue(req, work_catalogue)
+            for work_catalogue in work_catalogues
+        ]
+
+
+def format_work_catalogue(req, work_catalogue: dict) -> dict:
+    catalogue_id = strip_prefix(work_catalogue["id"])
+
+    return {
+        "id": get_identifier(
+            req, "publications.publication", publication_id=catalogue_id
+        ),
+        "label": {"none": [work_catalogue["title"]]},
+        "type": "rism:Publication",
+    }
+
+
 def format_work_node(req, work_node: dict) -> dict:
     transl: dict = req.ctx.translations
 
@@ -71,7 +114,7 @@ def format_work_node(req, work_node: dict) -> dict:
     base = EXTERNAL_IDS.get(authority, {}).get("ident")
     url = base.format(ident=ident)
 
-    person_id = re.sub(ID_SUB, "", work_node["composer_id"])
+    person_id = strip_prefix(work_node["composer_id"])
 
     return {
         "label": transl.get("records.external_work_reference"),

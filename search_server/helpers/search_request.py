@@ -10,12 +10,13 @@ from small_asc.query import (
 )
 
 from search_server.exceptions import InvalidQueryException, PaginationParseException
+from search_server.helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
+from search_server.helpers.incipit_search_fields import IncipitModeValues
 from search_server.helpers.vrv import get_pae_features
 from search_server.resources.search.pagination import (
     parse_page_number,
     parse_row_number,
 )
-from shared_helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
 
 log = logging.getLogger("mp_server")
 
@@ -24,7 +25,7 @@ TERM_FACET_LIMIT: int = 200  # The maximum number of results to return with a se
 
 # The set of fields that should always pass through the query validation because they are injected manually
 # and do not come from the user interface. Mostly used in incipit queries.
-RAW_FIELDS: set = {"intervals_bi", "pitches_bi", "contour_refined_bi"}
+RAW_FIELDS: set = {"intervals_bi", "pitches_bi", "contour_refined_bi", "text"}
 
 
 # Some of the facets and filters need to have a solr `{!tag}` prepended. We'll
@@ -54,12 +55,6 @@ class FacetTypeValues:
 class FacetSortValues:
     ALPHA = "alpha"
     COUNT = "count"
-
-
-class IncipitModeValues:
-    INTERVALS = "intervals"
-    EXACT_PITCHES = "exact-pitches"
-    CONTOUR = "contour"
 
 
 def sorting_for_mode(cfg: dict, mode: str) -> list:
@@ -201,8 +196,6 @@ class SearchRequest:
 
     """
 
-    default_sort = "id asc"
-
     def __init__(
         self,
         req,
@@ -220,6 +213,9 @@ class SearchRequest:
         self.filters: list = []
         self.sorts: list = []
         self.fields: list = ["*"]
+        # Allows the caller to override the number of rows returned.
+        # See self._compile_rows() for more detail.
+        self.rows: str | None = None
         self.query_report: dict | None = None
 
         # A probe request will do all the reqular things EXCEPT it will hard-code the number of responses to 0
@@ -396,7 +392,7 @@ class SearchRequest:
             # TODO: Check how this works with the new query grammar!
             quoted_values: list[str] = []
             for v in unquoted_values:
-                if v and (set(v) & {":", " ", "[", "]", "\\"}):
+                if v and (set(v) & {":", " ", "[", "]", "\\", "(", ")"}):
                     quoted_values.append(f'"{v}"')
                 elif v:
                     quoted_values.append(f"{v}")
@@ -477,6 +473,11 @@ class SearchRequest:
             else:
                 query_string = f"{tag}{solr_field_name}:({value})"
             filter_statements.append(query_string)
+
+        # NB: Restrict incipits to ONLY returning Source records for now.
+        # TODO: Remove this when we open it up to works.
+        if self._requested_mode == "incipits":
+            filter_statements.append(f"{{!tag={SolrQueryTags.MODE_FILTER_TAG}}}parent_type_s:source")
 
         return filter_statements
 
@@ -571,8 +572,8 @@ class SearchRequest:
 
         return sort_statement
 
-    def _compile_fields(self) -> str:
-        return ",".join(self.fields)
+    def _compile_fields(self) -> list[str]:
+        return self.fields
 
     def _compile_query(self) -> str:
         """Returns a validated query string that has been passed through the small-asc query parser. This
@@ -616,6 +617,81 @@ class SearchRequest:
 
         return parsed_query
 
+    def _compile_rows(self) -> int:
+        if self.probe:
+            return 0
+
+        # If the caller sets self.rows, then it will override any request parameters. It can also be
+        # a value that is not one that is permitted in the configuration.
+        if self.rows:
+            return parse_row_number(self._req, self.rows, only_allowed=False)
+        return parse_row_number(self._req, self._return_rows)
+
+    def _process_incipit_search(self) -> None:
+        # process intervals and modify the Solr search request accordingly.
+        #
+        # 1. Pass the incoming query to Verovio to render to PAE features
+        # 2. Somehow check what sort of query requested (e.g., interval-only search) using the `im` param
+        # 3. Adjust the query being passed to Solr to accommodate this query. This will probably encompass
+        #   3a. Interpreting the incoming query parameters as one (or more) Solr "filter" parameters
+        #   3b. Figuring out the statements to be used for the Solr 'sort' parameter
+        #   3c. Doing all this while also supporting 'traditional' facet searches.
+
+        # If we have an incipit mode, assume the incoming request is a PAE string.
+        self.pae_features = get_pae_features(self._req)
+        if not self.pae_features:
+            raise InvalidQueryException(
+                "The requested mode was 'incipits', but the PAE input was malformed."
+            )
+
+        # If verovio returns empty features, then something went wrong. Assume the problem is with the input
+        # query string, and flag an error to the user.
+        if not self.pae_features.get("intervalsChromatic", []):
+            raise InvalidQueryException(
+                "The requested mode was 'incipits', but the query could not be interpreted as music notation."
+            )
+
+        # This will be refactored to take into account the other accepted values for the interval search modes,
+        # once we know what they are.
+        incipit_query: str
+        incipit_query_field: str = "intervals_bi"
+        incipit_len_field: str = "intervals_len_i"
+        query_len: int
+
+        if self._incipit_mode == IncipitModeValues.EXACT_PITCHES:
+            pitches: list = self.pae_features.get("pitchesChromatic", [])
+            incipit_query = " ".join(pitches)
+            incipit_query_field = "pitches_bi"
+            incipit_len_field = "pitches_len_i"
+            query_len = len(pitches)
+        elif self._incipit_mode == IncipitModeValues.CONTOUR:
+            contour: list = self.pae_features.get("intervalRefinedContour", [])
+            incipit_query = " ".join(contour)
+            incipit_query_field = "contour_refined_bi"
+            query_len = len(contour)
+        else:
+            intervals: list = self.pae_features.get("intervalsChromatic", [])
+            incipit_query = " ".join(str(s) for s in intervals)
+            query_len = len(intervals)
+
+        if self._requested_query:
+            # Since we are injecting the query for the incipits into this list, we need to specify that any incoming
+            # queries that are already present are prefixed with the text query field.
+            self._requested_query = [f"text:{q}" for q in self._requested_query]
+
+        self._requested_query.insert(0, f'{incipit_query_field}:"{incipit_query}"')
+        self._extra_params["qq"] = f'{incipit_query_field}:"{incipit_query}"'
+        # query($qq) returns the score for the given subquery (qscore).
+        # scoring function is (qscore / ((doc_len + query_len) - qscore))
+        score_stmt: str = (
+            f"div(query($qq), sub(add({incipit_len_field}, {query_len}), query($qq)))"
+        )
+
+        if not self._result_sorting or self._result_sorting == "relevance":
+            self.sorts.insert(0, f"{score_stmt} desc")
+
+        self.fields.append(f"custom_score:scale({score_stmt},0,100)")
+
     def compile(self) -> JsonAPIRequest:
         """
         Assembles the incoming data into a form that is appropriate for
@@ -627,60 +703,9 @@ class SearchRequest:
         has_notedata: bool = self._req.args.get("n", None) is not None
 
         if self._requested_mode == "incipits" and has_notedata:
-            # process intervals and modify the Solr search request accordingly.
-            #
-            # 1. Pass the incoming query to Verovio to render to PAE features
-            # 2. Somehow check what sort of query requested (e.g., interval-only search) using the `im` param
-            # 3. Adjust the query being passed to Solr to accommodate this query. This will probably encompass
-            #   3a. Interpreting the incoming query parameters as one (or more) Solr "filter" parameters
-            #   3b. Figuring out the statements to be used for the Solr 'sort' parameter
-            #   3c. Doing all this while also supporting 'traditional' facet searches.
-
-            # If we have an incipit mode, assume the incoming request is a PAE string.
-            self.pae_features = get_pae_features(self._req)
-            if not self.pae_features:
-                raise InvalidQueryException(
-                    "The requested mode was 'incipits', but the PAE input was malformed."
-                )
-
-            # If verovio returns empty features, then something went wrong. Assume the problem is with the input
-            # query string, and flag an error to the user.
-            if not self.pae_features.get("intervalsChromatic", []):
-                raise InvalidQueryException(
-                    "The requested mode was 'incipits', but the query could not be interpreted as music notation."
-                )
-
-            # This will be refactored to take into account the other accepted values for the interval search modes,
-            # once we know what they are.
-            incipit_query: str
-            incipit_query_field: str = "intervals_bi"
-            incipit_len_field: str = "intervals_len_i"
-            query_len: int
-
-            if self._incipit_mode == IncipitModeValues.EXACT_PITCHES:
-                pitches: list = self.pae_features.get("pitchesChromatic", [])
-                incipit_query = " ".join(pitches)
-                incipit_query_field = "pitches_bi"
-                incipit_len_field = "pitches_len_i"
-                query_len = len(pitches)
-            elif self._incipit_mode == IncipitModeValues.CONTOUR:
-                contour: list = self.pae_features.get("intervalRefinedContour", [])
-                incipit_query = " ".join(contour)
-                incipit_query_field = "contour_refined_bi"
-                query_len = len(contour)
-            else:
-                intervals: list = self.pae_features.get("intervalsChromatic", [])
-                incipit_query = " ".join(str(s) for s in intervals)
-                query_len = len(intervals)
-
-            self._requested_query.insert(0, f'{incipit_query_field}:"{incipit_query}"')
-            self._extra_params["qq"] = f'{incipit_query_field}:"{incipit_query}"'
-            # query($qq) returns the score for the given subquery (qscore).
-            # scoring function is (qscore / ((doc_len + query_len) - qscore))
-            score_stmt: str = f"div(query($qq), sub(add({incipit_len_field}, {query_len}), query($qq)))"
-
-            self.sorts.insert(0, f"{score_stmt} desc, id desc")
-            self.fields.append(f"custom_score:scale({score_stmt},0,100)")
+            # The incipit search adds several things to the various fields
+            # used in the query response.
+            self._process_incipit_search()
 
         mode_filter: str = self._modes_to_filter()
         requested_filters: list = self._compile_filters()
@@ -708,7 +733,7 @@ class SearchRequest:
 
         # These have already been checked in the validation, so they shouldn't raise an exception here.
         page_num: int = parse_page_number(self._page)
-        return_rows: int = parse_row_number(self._req, self._return_rows)
+        return_rows: int = self._compile_rows()
         # Results are 0-indexed, so a request for 'start 0 + 20 rows' will return the first through the 20th result.
         # Then we simply take the page number and multiply it by the rows:
         #  start: page:1 = start:0
@@ -720,7 +745,7 @@ class SearchRequest:
             "query": self._compile_query(),
             "filter": self.filters,
             "offset": start_row,
-            "limit": return_rows if self.probe is False else 0,
+            "limit": return_rows,
             "sort": self._compile_sorts(),
             "facet": self._compile_facets(),
             "fields": self._compile_fields(),

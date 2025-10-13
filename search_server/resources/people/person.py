@@ -1,32 +1,23 @@
 import logging
-import re
 
 import ypres
 
+from search_server.helpers.display_fields import get_display_fields
+from search_server.helpers.display_translators import (
+    person_gender_translator,
+    person_name_variant_labels_translator,
+)
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrResult, result_count
 from search_server.resources.people.base_person import BasePerson
-from search_server.resources.people.variant_name import VariantNamesSection
+from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.works import WorksSection
-from shared_helpers.display_fields import get_display_fields
-from shared_helpers.display_translators import person_gender_translator
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 log = logging.getLogger("mp_server")
-
-
-async def handle_person_request(req, person_id: str) -> dict | None:
-    person_record = await SolrConnection.get(f"person_{person_id}")
-
-    if not person_record:
-        return None
-
-    return await Person(
-        person_record, context={"request": req, "direct_request": True}
-    ).serialized
 
 
 class Person(BasePerson):
@@ -38,6 +29,7 @@ class Person(BasePerson):
     sources = ypres.MethodField()
     works = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
+    digital_objects = ypres.MethodField(label="digitalObjects")
 
     def get_biographical_details(self, obj: SolrResult) -> dict | None:
         bio_details: dict = BiographicalDetails(
@@ -65,19 +57,30 @@ class Person(BasePerson):
             obj, context={"request": self.context["request"]}
         ).serialized
 
-    def get_sources(self, obj: SolrResult) -> dict | None:
+    async def get_sources(self, obj: SolrResult) -> dict | None:
         # Do not show a link to sources if this serializer is used for embedded results
-        if not self.context.get("direct_request") or obj.get("project_s") == "diamm":
-            return None
-
-        # if no sources are attached to this organization, don't show this section. NB: This will
-        # omit the anonymous user since that is manually set to 0 sources.
-        source_count: int = obj.get("total_sources_i", 0)
-        if source_count == 0:
+        if not self.context.get("direct_request") or obj.get("project_s") in (
+            "diamm",
+            "cantus",
+        ):
             return None
 
         person_id: str = obj["person_id"]
-        ident: str = re.sub(ID_SUB, "", person_id)
+
+        # Don't show sources for the anonymous person record.
+        if person_id == "person_30004985":
+            return None
+
+        fq: list[str] = [
+            "type:source",
+            f"all_related_people_ids:{person_id}",
+        ]
+        source_count = await result_count(fq=fq)
+
+        if source_count == 0:
+            return None
+
+        ident: str = strip_prefix(person_id)
 
         return {
             "url": get_identifier(
@@ -98,7 +101,7 @@ class Person(BasePerson):
             "related_places_json",
             "related_institutions_json",
             "related_sources_json",
-            "contributing_projects_json"
+            "contributing_projects_json",
         }.isdisjoint(obj.keys()):
             return None
 
@@ -116,8 +119,8 @@ class Person(BasePerson):
 
         return None
 
-    async def get_works(self, obj: SolrResult) -> dict | None:
-        if "work_nodes_json" not in obj:
+    def get_works(self, obj: SolrResult) -> dict | None:
+        if {"work_nodes_json", "works_catalogue_json"}.isdisjoint(obj.keys()):
             return None
 
         return WorksSection(
@@ -132,6 +135,17 @@ class Person(BasePerson):
 
         return ExternalResourcesSection(
             obj, context={"request": self.context["request"]}
+        ).serialized
+
+    async def get_digital_objects(self, obj: SolrResult) -> dict | None:
+        if not obj.get("has_digital_objects_b", False):
+            return None
+
+        return await DigitalObjectsSection(
+            obj,
+            context={
+                "request": self.context["request"],
+            },
         ).serialized
 
 
@@ -150,6 +164,7 @@ class BiographicalDetails(ypres.DictSerializer):
         transl: dict = req.ctx.translations
 
         field_config: dict = {
+            "authentication_code_s": ("records.authentication_code", None),
             "date_statement_s": ("records.life_dates", None),
             "other_dates_s": ("records.other_life_dates", None),
             "gender_s": ("records.gender", person_gender_translator),
@@ -158,3 +173,37 @@ class BiographicalDetails(ypres.DictSerializer):
         }
 
         return get_display_fields(obj, transl, field_config)
+
+
+class VariantNamesSection(ypres.DictSerializer):
+    ntype = ypres.StaticField(label="type", value="rism:VariantNamesSection")
+    slabel = ypres.MethodField(label="label")
+    items = ypres.MethodField()
+
+    def get_slabel(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return transl["records.name_variants"]
+
+    def get_items(self, obj: SolrResult) -> list[dict]:
+        return NameVariant(
+            obj["variant_names_json"],
+            many=True,
+            context={"request": self.context["request"]},
+        ).serialized_many
+
+
+class NameVariant(ypres.DictSerializer):
+    vtype = ypres.StaticField(label="type", value="rism:VariantName")
+    slabel = ypres.MethodField(label="label")
+    value = ypres.MethodField()
+
+    def get_slabel(self, obj: dict) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return person_name_variant_labels_translator(obj["type"], transl)
+
+    def get_value(self, obj: dict) -> dict:
+        return {"none": obj["variants"]}

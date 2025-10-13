@@ -1,22 +1,21 @@
 import itertools
 import logging
-import re
 from collections.abc import Callable
 
 import ypres
 
-from shared_helpers.display_translators import (
+from search_server.helpers.display_translators import (
     person_institution_relationship_labels_translator,
     place_relationship_labels_translator,
     qualifier_labels_translator,
     source_relationship_labels_translator,
     title_json_value_translator,
+    work_relationship_labels_translator,
 )
-from shared_helpers.identifiers import (
+from search_server.helpers.identifiers import (
     EXTERNAL_IDS,
-    ID_SUB,
-    PROJECT_ID_SUB,
     get_identifier,
+    strip_prefix,
 )
 
 log = logging.getLogger("mp_server")
@@ -39,9 +38,19 @@ class RelationshipsSection(ypres.DictSerializer):
         institutions: list = obj.get("related_institutions_json", [])
         places: list = obj.get("related_places_json", [])
         sources: list = obj.get("related_sources_json", [])
+        works: list = obj.get("related_works_json", [])
         contributing_projects: list = obj.get("contributing_projects_json", [])
 
-        all_relationships = itertools.chain(now_in, contains, people, institutions, sources, places, contributing_projects)
+        all_relationships = itertools.chain(
+            now_in,
+            contains,
+            people,
+            institutions,
+            sources,
+            works,
+            places,
+            contributing_projects,
+        )
 
         return Relationship(
             all_relationships,
@@ -99,6 +108,7 @@ class Relationship(ypres.DictSerializer):
 
     def get_related_to(self, obj: dict) -> dict | None:
         req = self.context["request"]
+
         if "person_id" in obj:
             return _related_to_person(req, obj)
         elif "institution_id" in obj:
@@ -107,6 +117,8 @@ class Relationship(ypres.DictSerializer):
             return _related_to_place(req, obj)
         elif "source_id" in obj:
             return _related_to_source(req, obj)
+        elif "work_id" in obj:
+            return _related_to_work(req, obj)
         else:
             # Something is wrong, but we can't find out what to display.
             return None
@@ -117,17 +129,19 @@ class Relationship(ypres.DictSerializer):
         # if any of these keys are in the object, then we have a relationship and it should be handled
         # by the 'related_to' function. This is done by seeing if the set of expected keys, and the set
         # of actual keys, have any overlap. If they do, bail.
-        if not {"person_id", "institution_id", "place_id"}.isdisjoint(obj.keys()):
+        if not {"person_id", "institution_id", "place_id", "work_id"}.isdisjoint(
+            obj.keys()
+        ):
             return None
 
         elif "name" in obj:
             # This will be selected as a non-linked label object
             # if we can't find an id to create a linkable object.
             return {"none": [obj["name"]]}
-        else:
-            # we have neither a related object, nor a name, so how could any reasonable person expect us
-            # to do anything with this? Just bail, and hope someone fixes the data.
-            return None
+
+        # we have neither a related object, nor a name, so how could any reasonable person expect us
+        # to do anything with this? Just bail, and hope someone fixes the data.
+        return None
 
     def get_note(self, obj: dict) -> dict | None:
         if "note" not in obj:
@@ -139,6 +153,7 @@ class Relationship(ypres.DictSerializer):
         # For contributing projects a Project URL is given.
         if "project_url" not in obj:
             return None
+
         return obj.get("project_url")
 
 
@@ -149,7 +164,7 @@ def _related_to_person(req, obj: dict) -> dict:
     else:
         name = f"{obj.get('name')}"
 
-    person_id = re.sub(ID_SUB, "", obj["person_id"])
+    person_id = strip_prefix(obj["person_id"])
 
     return {
         "id": get_identifier(req, "people.person", person_id=person_id),
@@ -167,7 +182,7 @@ def _related_to_institution(req, obj: dict) -> dict:
     if "siglum" in obj:
         name = f"{name} ({obj.get('siglum')})"
 
-    institution_id = re.sub(ID_SUB, "", obj["institution_id"])
+    institution_id = strip_prefix(obj["institution_id"])
 
     return {
         "id": get_identifier(
@@ -179,11 +194,11 @@ def _related_to_institution(req, obj: dict) -> dict:
 
 
 def _related_to_place(req, obj: dict) -> dict:
-    place_id = re.sub(ID_SUB, "", obj["place_id"])
+    place_id = strip_prefix(obj["place_id"])
 
     return {
         "id": get_identifier(req, "places.place", place_id=place_id),
-        "label": {"none": [obj.get("name")]},
+        "label": {"none": [obj.get("name", "[No name]")]},
         "type": "rism:Place",
     }
 
@@ -196,7 +211,7 @@ def _related_to_source(req, obj: dict) -> dict:
     proj: str | None = obj.get("project")
 
     if proj and proj in {"diamm", "cantus"}:
-        source_id = re.sub(PROJECT_ID_SUB, "", obj["source_id"])
+        source_id = strip_prefix(obj["source_id"])
         prefix: str | None = EXTERNAL_IDS.get(obj["project"], {}).get("ident")
         if not prefix:
             # If, for some reason this isn't found, return the empty dict.
@@ -206,12 +221,20 @@ def _related_to_source(req, obj: dict) -> dict:
         suffix = f"{spath}/{source_id}"
         ident = prefix.format(ident=suffix)
     else:
-        source_id = re.sub(ID_SUB, "", obj["source_id"])
+        source_id = strip_prefix(obj["source_id"])
         ident = get_identifier(req, "sources.source", source_id=source_id)
 
     source_title: dict = title_json_value_translator(obj.get("title", []), transl)
 
     return {"id": ident, "label": source_title, "type": "rism:Source"}
+
+
+def _related_to_work(req, obj: dict) -> dict:
+    work_id: str = strip_prefix(obj["work_id"])
+    ident: str = get_identifier(req, "works.work", work_id=work_id)
+    work_title: dict = {"none": [obj.get("title", "[No title]")]}
+
+    return {"id": ident, "label": work_title, "type": "rism:Work"}
 
 
 def _relationship_translator(obj: dict) -> Callable | None:
@@ -233,6 +256,8 @@ def _relationship_translator(obj: dict) -> Callable | None:
         return place_relationship_labels_translator
     elif "source_id" in obj:
         return source_relationship_labels_translator
+    elif "work_id" in obj:
+        return work_relationship_labels_translator
     elif "relationship" in obj:
         # To get around a bug where place IDs are not stored in Muscat, but the relationship
         # to them is. TODO: Fix this when the Muscat bug is fixed.

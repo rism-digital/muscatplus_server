@@ -1,37 +1,133 @@
-import re
+import urllib.parse
 
 import ypres
 from small_asc.client import Results
 
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
+from search_server.resources.incipits.incipit import (
+    WorkIncipitsSection,
+)
+from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
+from search_server.resources.shared.external_resources import ExternalResourcesSection
+from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import (
-    SOLR_FIELDS_FOR_BASE_SOURCE,
     BaseSource,
 )
 from search_server.resources.works.base_work import BaseWork
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult
 
 
 class FullWork(BaseWork):
+    incipits = ypres.MethodField()
     sources = ypres.MethodField()
+    external_resources = ypres.MethodField(label="externalResources")
+    external_authorities = ypres.MethodField(label="externalAuthorities")
+    form_of_work = ypres.MethodField(label="formOfWork")
+    relationships = ypres.MethodField()
 
-    async def get_sources(self, obj: SolrResult) -> dict | None:
+    async def get_incipits(self, obj: SolrResult) -> dict | None:
+        if not obj.get("has_incipits_b", False):
+            return None
+
+        req = self.context["request"]
+        return await WorkIncipitsSection(
+            obj, context={"request": req, "direct_request": False}
+        ).serialized
+
+    def get_external_resources(self, obj: SolrResult) -> dict | None:
+        if "external_resources_json" not in obj and not obj.get(
+            "has_external_record_b", False
+        ):
+            return None
+
+        return ExternalResourcesSection(
+            obj,
+            context={
+                "request": self.context["request"],
+            },
+        ).serialized
+
+    def get_external_authorities(self, obj: SolrResult) -> dict | None:
+        if "external_ids" not in obj:
+            return None
+
+        return ExternalAuthoritiesSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
+
+    def get_sources(self, obj: SolrResult) -> dict | None:
+        source_count: int = obj.get("source_count_i", 0)
+        if source_count == 0:
+            return None
+
         req = self.context["request"]
         work_id: str = obj["id"]
-        source_count: int = obj.get("source_count_i", 0)
-
-        ident: str = re.sub(ID_SUB, "", work_id)
+        ident: str = strip_prefix(work_id)
 
         d: dict = {
             "url": get_identifier(req, "works.work_sources", work_id=ident),
             "totalItems": source_count,
         }
 
-        items: list | None = await get_source_objects(req, work_id)
-        if items:
-            d["items"] = items
-
         return d
+
+    def get_form_of_work(self, obj: SolrResult) -> dict | None:
+        if "work_form_json" not in obj:
+            return None
+
+        return FormOfWorkSection(
+            obj,
+            context={"request": self.context["request"]},
+        ).serialized
+
+    def get_relationships(self, obj: SolrResult) -> dict | None:
+        # sets are cool; two sets are disjoint if they have no keys in common. We
+        # can use this to check whether these keys are in the solr result; if not,
+        # we have no relationships to render, so we can return None.
+        if {"related_people_json", "related_works_json"}.isdisjoint(obj.keys()):
+            return None
+
+        req = self.context["request"]
+        return RelationshipsSection(obj, context={"request": req}).serialized
+
+
+class FormOfWorkSection(ypres.DictSerializer):
+    section_label = ypres.MethodField(label="sectionLabel")
+    items = ypres.MethodField()
+
+    def get_section_label(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return transl.get("records.form_of_work", {})
+
+    def get_items(self, obj) -> list:
+        return FormOfWork(
+            obj["work_form_json"],
+            many=True,
+            context={"request": self.context["request"]},
+        ).serialized_many
+
+
+class FormOfWork(ypres.DictSerializer):
+    sid = ypres.MethodField(label="id")
+    stype = ypres.StaticField(label="type", value="rism:Subject")
+    slabel = ypres.MethodField(label="label")
+    value = ypres.MethodField()
+
+    def get_sid(self, obj: dict) -> str:
+        req = self.context["request"]
+        subject_id: str = strip_prefix(obj["id"])
+
+        return get_identifier(req, "subjects.subject", subject_id=subject_id)
+
+    def get_slabel(self, obj: dict) -> dict:
+        return {"none": [obj.get("subject")]}
+
+    def get_value(self, obj: dict) -> str:
+        if "subject" not in obj:
+            return ""
+        return urllib.parse.quote_plus(obj["subject"])
 
 
 async def get_source_objects(req, work_id: str) -> list | None:
@@ -42,7 +138,6 @@ async def get_source_objects(req, work_id: str) -> list | None:
         {
             "query": "*:*",
             "filter": fq,
-            "fields": SOLR_FIELDS_FOR_BASE_SOURCE,
             "sort": sort,
         },
         cursor=True,

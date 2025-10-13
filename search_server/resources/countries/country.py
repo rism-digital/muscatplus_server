@@ -1,7 +1,6 @@
-
 import ypres
 
-from shared_helpers.display_translators import (
+from search_server.helpers.display_translators import (
     SOURCE_SIGLA_COUNTRY_MAP,
     country_code_labels_translator,
 )
@@ -26,12 +25,15 @@ class CountryList(ypres.DictSerializer):
     items = ypres.MethodField()
 
     def get_clid(self, _) -> str:
-        req = self.context["request"]  # type: ignore
+        req = self.context["request"]
         return req.url
 
     def get_items(self, obj: dict) -> list[dict]:
-        req = self.context["request"]  # type: ignore
+        req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return [{"label": country_code_labels_translator(c, transl), "value": c}
-                for c in obj if c]
+        return [
+            {"label": country_code_labels_translator(c, transl), "value": c}
+            for c in obj
+            if c
+        ]

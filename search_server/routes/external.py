@@ -20,5 +20,5 @@ async def external(req, project: str, resource_type: str, ext_id: str):
 @external_blueprint.route(
     "/<project:str>/source/<source_id:str>/holding/<institution_id:str>"
 )
-def external_holding(req, project: str, source_id: str, institution_id: str):
+async def external_holding(req, project: str, source_id: str, institution_id: str):
     return response.json({"message": "Not implemented"}, status=501)

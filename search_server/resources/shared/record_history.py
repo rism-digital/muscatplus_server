@@ -1,5 +1,3 @@
-
-
 def get_record_history(obj: dict, transl: dict) -> dict | None:
     """
     Formats a record history object with the appropriate translation labels.
@@ -18,8 +16,12 @@ def get_record_history(obj: dict, transl: dict) -> dict | None:
 
     return {
         "type": "rism:RecordHistory",
-        "createdLabel": transl.get("general.created_at"),
-        "updatedLabel": transl.get("general.updated_at"),
-        "created": obj.get("created"),
-        "updated": obj.get("updated"),
+        "created": {
+            "label": transl.get("general.created_at"),
+            "value": obj.get("created"),
+        },
+        "updated": {
+            "label": transl.get("general.updated_at"),
+            "value": obj.get("updated"),
+        },
     }

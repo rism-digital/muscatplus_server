@@ -280,7 +280,7 @@ pl:
     alternate_spelling: Alternatywna pisownia
     alternative_work_title: Alternatywny tytuł dzieła
     amount: Liczba
-    annex: Annex
+    annex: Dodatek
     appendix: Załącznik
     archive: Archiwum
     arrangement: Aranżacja
@@ -422,6 +422,7 @@ pl:
     deprecated_fields: Nieaktualne pola (nie uzupełniaj)
     description: Opis
     description_area: Obszar opisu
+    description_conventions: Konwencja opisowa
     description_summary: Podsumowanie
     designer: Projektant
     df_major: Des-dur
@@ -491,6 +492,7 @@ pl:
     fingerprint_identifier: Identyfikator odcisku palca
     first_entry: Pierwszy wpis
     first_second_group: Pierwsza / druga grupa
+    form_of_work: Gatunek dzieła
     form_subdivision: Dalszy podział formularza
     format_extent: Rodzaj źródła, objętość
     former_sigla: Poprzednie siglum
@@ -544,6 +546,7 @@ pl:
     identity_area: Obszar tożsamości
     iiif_manifest: "Manifest IIIF (źródło zdigitalizowane)"
     iiif_manifest_other: "Manifest IIIF (inne)"
+    iiif_manifest_nothing_more: Manifest IIIF
     illustrator: Ilustrator
     immediate_parent_body: Natychmiastowy rodzic
     import: Import
@@ -678,6 +681,7 @@ pl:
     name_family: Nazwa rodziny
     name_of_part: Nazwa części/sekcji utworu
     name_printer: Nazwa drukarni
+    name_titles_words: Tytuły i słowa powiązane z nazwą
     name_variant: Alternatywna nazwa osoby
     name_variants: Alternatywne nazwy osoby
     named_dramatic_roles: Postaci
@@ -709,6 +713,7 @@ pl:
     octoechos7: 'Octoechos 7: Ēchos barys (trzecia skala plagalna muzyki bizantyjskiej)'
     octoechos8: 'Octoechos 8: Ēchos plagios tetartos (czwarta skala plagalna muzyki bizantyjskiej)'
     online_finding_aids: Pomoce archiwalne on-line
+    online_resource: Zasoby Online
     opera_houses_concert_halls: Opery i sale koncertowe
     opus_number: Numer opus
     opus_thematic_index_number: Opus / Numer z katalogu tematycznego
@@ -726,6 +731,7 @@ pl:
     other_instruments: Pozostałe instrumenty
     other_life_dates: Pozostałe daty urodzenia i śmierci
     other_physical_details: Pozostałe dane fizyczne
+    other_resource: Inne zasoby
     other_searchform: Inna forma wyszukiwania
     other_shelfmark: Inna sygnatura
     other_standard_identifier: Identyfikator innego standardu
@@ -777,9 +783,12 @@ pl:
     print_with_non_autograph_annotations: Druk z adnotacjami nieautorskimi
     printer: Drukarnia
     printing_technique: Technika druku
+    private_collection: Kolekcja prywatna
     production: Produkcja
     production_personnel: Personel produkcyjny
     profession_or_function: Zawód lub funkcja
+    project: Projekt
+    project_url: Adres URL projektu
     provenance: Pochodzenie
     provenance_notes: Uwaga o proweniencji
     pseudonym: Pseudonim
@@ -927,8 +936,10 @@ pl:
     watermark_description: Opis znaku wodnego
     woodwinds: Instrumenty dęte drewniane
     work: Dzieło
+    work_catalog: Katalog dzieł
+    work_catalogs: Katalogi dzieł
     work_catalog_note: Notatka do katalogu utworów
-    work_list: Work list
+    work_list: Lista Dzieł
     work_node: Odniesienie do Dzieła zewnętrznego (Work node)
     work_number: Numer dzieła
     work_tag: tag edycji Dzieła
@@ -951,13 +962,22 @@ pl:
     P60183: "Wstawić"
   relations_works:
     P60250: "Posiada derywatywę"
-    P60305: "Posiada źródło"
+    P60305: "Jest oparte na"
     P60216: "Jest rozszerzony jako"
     P60294: "Jest rozszerzoną wersją"
     P60274: "Jest zaaranżowane jako"
     P60242: "Jest aranżacją"
     P60198: "Jest uzupełnione o"
     P60313: "Nieokreślony"
+  relations_institutions:
+    P50008: Hierarchicznie przełożony
+    P50010: Hierarchicznie podwładny
+    P50012: Poprzednik organizacji
+    P50016: Następca organizacji
+    P50020: Rodzina założycieli organizacji
+    P50230: Członek organizacji
+    P50435: Członek rodziny, będący częścią organizacji
+    P50301: Wchłonięta organizacja
   verovio:
     position: "Pozycja"
     warning: "Uwaga"
@@ -1028,6 +1048,12 @@ pl:
     ERR_064_LIGATURE_DURATION: Czas trwania ligatury nie może być krótszy niż semibrevis.
     ERR_065_MREST_INVALID_MEASURE: Miara taktu pustego nie może zawierać innych znaków.
     ERR_066_EMPTY_CONTAINER: Grupa ozdobników lub belkowanie nie mogą być puste.
+  work_catalogue:
+    not_work_catalogue: To nie jest katalog dzieł
+    work_catalogue_alternate: Alternatywne
+    work_catalogue_complete: Kompletne
+    work_catalogue_in_preparation: Kwalifikujące się
+    work_catalogue_partial: Częściowo kompletne
   rism_online:
     manuscript: "Rękopis"
     printed: "Druk"

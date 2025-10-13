@@ -1,12 +1,12 @@
 import logging
-import re
 
 import ypres
 from small_asc.client import Results
 
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import render_url
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrConnection, SolrResult
+from search_server.resources.shared.part_of import PartOfSection
 
 log = logging.getLogger("mp_server")
 
@@ -20,7 +20,7 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
     def get_doid(self, obj: SolrResult) -> str:
         req = self.context["request"]
         obj_type: str = obj["type"]
-        obj_id: str = re.sub(ID_SUB, "", obj["id"])
+        obj_id: str = strip_prefix(obj["id"])
         # linked_record_type: str = obj["linked_type_s"]
         # linked_id_val: str = obj["linked_id"]
         # linked_id: str = re.sub(ID_SUB, "", linked_id_val)
@@ -29,9 +29,17 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
             return get_identifier(req, "sources.digital_object_list", source_id=obj_id)
         elif obj_type == "person":
             return get_identifier(req, "people.digital_object_list", person_id=obj_id)
+        elif obj_type == "holding":
+            source_id = strip_prefix(obj["source_id"])
+            return get_identifier(
+                req,
+                "sources.holding_digital_object_list",
+                source_id=source_id,
+                holding_id=obj_id,
+            )
         elif obj_type == "institution":
             return get_identifier(
-                req, "institution.digital_object_list", institution_id=obj_id
+                req, "institutions.digital_object_list", institution_id=obj_id
             )
         else:
             log.error("Could not determine ID for %s", obj["id"])
@@ -66,9 +74,7 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
 class DigitalObject(ypres.AsyncDictSerializer):
     doid = ypres.MethodField(label="id")
     dotype = ypres.StaticField(label="type", value="rism:DigitalObject")
-    # part_of = ypres.MethodField(
-    #     label="partOf"
-    # )
+    part_of = ypres.MethodField(label="partOf")
     slabel = ypres.MethodField(label="label")
     format = ypres.MethodField()
     body = ypres.MethodField()
@@ -77,9 +83,9 @@ class DigitalObject(ypres.AsyncDictSerializer):
         req = self.context["request"]
         linked_record_type: str = obj["linked_type_s"]
         linked_id_val: str = obj["linked_id"]
-        linked_id: str = re.sub(ID_SUB, "", linked_id_val)
+        linked_id: str = strip_prefix(linked_id_val)
         dobject_id_val: str = obj["id"]
-        dobject_id: str = re.sub(ID_SUB, "", dobject_id_val)
+        dobject_id: str = strip_prefix(dobject_id_val)
 
         if linked_record_type == "source":
             return get_identifier(
@@ -92,10 +98,20 @@ class DigitalObject(ypres.AsyncDictSerializer):
             return get_identifier(
                 req, "people.digital_object", person_id=linked_id, dobject_id=dobject_id
             )
+        elif linked_record_type == "holding":
+            # we can get the source ID from the request path.
+            source_id: str = req.match_info.get("source_id", "no-id")
+            return get_identifier(
+                req,
+                "sources.holding_digital_object",
+                source_id=source_id,
+                holding_id=linked_id,
+                dobject_id=dobject_id,
+            )
         elif linked_record_type == "institution":
             return get_identifier(
                 req,
-                "institution.digital_object",
+                "institutions.digital_object",
                 institution_id=linked_id,
                 dobject_id=dobject_id,
             )
@@ -107,15 +123,19 @@ class DigitalObject(ypres.AsyncDictSerializer):
         return {"none": [f"{obj.get('description_s')}"]}
 
     def get_part_of(self, obj: SolrResult) -> dict | None:
-        # TODO!
-        pass
+        if not self.context.get("direct_request", False):
+            return None
+
+        return PartOfSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
 
     def get_format(self, obj: SolrResult) -> str | None:
         return obj["media_type_s"]
 
-    async def get_body(self, obj: SolrResult) -> dict:
+    async def get_body(self, obj: SolrResult) -> dict | None:
         d = {}
-        mt: str | None = obj.get("media_type_s")
+        mt: str = obj["media_type_s"]
         if mt in ("image/jpeg", "image/png"):
             d.update(
                 {
@@ -137,5 +157,4 @@ class DigitalObject(ypres.AsyncDictSerializer):
                     "rendered": {"format": "image/svg+xml", "data": svg},
                 }
             )
-
-        return d
+        return d or None

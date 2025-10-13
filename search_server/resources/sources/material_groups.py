@@ -2,15 +2,16 @@ import logging
 
 import ypres
 
-from search_server.resources.shared.external_resources import ExternalResourcesSection
-from search_server.resources.shared.relationship import RelationshipsSection
-from shared_helpers.display_fields import LabelConfig, get_display_fields
-from shared_helpers.display_translators import (
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
+from search_server.helpers.display_translators import (
     material_content_types_translator,
     material_source_types_translator,
     printing_techniques_translator,
 )
-from shared_helpers.solr_connection import SolrResult
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrResult
+from search_server.resources.shared.external_resources import ExternalResourcesSection
+from search_server.resources.shared.relationship import RelationshipsSection
 
 log = logging.getLogger("mp_server")
 
@@ -36,11 +37,20 @@ class MaterialGroupsSection(ypres.DictSerializer):
 
 
 class MaterialGroup(ypres.DictSerializer):
+    sid = ypres.MethodField(label="id")
     slabel = ypres.MethodField(label="label")
     summary = ypres.MethodField()
     notes = ypres.MethodField()
     relationships = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
+
+    def get_sid(self, obj: dict) -> str:
+        req = self.context["request"]
+        group_num: str = obj["group_num"]
+        source_id: str = strip_prefix(obj["source_id"])
+        return get_identifier(
+            req, "sources.material_group", source_id=source_id, mg_id=group_num
+        )
 
     def get_slabel(self, obj: dict) -> dict:
         # TODO: Translate this header into the languages

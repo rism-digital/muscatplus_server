@@ -422,6 +422,7 @@ de:
     deprecated_fields: Veraltete Felder (nicht verwenden)
     description: Beschreibung
     description_area: Beschreibung
+    description_conventions: Beschreibungskonventionen
     description_summary: Zusammenfassende Beschreibung
     designer: Designer
     df_major: Des-Dur
@@ -461,8 +462,8 @@ de:
     event_place: Veranstaltungsort
     excerpts: Ausschnitte
     exemplar: Exemplar
-    exemplars: Exemplars
-    expansion: Expansion
+    exemplars: Exemplare
+    expansion: Erweiterung
     extent: Umfang
     extent_parts: Umfang Stimmenmaterial
     external_resource: Elektronische Lokalisierung und Zugriff
@@ -491,6 +492,7 @@ de:
     fingerprint_identifier: Fingerprint-Erkennung
     first_entry: Erster Eintrag
     first_second_group: Erste und zweite Zeichengruppe
+    form_of_work: Werkgattung
     form_subdivision: Unterteilung nach der Form
     format_extent: Quellenart, Umfang
     former_sigla: Früheres Sigel
@@ -544,6 +546,7 @@ de:
     identity_area: Identity area
     iiif_manifest: "IIIF-Manifest (digitalisierte Quelle)"
     iiif_manifest_other: "IIIF-Manifest (sonstige)"
+    iiif_manifest_nothing_more: IIIF-Manifest
     illustrator: Illustrator
     immediate_parent_body: Unmittelbarer Elternteil
     import: Fremddateneinspielung
@@ -585,7 +588,7 @@ de:
     language_codes: Sprachcodes
     language_libretto: Sprachcode von Libretti
     language_note: Sprachenvermerk
-    language_of_cataloging: Katalogisierungssprache
+    language_of_cataloging: Katalogisierungsspache
     language_original_text: Sprachcode des Originaltextes
     language_text: Sprachcode
     later_entry: Späterer Eintrag
@@ -678,6 +681,7 @@ de:
     name_family: Familienname
     name_of_part: Anzahl Teile oder Abschnitte eines Werks
     name_printer: Drucker, Druckerei
+    name_titles_words: Mit einem Namen verknüpfte Titel und Zusätze
     name_variant: Namensvarianten
     name_variants: Namensvarianten
     named_dramatic_roles: 'Rollennamen: Schreibweise'
@@ -709,6 +713,7 @@ de:
     octoechos7: 'Octoechos 7: Ēchos barys (Third plagal mode of Byzantine music)'
     octoechos8: 'Octoechos 8: Ēchos plagios tetartos (Fourth plagal mode of Byzantine music)'
     online_finding_aids: Archivführer und andere Publikationen
+    online_resource: Online-Ressource
     opera_houses_concert_halls: Opernhäuser und Konzerthallen
     opus_number: Opus
     opus_thematic_index_number: Opus / WV-Nummer
@@ -726,6 +731,7 @@ de:
     other_instruments: Weitere Instrumente
     other_life_dates: Andere Lebensdaten
     other_physical_details: Zusätzliche Materialbeschreibung
+    other_resource: Weitere Ressourcen
     other_searchform: andere Suchform
     other_shelfmark: Weitere Signatur
     other_standard_identifier: Normdatenverweise
@@ -777,9 +783,12 @@ de:
     print_with_non_autograph_annotations: Druck mit nicht-autographen Eintragungen
     printer: Drucker
     printing_technique: Drucktechnik
+    private_collection: Privatsammlung
     production: Verlauf
     production_personnel: Produktionspersonal
     profession_or_function: Beruf oder Funktion
+    project: Projekt
+    project_url: Projekt-URL
     provenance: Bestandsname
     provenance_notes: Provenienzvermerk
     pseudonym: Pseudonym
@@ -842,7 +851,7 @@ de:
     sister_of: Schwester von
     sketches: Skizzen
     solo_voice: Solostimme
-    soloist_instrument: Solistisches Instrument
+    soloist_instrument: Soloinstrument
     source: Quelle
     sources: Quellen
     source_data_found: Literaturnachweis
@@ -927,6 +936,8 @@ de:
     watermark_description: Wasserzeichen
     woodwinds: Holzblasinstrumente
     work: Werk
+    work_catalog: Werkkatalog
+    work_catalogs: Werkkatalog
     work_catalog_note: Bemerkung Werkverzeichnis
     work_list: Werkliste
     work_node: Externe Werk-Referenz (Work node)
@@ -951,13 +962,22 @@ de:
     P60183: "Einfügen"
   relations_works:
     P60250: "Hat Derivate"
-    P60305: "Hat Quelle"
+    P60305: "Basiert auf"
     P60216: "Wird erweitert als"
     P60294: "Ist erweiterte Version von"
     P60274: "Bearbeitung als"
     P60242: "Ist Anordnung von"
     P60198: "Wird ergänzt durch"
     P60313: "Nicht definiert"
+  relations_institutions:
+    P50008: Hierarchisch höher
+    P50010: Hierarchisch untergeordnet
+    P50012: Vorgänger der Körperschaft
+    P50016: Nachfolger der Körperschaft
+    P50020: Gründerfamilie der Körperschaft
+    P50230: Körperschaftsmitglied der Körperschaft
+    P50435: Corporate body member of family
+    P50301: Aufgenommene Körperschaft
   verovio:
     position: "Standort"
     warning: "Warnung"
@@ -1028,6 +1048,12 @@ de:
     ERR_064_LIGATURE_DURATION: Die Dauer einer Ligatur kann nicht kürzer als eine Semibrevis sein.
     ERR_065_MREST_INVALID_MEASURE: Ein Takt Pause kann nichts anderes enthalten.
     ERR_066_EMPTY_CONTAINER: Zwischen den Sonderzeichen für Gruppen von Vorschlagsnoten oder Balken müssen Noten stehen.
+  work_catalogue:
+    not_work_catalogue: Kein Werkverzeichnis
+    work_catalogue_alternate: Alternative
+    work_catalogue_complete: Abgeschlossen
+    work_catalogue_in_preparation: Geeignet
+    work_catalogue_partial: Teilweise abgeschlossen
   rism_online:
     manuscript: "Handschrift"
     printed: "Gedruckt"

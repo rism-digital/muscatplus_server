@@ -1,14 +1,14 @@
-
 import orjson
 import ypres
 from sanic import response
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.exceptions import InvalidQueryException
+from search_server.helpers.identifiers import get_identifier
 from search_server.helpers.search_request import SearchRequest
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.search.facets import get_facets
-from shared_helpers.identifiers import get_identifier
-from shared_helpers.solr_connection import SolrConnection
+from search_server.template_render import render_template
 
 
 async def handle_front_request(req) -> response.HTTPResponse:
@@ -24,11 +24,18 @@ async def handle_front_request(req) -> response.HTTPResponse:
         solr_res, context={"request": req, "direct_request": True}
     ).serialized
 
-    return response.json(
-        results,
-        content_type="application/ld+json;charset=utf-8",
-        option=orjson.OPT_INDENT_2 if req.app.ctx.config["common"]["debug"] else 0,
-    )
+    accept: str | None = req.headers.get("Accept")
+    app_context = req.app.ctx
+
+    if accept and "json" in accept:
+        return response.json(
+            results,
+            content_type="application/ld+json;charset=utf-8",
+            option=orjson.OPT_INDENT_2 if req.app.ctx.config["common"]["debug"] else 0,
+        )
+    else:
+        rendered_template: str = render_template(app_context, req, results)
+        return response.html(rendered_template)
 
 
 class Front(ypres.DictSerializer):

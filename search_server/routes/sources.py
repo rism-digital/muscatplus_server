@@ -1,8 +1,7 @@
-
 from sanic import Blueprint, response
 
 from search_server.request_handlers import handle_request, handle_search
-from search_server.resources.incipits.incipit import (
+from search_server.resources.incipits.handlers import (
     handle_incipit_request,
     handle_incipits_list_request,
     handle_mei_download,
@@ -12,11 +11,9 @@ from search_server.resources.sources.contents_search import (
     handle_contents_probe_request,
     handle_contents_search_request,
 )
-from search_server.resources.sources.exemplars import (
+from search_server.resources.sources.handlers import (
     handle_exemplar_section_request,
     handle_holdings_request,
-)
-from search_server.resources.sources.handlers import (
     handle_source_request,
 )
 
@@ -52,7 +49,7 @@ async def incipit(req, source_id: str, work_num: str):
     if accept and "application/mei+xml" in accept:
         # Handle the request differently if the Accept type is MEI
         mei_resp: dict | None = await handle_mei_download(
-            req, source_id=source_id, work_num=work_num
+            req, record_id=source_id, record_type="source", work_num=work_num
         )
         if not mei_resp:
             return response.json(
@@ -61,7 +58,7 @@ async def incipit(req, source_id: str, work_num: str):
         return response.text(mei_resp["content"], headers=mei_resp["headers"])
     elif accept and "image/png" in accept:
         png_resp: dict | None = await handle_png_download(
-            req, source_id=source_id, work_num=work_num
+            req, record_id=source_id, record_type="source", work_num=work_num
         )
         if not png_resp:
             return response.json(
@@ -69,8 +66,13 @@ async def incipit(req, source_id: str, work_num: str):
             )
         return response.raw(png_resp["content"], headers=png_resp["headers"])
 
+    # return the JSON-LD representation of the incipit
     return await handle_request(
-        req, handle_incipit_request, source_id=source_id, work_num=work_num
+        req,
+        handle_incipit_request,
+        record_id=source_id,
+        record_type="source",
+        work_num=work_num,
     )
 
 
@@ -83,10 +85,12 @@ async def incipit_mei_encoding(req, source_id: str, work_num: str):
     for both.
     """
     resp: dict | None = await handle_mei_download(
-        req, source_id=source_id, work_num=work_num
+        req, record_id=source_id, record_type="source", work_num=work_num
     )
     if not resp:
-        return response.json({"message": "The requested resource could not be found"}, status=404)
+        return response.json(
+            {"message": "The requested resource could not be found"}, status=404
+        )
 
     return response.text(resp["content"], headers=resp["headers"])
 
@@ -100,10 +104,12 @@ async def incipit_png_rendering(req, source_id: str, work_num: str):
     for both.
     """
     resp: dict | None = await handle_png_download(
-        req, source_id=source_id, work_num=work_num
+        req, record_id=source_id, record_type="source", work_num=work_num
     )
     if not resp:
-        return response.json({"message": "The requested resource could not be found"}, status=404)
+        return response.json(
+            {"message": "The requested resource could not be found"}, status=404
+        )
 
     return response.raw(resp["content"], headers=resp["headers"])
 
@@ -163,7 +169,7 @@ async def digital_object_list(req, source_id: str):
 
 
 @sources_blueprint.route("/<source_id:str>/digital-objects/<dobject_id:str>")
-async def digital_object(req, source_id: str, digital_object_id: str):
+async def digital_object(req, source_id: str, dobject_id: str):
     return response.json({"message": "Not implemented"}, status=501)
 
 
@@ -184,3 +190,77 @@ async def holding(req, source_id: str, holding_id: str):
 @sources_blueprint.route("/<source_id:str>/holdings/<holding_id:str>/relationships/")
 async def holding_relationships(req, source_id: str, holding_id: str):
     return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route("/<source_id:str>/holdings/<holding_id:str>/digital-objects")
+async def holding_digital_object_list(req, source_id: str, holding_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/holdings/<holding_id:str>/digital-objects/<dobject_id:str>"
+)
+async def holding_digital_object(req, source_id: str, holding_id: str, dobject_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route("/<source_id:str>/inventory-items/")
+async def inventory_items(req, source_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route("/<source_id:str>/inventory-items/<inventory_item_id:str>")
+async def inventory_item(req, source_id: str, inventory_item_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/inventory-items/<inventory_item_id:str>/incipits/<work_num:str>/mei"
+)
+async def inventory_incipit_mei_encoding(
+    req, source_id: str, inventory_item_id: str, work_num: str
+):
+    """
+    Retrieve an individual incipit encoded as MEI, based on the suffix.
+    It is also possible to pass an `Accept:` header for a content-negotiated
+    response to the main incipit retrieve function, so we use the same handler
+    for both.
+    """
+    resp: dict | None = await handle_mei_download(
+        req,
+        record_id=inventory_item_id,
+        record_type="inventory_item",
+        work_num=work_num,
+    )
+    if not resp:
+        return response.json(
+            {"message": "The requested resource could not be found"}, status=404
+        )
+
+    return response.text(resp["content"], headers=resp["headers"])
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/inventory-items/<inventory_item_id:str>/incipits/<work_num:str>/png"
+)
+async def inventory_incipit_png_rendering(
+    req, source_id: str, inventory_item_id: str, work_num: str
+):
+    """
+    Retrieve an individual incipit encoded as MEI, based on the suffix.
+    It is also possible to pass an `Accept:` header for a content-negotiated
+    response to the main incipit retrieve function, so we use the same handler
+    for both.
+    """
+    resp: dict | None = await handle_png_download(
+        req,
+        record_id=inventory_item_id,
+        record_type="inventory_item",
+        work_num=work_num,
+    )
+    if not resp:
+        return response.json(
+            {"message": "The requested resource could not be found"}, status=404
+        )
+
+    return response.raw(resp["content"], headers=resp["headers"])

@@ -1,28 +1,14 @@
-import re
-
 import ypres
 
+from search_server.helpers.display_fields import get_display_fields
+from search_server.helpers.display_translators import (
+    country_codes_labels_translator,
+    institution_type_translator,
+)
+from search_server.helpers.formatters import format_institution_label
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.shared.record_history import get_record_history
-from shared_helpers.display_fields import get_display_fields
-from shared_helpers.display_translators import country_codes_labels_translator
-from shared_helpers.formatters import format_institution_label
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.solr_connection import SolrResult
-
-SOLR_FIELDS_FOR_BASE_INSTITUTION: list = [
-    "id",
-    "type",
-    "created",
-    "updated",
-    "name_s",
-    "city_s",
-    "countries_sm",
-    "siglum_s",
-    "alternate_names_sm",
-    "parallel_names_sm",
-    "institution_types_sm",
-    "name_ans",
-]
 
 
 class BaseInstitution(ypres.AsyncDictSerializer):
@@ -35,7 +21,7 @@ class BaseInstitution(ypres.AsyncDictSerializer):
 
     def get_iid(self, obj: SolrResult) -> str:
         req = self.context["request"]
-        institution_id: str = re.sub(ID_SUB, "", obj["id"])
+        institution_id: str = strip_prefix(obj["id"])
 
         return get_identifier(
             req, "institutions.institution", institution_id=institution_id
@@ -88,10 +74,13 @@ class OrganizationDetails(ypres.DictSerializer):
             "city_s": ("records.city", None),
             "alternate_names_sm": ("records.other_form_of_name", None),
             "parallel_names_sm": ("records.parallel_form", None),
-            "institution_types_sm": ("records.type_institution", None),
+            "institution_types_sm": (
+                "records.type_institution",
+                institution_type_translator,
+            ),
             "country_codes_sm": ("records.country", country_codes_labels_translator),
             "former_sigla_sm": ("records.former_sigla", None),
-            "full_rism_id": ("records.rism_id_number", None)
+            "full_rism_id": ("records.rism_id_number", None),
         }
 
         return get_display_fields(obj, transl, field_config)

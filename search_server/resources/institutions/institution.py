@@ -1,31 +1,21 @@
-import re
+import logging
 from collections.abc import Callable
 
 import ypres
 
+from search_server.helpers.display_fields import assemble_label_value
+from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.languages import merge_language_maps
+from search_server.helpers.solr_connection import SolrResult, result_count
+from search_server.helpers.utilities import is_number
 from search_server.resources.institutions.base_institution import BaseInstitution
+from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
-from shared_helpers.display_fields import assemble_label_value
-from shared_helpers.identifiers import ID_SUB, get_identifier
-from shared_helpers.languages import merge_language_maps
-from shared_helpers.solr_connection import SolrConnection, SolrResult
-from shared_helpers.utilities import is_number
 
-
-async def handle_institution_request(req, institution_id: str) -> dict | None:
-    institution_record: dict | None = await SolrConnection.get(  # type: ignore
-        f"institution_{institution_id}"
-    )
-
-    if not institution_record:
-        return None
-
-    return await Institution(
-        institution_record, context={"request": req, "direct_request": True}
-    ).serialized
+log = logging.getLogger("mp_server")
 
 
 class Institution(BaseInstitution):
@@ -35,17 +25,26 @@ class Institution(BaseInstitution):
     relationships = ypres.MethodField()
     notes = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
+    digital_objects = ypres.MethodField(label="digitalObjects")
     properties = ypres.MethodField()
 
-    def get_sources(self, obj: SolrResult) -> dict | None:
+    async def get_sources(self, obj: SolrResult) -> dict | None:
         institution_id = obj["institution_id"]
-        ident: str = re.sub(ID_SUB, "", institution_id)
-        source_count: int = obj.get("total_sources_i", 0)
-
-        # if no sources are attached OR this is the 's.n.' record, return 0 sources attached.
-        if source_count == 0 or ident == "40009305" or obj.get("project_s") == "diamm":
+        # if this is the 's.n.' record return 0 sources attached.
+        if institution_id == "institution_40009305":
             return None
 
+        source_count: int
+        fq: list[str] = [
+            "type:source",
+            f"all_related_institutions_ids:{institution_id}",
+        ]
+        source_count = await result_count(fq=fq)
+
+        if source_count == 0:
+            return None
+
+        ident: str = strip_prefix(institution_id)
         return {
             "url": get_identifier(
                 self.context["request"],
@@ -55,7 +54,7 @@ class Institution(BaseInstitution):
             "totalItems": source_count,
         }
 
-    async def get_location(self, obj: SolrResult) -> dict | None:
+    def get_location(self, obj: SolrResult) -> dict | None:
         if {
             "street_address_sm",
             "city_address_sm",
@@ -69,7 +68,7 @@ class Institution(BaseInstitution):
             obj, context={"request": self.context["request"]}
         ).serialized
 
-    async def get_external_authorities(self, obj: SolrResult) -> dict | None:
+    def get_external_authorities(self, obj: SolrResult) -> dict | None:
         if "external_ids" not in obj:
             return None
 
@@ -88,7 +87,7 @@ class Institution(BaseInstitution):
             "related_sources_json",
             "now_in_json",
             "contains_json",
-            "contributing_projects_json"
+            "contributing_projects_json",
         }.isdisjoint(obj.keys()):
             return None
 
@@ -116,11 +115,22 @@ class Institution(BaseInstitution):
             obj, context={"request": self.context["request"]}
         ).serialized
 
+    async def get_digital_objects(self, obj: SolrResult) -> dict | None:
+        if not obj.get("has_digital_objects_b", False):
+            return None
+
+        return await DigitalObjectsSection(
+            obj,
+            context={
+                "request": self.context["request"],
+            },
+        ).serialized
+
     def get_properties(self, obj: SolrResult) -> dict | None:
         d = {
             "siglum": obj.get("siglum_s"),
             "countryCodes": obj.get("country_codes_sm", []),
-            "city": obj.get("city_s")
+            "city": obj.get("city_s"),
         }
 
         return {k: v for k, v in d.items() if v} or None
@@ -160,8 +170,8 @@ class LocationAddressSection(ypres.DictSerializer):
         for address in obj.get("addresses_json", []):
             out_addr = {}
             for k, _ in address.items():
-                label: tuple[str, Callable | None] = (
-                    mailing_address_field_config.get(k, ())
+                label: tuple[str, Callable | None] = mailing_address_field_config.get(
+                    k, ()
                 )
                 if not label:
                     continue
@@ -185,7 +195,7 @@ class LocationAddressSection(ypres.DictSerializer):
             return None
 
         institution_id: str = obj["id"]
-        ident: str = re.sub(ID_SUB, "", institution_id)
+        ident: str = strip_prefix(institution_id)
 
         geojson_uri: str = get_identifier(
             req, "institutions.geo_coordinates", institution_id=ident

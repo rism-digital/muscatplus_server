@@ -2,8 +2,8 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from shared_helpers.identifiers import SOLR_FIELD_DATA_TYPES
-from shared_helpers.solr_connection import SolrResult
+from search_server.helpers.identifiers import SOLR_FIELD_DATA_TYPES
+from search_server.helpers.solr_connection import SolrResult
 
 # LabelConfig takes a Solr field, and maps it to a tuple containing the translation value for the label, and an
 # optional Callable that can be used to provide the value translations. For example, if we have:
@@ -19,7 +19,7 @@ from shared_helpers.solr_connection import SolrResult
 #  A value of `None` for the value translator means to simply take the value verbatim. (Technically, a value of None
 #  passes it through the _default_translator function, but this is largely transparent to the user).
 #
-LabelConfig = dict[str, tuple[str, Callable | dict | None]]
+type LabelConfig = dict[str, tuple[str, Callable | None]]
 
 log = logging.getLogger("mp_server")
 
@@ -111,7 +111,10 @@ def get_display_fields(
             continue
 
         label_value: dict = assemble_label_value(
-            record, field, translation_map, translations  # type: ignore
+            record,
+            field,
+            translation_map,
+            translations,  # type: ignore
         )
 
         display.append(label_value)

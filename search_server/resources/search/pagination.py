@@ -173,17 +173,20 @@ def parse_row_number_from_request(req) -> int:
     :param req:
     :return: the number of rows (i.e. the page size)
     """
-    this_page_qstr: str | None = req.args.get(ROWS_QUERY_PARAM, None)
-
+    this_page_qstr: str | None = req.args.get(ROWS_QUERY_PARAM)
     return parse_row_number(req, this_page_qstr)
 
 
-def parse_row_number(req, row_query_string: str | None) -> int:
+def parse_row_number(
+    req, row_query_string: str | None, only_allowed: bool = True
+) -> int:
     """
     Parses the row parameter string. If it's None, return the default rows
     Any invalid cases (rows not in the permitted list, rows not an int etc.) will raise a PaginationParseError
     :param req: A Sanic request instance
     :param row_query_string: The query string.
+    :param only_allowed: Whether the row number will raise an exception if the value it not one of a permitted
+        number of options.
     :return: the number of rows (i.e. the page size)
     """
     rows: int
@@ -199,7 +202,7 @@ def parse_row_number(req, row_query_string: str | None) -> int:
             "Invalid value for rows. If provided, it must be a whole number."
         ) from err
 
-    if rows not in search_config["page_sizes"]:
+    if only_allowed and rows not in search_config["page_sizes"]:
         raise PaginationParseException(
             f"Invalid value for page size. Only {', '.join([str(v) for v in search_config['page_sizes']])} are acceptable values"
         )

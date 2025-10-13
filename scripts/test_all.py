@@ -1,115 +1,179 @@
+import argparse
 import asyncio
-import re
-import timeit
+import logging
+import random
+import sys
 
-import aiohttp
-import uvloop
+import httpx
 from small_asc.client import Solr
 
-asyncio.set_event_loop(uvloop.new_event_loop())
+solr_conn = Solr("http://localhost:8983/solr/muscatplus_live")
+
+VALID_CODES = {200, 410}
+
+# ---- tune these for your environment ----
+MAX_CONCURRENCY = 50  # cap simultaneous requests
+LIMITS = httpx.Limits(  # connection pool sizing
+    max_connections=200,
+    max_keepalive_connections=50,
+)
+TIMEOUT = httpx.Timeout(  # per-request timeouts
+    connect=10.0, read=10.0, write=10.0, pool=10.0
+)
+USE_HTTP2 = True
+# ----------------------------------------
 
 
-async def fetch(url: str, session, num: int) -> bool:
-    print(f"{num}. fetching {url}")
-    async with session.get(url) as r:
-        txt = await r.json()
-        # print(txt)
-        if r.status == 200:
-            return True
+def id_from_solr_record(record: dict) -> str:
+    record_type: str = record["type"]
 
-        print(f"Error fetching {url}")
-        return False
-
-
-async def do_something(results):
-    for result in results:
-        pass
-
-
-async def run_search() -> (int, int):
-    async with aiohttp.ClientSession(
-        headers={"Accept": "application/ld+json", "X-API-Accept-Language": "en"}
-    ) as session, session.get("https://rism.online/search?mode=people") as r:
-        response = await r.json()
-        search_info = response.get("view")
-        this_page = search_info["thisPage"]
-        total_pages = search_info.get("totalPages")
-        while total_pages > 0:
-            _ = await do_something(response["items"])
-            print("finished processing page", this_page)
-
-            with await session.get(search_info["next"]) as r:
-                response = await r.json()
-                search_info = response.get("view")
-                this_page = search_info["thisPage"]
-
-            total_pages -= 1
-
-    return (0, 0)
+    if record_type == "holding":
+        source_id_value: str = record["source_id"].split("_")[-1]
+        holding_id_value: str = record["holding_id"].split("_")[-1]
+        return f"/sources/{source_id_value}/holdings/{holding_id_value}"
+    elif record_type == "source":
+        source_id = record["id"].split("_")[-1]
+        return f"/sources/{source_id}"
+    elif record_type == "person":
+        person_id = record["id"].split("_")[-1]
+        return f"/people/{person_id}"
+    elif record_type == "institution":
+        institution_id = record["id"].split("_")[-1]
+        return f"/institutions/{institution_id}"
+    elif record_type == "work":
+        work_id = record["id"].split("_")[-1]
+        return f"/works/{work_id}"
+    elif record_type == "incipit":
+        incipit_id = record["id"].split("_")[-1]
+        return f"/incipits/{incipit_id}"
+    else:
+        raise ValueError(f"Unknown record type {record_type}")
 
 
-async def get_ids():
-    s = Solr("http://localhost:8983/solr/muscatplus_live")
-    # fq = ["type:source", "country_code_s:CH"]
-    # fq = ["type:source", "project_s:diamm"]
-    # fq = ["type:institution", "project_s:diamm"]
-    fq = ["type:institution", "!project_s:diamm"]
-    # fq = ["type:person", "project_s:diamm"]
-    # fq = ["type:person", "!project_s:diamm"]
-    # fq = ["type:institution"]
-    # fq = ["type:person"]
-    sort = "id asc"
+async def fetch_url(
+    url: str, client: httpx.AsyncClient, sem: asyncio.Semaphore
+) -> tuple[str, bool, int | None, str | None]:
+    log.debug("Fetching %s", url)
+    async with sem:
+        try:
+            r = await client.get(url)
+            # read the body so the connection is reusable (even if you don’t need it)
+            await r.aread()
+            return url, r.status_code in VALID_CODES, r.status_code, None
+        except httpx.HTTPStatusError as e:
+            # only raised if raise_for_status() used; included for completeness
+            return (
+                url,
+                False,
+                e.response.status_code if e.response else None,
+                f"HTTPStatusError: {e}",
+            )
+        except httpx.TimeoutException:
+            return url, False, None, "Timeout"
+        except httpx.RequestError as e:
+            # DNS errors, TLS errors, refused connections, etc.
+            return url, False, None, f"RequestError: {e}"
+        except Exception as e:
+            return url, False, None, f"Other error: {e}"
+
+
+async def get_ids(record_type: str, baseurl: str, limit: int | None = None):
+    fq = [f"type:{record_type}", "!project_s:diamm", "!project_s:cantus"]
+    if limit:
+        # if we have a limit set, we want to sample a random subset of the records. We use the
+        # RandomSortField functionality to do this.
+        rand_seed: int = random.randint(1, 9999)  # noqa: S311
+        sort = f"random_{rand_seed} desc"
+    else:
+        sort = "id asc"
+
     fl: list = ["id"]
 
-    res = await s.search(
+    res = await solr_conn.search(
         {"query": "*:*", "filter": fq, "fields": fl, "sort": sort, "limit": 500},
         cursor=True,
     )
-    id_sub = re.compile(
-        r"source_|person_|institution_|diamm_source_|diamm_organization_|diamm_person_"
-    )
-    print(f"Assembling {res.hits} IDs")
-    ids: list = []
+    log.info("Found %s total URLs", res.hits)
+    urls: list = []
+    num_ids: int = 0
     async for s in res:
-        ids.append(re.sub(id_sub, "", s.get("id")))
+        record_id: str = id_from_solr_record(s)
+        urls.append(f"{baseurl}{record_id}")
+        num_ids += 1
+        if limit and num_ids >= limit:
+            # once we've reached our limit, stop adding IDs.
+            break
 
-    print(f"Actually got {len(ids)}")
-    return ids
+    log.info("Actually running the test with %s URLs", len(urls))
+    log.debug("First 10 URLs: %s", urls[:10])
+    return urls
 
 
-async def run() -> (int, int):
-    item_ids: list = await get_ids()
-    responses: list = []
+async def main(args: argparse.Namespace) -> bool:
+    res: bool = True
+    log.info("Getting IDs")
+    list_of_urls: list = await get_ids(args.type, args.baseurl, args.limit)
 
-    async with aiohttp.ClientSession(
+    sem = asyncio.Semaphore(MAX_CONCURRENCY)
+    async with httpx.AsyncClient(
         headers={"Accept": "application/ld+json", "X-API-Accept-Language": "en"}
-    ) as session:
-        for num, itm in enumerate(item_ids):
-            url: str = f"https://rism.online/institutions/{itm}"
-            # url: str = f"http://dev.rism.offline/external/diamm/person/{itm}"
-            res: bool = await fetch(url, session, num)
-            responses.append(res)
+    ) as client:
+        tasks = [fetch_url(url, client, sem) for url in list_of_urls]
+        results = await asyncio.gather(*tasks)
 
-    successes: int = responses.count(True)
-    failures: int = responses.count(False)
+    ok_nok = [ok for (_url, ok, _status, _err) in results]
+    all_failures = [u for u in results if not u[1]]
+    success: int = ok_nok.count(True)
+    failure: int = ok_nok.count(False)
 
-    return successes, failures
+    log.info("Success: %s, Failures: %s", success, failure)
+    if all_failures:
+        log.error("Failures: %s", all_failures)
 
-
-async def main():
-    start = timeit.default_timer()
-    successes, failures = await run_search()
-    end = timeit.default_timer()
-    elapsed: float = end - start
-
-    hours, remainder = divmod(elapsed, 60 * 60)
-    minutes, seconds = divmod(remainder, 60)
-    total = successes + failures
-    print(f"Processed {total} records")
-    print(f"Found {failures} errors ({(failures / total) * 100}%)")
-    print(f"Total time to download: {int(hours):02}:{int(minutes):02}:{seconds:02.2}")
-    print(f"Download rate: {total / elapsed}r/s")
+    return res
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser()
+    parser.add_argument("type")
+    parser.add_argument(
+        "-l", "--limit", help="Limit the number of records to process", type=int
+    )
+    parser.add_argument(
+        "-c", "--count", action="store_true", help="Count the number of records"
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Verbose output (log level DEBUG)"
+    )
+    parser.add_argument(
+        "-q", "--quiet", action="store_true", help="Quiet output (log level WARNING)"
+    )
+    parser.add_argument("-b", "--baseurl", default="http://dev.rism.offline")
+
+    parsed_args = parser.parse_args()
+    print(parsed_args.verbose, parsed_args.quiet)
+
+    if parsed_args.verbose:
+        loglevel = logging.DEBUG
+    elif parsed_args.quiet:
+        loglevel = logging.WARNING
+    else:
+        loglevel = logging.INFO
+
+    logging.basicConfig(
+        format="[%(name)s][%(asctime)s] [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
+        level=loglevel,
+    )
+
+    log = logging.getLogger("link_test")
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("asyncio").setLevel(logging.WARNING)
+
+    log.info("Parsed args: %s", parsed_args)
+
+    res: bool = asyncio.run(main(parsed_args))
+
+    if not res:
+        sys.exit(1)
+    sys.exit()

@@ -1,6 +1,6 @@
 from sanic import Blueprint, response
 
-from search_server.resources.incipits.render import (
+from search_server.resources.incipits.handlers import (
     handle_incipit_render,
     handle_incipit_validate,
 )

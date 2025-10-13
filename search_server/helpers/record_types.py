@@ -1,4 +1,4 @@
-from shared_helpers.display_translators import (
+from search_server.helpers.display_translators import (
     content_type_translator,
     record_type_translator,
     source_type_translator,
@@ -24,6 +24,7 @@ CONTENT_TYPE_MAP: dict = {
     "musical": "rism:MusicalContent",
     "mixed": "rism:MixedContent",
     "other": "rism:OtherContent",
+    "inventory": "rism:InventoryContent",
 }
 
 

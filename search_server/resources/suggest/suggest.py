@@ -8,8 +8,8 @@ from sanic import request, response
 from small_asc.client import SolrError
 
 from search_server.helpers.search_request import suggest_fields_for_alias
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.request_handlers import send_json_response
-from shared_helpers.solr_connection import SolrConnection
 
 log = logging.getLogger("mp_server")
 
@@ -85,7 +85,9 @@ async def handle_suggest_request(
 
     query: str | None = req.args.get("q")
     if not query:
-        return response.json({"message": "A suggest request requires a q parameter"}, status=400)
+        return response.json(
+            {"message": "A suggest request requires a q parameter"}, status=400
+        )
 
     cfg: dict = req.app.ctx.config
     # unlike the search handler we don't know what mode we're in, so we
@@ -118,5 +120,7 @@ async def handle_suggest_request(
     ).serialized
 
     return await send_json_response(
-        suggest_results, req.app.ctx.config["common"]["debug"]
+        req,
+        suggest_results,
+        req.app.ctx.config["common"]["debug"],
     )

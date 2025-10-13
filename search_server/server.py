@@ -1,10 +1,17 @@
 import logging
 
 import orjson
-import sentry_sdk
 import yaml
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sanic import Sanic, response
+from sanic.exceptions import NotFound, ServerError
 
+from search_server.helpers.languages import (
+    SUPPORTED_LANGUAGES,
+    filter_languages,
+    load_translations,
+)
+from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.api import api_blueprint
 from search_server.routes.countries import countries_blueprint
@@ -12,15 +19,16 @@ from search_server.routes.external import external_blueprint
 from search_server.routes.festivals import festivals_blueprint
 from search_server.routes.incipits import incipits_blueprint
 from search_server.routes.institutions import institutions_blueprint
+from search_server.routes.opengraph import opengraph_blueprint
 from search_server.routes.people import people_blueprint
 from search_server.routes.places import places_blueprint
+from search_server.routes.publications import publications_blueprint
 from search_server.routes.query import query_blueprint
 from search_server.routes.sigla import sigla_blueprint
+from search_server.routes.sitemap import sitemap_blueprint
 from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
 from search_server.routes.works import works_blueprint
-from shared_helpers.languages import load_translations, negotiate_languages
-from shared_helpers.solr_connection import SolrConnection
 
 config: dict = yaml.safe_load(open("configuration.yml"))  # noqa: SIM115
 debug_mode: bool = config["common"]["debug"]
@@ -34,12 +42,19 @@ release = version_string[1:] if version_string.startswith("v") else version_stri
 
 app = Sanic("mp_server", dumps=orjson.dumps)
 
+template_env = Environment(
+    loader=FileSystemLoader("search_server/templates"),
+    autoescape=select_autoescape(["xml"]),
+)
+app.ctx.template_env = template_env
+
 
 @app.listener("before_server_start")
 async def init_sentry(_):
-    if debug_mode is True:
+    if debug_mode:
         return
 
+    import sentry_sdk
     from sentry_sdk.integrations.asyncio import AsyncioIntegration
 
     sentry_sdk.init(
@@ -64,6 +79,11 @@ app.blueprint(query_blueprint)
 app.blueprint(api_blueprint)
 app.blueprint(external_blueprint)
 app.blueprint(sigla_blueprint)
+app.blueprint(publications_blueprint)
+
+app.blueprint(sitemap_blueprint)
+app.blueprint(opengraph_blueprint)
+
 
 app.config.FORWARDED_SECRET = config["common"]["secret"]
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
@@ -77,7 +97,7 @@ logging.basicConfig(
 
 log = logging.getLogger("mp_server")
 
-translations: dict | None = load_translations("locales/")
+translations: dict = load_translations("locales/")
 if not translations:
     log.critical("No translations can be loaded.")
 
@@ -91,12 +111,12 @@ app.ctx.config = config
 
 
 @app.on_request
-def do_language_negotiation(req):
+def do_language_negotiation(req) -> None:
     """
-    Performs language negotiation on every request. This looks for the presence of the
-    X-API-Accept-Language request header, with values of one or more language codes or "*".
-    If those language codes map to ones that are supported in RISM Online, then the full
-    dictionary of translations is filtered to only include the requested languages.
+    This looks for the presence of the X-API-Accept-Language request header, with values
+    of one or more language codes or "*". If those language codes map to ones that are
+    supported in RISM Online, then the full dictionary of translations is filtered to only
+    include the requested languages.
 
     Serializers will then use the filtered translations dictionary on the request to produce
     the translated values.
@@ -106,7 +126,29 @@ def do_language_negotiation(req):
     :param req: A Sanic Request object
     :return: None
     """
-    req.ctx.translations = negotiate_languages(req, translations)
+    lang_header = req.headers.get("X-API-Accept-Language")
+
+    if not lang_header or lang_header == "*":
+        log.debug(
+            "No language negotiation" if not lang_header else "All languages negotiated"
+        )
+        accepted = SUPPORTED_LANGUAGES
+    else:
+        requested = {lang.strip() for lang in lang_header.split(",")}
+        accepted = requested & SUPPORTED_LANGUAGES
+
+        if not accepted:
+            log.debug("No acceptable language values requested")
+            accepted = SUPPORTED_LANGUAGES
+        else:
+            log.debug("Filtering languages %s", accepted)
+
+    req.ctx.accepted_languages = list(accepted)
+    req.ctx.translations = (
+        translations
+        if accepted == SUPPORTED_LANGUAGES
+        else filter_languages(accepted, translations)
+    )
 
 
 @app.route("/")
@@ -141,3 +183,8 @@ async def about(req) -> response.JSONResponse:
     }
 
     return response.json(resp)
+
+
+@app.exception(NotFound, ServerError)
+async def json_error(req, exc) -> response.HTTPResponse:
+    return response.json({"message": exc.message})
