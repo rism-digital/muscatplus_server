@@ -4,303 +4,371 @@ sys.path.append("./")
 
 import argparse
 import asyncio
-import concurrent.futures
+import logging
 import logging.config
 import sqlite3
-import subprocess
 import timeit
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
 
+import aiosqlite
 import httpx
 import orjson
 import rdflib
-import uvloop
 import yaml
-from sanic.compat import Header
-from sanic.models.protocol_types import TransportProtocol
-from sanic.request import Request
-from small_asc.client import Solr
+from small_asc.client import JsonAPIRequest, Solr
 
 from search_server.helpers.jsonld import (
     RISM_JSONLD_DEFAULT_CONTEXT,
     RISM_JSONLD_INSTITUTION_CONTEXT,
     RISM_JSONLD_PERSON_CONTEXT,
+    RISM_JSONLD_PUBLICATION_CONTEXT,
     RISM_JSONLD_SOURCE_CONTEXT,
+    RISM_JSONLD_WORK_CONTEXT,
 )
 from search_server.helpers.languages import filter_languages, load_translations
 from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
 from search_server.resources.sources.full_source import FullSource
-from search_server.server import app
+from search_server.resources.works.full_work import FullWork
 
+# -------------------------------------------------------------------
+# Logging
+# -------------------------------------------------------------------
 with open("linked_data/logging.yml") as lg:
-    log_config: dict = yaml.safe_load(lg)
+    log_config: dict[str, Any] = yaml.safe_load(lg)
 logging.config.dictConfig(log_config)
-
 log = logging.getLogger("ld_export")
 
+# -------------------------------------------------------------------
+# Config
+# -------------------------------------------------------------------
 with open("configuration.yml") as cf:
-    config: dict = yaml.safe_load(cf)
+    config: dict[str, Any] = yaml.safe_load(cf)
 
 SOLR_SERVER: str = config["solr"]["server"]
 
-solr_conn = Solr(SOLR_SERVER)
 
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
-
-# Mock route for the request
+# -------------------------------------------------------------------
+# Minimal request stub for serializers (exposes .app and common attrs)
+# -------------------------------------------------------------------
 class MockRoute:
-    def __init__(self):
+    def __init__(self) -> None:
         self.name = ""
 
 
-# Alters the response to make all the URIs appear to be coming from the production site.
-# Since every URL in the serializers runs through the `get_identifier` function, it will
-# pick up on this info for constructing the URI.
-headers: Header = Header(
-    {
-        "X-Forwarded-Proto": "https",
-        "X-Forwarded-Host": "rism.online",
-    }
-)
-translations: dict = load_translations("locales/") or {}
-filt_translations: dict = filter_languages({"en"}, translations)
+def make_request_stub(translations: dict[str, Any]) -> SimpleNamespace:
+    app_stub = SimpleNamespace(
+        config={},
+        ctx=SimpleNamespace(),
+        router=SimpleNamespace(url_for=lambda *a, **k: None),
+        url_for=lambda *a, **k: None,
+    )
+    return SimpleNamespace(
+        app=app_stub,
+        ctx=SimpleNamespace(translations=translations),
+        route=MockRoute(),
+        headers={
+            "X-Forwarded-Proto": "https",
+            "X-Forwarded-Host": "rism.online",
+        },
+        method="GET",
+        path="/foo",
+        scheme="https",
+        host="rism.online",
+        url="https://rism.online/foo",
+        ip="127.0.0.1",
+    )
 
-req = Request(bytes("/foo", "ascii"), headers, "", "GET", TransportProtocol(), app)
-req.ctx.translations = filt_translations
-req.route = MockRoute()  # type: ignore
 
-serializer_map: dict = {
+translations: dict[str, Any] = load_translations("locales/") or {}
+filt_translations: dict[str, Any] = filter_languages({"en"}, translations)
+REQ_STUB = make_request_stub(filt_translations)
+
+# -------------------------------------------------------------------
+# Serialization helpers
+# -------------------------------------------------------------------
+serializer_map: dict[str, Any] = {
     "source": FullSource,
     "person": Person,
     "institution": Institution,
+    "work": FullWork,
+}
+
+CONTEXTS: dict[str, Any] = {
+    "source": RISM_JSONLD_SOURCE_CONTEXT,
+    "person": RISM_JSONLD_PERSON_CONTEXT,
+    "institution": RISM_JSONLD_INSTITUTION_CONTEXT,
+    "work": RISM_JSONLD_WORK_CONTEXT,
+    "publication": RISM_JSONLD_PUBLICATION_CONTEXT,
 }
 
 
-def to_ntriples(data: dict) -> str:
+def to_ntriples(data: dict[str, Any]) -> str:
     json_serialized: str = orjson.dumps(data).decode("utf-8")
     graph_object: rdflib.Graph = rdflib.Graph().parse(
         data=json_serialized, format="application/ld+json"
     )
-    return graph_object.serialize(format="nt")
+    ntrips = graph_object.serialize(format="nt")
+    return ntrips.decode("utf-8") if isinstance(ntrips, (bytes, bytearray)) else ntrips
 
 
-async def create_id_groups(
-    num_groups: int, record_type: str, country_code: str | None
-) -> list:
-    log.info("Creating ID groups")
-    fq = [f"type:{record_type}", "!project_s:[* TO *]"]
-
-    if record_type == "source" and country_code:
-        fq.append(f"country_codes_sm:{country_code}")
-
-    fl = ["id"]
-
-    res = await solr_conn.search(
-        {"query": "*:*", "filter": fq, "fields": fl, "sort": "id asc", "limit": 1000},
-        cursor=True,
-    )
-    log.debug("Gathering groups")
-    id_list: list = [sdoc["id"] async for sdoc in res]
-
-    log.debug("Gathering done, found %s total IDs", res.hits)
-    split_groups: list = [id_list[g::num_groups] for g in range(num_groups)]
-
-    log.info(
-        "Created %s groups from %s documents, first has %s IDs, last has %s IDs",
-        len(split_groups),
-        res.hits,
-        len(split_groups[0]),
-        len(split_groups[-1]),
-    )
-
-    return split_groups
-
-
-async def run_serializer(
-    docid: str, serializer, ctx_val: dict, semaphore, session, sqlconn
+async def run_serializer_from_doc(
+    this_doc: dict[str, Any],
+    serializer_cls,
+    ctx_val: dict[str, Any],
+    session: httpx.AsyncClient,
+    sqlconn: aiosqlite.Connection,
+    db_lock: asyncio.Lock,
 ) -> None:
-    async with semaphore:
-        log.debug("Serializing %s", docid)
+    if not this_doc:
+        return
+    try:
+        serialized = await serializer_cls(
+            this_doc,
+            context={"request": REQ_STUB, "direct_request": True, "client": session},
+        ).serialized
+    except Exception as e:
+        log.critical("=========== Serializer failed for %s: %s", this_doc.get("id"), e)
+        return
 
-        try:
-            this_doc = await solr_conn.get(docid)
-        except Exception as e:
-            log.critical(
-                "=========== Exception raised in get request for source %s: %s",
-                docid,
-                e,
-            )
-            return None
+    doc = {"@context": ctx_val["@context"], **serialized}
+    ntrips: str = to_ntriples(doc)
+    if not ntrips:
+        log.critical("No N-Triples for %s", this_doc.get("id"))
+        return
 
-        if this_doc is None:
-            log.error("No document for %s", docid)
-
-        try:
-            serialized = await serializer(
-                this_doc,
-                context={"request": req, "direct_request": True, "client": session},
-            ).data
-        except Exception as e:
-            log.critical(
-                "=========== Exception raised in serializer for source %s: %s", docid, e
-            )
-            return None
-
-        serialized.update(ctx_val)
-        ntrips: str = to_ntriples(serialized)
-        if not ntrips:
-            log.critical("No output! %s", docid)
-
-        with sqlconn:
-            sqlconn.execute(
-                "INSERT INTO serialized VALUES (?, ?, ?)",
-                (docid, this_doc["type"], ntrips),  # type: ignore
-            )
-
-        sqlconn.commit()
-        await asyncio.sleep(0.5)
+    async with db_lock:
+        await sqlconn.execute(
+            "INSERT OR REPLACE INTO serialized VALUES (?, ?, ?)",
+            (this_doc.get("id"), this_doc.get("type"), ntrips),
+        )
 
 
-async def serialize(id_group: list, record_type: str, semaphore, dbname: str) -> None:
-    log.debug("Actually serializing! Processing %s IDs", len(id_group))
-    if record_type == "source":
-        ctx_val = {"@context": RISM_JSONLD_SOURCE_CONTEXT}
-    elif record_type == "person":
-        ctx_val = {"@context": RISM_JSONLD_PERSON_CONTEXT}
-    elif record_type == "institution":
-        ctx_val = {"@context": RISM_JSONLD_INSTITUTION_CONTEXT}
-    else:
+# -------------------------------------------------------------------
+# Solr streaming: single paginated search per record type
+# -------------------------------------------------------------------
+async def stream_solr_docs_for_type(
+    solr_conn: Solr, record_type: str, country_code: str | None, page_size: int
+):
+    """
+    Async generator that yields full documents for a given record type using a Solr cursor.
+    Assumes the client handles cursor paging when cursor=True.
+    """
+    fq = [f"type:{record_type}", "!project_s:[* TO *]"]
+    if record_type == "source" and country_code:
+        fq.append(f"country_codes_sm:{country_code.upper()}")
+
+    params: JsonAPIRequest = {
+        "query": "*:*",
+        "filter": fq,
+        # "fields": ["*"],  # request full docs so serializers don't need per-id fetch
+        "sort": "id asc",
+        "limit": page_size,  # cursor page size
+    }
+    res = await solr_conn.search(params, cursor=True)
+    log.info("Solr query received %s results", res.hits)
+    async for sdoc in res:
+        log.debug("Processing solr document")
+        yield sdoc, res  # res carries .hits if you want to log totals at the end
+
+
+# -------------------------------------------------------------------
+# Main async pipeline for one record type
+# -------------------------------------------------------------------
+async def process_record_type(
+    solr_conn: Solr,
+    record_type: str,
+    country_code: str | None,
+    dbname: str,
+    concurrency: int,
+    page_size: int,
+) -> int:
+    """
+    Performs a single paginated search via the client's cursor and serializes each document.
+    Returns count of processed docs.
+    """
+    ctx_val = {"@context": CONTEXTS.get(record_type, RISM_JSONLD_DEFAULT_CONTEXT)}
+    serializer_cls = serializer_map.get(record_type)
+
+    # If you have a Publication serializer, add it to serializer_map instead of this fallback.
+    if record_type == "publication" and serializer_cls is None:
         log.warning(
-            "Could not determine context for %s. Using the default context", record_type
+            "No explicit serializer for 'publication'; using FullWork as a fallback."
         )
-        ctx_val = {"@context": RISM_JSONLD_DEFAULT_CONTEXT}
+        serializer_cls = FullWork
 
-    tasks = set()
-    serializer = serializer_map.get(record_type)
-    if not serializer:
-        log.critical(
-            "There was a problem retrieving the serializer class for %s", record_type
+    if not serializer_cls:
+        log.critical("No serializer class for %s", record_type)
+        return 0
+
+    # DB connection (async)
+    async with aiosqlite.connect(dbname) as sqlconn:
+        await sqlconn.executescript(
+            """
+            PRAGMA journal_mode=WAL;
+            PRAGMA synchronous=NORMAL;
+            CREATE TABLE IF NOT EXISTS serialized(
+                id   TEXT PRIMARY KEY,
+                type TEXT,
+                ttl  TEXT
+            );
+            """
         )
-        return None
+        db_lock = asyncio.Lock()
 
-    sqlconn = sqlite3.connect(dbname)
+        # HTTP client for any downstream network I/O in serializers
+        limits = httpx.Limits(
+            max_connections=8, max_keepalive_connections=4, keepalive_expiry=30.0
+        )
+        timeout = httpx.Timeout(20.0, connect=10.0, read=20.0, write=20.0)
 
-    async with httpx.AsyncClient() as session:
-        for docid in id_group:
-            task = asyncio.create_task(
-                run_serializer(docid, serializer, ctx_val, semaphore, session, sqlconn)
-            )
-            tasks.add(task)
-            task.add_done_callback(tasks.discard)
+        start_time = timeit.default_timer()
+        last_log_time = start_time
+        last_count = 0
 
-        for coro in asyncio.as_completed(tasks):
-            try:
-                await coro
-            except Exception as e:
-                log.critical(
-                    "===========================================   Exception raised! %s",
-                    e,
+        async with httpx.AsyncClient(limits=limits, timeout=timeout) as session:
+            sem = asyncio.Semaphore(concurrency)
+            in_flight: set[asyncio.Task] = set()
+            processed = 0
+
+            # Single Solr cursor stream
+            res_last = None
+            async for doc, res in stream_solr_docs_for_type(
+                solr_conn, record_type, country_code, page_size
+            ):
+                res_last = res
+                processed += 1
+
+                # ---- rate logging every 60s (or every 1000 docs, whichever comes first)
+                now = timeit.default_timer()
+                if (now - last_log_time) >= 60 or (processed - last_count) >= 1000:
+                    elapsed = now - start_time
+                    per_min = processed / (elapsed / 60) if elapsed else 0
+                    log.info(
+                        "[%s] Progress: %d docs processed | %.1f docs/min | elapsed %.1f min",
+                        record_type,
+                        processed,
+                        per_min,
+                        elapsed / 60,
+                    )
+                    last_log_time = now
+                    last_count = processed
+                # ----------------------------------------------------------
+
+                await sem.acquire()
+                t = asyncio.create_task(
+                    run_serializer_from_doc(
+                        doc, serializer_cls, ctx_val, session, sqlconn, db_lock
+                    )
                 )
+                in_flight.add(t)
+                t.add_done_callback(lambda _t: (sem.release(), in_flight.discard(_t)))
 
-    sqlconn.commit()
-    sqlconn.close()
+                # Drain periodically to surface exceptions
+                if len(in_flight) >= concurrency:
+                    done, in_flight = await asyncio.wait(
+                        in_flight, return_when=asyncio.FIRST_COMPLETED
+                    )
 
+            # Drain remaining tasks
+            if in_flight:
+                await asyncio.gather(*in_flight, return_exceptions=True)
 
-def do_serialize(id_group: list, resource_type: str, dbname: str):
-    num_async_procs: int = 10
-    semaphore = asyncio.Semaphore(num_async_procs)
-    asyncio.run(serialize(id_group, resource_type, semaphore, dbname))
+        await sqlconn.commit()
 
-
-def main(args: argparse.Namespace, parallel_processes: int) -> bool:
-    types_to_serialize: list
-    if not args.include:
-        types_to_serialize = ["source", "person", "institution"]
+    # Log total hits if available
+    if res_last is not None and getattr(res_last, "hits", None) is not None:
+        log.info(
+            "Processed %s documents for %s (Solr hits reported: %s)",
+            processed,
+            record_type,
+            res_last.hits,  # type: ignore[attr-defined]
+        )
     else:
-        types_to_serialize = args.include
+        log.info("Processed %s documents for %s", processed, record_type)
+
+    return processed
+
+
+# -------------------------------------------------------------------
+# Orchestration (no multiprocessing; one cursor per type)
+# -------------------------------------------------------------------
+def dump_nt_from_db(db_path: Path, nt_path: Path) -> None:
+    log.info("Writing N-Triples output to %s", str(nt_path))
+    with (
+        sqlite3.connect(str(db_path)) as db,
+        open(nt_path, "w", encoding="utf-8") as nt_out,
+    ):
+        for (ttl,) in db.execute("SELECT ttl FROM serialized"):
+            if ttl:
+                nt_out.write(ttl)
+                if not ttl.endswith("\n"):
+                    nt_out.write("\n")
+
+
+def main(args: argparse.Namespace) -> bool:
+    types_to_serialize: list[str] = (
+        ["source", "person", "institution", "work", "publication"]
+        if not args.include
+        else args.include
+    )
 
     output_path: Path = args.output
     output_path.mkdir(parents=True, exist_ok=True)
 
-    log.info(f"Running with {parallel_processes} processes")
-
+    # Optional cleanup
     if args.empty:
-        for i in range(parallel_processes):
-            db_file = Path(args.output, f"output_{i}.db")
+        for rec_type in types_to_serialize:
+            nt_path = Path(args.output, f"{rec_type}.nt")
+            db_file = Path(args.output, f"{rec_type}.db")
+            if nt_path.exists():
+                log.info("Removing %s", str(nt_path))
+                nt_path.unlink(missing_ok=True)
             if db_file.exists():
                 log.info("Removing %s", str(db_file))
                 db_file.unlink(missing_ok=True)
 
-    for i in range(parallel_processes):
-        db_file = Path(args.output, f"output_{i}.db")
-        db_name = str(db_file)
+    async def run_all() -> None:
+        solr_conn = Solr(SOLR_SERVER)
 
-        sqlconn = sqlite3.connect(db_name)
-        sql_stmt: str = "CREATE TABLE IF NOT EXISTS serialized(id TEXT PRIMARY KEY, type TEXT, ttl TEXT)"
-        sqlconn.execute(sql_stmt)
-        sqlconn.commit()
-        sqlconn.close()
+        for rec_type in types_to_serialize:
+            log.info("Running single-cursor serialization for %s", rec_type)
 
-    for rec_type in types_to_serialize:
-        log.info("Running serializer for %s", rec_type)
-        id_groups: list = asyncio.run(
-            create_id_groups(parallel_processes, rec_type, args.country)
-        )
-        log.debug(
-            "Got %s id groups, for %s parallel processes",
-            len(id_groups),
-            parallel_processes,
-        )
-        num_results: int = sum([len(x) for x in id_groups])
-        log.info("The number of results we will process is %s", num_results)
-        start_serialize = timeit.default_timer()
+            db_file = Path(args.output, f"{rec_type}.db")
+            db_name = str(db_file)
 
-        futures = []
-        with concurrent.futures.ProcessPoolExecutor(parallel_processes) as executor:
-            for i in range(parallel_processes):
-                this_group = id_groups[i]
-                if not this_group:
-                    continue
+            start_serialize = timeit.default_timer()
+            processed = await process_record_type(
+                solr_conn=solr_conn,
+                record_type=rec_type,
+                country_code=args.country,
+                dbname=db_name,
+                concurrency=args.concurrency,
+                page_size=args.page_size,
+            )
+            elapsed = timeit.default_timer() - start_serialize
+            rate = (processed / elapsed) if elapsed else 0.0
+            log.info(
+                "Total time to serialize %s: %.3fs  |  processed=%d  |  rate=%.2f docs/s",
+                rec_type,
+                elapsed,
+                processed,
+                rate,
+            )
 
-                db_file = Path(args.output, f"output_{i}.db")
-                db_name = str(db_file)
+            # Dump N-Triples to per-type file
+            nt_path = Path(args.output, f"{rec_type}.nt")
+            dump_nt_from_db(db_file, nt_path)
 
-                new_future = executor.submit(
-                    do_serialize, id_groups[i], rec_type, db_name
-                )
-                futures.append(new_future)
-
-        for f in concurrent.futures.as_completed(futures):
-            f.result()
-
-        end_serialize = timeit.default_timer()
-        s_elapsed: float = end_serialize - start_serialize
-        s_hours, s_remainder = divmod(s_elapsed, 60 * 60)
-        s_minutes, s_seconds = divmod(s_remainder, 60)
-        log.info(
-            f"Total time to serialize {rec_type}: {int(s_hours):02}:{int(s_minutes):02}:{round(s_seconds):02} (Total: {s_elapsed}s)"
-        )
-        log.info(f"Total processing rate: {num_results / s_elapsed} docs/s")
-
-    for i in range(parallel_processes):
-        nth_db_name = Path(args.output, f"output_{i}.db")
-        ttl_path = Path(args.output, f"output_{i}.nt")
-
-        if args.empty:
-            log.info("Removing %s", str(ttl_path))
-            ttl_path.unlink(missing_ok=True)
-
-        with open(ttl_path, "w") as ttl_out:
-            log.info("Writing TTL output to %s", str(ttl_path))
-            sql_stmt = "SELECT ttl FROM serialized"
-
-            subprocess.run(["sqlite3", str(nth_db_name), sql_stmt], stdout=ttl_out)  # noqa
-
+    asyncio.run(run_all())
     return True
 
 
+# -------------------------------------------------------------------
+# CLI
+# -------------------------------------------------------------------
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -320,7 +388,24 @@ if __name__ == "__main__":
     parser.add_argument(
         "-q", "--quiet", action="store_true", help="Quiet output (log level WARNING)"
     )
-    parser.add_argument("--include", action="extend", nargs="*")
+    parser.add_argument(
+        "--include",
+        nargs="*",
+        choices=["source", "person", "institution", "work", "publication"],
+        help="Limit to specific record types",
+    )
+    parser.add_argument(
+        "--concurrency",
+        type=int,
+        default=8,
+        help="Max concurrent serializer tasks (affects CPU/DB only; Solr is single-cursor).",
+    )
+    parser.add_argument(
+        "--page-size",
+        type=int,
+        default=500,
+        help="Solr cursor page size (number of docs per page).",
+    )
 
     incoming_args = parser.parse_args()
 
@@ -332,15 +417,15 @@ if __name__ == "__main__":
         log.setLevel(logging.INFO)
 
     start = timeit.default_timer()
-    # num_procs: int = os.cpu_count()
-    num_procs: int = 6
+    result: bool = main(incoming_args)
+    elapsed = timeit.default_timer() - start
 
-    result: bool = main(incoming_args, num_procs)
-
-    end = timeit.default_timer()
-    elapsed: float = end - start
     hours, remainder = divmod(elapsed, 60 * 60)
     minutes, seconds = divmod(remainder, 60)
     log.info(
-        f"Total time to run: {int(hours):02}:{int(minutes):02}:{round(seconds):02} (Total: {elapsed}s)"
+        "Total time to run: %02d:%02d:%02d (Total: %.3fs)",
+        int(hours),
+        int(minutes),
+        round(seconds),
+        elapsed,
     )

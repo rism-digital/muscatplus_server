@@ -4,6 +4,7 @@ from search_server.helpers.jsonld import (
     RISM_JSONLD_DEFAULT_CONTEXT,
     RISM_JSONLD_INSTITUTION_CONTEXT,
     RISM_JSONLD_PERSON_CONTEXT,
+    RISM_JSONLD_PUBLICATION_CONTEXT,
     RISM_JSONLD_SOURCE_CONTEXT,
     RISM_JSONLD_WORK_CONTEXT,
 )
@@ -29,6 +30,11 @@ async def institution_context(req) -> response.HTTPResponse:
 @api_blueprint.route("/work.json")
 async def work_context(req) -> response.HTTPResponse:
     return response.json({"@context": RISM_JSONLD_WORK_CONTEXT})
+
+
+@api_blueprint.route("/publication.json")
+async def publication_context(req) -> response.HTTPResponse:
+    return response.json({"@context": RISM_JSONLD_PUBLICATION_CONTEXT})
 
 
 @api_blueprint.route("/context.json")
