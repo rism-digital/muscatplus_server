@@ -17,6 +17,9 @@ import httpx
 import orjson
 import rdflib
 import yaml
+from sanic import Request
+from sanic.compat import Header
+from sanic.models.protocol_types import TransportProtocol
 from small_asc.client import JsonAPIRequest, Solr
 
 from search_server.helpers.jsonld import (
@@ -32,6 +35,7 @@ from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
 from search_server.resources.sources.full_source import FullSource
 from search_server.resources.works.full_work import FullWork
+from search_server.server import app
 
 # -------------------------------------------------------------------
 # Logging
@@ -58,33 +62,22 @@ class MockRoute:
         self.name = ""
 
 
-def make_request_stub(translations: dict[str, Any]) -> SimpleNamespace:
-    app_stub = SimpleNamespace(
-        config={},
-        ctx=SimpleNamespace(),
-        router=SimpleNamespace(url_for=lambda *a, **k: None),
-        url_for=lambda *a, **k: None,
-    )
-    return SimpleNamespace(
-        app=app_stub,
-        ctx=SimpleNamespace(translations=translations),
-        route=MockRoute(),
-        headers={
-            "X-Forwarded-Proto": "https",
-            "X-Forwarded-Host": "rism.online",
-        },
-        method="GET",
-        path="/foo",
-        scheme="https",
-        host="rism.online",
-        url="https://rism.online/foo",
-        ip="127.0.0.1",
-    )
+# Alters the response to make all the URIs appear to be coming from the production site.
+# Since every URL in the serializers runs through the `get_identifier` function, it will
+# pick up on this info for constructing the URI.
+headers: Header = Header(
+    {
+        "X-Forwarded-Proto": "https",
+        "X-Forwarded-Host": "rism.online",
+    }
+)
+translations: dict = load_translations("locales/") or {}
+filt_translations: dict = filter_languages({"en"}, translations)
 
+req = Request(bytes("/foo", "ascii"), headers, "", "GET", TransportProtocol(), app)
+req.ctx.translations = filt_translations
+req.route = MockRoute()  # type: ignore
 
-translations: dict[str, Any] = load_translations("locales/") or {}
-filt_translations: dict[str, Any] = filter_languages({"en"}, translations)
-REQ_STUB = make_request_stub(filt_translations)
 
 # -------------------------------------------------------------------
 # Serialization helpers
@@ -127,7 +120,7 @@ async def run_serializer_from_doc(
     try:
         serialized = await serializer_cls(
             this_doc,
-            context={"request": REQ_STUB, "direct_request": True, "client": session},
+            context={"request": req, "direct_request": True, "client": session},
         ).serialized
     except Exception as e:
         log.critical("=========== Serializer failed for %s: %s", this_doc.get("id"), e)
