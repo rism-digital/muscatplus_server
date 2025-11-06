@@ -98,6 +98,8 @@ CONTEXTS: dict[str, Any] = {
     "publication": RISM_JSONLD_PUBLICATION_CONTEXT,
 }
 
+RECORD_TYPES: list[str] = list(serializer_map.keys())
+
 
 def to_ntriples(data: dict[str, Any]) -> str:
     json_serialized: str = orjson.dumps(data).decode("utf-8")
@@ -303,11 +305,7 @@ def dump_nt_from_db(db_path: Path, nt_path: Path) -> None:
 
 
 def main(args: argparse.Namespace) -> bool:
-    types_to_serialize: list[str] = (
-        ["source", "person", "institution", "work", "publication"]
-        if not args.include
-        else args.include
-    )
+    types_to_serialize: list[str] = RECORD_TYPES if not args.include else args.include
 
     output_path: Path = args.output
     output_path.mkdir(parents=True, exist_ok=True)
@@ -328,7 +326,7 @@ def main(args: argparse.Namespace) -> bool:
         solr_conn = Solr(SOLR_SERVER)
 
         for rec_type in types_to_serialize:
-            log.info("Running single-cursor serialization for %s", rec_type)
+            log.info("Running serialization for %s", rec_type)
 
             db_file = Path(args.output, f"{rec_type}.db")
             db_name = str(db_file)
@@ -385,7 +383,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--include",
         nargs="*",
-        choices=["source", "person", "institution", "work", "publication"],
+        choices=RECORD_TYPES,
         help="Limit to specific record types",
     )
     parser.add_argument(
