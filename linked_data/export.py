@@ -9,7 +9,6 @@ import logging.config
 import sqlite3
 import timeit
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Any
 
 import aiosqlite
@@ -33,6 +32,7 @@ from search_server.helpers.jsonld import (
 from search_server.helpers.languages import filter_languages, load_translations
 from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
+from search_server.resources.publications.publication import Publication
 from search_server.resources.sources.full_source import FullSource
 from search_server.resources.works.full_work import FullWork
 from search_server.server import app
@@ -87,6 +87,7 @@ serializer_map: dict[str, Any] = {
     "person": Person,
     "institution": Institution,
     "work": FullWork,
+    "publication": Publication,
 }
 
 CONTEXTS: dict[str, Any] = {
