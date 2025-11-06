@@ -187,4 +187,4 @@ async def about(req) -> response.JSONResponse:
 
 @app.exception(NotFound, ServerError)
 async def json_error(req, exc) -> response.HTTPResponse:
-    return response.json({"message": exc.message})
+    return response.json({"message": exc.message}, status=exc.status_code)
