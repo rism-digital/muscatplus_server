@@ -61,10 +61,12 @@ class FullWork(BaseWork):
             return None
 
         req = self.context["request"]
+        transl: dict = req.ctx.translations
         work_id: str = obj["id"]
         ident: str = strip_prefix(work_id)
 
         d: dict = {
+            "sectionLabel": transl.get("records.sources"),
             "url": get_identifier(req, "works.work_sources", work_id=ident),
             "totalItems": source_count,
         }
