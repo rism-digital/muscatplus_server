@@ -1,5 +1,3 @@
-import logging
-
 import ypres
 
 from search_server.helpers.display_fields import get_display_fields
@@ -16,8 +14,6 @@ from search_server.resources.shared.external_resources import ExternalResourcesS
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.works import WorksSection
-
-log = logging.getLogger("mp_server")
 
 
 class Person(BasePerson):

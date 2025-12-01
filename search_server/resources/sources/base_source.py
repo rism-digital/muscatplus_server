@@ -1,5 +1,3 @@
-import logging
-
 import ypres
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
@@ -14,8 +12,6 @@ from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.shared.part_of import PartOfSection
 from search_server.resources.shared.record_history import get_record_history
 from search_server.resources.shared.relationship import Relationship
-
-log = logging.getLogger("mp_server")
 
 
 class BaseSource(ypres.AsyncDictSerializer):

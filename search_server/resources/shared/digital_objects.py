@@ -1,14 +1,11 @@
-import logging
-
 import ypres
+from sanic.log import logger
 from small_asc.client import Results
 
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import render_url
 from search_server.resources.shared.part_of import PartOfSection
-
-log = logging.getLogger("mp_server")
 
 
 class DigitalObjectsSection(ypres.AsyncDictSerializer):
@@ -42,7 +39,7 @@ class DigitalObjectsSection(ypres.AsyncDictSerializer):
                 req, "institutions.digital_object_list", institution_id=obj_id
             )
         else:
-            log.error("Could not determine ID for %s", obj["id"])
+            logger.error("Could not determine ID for %s", obj["id"])
             return "no-id"
 
     def get_section_label(self, obj: SolrResult):
@@ -116,7 +113,7 @@ class DigitalObject(ypres.AsyncDictSerializer):
                 dobject_id=dobject_id,
             )
         else:
-            log.error("Could not determine ID for %s", obj["id"])
+            logger.error("Could not determine ID for %s", obj["id"])
             return "no-id"
 
     def get_slabel(self, obj: SolrResult) -> dict:
@@ -149,7 +146,7 @@ class DigitalObject(ypres.AsyncDictSerializer):
             svg: str | None = await render_url(mei_url)
 
             if not svg:
-                log.error("Could not render SVG for %s", obj.get("id"))
+                logger.error("Could not render SVG for %s", obj.get("id"))
 
             d.update(
                 {

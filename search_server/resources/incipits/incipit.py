@@ -1,8 +1,6 @@
-import logging
-
 import ypres
 from small_asc.client import Results
-
+from sanic.log import logger
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.display_translators import (
     clef_translator,
@@ -13,8 +11,6 @@ from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.helpers.vrv import RenderedIncipit, render_pae
 from search_server.resources.shared.part_of import PartOfSection
-
-log = logging.getLogger("mp_server")
 
 
 class IncipitsSection(ypres.AsyncDictSerializer):
@@ -242,7 +238,7 @@ class Incipit(ypres.AsyncDictSerializer):
         rendered_pae: RenderedIncipit = render_pae(pae_code, is_mensural=is_mensural)
 
         if not rendered_pae:
-            log.error("Could not load music incipit for %s", obj.get("id"))
+            logger.error("Could not load music incipit for %s", obj.get("id"))
             return None
 
         svg, b64midi = rendered_pae

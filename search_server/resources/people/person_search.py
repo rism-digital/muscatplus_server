@@ -1,5 +1,3 @@
-import logging
-
 import ypres
 from small_asc.client import Results
 
@@ -7,8 +5,6 @@ from search_server.resources.search.search_results import (
     BaseSearchResults,
 )
 from search_server.resources.search.source_result import SourceSearchResult
-
-log = logging.getLogger("mp_server")
 
 
 class PersonResults(BaseSearchResults):

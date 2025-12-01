@@ -1,7 +1,6 @@
-import logging
 import subprocess  # noqa: S404
 
-log = logging.getLogger("mp_server")
+from sanic.log import logger
 
 
 def render_svg(
@@ -39,5 +38,5 @@ def render_svg(
         command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
     stdout, stderr = proc.communicate(input=svginput.encode())
-    log.info("%s, %s", stdout, stderr)
+    logger.info("%s, %s", stdout, stderr)
     return proc.returncode >= 0

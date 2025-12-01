@@ -4,7 +4,6 @@ sys.path.append("./")
 
 import argparse
 import asyncio
-import logging
 import logging.config
 import sqlite3
 import timeit

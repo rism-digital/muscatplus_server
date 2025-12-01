@@ -1,10 +1,9 @@
-import logging
-
 import orjson
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sanic import Sanic, response
 from sanic.exceptions import NotFound, ServerError
+from sanic.log import logger
 
 from search_server.helpers.languages import (
     SUPPORTED_LANGUAGES,
@@ -30,15 +29,17 @@ from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
 from search_server.routes.works import works_blueprint
 
-config: dict = yaml.safe_load(open("configuration.yml"))  # noqa: SIM115
+with open("configuration.yml") as cfile:
+    config: dict = yaml.safe_load(cfile)
+
 debug_mode: bool = config["common"]["debug"]
 version_string: str = config["common"]["version"]
-release: str = ""
 
 # If we have semver then remove the leading 'v', e.g., 'v1.1.1' -> '1.1.1'
 # The full release string would then be 'muscatplus_server@1.1.1'
 # Otherwise, use the version string verbatim, e.g., 'muscatplus_server@development'.
-release = version_string[1:] if version_string.startswith("v") else version_string
+release: str = version_string[1:] if version_string.startswith("v") else version_string
+
 
 app = Sanic("mp_server", dumps=orjson.dumps)
 
@@ -88,18 +89,9 @@ app.blueprint(opengraph_blueprint)
 app.config.FORWARDED_SECRET = config["common"]["secret"]
 app.config.KEEP_ALIVE_TIMEOUT = 75  # matches nginx default keepalive
 
-LOGLEVEL = logging.DEBUG if debug_mode else logging.ERROR
-
-logging.basicConfig(
-    format="[%(asctime)s] [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
-    level=LOGLEVEL,
-)
-
-log = logging.getLogger("mp_server")
-
 translations: dict = load_translations("locales/")
 if not translations:
-    log.critical("No translations can be loaded.")
+    logger.critical("No translations can be loaded.")
 
 app.ctx.translations = translations
 
@@ -129,7 +121,7 @@ def do_language_negotiation(req) -> None:
     lang_header = req.headers.get("X-API-Accept-Language")
 
     if not lang_header or lang_header == "*":
-        log.debug(
+        logger.debug(
             "No language negotiation" if not lang_header else "All languages negotiated"
         )
         accepted = SUPPORTED_LANGUAGES
@@ -138,10 +130,10 @@ def do_language_negotiation(req) -> None:
         accepted = requested & SUPPORTED_LANGUAGES
 
         if not accepted:
-            log.debug("No acceptable language values requested")
+            logger.debug("No acceptable language values requested")
             accepted = SUPPORTED_LANGUAGES
         else:
-            log.debug("Filtering languages %s", accepted)
+            logger.debug("Filtering languages %s", accepted)
 
     req.ctx.accepted_languages = list(accepted)
     req.ctx.translations = (

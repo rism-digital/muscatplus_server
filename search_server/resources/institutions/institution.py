@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Callable
 
 import ypres
@@ -14,8 +13,6 @@ from search_server.resources.shared.external_authority import ExternalAuthoritie
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
-
-log = logging.getLogger("mp_server")
 
 
 class Institution(BaseInstitution):
@@ -170,9 +167,7 @@ class LocationAddressSection(ypres.DictSerializer):
         for address in obj.get("addresses_json", []):
             out_addr = {}
             for k, _ in address.items():
-                label: tuple[str, Callable | None] = mailing_address_field_config.get(
-                    k, ()
-                )
+                label: tuple[str, Callable | None] = mailing_address_field_config.get(k)
                 if not label:
                     continue
 

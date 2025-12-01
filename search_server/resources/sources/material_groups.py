@@ -1,5 +1,3 @@
-import logging
-
 import ypres
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
@@ -12,8 +10,6 @@ from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.relationship import RelationshipsSection
-
-log = logging.getLogger("mp_server")
 
 
 class MaterialGroupsSection(ypres.DictSerializer):

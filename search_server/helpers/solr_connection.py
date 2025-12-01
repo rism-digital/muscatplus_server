@@ -1,7 +1,7 @@
-import logging
 from typing import Any
 
 import yaml
+from sanic.log import logger
 from small_asc.client import JsonAPIRequest, Results, Solr
 
 """
@@ -15,8 +15,6 @@ they can then use to perform searches.
 
 """
 
-log = logging.getLogger("mp_server")
-
 with open("configuration.yml") as yml:
     config: dict = yaml.safe_load(yml)
 
@@ -24,7 +22,7 @@ solr_url = config["solr"]["server"]
 
 SolrConnection: Solr = Solr(solr_url)
 
-log.debug("Solr connection set to %s", solr_url)
+logger.debug("Solr connection set to %s", solr_url)
 
 type SolrResult = dict[str, Any]
 

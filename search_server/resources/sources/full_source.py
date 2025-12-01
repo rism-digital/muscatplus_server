@@ -1,5 +1,3 @@
-import logging
-
 import ypres
 
 from search_server.helpers.identifiers import get_identifier, strip_prefix
@@ -15,8 +13,6 @@ from search_server.resources.sources.exemplars import ExemplarsSection
 from search_server.resources.sources.material_groups import MaterialGroupsSection
 from search_server.resources.sources.source_items import SourceItemsSection
 from search_server.resources.sources.works import WorksSection
-
-log = logging.getLogger("mp_server")
 
 
 class SourceItemList(ypres.DictSerializer):

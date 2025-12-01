@@ -1,5 +1,3 @@
-import logging
-
 import ypres
 from small_asc.client import JsonAPIRequest, Results
 
@@ -13,8 +11,6 @@ from search_server.resources.people.base_person import BasePerson
 from search_server.resources.sources.base_source import (
     BaseSource,
 )
-
-log = logging.getLogger("mp_server")
 
 
 async def handle_place_request(req, place_id: str) -> dict | None:

@@ -1,6 +1,5 @@
-import logging
-
 import ypres
+from sanic.log import logger
 
 from search_server.helpers.identifiers import (
     PROJECT_IDENTIFIERS,
@@ -12,8 +11,6 @@ from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
 from search_server.resources.sources.full_source import FullSource
 
-log = logging.getLogger("mp_server")
-
 
 async def handle_external_request(
     req, project: str, resource_type: str, ext_id: str
@@ -22,7 +19,7 @@ async def handle_external_request(
     external_record = await SolrConnection.get(solr_id)
 
     if not external_record:
-        log.warning(
+        logger.warning(
             "No record found for external/%s/%s/%s", project, resource_type, ext_id
         )
         return None

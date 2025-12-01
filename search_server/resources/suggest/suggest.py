@@ -1,17 +1,15 @@
-import logging
 import operator
 import re
 from collections import defaultdict
 
 import ypres
 from sanic import request, response
+from sanic.log import logger
 from small_asc.client import SolrError
 
 from search_server.helpers.search_request import suggest_fields_for_alias
 from search_server.helpers.solr_connection import SolrConnection
 from search_server.request_handlers import send_json_response
-
-log = logging.getLogger("mp_server")
 
 
 class SuggestionResults(ypres.DictSerializer):
@@ -106,7 +104,7 @@ async def handle_suggest_request(
         )
     except SolrError:
         msg: str = "Error sending suggest request"
-        log.exception(msg)
+        logger.exception(msg)
         return response.json({"message": msg}, status=500)
 
     suggest_results: dict = SuggestionResults(

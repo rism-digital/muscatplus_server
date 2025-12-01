@@ -1,13 +1,10 @@
-import logging
-
+from sanic.log import logger
 import ypres
 
 from search_server.helpers.display_translators import work_catalogue_status_translator
 from search_server.helpers.formatters import format_source_label
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.record_types import create_source_types_block
-
-log = logging.getLogger("mp_server")
 
 
 # TODO: Ensure the required fields are present in the object before serializing
@@ -53,7 +50,7 @@ class PartOfSection(ypres.DictSerializer):
             case "dobject":
                 return [_get_dobject_part_of(req, obj, transl)]
             case _:
-                log.error(
+                logger.error(
                     "Could not determine object type %s for %s", obj_type, obj["id"]
                 )
 
@@ -249,7 +246,7 @@ def _get_dobject_part_of(req, obj: dict, translations: dict) -> dict:
             "type": "rism:Institution",
         }
     else:
-        log.error("Could not determine part-of for %s", obj["id"])
+        logger.error("Could not determine part-of for %s", obj["id"])
         related_to = {
             "id": "no-id",
             "type": "rism:UnknownObject",

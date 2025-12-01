@@ -1,6 +1,5 @@
-import logging
-
 import ypres
+from sanic.log import logger
 
 from search_server.helpers.display_fields import get_search_result_summary
 from search_server.helpers.display_translators import title_json_value_translator
@@ -10,8 +9,6 @@ from search_server.helpers.incipit_search_fields import IncipitModeValues
 from search_server.helpers.solr_connection import SolrResult
 from search_server.helpers.vrv import render_incipit
 from search_server.resources.shared.part_of import PartOfSection
-
-log = logging.getLogger("mp_server")
 
 
 class IncipitSearchResult(ypres.DictSerializer):
@@ -69,7 +66,7 @@ class IncipitSearchResult(ypres.DictSerializer):
 
     def get_rendered(self, obj: SolrResult) -> list | None:
         if not obj.get("has_notation_b", False):
-            log.debug("No music incipit")
+            logger.debug("No music incipit")
             return None
 
         req = self.context["request"]

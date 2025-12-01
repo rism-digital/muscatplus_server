@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Callable
 from typing import Any
 
@@ -20,8 +19,6 @@ from search_server.helpers.solr_connection import SolrResult
 #  passes it through the _default_translator function, but this is largely transparent to the user).
 #
 type LabelConfig = dict[str, tuple[str, Callable | None]]
-
-log = logging.getLogger("mp_server")
 
 FIELD_CONFIG: LabelConfig = {
     "main_title_s": ("records.standardized_title", None),

@@ -1,9 +1,6 @@
-import logging
-
 import orjson
 import rdflib
-
-log = logging.getLogger("mp_server")
+from sanic.log import logger
 
 
 def _to_graph_object(data: dict) -> rdflib.Graph:
@@ -20,9 +17,9 @@ def _to_graph_object(data: dict) -> rdflib.Graph:
 
 
 def to_turtle(data: dict) -> str:
-    log.debug("Creating graph from data")
+    logger.debug("Creating graph from data")
     graph_object: rdflib.Graph = _to_graph_object(data)
-    log.debug("Created graph object")
+    logger.debug("Created graph object")
     return graph_object.serialize(format="turtle")
 
 

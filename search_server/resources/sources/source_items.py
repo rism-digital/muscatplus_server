@@ -1,13 +1,10 @@
-import logging
-
 import ypres
+from sanic.log import logger
 from small_asc.client import Results
 
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.sources.base_source import BaseSource
-
-log = logging.getLogger("mp_server")
 
 
 class SourceItemsSection(ypres.AsyncDictSerializer):
@@ -79,7 +76,7 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
                 )
 
                 if not source_doc:
-                    log.error("Could not load source for holding %s", res["id"])
+                    logger.error("Could not load source for holding %s", res["id"])
                     continue
 
                 items.append(
@@ -91,7 +88,9 @@ class SourceItemsSection(ypres.AsyncDictSerializer):
                     ).serialized
                 )
             else:
-                log.error("Unexpected result type %s for %s", res.get("type"), this_id)
+                logger.error(
+                    "Unexpected result type %s for %s", res.get("type"), this_id
+                )
                 continue
 
         return items or None
