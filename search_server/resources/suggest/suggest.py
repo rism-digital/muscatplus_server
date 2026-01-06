@@ -117,7 +117,7 @@ async def handle_suggest_request(
         },
     ).serialized
 
-    return await send_json_response(
+    return send_json_response(
         req,
         suggest_results,
         req.app.ctx.config["common"]["debug"],

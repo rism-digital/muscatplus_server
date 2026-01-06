@@ -5,12 +5,14 @@ from sanic import Sanic, response
 from sanic.exceptions import NotFound, ServerError
 from sanic.log import logger
 
+from search_server.helpers.identifiers import get_identifier
 from search_server.helpers.languages import (
     SUPPORTED_LANGUAGES,
     filter_languages,
     load_translations,
 )
 from search_server.helpers.solr_connection import SolrConnection
+from search_server.request_handlers import send_json_response
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.api import api_blueprint
 from search_server.routes.countries import countries_blueprint
@@ -28,6 +30,7 @@ from search_server.routes.sitemap import sitemap_blueprint
 from search_server.routes.sources import sources_blueprint
 from search_server.routes.subjects import subjects_blueprint
 from search_server.routes.works import works_blueprint
+from search_server.template_render import render_template
 
 with open("configuration.yml") as cfile:
     config: dict = yaml.safe_load(cfile)
@@ -149,10 +152,12 @@ async def front(req):
 
 
 @app.route("/about")
-async def about(req) -> response.JSONResponse:
-    cfg: dict = req.app.ctx.config
-    idx_result: dict | None = await SolrConnection.get("rism-online-index-info")  # type: ignore
+async def about(req) -> response.HTTPResponse:
+    app_context = req.app.ctx
+    cfg: dict = app_context.config
 
+    idx_result: dict | None = await SolrConnection.get("rism-online-index-info")  # type: ignore
+    ident = get_identifier(req, "about")
     # If, for some reason, we don't have a result for the last indexed
     # value, then return Jan 1, 1970.
     if idx_result:
@@ -167,6 +172,8 @@ async def about(req) -> response.JSONResponse:
         cantus_records = "1970-01-01T00:00:00.000Z"
 
     resp: dict = {
+        "id": ident,
+        "type": "rism:About",
         "serverVersion": cfg["common"]["version"],
         "indexerVersion": idxversion,
         "lastIndexed": lastidx,
@@ -174,7 +181,12 @@ async def about(req) -> response.JSONResponse:
         "latestFromCantus": cantus_records,
     }
 
-    return response.json(resp)
+    accept: str | None = req.headers.get("Accept")
+    if accept and "json" in accept:
+        return send_json_response(req, resp, app_context.config["common"]["debug"])
+    else:
+        rendered_template: str = render_template(app_context, req, resp)
+        return response.html(rendered_template)
 
 
 @app.exception(NotFound, ServerError)

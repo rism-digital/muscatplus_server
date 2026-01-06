@@ -33,7 +33,7 @@ async def tombstone_or_not_found(req: request.Request) -> response.HTTPResponse:
     )
 
 
-async def send_json_response(
+def send_json_response(
     req: request.Request, serialized_results: dict, debug_response: bool
 ) -> response.HTTPResponse:
     accept: str | None = req.headers.get("Accept")
@@ -221,9 +221,7 @@ async def handle_search(
                 {"message": "The requested resource was not found"}, status=404
             )
 
-        return await send_json_response(
-            req, data_obj, app_context.config["common"]["debug"]
-        )
+        return send_json_response(req, data_obj, app_context.config["common"]["debug"])
     else:
         rendered_template: str = render_template(app_context, req, data_obj)
         return response.html(rendered_template)

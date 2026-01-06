@@ -38,6 +38,14 @@ def format_person_label(obj: dict) -> str:
     return f"{name}{dates}"
 
 
+def format_work_label(obj: dict) -> str:
+    return "Work Label Goes Here"
+
+
+def format_work_description(obj: dict) -> str:
+    return "Work Description Goes Here"
+
+
 def format_incipit_label(obj: dict) -> str:
     """
     :param obj: A Solr result object containing an incipit record
@@ -63,7 +71,7 @@ def format_source_description(obj: dict) -> str:
     if "source_title_s" in obj:
         source_title = obj["source_title_s"]
 
-    return f"{source_title} {composers} {people}"
+    return "Source Description Goes Here"
 
 
 def format_person_description(obj: dict) -> str:
@@ -76,7 +84,7 @@ def format_person_description(obj: dict) -> str:
     if "profession_function_sm" in obj:
         profession = "; ".join(obj["profession_function_sm"])
 
-    return f"{places} {profession}"
+    return "Person Description Goes Here"
 
 
 def format_institution_description(obj: dict) -> str:
@@ -85,4 +93,4 @@ def format_institution_description(obj: dict) -> str:
     if "street_address_sm" in obj:
         address = " ".join(obj["street_address_sm"])
 
-    return f"{address}"
+    return "Institution Description Goes Here"
