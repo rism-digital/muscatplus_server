@@ -17,6 +17,16 @@ from search_server.helpers.formatters import (
 from search_server.resources.countries.country import CountryList
 
 
+def extract_page_label(obj: dict) -> str:
+    if "label" not in obj:
+        return "RISM Online"
+    elif "en" in obj["label"]:
+        return obj["label"]["en"][0]
+    elif "none" in obj["label"]:
+        return obj["label"]["none"][0]
+    return "RISM Online"
+
+
 class TemplateData(ypres.DictSerializer):
     record_url = ypres.MethodField()
     record_data = ypres.MethodField()
@@ -64,10 +74,10 @@ class SourceTemplateData(TemplateData):
     record_image_url = ypres.MethodField()
 
     def get_record_title(self, obj: dict) -> str:
-        return ""
+        return extract_page_label(obj)
 
-    def get_record_description(self, obj: dict) -> str:
-        return format_source_description(obj)
+    def get_record_description(self, obj: dict) -> str | None:
+        return None
 
     def get_record_image_url(self, obj: dict) -> str | None:
         return f"{obj['id']}/image.png"
@@ -77,21 +87,15 @@ class PersonTemplateData(TemplateData):
     record_title = ypres.MethodField()
     record_description = ypres.MethodField()
     record_image_url = ypres.MethodField()
-    record_schemaorg = ypres.MethodField()
 
     def get_record_title(self, obj: dict) -> str:
-        return format_person_label(obj)
+        return extract_page_label(obj)
 
-    def get_record_description(self, obj: dict) -> str:
-        return format_person_description(obj)
+    def get_record_description(self, obj: dict) -> str | None:
+        return None
 
     def get_record_image_url(self, obj: dict) -> str | None:
         return f"{obj['id']}/image.png"
-
-    def get_record_schemaorg(self, obj: dict) -> str:
-        so = {}
-
-        return orjson.dumps(so).decode("utf-8")
 
 
 class InstitutionTemplateData(TemplateData):
@@ -100,10 +104,10 @@ class InstitutionTemplateData(TemplateData):
     record_image_url = ypres.MethodField()
 
     def get_record_title(self, obj: dict) -> str:
-        return format_institution_label(obj)
+        return extract_page_label(obj)
 
-    def get_record_description(self, obj: dict) -> str:
-        return format_institution_description(obj)
+    def get_record_description(self, obj: dict) -> str | None:
+        return None
 
     def get_record_image_url(self, obj: dict) -> str | None:
         return f"{obj['id']}/image.png"
@@ -115,10 +119,10 @@ class WorkTemplateData(TemplateData):
     record_image_url = ypres.MethodField()
 
     def get_record_title(self, obj: dict) -> str:
-        return format_work_label(obj)
+        return extract_page_label(obj)
 
-    def get_record_description(self, obj: dict) -> str:
-        return format_work_description(obj)
+    def get_record_description(self, obj: dict) -> str | None:
+        return None
 
     def get_record_image_url(self, obj: dict) -> str | None:
         return f"{obj['id']}/image.png"
@@ -130,10 +134,10 @@ class PublicationTemplateData(TemplateData):
     record_image_url = ypres.MethodField()
 
     def get_record_title(self, obj: dict) -> str:
-        return ""
+        return extract_page_label(obj)
 
-    def get_record_description(self, obj: dict) -> str:
-        return ""
+    def get_record_description(self, obj: dict) -> str | None:
+        return None
 
     def get_record_image_url(self, obj: dict) -> str | None:
         return f"{obj['id']}/image.png"
@@ -145,7 +149,7 @@ class FrontTemplateData(TemplateData):
     record_image_url = ypres.MethodField()
 
     def get_record_title(self, obj: dict) -> str:
-        return "RISM Online"
+        return extract_page_label(obj)
 
     def get_record_description(self, obj: dict) -> str | None:
         return None
@@ -160,7 +164,7 @@ class AboutTemplateData(TemplateData):
     record_image_url = ypres.MethodField()
 
     def get_record_title(self, obj: dict) -> str:
-        return "RISM Online"
+        return "RISM Online: About"
 
     def get_record_description(self, obj: dict) -> str | None:
         return None
