@@ -39,7 +39,7 @@ def render_template(app_context, req, data_obj: dict | None) -> str:
         case "rism:About":
             tmpl_vars = AboutTemplateData(data_obj, context=request_ctx).serialized
         case _:
-            logger.warning("Using default template data response for %s", record_type)
+            logger.debug("Using default template data response for %s", record_type)
             tmpl_vars = TemplateData(data_obj, context=request_ctx).serialized
 
     return record_tmpl.render(**tmpl_vars)

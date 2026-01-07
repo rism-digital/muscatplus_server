@@ -180,7 +180,7 @@ async def handle_request(
 
     res = {**ctx_val, **data_obj}
 
-    return await send_json_response(req, res, app_context.config["common"]["debug"])
+    return send_json_response(req, res, app_context.config["common"]["debug"])
 
 
 async def handle_search(
