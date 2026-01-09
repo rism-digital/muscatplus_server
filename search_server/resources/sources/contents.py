@@ -45,7 +45,7 @@ class ContentsSection(ypres.DictSerializer):
             "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
             "standard_title_s": ("records.standardized_title", None),
             "source_title_s": ("records.title_on_source", None),
-            "variant_title_s": ("records.variant_source_title", None),
+            "variant_titles_sm": ("records.variant_source_title", None),
             "additional_titles_json": (
                 "records.additional_title",
                 title_json_value_translator,
