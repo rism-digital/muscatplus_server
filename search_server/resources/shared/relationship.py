@@ -193,10 +193,19 @@ def _related_to_institution(req, obj: dict) -> dict:
 
 def _related_to_place(req, obj: dict) -> dict:
     place_id = strip_prefix(obj["place_id"])
+    name = [obj["name"]]
+
+    if "district" in obj:
+        name.append(obj["district"])
+
+    if "country" in obj:
+        name.append(obj["country"])
+
+    full_name: str = ", ".join(name)
 
     return {
         "id": get_identifier(req, "places.place", place_id=place_id),
-        "label": {"none": [obj.get("name", "[No name]")]},
+        "label": {"none": [full_name]},
         "type": "rism:Place",
     }
 
