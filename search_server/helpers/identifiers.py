@@ -111,18 +111,18 @@ def get_url_from_type(
     req: request.Request, record_type: str, record_id: str
 ) -> str | None:
     site: str = get_site(req)
-    url: str
 
-    if record_type == "source":
-        url = f"{site}/sources/{record_id}"
-    elif record_type == "person":
-        url = f"{site}/people/{record_id}"
-    elif record_type == "institution":
-        url = f"{site}/institutions/{record_id}"
-    else:
-        return None
-
-    return url
+    match record_type:
+        case "source":
+            return f"{site}/sources/{record_id}"
+        case "person":
+            return f"{site}/people/{record_id}"
+        case "institution":
+            return f"{site}/institutions/{record_id}"
+        case "work":
+            return f"{site}/works/{record_id}"
+        case _:
+            return None
 
 
 # Maps a solr field name to one or more Linked Data data types.
