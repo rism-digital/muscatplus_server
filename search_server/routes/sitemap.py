@@ -13,16 +13,19 @@ from search_server.helpers.solr_connection import SolrConnection
 
 sitemap_blueprint: Blueprint = Blueprint("sitemap")
 
+RECORD_TYPES_IN_SITEMAP = ("work", "source", "person", "institution")
+
 
 @sitemap_blueprint.route("sitemap.xml")
 async def sitemap_root(req) -> sanic.HTTPResponse:
     site: str = get_site(req)
     page_size: int = req.app.ctx.config["sitemap"]["pagesize"]
+    type_query = " OR ".join([f"type:{t}" for t in RECORD_TYPES_IN_SITEMAP])
 
     solr_query = {
         "query": "*:*",
         "filter": [
-            "type:person OR type:source OR type:institution OR type:work",
+            type_query,
             "!project_s:[* TO *]",
         ],
         "limit": 0,
@@ -52,11 +55,12 @@ async def sitemap_page(req, page_num: str):
 
     page_size: int = cfg["sitemap"]["pagesize"]
     offset: int = 0 if pnum == 1 else ((pnum - 1) * page_size)
+    type_query = " OR ".join([f"type:{t}" for t in RECORD_TYPES_IN_SITEMAP])
 
     solr_query = {
         "query": "*:*",
         "filter": [
-            "type:person OR type:source OR type:institution OR type:work",
+            type_query,
             "!project_s:[* TO *]",
         ],
         "limit": page_size,
@@ -70,11 +74,11 @@ async def sitemap_page(req, page_num: str):
     urlentries: list = []
     for result in res.docs:
         restype: str = result["type"]
-        resid: str = strip_prefix(result["id"])
-
-        url: str | None = get_url_from_type(req, restype, resid)
-        if not url:
+        if restype not in RECORD_TYPES_IN_SITEMAP:
             continue
+
+        resid: str = strip_prefix(result["id"])
+        url: str | None = get_url_from_type(req, restype, resid)
 
         urlentries.append({"url": url, "updated": result.get("updated")})
 
