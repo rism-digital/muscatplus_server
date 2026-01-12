@@ -270,7 +270,7 @@ _WORKS_RELATIONSHIP_LABELS_MAP = {
     "rdau:P60274": "relations_works.P60274",
     "rdau:P60242": "relations_works.P60242",
     "rdau:P60198": "relations_works.P60198",
-    "rdau:P60313": "relations_works.P60313"
+    "rdau:P60313": "relations_works.P60313",
 }
 
 _PERSON_NAME_VARIANT_TYPES_MAP = {
@@ -285,6 +285,7 @@ _PERSON_NAME_VARIANT_TYPES_MAP = {
     "ub": "records.translation",
     "xx": "records.uncategorized",
     "z": "records.alternate_spelling",
+    "dv": "records.uncategorized",  # Remove when this is no longer in use.
 }
 
 
@@ -622,6 +623,7 @@ def source_relationship_labels_translator(value: str, translations: dict) -> dic
 
 def work_relationship_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _WORKS_RELATIONSHIP_LABELS_MAP)
+
 
 def qualifier_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _QUALIFIER_LABELS_MAP)
