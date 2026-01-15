@@ -649,7 +649,11 @@ def secondary_literature_json_value_translator(
     for work in values:
         work_id = work.get("id")
         if work_id not in all_works:
-            all_works[work_id] = {"formatted": work.get("formatted"), "pages": []}
+            all_works[work_id] = {
+                "formatted": work.get("formatted"),
+                "pages": [],
+                "short_name": work.get("short_name"),
+            }
 
         if p := work.get("pages"):
             all_works[work_id]["pages"].append(p)
@@ -657,9 +661,11 @@ def secondary_literature_json_value_translator(
     works: list = []
 
     for _, fmtwks in all_works.items():
-        number_page: str = "; ".join(fmtwks.get("pages", []))
+        number_page: str = f", {'; '.join(p)}" if (p := fmtwks.get("pages")) else ""
+        short_name: str = f"{n}" if (n := fmtwks.get("short_name")) else ""
+        source_ref = f"[{short_name}{number_page}]"
         reference: str = fmtwks.get("formatted", "")
-        ref = f"{reference} {number_page}"
+        ref = f"{reference} {source_ref}"
         ref += f"{'' if ref.strip().endswith('.') else '.'}"
         works.append(ref)
 

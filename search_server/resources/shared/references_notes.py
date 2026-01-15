@@ -51,6 +51,10 @@ class ReferencesNotesSection(ypres.DictSerializer):
                 "records.bibliographic_reference",
                 secondary_literature_json_value_translator,
             ),
+            "source_data_found_json": (
+                "records.source_data_found",
+                secondary_literature_json_value_translator,
+            ),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)

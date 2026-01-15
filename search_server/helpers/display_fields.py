@@ -23,7 +23,7 @@ type LabelConfig = dict[str, tuple[str, Callable | None]]
 FIELD_CONFIG: LabelConfig = {
     "main_title_s": ("records.standardized_title", None),
     "scoring_summary_sm": ("records.scoring_summary", None),
-    "source_title_s": ("records.title_on_source", None),
+    "source_title_sm": ("records.title_on_source", None),
     "additional_title_s": ("records.additional_title", None),
 }
 
