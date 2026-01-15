@@ -1,8 +1,10 @@
 import urllib.parse
 from collections import defaultdict
 
+from sanic.log import logger
 from small_asc.client import JsonAPIRequest
 from small_asc.query import (
+    EmptyFieldQueryError,
     FieldNotFoundError,
     QueryParseError,
     parse_with_field_replacements,
@@ -16,8 +18,6 @@ from search_server.resources.search.pagination import (
     parse_page_number,
     parse_row_number,
 )
-
-from sanic.log import logger
 
 DEFAULT_QUERY_STRING: str = "*:*"
 TERM_FACET_LIMIT: int = 200  # The maximum number of results to return with a select facet ('term' facet in solr).
@@ -608,6 +608,9 @@ class SearchRequest:
                 "valid": False,
                 "message": {"none": [str(e)]},
             }
+            return query_string
+        except EmptyFieldQueryError as e:
+            self.query_report = {"valid": False, "message": {"none": [str(e)]}}
             return query_string
 
         logger.debug("Parsed query: %s", repr(parsed_query))
