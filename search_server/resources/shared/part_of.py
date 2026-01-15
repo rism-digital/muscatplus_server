@@ -58,8 +58,8 @@ class PartOfSection(ypres.DictSerializer):
 
 
 def _get_work_part_of(req, obj: dict, translations: dict) -> dict:
-    wc = obj["works_catalogue_json"]
-    return _get_work_block(req, wc, translations, is_primary=True)
+    wc = obj.get("works_catalogue_json")
+    return _get_work_block(req, wc[0], translations, is_primary=True) if wc else {}
 
 
 def _get_work_block(
