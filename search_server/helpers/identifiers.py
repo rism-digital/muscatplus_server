@@ -131,7 +131,7 @@ FieldDataType = dict[str, list[str]]
 
 SOLR_FIELD_DATA_TYPES: FieldDataType = {
     "standard_title_s": ["dcterms:title", "rism:StandardizedTitle"],
-    "source_title_s": ["dcterms:title"],
+    "source_title_sm": ["dcterms:title"],
     "variant_titles_sm": ["dcterms:alternate"],
     "additional_titles_json": ["dcterms:alternate"],
     "description_summary_sm": ["dcterms:description"],

@@ -39,7 +39,7 @@ SOLR_FIELDS: list = [
     "place_names_sm",
     "profession_function_sm",
     "people_names_sm",
-    "source_title_s",
+    "source_title_sm",
     "street_address_sm",
     "holding_institutions_sm",
     "related_institutions_sm",

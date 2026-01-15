@@ -64,8 +64,8 @@ def format_source_description(obj: dict) -> str:
     if "people_names_sm" in obj:
         people = "; ".join(obj["people_names_sm"])
 
-    if "source_title_s" in obj:
-        source_title = obj["source_title_s"]
+    if "source_title_sm" in obj:
+        source_title = " ".join(obj["source_title_sm"])
 
     return "Source Description Goes Here"
 
