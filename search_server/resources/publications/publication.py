@@ -2,7 +2,9 @@ import ypres
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.identifiers import get_identifier
+from search_server.helpers.languages import languages_translator
 from search_server.resources.publications.base_publication import BasePublication
+from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import (
     RelationshipsSection,
@@ -14,6 +16,7 @@ class Publication(BasePublication):
     relationships = ypres.MethodField()
     notes = ypres.MethodField()
     works = ypres.MethodField()
+    external_resources = ypres.MethodField(label="externalResources")
 
     def get_summary(self, obj: dict) -> list[dict] | None:
         req = self.context["request"]
@@ -24,6 +27,9 @@ class Publication(BasePublication):
             "publication_place_sm": ("records.place_publication", None),
             "publisher_copyist_sm": ("records.publisher_copyist", None),
             "date_statements_sm": ("records.date", None),
+            "format_extent_sm": ("records.extent", None),
+            "isbn_sm": ("records.isbn", None),
+            "language_text_sm": ("records.language_text", languages_translator),
         }
 
         return get_display_fields(obj, transl, field_config=field_config)
@@ -66,3 +72,13 @@ class Publication(BasePublication):
             ),
             "totalItems": num_works,
         }
+
+    def get_external_resources(self, obj: dict) -> dict | None:
+        if "external_resources_json" not in obj and not obj.get(
+            "has_external_record_b", False
+        ):
+            return None
+
+        return ExternalResourcesSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
