@@ -142,10 +142,10 @@ class Institution(BaseInstitution):
         d = {"label": {"none": ["RISM Contributions"]}}
 
         if people_count > 0:
-            d["people"] = {"search": people_search_url, "count": people_count}
+            d["people"] = {"url": people_search_url, "count": people_count}
 
         if sources_count > 0:
-            d["sources"] = {"search": sources_search_url, "count": sources_count}
+            d["sources"] = {"url": sources_search_url, "count": sources_count}
 
         return d or None
 
