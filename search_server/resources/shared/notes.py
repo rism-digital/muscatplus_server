@@ -34,6 +34,7 @@ class NotesSection(ypres.DictSerializer):
                 "records.source_data_found",
                 secondary_literature_json_value_translator,
             ),
+            "work_catalogue_notes_sm": ("records.work_catalog_note", None),
         }
 
         return get_display_fields(obj, transl, field_config)
