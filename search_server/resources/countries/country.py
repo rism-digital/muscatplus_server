@@ -4,6 +4,7 @@ from search_server.helpers.display_translators import (
     SOURCE_SIGLA_COUNTRY_MAP,
     country_code_labels_translator,
 )
+from search_server.helpers.identifiers import get_identifier
 
 
 async def handle_country_request(req, country_id: str) -> dict | None:
@@ -26,7 +27,7 @@ class CountryList(ypres.DictSerializer):
 
     def get_clid(self, _) -> str:
         req = self.context["request"]
-        return req.url
+        return get_identifier(req, "countries.country_list")
 
     def get_items(self, obj: dict) -> list[dict]:
         req = self.context["request"]
