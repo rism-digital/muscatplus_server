@@ -162,7 +162,7 @@ class BiographicalDetails(ypres.DictSerializer):
         field_config: dict = {
             "authentication_code_s": ("records.authentication_code", None),
             "date_statement_s": ("records.life_dates", None),
-            "other_dates_s": ("records.other_life_dates", None),
+            "other_dates_sm": ("records.other_life_dates", None),
             "gender_s": ("records.gender", person_gender_translator),
             "profession_function_sm": ("records.profession_or_function", None),
             "full_rism_id": ("records.rism_id_number", None),

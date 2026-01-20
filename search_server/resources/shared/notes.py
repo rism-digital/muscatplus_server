@@ -25,10 +25,6 @@ class NotesSection(ypres.DictSerializer):
 
         field_config: LabelConfig = {
             "general_notes_sm": ("records.general_note", None),
-            "additional_biography_sm": (
-                "records.additional_biographical_information",
-                None,
-            ),
             "institution_history_sm": ("records.history_institution", None),
             "bibliographic_references_json": (
                 "records.bibliographic_reference",
