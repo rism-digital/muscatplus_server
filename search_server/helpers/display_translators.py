@@ -653,6 +653,7 @@ def secondary_literature_json_value_translator(
                 "formatted": work.get("formatted"),
                 "pages": [],
                 "short_name": work.get("short_name"),
+                "info": work.get("info"),
             }
 
         if p := work.get("pages"):
@@ -663,7 +664,8 @@ def secondary_literature_json_value_translator(
     for _, fmtwks in all_works.items():
         number_page: str = f", {'; '.join(p)}" if (p := fmtwks.get("pages")) else ""
         short_name: str = f"{n}" if (n := fmtwks.get("short_name")) else ""
-        source_ref = f"[{short_name}{number_page}]"
+        info: str = f" {nf}" if (nf := fmtwks.get("info")) else ""
+        source_ref = f"[{short_name}{number_page}{info}]"
         reference: str = fmtwks.get("formatted", "")
         ref = f"{reference} {source_ref}"
         ref += f"{'' if ref.strip().endswith('.') else '.'}"
