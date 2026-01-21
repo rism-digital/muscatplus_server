@@ -78,6 +78,9 @@ class WorksCataloguesSection(ypres.DictSerializer):
         transl: dict = req.ctx.translations
         return transl["records.work_catalogs"]
 
+    def get_work_number(self, obj: dict) -> str | None:
+        return obj.get("pages")
+
     def get_items(self, obj: dict) -> list[dict]:
         work_catalogues = obj["works_catalogue_json"]
         req = self.context["request"]

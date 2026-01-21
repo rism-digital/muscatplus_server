@@ -1,5 +1,3 @@
-import logging
-
 import ypres
 
 from search_server.helpers.identifiers import get_identifier, strip_prefix
@@ -15,8 +13,6 @@ from search_server.resources.sources.exemplars import ExemplarsSection
 from search_server.resources.sources.material_groups import MaterialGroupsSection
 from search_server.resources.sources.source_items import SourceItemsSection
 from search_server.resources.sources.works import WorksSection
-
-log = logging.getLogger("mp_server")
 
 
 class SourceItemList(ypres.DictSerializer):
@@ -156,7 +152,7 @@ class FullSource(BaseSource):
         ).serialized
 
     def get_works(self, obj: SolrResult) -> dict | None:
-        if "work_node_json" not in obj:
+        if {"work_node_json", "works_catalogue_json"}.isdisjoint(obj.keys()):
             return None
 
         return WorksSection(  # type: ignore

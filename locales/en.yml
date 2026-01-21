@@ -971,7 +971,7 @@ en:
     P60274: "Is arranged as"
     P60242: "Is arrangement of"
     P60198: "Is complemented by"
-    P60313: "Undefined"
+    P60313: "Related Work"
   relations_institutions:
     P50008: Hierarchical superior
     P50010: Hierarchical subordinate

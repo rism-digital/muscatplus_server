@@ -1,15 +1,13 @@
-import logging
 import re
 from urllib.parse import unquote
 
+from sanic.log import logger
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.identifiers import strip_prefix
 from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.search.pagination import parse_page_number
 from search_server.resources.search.search_results import SearchResults
-
-log = logging.getLogger("mp_export")
 
 INVALID_SIGLUM = re.compile(r"^[\w-]+$")
 
@@ -21,7 +19,7 @@ async def handle_institution_sigla_request(req, siglum: str) -> str | None:
     # If the regex doesn't match, the return value will be None, in which case it's
     # a problematic siglum.
     if "_" in incoming_sig or re.fullmatch(INVALID_SIGLUM, incoming_sig) is None:
-        log.warning(
+        logger.warning(
             "Invalid characters in siglum, so it cannot match anything: %s",
             incoming_sig,
         )
@@ -37,7 +35,7 @@ async def handle_institution_sigla_request(req, siglum: str) -> str | None:
         return None
 
     if institution_record.hits > 1:
-        log.warning(
+        logger.warning(
             "More than one result was returned for siglum %s. This shouldn't happen.",
             siglum,
         )

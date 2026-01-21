@@ -1,6 +1,5 @@
-import logging
-
 import ypres
+from sanic.log import logger
 from small_asc.client import Results
 
 from search_server.helpers.solr_connection import SolrConnection
@@ -9,8 +8,6 @@ from search_server.resources.search.incipit_result import IncipitSearchResult
 from search_server.resources.search.institution_result import InstitutionSearchResult
 from search_server.resources.search.person_result import PersonSearchResult
 from search_server.resources.search.source_result import SourceSearchResult
-
-log = logging.getLogger("mp_server")
 
 
 class SearchResults(BaseSearchResults):
@@ -125,7 +122,7 @@ class SearchResults(BaseSearchResults):
                     source_id: str = d["source_id"]
                     source_doc: dict | None = await SolrConnection.get(source_id)  # type: ignore
                     if not source_doc:
-                        log.error("Malformed holding %s", d["id"])
+                        logger.error("Malformed holding %s", d["id"])
                         continue
 
                     results.append(

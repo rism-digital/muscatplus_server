@@ -1,13 +1,11 @@
 import collections
 import errno
-import logging
 import os
 import re
 from pathlib import Path
 
 import yaml
-
-log = logging.getLogger("mp_server")
+from sanic.log import logger
 
 # Removes ruby crud in the YML files.
 REMOVE_ACTIVESUPPORT: re.Pattern = re.compile(
@@ -50,7 +48,7 @@ def language_labels(translations: dict) -> dict:
         try:
             lang_contents: dict = yaml.safe_load(cleaned_yml)
         except yaml.YAMLError:
-            log.error("Problem loading language labels %s; It was skipped.", fn)
+            logger.error("Problem loading language labels %s; It was skipped.", fn)
             raise
 
     res: dict = {}
@@ -91,7 +89,7 @@ def load_translations(path: str) -> dict:
     structure.
     """
     if not os.path.exists(path):
-        log.error("The path for loading the language files does not exist: %s", path)
+        logger.error("The path for loading the language files does not exist: %s", path)
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), path)
 
     output: collections.defaultdict = collections.defaultdict(dict)
@@ -100,14 +98,14 @@ def load_translations(path: str) -> dict:
         locale_file: Path = Path(path, f"{langcode}.yml")
 
         if not locale_file.exists():
-            log.warning("%s could not be found; skipping", locale_file)
+            logger.warning("%s could not be found; skipping", locale_file)
             continue
 
         with locale_file.open("r") as file_contents:
             locale_contents: dict = yaml.safe_load(file_contents) or {}
 
         if langcode not in locale_contents:
-            log.error(
+            logger.error(
                 "The locale in the filename does not match the contents of the file: %s",
                 locale_file,
             )

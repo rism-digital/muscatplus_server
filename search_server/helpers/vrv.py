@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 import tempfile
@@ -9,13 +8,13 @@ import cdifflib  # type: ignore
 import httpx
 import orjson
 import verovio
+from sanic.log import logger
 
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.incipit_search_fields import MODE_FIELDS
 from search_server.helpers.resvg import render_svg
 from search_server.helpers.solr_connection import SolrResult
 
-log = logging.getLogger("mp_server")
 verovio.enableLog(False)
 VEROVIO_BASE_OPTIONS: dict = {
     "footer": "none",
@@ -128,11 +127,11 @@ async def render_url(url: str) -> str | None:
         try:
             res = await client.get(url)
         except httpx.RequestError:
-            log.error("Request error for %s", url)
+            logger.error("Request error for %s", url)
             return None
 
         if res.status_code != 200:
-            log.error(
+            logger.error(
                 "Server responded with non-success status code: %s", res.status_code
             )
             return None
@@ -149,7 +148,7 @@ async def render_url(url: str) -> str | None:
         load_status: bool = vrv_tk.loadData(mei)
 
         if not load_status:
-            log.error("Verovio could not load file %s", url)
+            logger.error("Verovio could not load file %s", url)
             return None
 
         svg: str = vrv_tk.renderToSVG()
@@ -188,7 +187,7 @@ def render_mei(req, incipit: dict) -> str | None:
             req, "works.incipit_mei_encoding", work_id=work_id, work_num=work_num
         )
     else:
-        log.error(
+        logger.error(
             "Unknown parent type %s for incipit %s", incipit_parent_type, incipit["id"]
         )
         return None
@@ -221,7 +220,7 @@ def render_mei(req, incipit: dict) -> str | None:
     load_status: bool = vrv_tk.loadData(orjson.dumps(pae).decode("utf8"))
     if not load_status:
         incipit_id: str = incipit["id"]
-        log.error("Verovio could transform incipit %s to MEI", incipit_id)
+        logger.error("Verovio could transform incipit %s to MEI", incipit_id)
         return None
 
     mei: str = vrv_tk.getMEI()
@@ -246,7 +245,7 @@ def render_png(req, incipit: str) -> bytes | None:
         zoom_factor="2",
     )
     if not render_success:
-        log.error("There was a problem rendering an SVG!")
+        logger.error("There was a problem rendering an SVG!")
         return None
 
     # The tempfile should have the PNG data in it now.
@@ -310,7 +309,7 @@ def get_pae_features(req) -> dict | None:
     vrv_tk.setInputFrom("pae")
     load_success: bool = vrv_tk.loadData(pae)
     if not load_success:
-        log.warning("Could not load PAE for %s", pae)
+        logger.warning("Could not load PAE for %s", pae)
         return None
     return vrv_tk.getDescriptiveFeatures({})
 
@@ -354,7 +353,7 @@ def render_incipit(
 ) -> RenderedIncipit:
     pae_code: str | None = obj.get("original_pae_sni")
     if not pae_code:
-        log.debug("no PAE code")
+        logger.debug("no PAE code")
         return None, None
 
     is_mensural: bool = obj.get("is_mensural_b", False)
@@ -362,16 +361,16 @@ def render_incipit(
     if query_pae_features is None:
         # If we don't do the highlighting phase, exit now. We don't need to use
         # the CRC for the incipit.
-        log.info("No query features provided, skipping highlighting")
+        logger.info("No query features provided, skipping highlighting")
         return render_pae(pae_code, is_mensural=is_mensural)
 
     svg, b64midi = render_pae(pae_code, use_crc=True, is_mensural=is_mensural)
     if not svg:
-        log.error("Could not load music incipit for %s", obj.get("id"))
+        logger.error("Could not load music incipit for %s", obj.get("id"))
         return None, None
 
     if search_mode is None or search_mode not in MODE_FIELDS:
-        log.info("No search mode, skipping highlighting")
+        logger.info("No search mode, skipping highlighting")
         return svg, b64midi
 
     # We need to know the search mode so that we know what set of values in the
@@ -379,15 +378,15 @@ def render_incipit(
     feature_field, ids_field, query_features_field = MODE_FIELDS[search_mode]
 
     if feature_field not in obj:
-        log.info("no feature field, skipping highlighting")
+        logger.info("no feature field, skipping highlighting")
         return svg, b64midi
 
     document_interval_features: list[str] = list(map(str, obj[feature_field]))
     document_interval_ids: list[list[str]] = obj[ids_field]
     query_interval_feature: list[str] = query_pae_features[query_features_field]
 
-    log.debug("Document features: %s", document_interval_features)
-    log.debug("Query features: %s", query_interval_feature)
+    logger.debug("Document features: %s", document_interval_features)
+    logger.debug("Query features: %s", query_interval_feature)
 
     # The type checker will emit an error here because the default types for
     # a and b are strings, not lists. However, the documentation only says that

@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Callable
 
 import ypres
@@ -15,8 +14,6 @@ from search_server.resources.shared.external_resources import ExternalResourcesS
 from search_server.resources.shared.notes import NotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 
-log = logging.getLogger("mp_server")
-
 
 class Institution(BaseInstitution):
     location = ypres.MethodField()
@@ -26,6 +23,7 @@ class Institution(BaseInstitution):
     notes = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
     digital_objects = ypres.MethodField(label="digitalObjects")
+    contributions = ypres.MethodField()
     properties = ypres.MethodField()
 
     async def get_sources(self, obj: SolrResult) -> dict | None:
@@ -126,6 +124,31 @@ class Institution(BaseInstitution):
             },
         ).serialized
 
+    def get_contributions(self, obj) -> dict | None:
+        if not obj.get("is_contributing_project_b"):
+            return None
+
+        req = self.context["request"]
+
+        people_search_url = get_identifier(
+            req, "query.search", fq=f"contributing-project:{obj['id']}", mode="people"
+        )
+        people_count: int = obj.get("people_contribution_count_i", 0)
+        sources_search_url = get_identifier(
+            req, "query.search", fq=f"contributing-project:{obj['id']}", mode="sources"
+        )
+        sources_count: int = obj.get("sources_contribution_count_i", 0)
+
+        d = {"label": {"none": ["RISM Contributions"]}}
+
+        if people_count > 0:
+            d["people"] = {"url": people_search_url, "count": people_count}
+
+        if sources_count > 0:
+            d["sources"] = {"url": sources_search_url, "count": sources_count}
+
+        return d or None
+
     def get_properties(self, obj: SolrResult) -> dict | None:
         d = {
             "siglum": obj.get("siglum_s"),
@@ -170,9 +193,7 @@ class LocationAddressSection(ypres.DictSerializer):
         for address in obj.get("addresses_json", []):
             out_addr = {}
             for k, _ in address.items():
-                label: tuple[str, Callable | None] = mailing_address_field_config.get(
-                    k, ()
-                )
+                label: tuple[str, Callable | None] = mailing_address_field_config.get(k)
                 if not label:
                     continue
 

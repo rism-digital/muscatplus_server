@@ -1,4 +1,3 @@
-import logging
 import math
 from typing import Optional
 
@@ -7,8 +6,6 @@ from small_asc.client import Results
 
 from search_server.exceptions import PaginationParseException
 from search_server.helpers.urls import remove_query_param, replace_query_param
-
-log = logging.getLogger("mp_server")
 
 PAGE_QUERY_PARAM = "page"
 ROWS_QUERY_PARAM = "rows"

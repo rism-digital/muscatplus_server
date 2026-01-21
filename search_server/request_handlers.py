@@ -1,9 +1,9 @@
-import logging
 from collections.abc import Callable
 
 import httpx
 import orjson
 from sanic import request, response
+from sanic.log import logger
 from small_asc.client import SolrError
 
 from search_server.exceptions import InvalidQueryException
@@ -12,8 +12,6 @@ from search_server.helpers.jsonld import RouteContextMap
 from search_server.helpers.linked_data import to_expanded_jsonld, to_ntriples, to_turtle
 from search_server.resources.tombstones import handle_tombstone
 from search_server.template_render import render_template
-
-log = logging.getLogger("mp_server")
 
 JSONLD_MEDIA_TYPE = "application/ld+json"
 JSON_MEDIA_TYPE = "application/json"
@@ -35,7 +33,7 @@ async def tombstone_or_not_found(req: request.Request) -> response.HTTPResponse:
     )
 
 
-async def send_json_response(
+def send_json_response(
     req: request.Request, serialized_results: dict, debug_response: bool
 ) -> response.HTTPResponse:
     accept: str | None = req.headers.get("Accept")
@@ -103,6 +101,7 @@ async def handle_request(
         rendered_template: str = render_template(app_context, req, data_obj)
         return response.html(rendered_template, status=response_code)
 
+    # Anything past this point is a data API response.
     if response_code in (410, 404, 500):
         return response.json(data_obj, status=response_code)
 
@@ -168,7 +167,7 @@ async def handle_request(
         # with the appropriate content-type.
         return response.text(exp, content_type=EXPANDED_JSONLD_MEDIA_TYPE)
 
-    log.debug("Sending JSON")
+    logger.debug("Sending JSON")
 
     # We can control the embedding of the context either globally, in the configuration, or
     # per-request, with the X-Embed-Context header.
@@ -181,7 +180,7 @@ async def handle_request(
 
     res = {**ctx_val, **data_obj}
 
-    return await send_json_response(req, res, app_context.config["common"]["debug"])
+    return send_json_response(req, res, app_context.config["common"]["debug"])
 
 
 async def handle_search(
@@ -222,9 +221,7 @@ async def handle_search(
                 {"message": "The requested resource was not found"}, status=404
             )
 
-        return await send_json_response(
-            req, data_obj, app_context.config["common"]["debug"]
-        )
+        return send_json_response(req, data_obj, app_context.config["common"]["debug"])
     else:
         rendered_template: str = render_template(app_context, req, data_obj)
         return response.html(rendered_template)

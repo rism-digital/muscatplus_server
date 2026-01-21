@@ -270,7 +270,7 @@ _WORKS_RELATIONSHIP_LABELS_MAP = {
     "rdau:P60274": "relations_works.P60274",
     "rdau:P60242": "relations_works.P60242",
     "rdau:P60198": "relations_works.P60198",
-    "rdau:P60313": "relations_works.P60313"
+    "rdau:P60313": "relations_works.P60313",
 }
 
 _PERSON_NAME_VARIANT_TYPES_MAP = {
@@ -285,6 +285,7 @@ _PERSON_NAME_VARIANT_TYPES_MAP = {
     "ub": "records.translation",
     "xx": "records.uncategorized",
     "z": "records.alternate_spelling",
+    "dv": "records.uncategorized",  # Remove when this is no longer in use.
 }
 
 
@@ -623,6 +624,7 @@ def source_relationship_labels_translator(value: str, translations: dict) -> dic
 def work_relationship_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _WORKS_RELATIONSHIP_LABELS_MAP)
 
+
 def qualifier_labels_translator(value: str, translations: dict) -> dict:
     return __lookup_translations(value, translations, _QUALIFIER_LABELS_MAP)
 
@@ -647,7 +649,12 @@ def secondary_literature_json_value_translator(
     for work in values:
         work_id = work.get("id")
         if work_id not in all_works:
-            all_works[work_id] = {"formatted": work.get("formatted"), "pages": []}
+            all_works[work_id] = {
+                "formatted": work.get("formatted"),
+                "pages": [],
+                "short_name": work.get("short_name"),
+                "info": work.get("info"),
+            }
 
         if p := work.get("pages"):
             all_works[work_id]["pages"].append(p)
@@ -655,9 +662,12 @@ def secondary_literature_json_value_translator(
     works: list = []
 
     for _, fmtwks in all_works.items():
-        number_page: str = "; ".join(fmtwks.get("pages", []))
+        number_page: str = f", {'; '.join(p)}" if (p := fmtwks.get("pages")) else ""
+        short_name: str = f"{n}" if (n := fmtwks.get("short_name")) else ""
+        info: str = f" {nf}" if (nf := fmtwks.get("info")) else ""
+        source_ref = f"[{short_name}{number_page}{info}]"
         reference: str = fmtwks.get("formatted", "")
-        ref = f"{reference} {number_page}"
+        ref = f"{reference} {source_ref}"
         ref += f"{'' if ref.strip().endswith('.') else '.'}"
         works.append(ref)
 

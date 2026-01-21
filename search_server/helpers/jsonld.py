@@ -1,10 +1,12 @@
 from collections import namedtuple
+from typing import NamedTuple
 
 # Create a type for Context Documents
 ContextDocument = dict
 
 __BASE_CONTEXT = {
     "@version": 1.1,
+    "@protected": True,
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rism": "https://rism.online/api/v1#",
@@ -87,11 +89,42 @@ __INCIPITS = {
     }
 }
 
+__PARTOF = {
+    "partOf": {
+        "@id": "rism:isPartOf",
+        "@type": "@id",
+        "@context": {
+            "items": "@set",
+            "relationshipType": {
+                "@id": "rism:workCatalogRelationship",
+                "@type": "@vocab",
+            },
+            "workNumber": {"@id": "rism:hasWorkNumber"},
+            "relatedTo": {"@id": "rism:Publication"},
+        },
+    },
+}
+
+__CREATOR = {
+    "creator": {
+        "@id": "dcterms:creator",
+        "@type": "@id",
+        "@context": {"relatedTo": "@nest"},
+    }
+}
+
+__SUMMARY = {
+    "summary": {
+        "@id": "rism:hasSummary",
+        "@type": "@id",
+    }
+}
 
 RISM_JSONLD_DEFAULT_CONTEXT: ContextDocument = {**__BASE_CONTEXT}
-
-
-RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {**__BASE_CONTEXT, **__RELATIONSHIPS}
+RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__RELATIONSHIPS,
+}
 
 RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
@@ -110,30 +143,34 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
         "@id": "rism:hasLocation",
         "@type": "@id",
         "@context": {
-            "coordinates": {
-                "@id": "geojson:coordinates"
-            },
-            "geometry": {
-                "@id": "geojson:geometry",
-                "@type": "@id"
-            },
-            "lat": {
-                "@id": "geo:lat",
-                "@type": "xsd:float"
-            },
-            "long": {
-                "@id": "geo:long",
-                "@type": "xsd:float"
-            },
-        }
-    }
+            "coordinates": {"@id": "geojson:coordinates"},
+            "geometry": {"@id": "geojson:geometry", "@type": "@id"},
+            "lat": {"@id": "geo:lat", "@type": "xsd:float"},
+            "long": {"@id": "geo:long", "@type": "xsd:float"},
+        },
+    },
 }
 
-RISM_JSONLD_WORK_CONTEXT: ContextDocument = {**__BASE_CONTEXT}
+RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__INCIPITS,
+    **__PARTOF,
+    **__CREATOR,
+    **__SUMMARY,
+}
+
+RISM_JSONLD_PUBLICATION_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__SUMMARY,
+    **__RELATIONSHIPS,
+}
+
 RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
     **__RELATIONSHIPS,
     **__INCIPITS,
+    **__PARTOF,
+    **__CREATOR,
     "dates": {
         "@id": "rism:hasDates",
         "@context": {
@@ -150,23 +187,14 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
             },
         },
     },
-    "creator": {
-        "@id": "dcterms:creator",
-        "@type": "@id",
-        "@context": {"relatedTo": "@nest"},
-    },
     "materialGroups": {
         "@id": "rism:hasMaterialGroup",
         "@type": "@id",
         "@context": {
             "items": "@set",
-            "summary": {
-                "@id": "rism:hasSummary",
-                "@type": "@id",
-            },
+            **__SUMMARY,
         },
     },
-    "partOf": {"@id": "rism:isPartOf", "@type": "@id", "@context": {"source": "@nest"}},
     "sourceItems": {
         "@id": "rism:hasSourceItem",
         "@type": "@id",
@@ -199,8 +227,17 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
 }
 
 
-RouteOptions = namedtuple("RouteOptions", ["route", "context"])
+class RouteOptions(NamedTuple):
+    route: str
+    context: dict
 
+
+# The route is set in the 'routes' and represents the route for a record of a given type,
+# e.g., "mp_server.people.person" is defined in "routes/people" and is the "person" function.
+# The context is the route given in "routes/api" and represents the URL to the context
+# document. A configuration parameter and a header ("X-Embed-Context") can control whether the
+# JSON-LD is served with an embedded context, or just a URL to the context document. (An embedded
+# context is used to transform the JSON-LD into RDF).
 RouteContextMap: dict[str, RouteOptions] = {
     "mp_server.people.person": RouteOptions(
         "api.person_context", RISM_JSONLD_PERSON_CONTEXT
@@ -212,5 +249,8 @@ RouteContextMap: dict[str, RouteOptions] = {
         "api.source_context", RISM_JSONLD_SOURCE_CONTEXT
     ),
     "mp_server.works.work": RouteOptions("api.work_context", RISM_JSONLD_WORK_CONTEXT),
+    "mp_server.publications.publication": RouteOptions(
+        "api.publication_context", RISM_JSONLD_PUBLICATION_CONTEXT
+    ),
     "__default": RouteOptions("api.default_context", RISM_JSONLD_DEFAULT_CONTEXT),
 }

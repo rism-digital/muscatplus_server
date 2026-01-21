@@ -10,6 +10,7 @@ from search_server.resources.incipits.incipit import (
 )
 from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
+from search_server.resources.shared.references_notes import ReferencesNotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import (
     BaseSource,
@@ -23,6 +24,7 @@ class FullWork(BaseWork):
     external_resources = ypres.MethodField(label="externalResources")
     external_authorities = ypres.MethodField(label="externalAuthorities")
     form_of_work = ypres.MethodField(label="formOfWork")
+    references_notes = ypres.MethodField(label="referencesNotes")
     relationships = ypres.MethodField()
 
     async def get_incipits(self, obj: SolrResult) -> dict | None:
@@ -61,10 +63,12 @@ class FullWork(BaseWork):
             return None
 
         req = self.context["request"]
+        transl: dict = req.ctx.translations
         work_id: str = obj["id"]
         ident: str = strip_prefix(work_id)
 
         d: dict = {
+            "sectionLabel": transl.get("records.sources"),
             "url": get_identifier(req, "works.work_sources", work_id=ident),
             "totalItems": source_count,
         }
@@ -89,6 +93,21 @@ class FullWork(BaseWork):
 
         req = self.context["request"]
         return RelationshipsSection(obj, context={"request": req}).serialized
+
+    def get_references_notes(self, obj: SolrResult) -> dict | None:
+        req = self.context["request"]
+        refnotes: dict = ReferencesNotesSection(
+            obj, context={"request": req}
+        ).serialized
+
+        # if the only two keys in the references and notes section is 'label' and 'type'
+        # then there is no content and we can hide this section.
+        if {"notes", "performanceLocations", "liturgicalFestivals"}.isdisjoint(
+            refnotes.keys()
+        ):
+            return None
+
+        return refnotes
 
 
 class FormOfWorkSection(ypres.DictSerializer):

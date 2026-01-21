@@ -1,9 +1,10 @@
-import logging
 import urllib.parse
 from collections import defaultdict
 
+from sanic.log import logger
 from small_asc.client import JsonAPIRequest
 from small_asc.query import (
+    EmptyFieldQueryError,
     FieldNotFoundError,
     QueryParseError,
     parse_with_field_replacements,
@@ -17,8 +18,6 @@ from search_server.resources.search.pagination import (
     parse_page_number,
     parse_row_number,
 )
-
-log = logging.getLogger("mp_server")
 
 DEFAULT_QUERY_STRING: str = "*:*"
 TERM_FACET_LIMIT: int = 200  # The maximum number of results to return with a select facet ('term' facet in solr).
@@ -477,7 +476,9 @@ class SearchRequest:
         # NB: Restrict incipits to ONLY returning Source records for now.
         # TODO: Remove this when we open it up to works.
         if self._requested_mode == "incipits":
-            filter_statements.append(f"{{!tag={SolrQueryTags.MODE_FILTER_TAG}}}parent_type_s:source")
+            filter_statements.append(
+                f"{{!tag={SolrQueryTags.MODE_FILTER_TAG}}}parent_type_s:source"
+            )
 
         return filter_statements
 
@@ -608,8 +609,11 @@ class SearchRequest:
                 "message": {"none": [str(e)]},
             }
             return query_string
+        except EmptyFieldQueryError as e:
+            self.query_report = {"valid": False, "message": {"none": [str(e)]}}
+            return query_string
 
-        log.debug("Parsed query: %s", repr(parsed_query))
+        logger.debug("Parsed query: %s", repr(parsed_query))
         self.query_report = {
             "valid": True,
             "message": {"none": ["The query was valid"]},

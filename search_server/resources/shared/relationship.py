@@ -1,8 +1,8 @@
 import itertools
-import logging
 from collections.abc import Callable
 
 import ypres
+from sanic.log import logger
 
 from search_server.helpers.display_translators import (
     person_institution_relationship_labels_translator,
@@ -17,8 +17,6 @@ from search_server.helpers.identifiers import (
     get_identifier,
     strip_prefix,
 )
-
-log = logging.getLogger("mp_server")
 
 
 class RelationshipsSection(ypres.DictSerializer):
@@ -195,10 +193,19 @@ def _related_to_institution(req, obj: dict) -> dict:
 
 def _related_to_place(req, obj: dict) -> dict:
     place_id = strip_prefix(obj["place_id"])
+    name = [obj["name"]]
+
+    if "district" in obj:
+        name.append(obj["district"])
+
+    if "country" in obj:
+        name.append(obj["country"])
+
+    full_name: str = ", ".join(name)
 
     return {
         "id": get_identifier(req, "places.place", place_id=place_id),
-        "label": {"none": [obj.get("name", "[No name]")]},
+        "label": {"none": [full_name]},
         "type": "rism:Place",
     }
 
@@ -215,7 +222,7 @@ def _related_to_source(req, obj: dict) -> dict:
         prefix: str | None = EXTERNAL_IDS.get(obj["project"], {}).get("ident")
         if not prefix:
             # If, for some reason this isn't found, return the empty dict.
-            log.error("A URI prefix was not found for project %s", obj["project"])
+            logger.error("A URI prefix was not found for project %s", obj["project"])
             return {}
         spath = "source" if proj == "cantus" else "sources"
         suffix = f"{spath}/{source_id}"

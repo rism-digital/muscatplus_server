@@ -1,8 +1,8 @@
-import logging
 import re
 import urllib.parse
 from re import Pattern
 
+from sanic.log import logger
 from small_asc.client import Results
 
 from search_server.helpers.identifiers import get_identifier
@@ -16,7 +16,6 @@ from search_server.helpers.search_request import (
     types_alias_map,
 )
 
-log = logging.getLogger("mp_server")
 RANGE_PARSING_REGEX: Pattern = re.compile(
     r"\[(?P<start>-?\d{,4})\s?TO\s?(?P<end>-?\d{,4})]"
 )
@@ -87,7 +86,7 @@ def get_facets(req, obj: Results) -> dict | None:
         # use a function query, where it only returns the count of documents
         # that would occur after applying the function query.
         if res.keys() == {"count"} and "function_query" not in facet_config_map[alias]:
-            log.debug(f"Bailing with facet type of {facet_type}")
+            logger.debug(f"Bailing with facet type of {facet_type}")
             continue
 
         # Translate the label of the facet. If we don't find a translation

@@ -1,14 +1,6 @@
 from search_server.helpers.display_translators import title_json_value_translator
 
 
-def format_work_label(obj: dict) -> str:
-    title: str = obj.get("standard_title_s", "")
-    catalogue: str = f" {obj.get('catalogue_s', '')}"
-    catalogue_num: str = f" {obj.get('number_page_s')}"
-
-    return f"{title} {catalogue}{catalogue_num}"
-
-
 def format_source_label(std_title: list, translations: dict) -> dict:
     return title_json_value_translator(std_title, translations)
 
@@ -38,6 +30,18 @@ def format_person_label(obj: dict) -> str:
     return f"{name}{dates}"
 
 
+def format_work_label(obj: dict) -> str:
+    title: str = obj.get("standard_title_s", "")
+    catalogue: str = f" {obj.get('catalogue_s', '')}"
+    catalogue_num: str = f" {obj.get('number_page_s')}"
+
+    return f"{title} {catalogue}{catalogue_num}"
+
+
+def format_work_description(obj: dict) -> str:
+    return "Work Description Goes Here"
+
+
 def format_incipit_label(obj: dict) -> str:
     """
     :param obj: A Solr result object containing an incipit record
@@ -60,10 +64,10 @@ def format_source_description(obj: dict) -> str:
     if "people_names_sm" in obj:
         people = "; ".join(obj["people_names_sm"])
 
-    if "source_title_s" in obj:
-        source_title = obj["source_title_s"]
+    if "source_title_sm" in obj:
+        source_title = " ".join(obj["source_title_sm"])
 
-    return f"{source_title} {composers} {people}"
+    return "Source Description Goes Here"
 
 
 def format_person_description(obj: dict) -> str:
@@ -76,7 +80,7 @@ def format_person_description(obj: dict) -> str:
     if "profession_function_sm" in obj:
         profession = "; ".join(obj["profession_function_sm"])
 
-    return f"{places} {profession}"
+    return "Person Description Goes Here"
 
 
 def format_institution_description(obj: dict) -> str:
@@ -85,4 +89,4 @@ def format_institution_description(obj: dict) -> str:
     if "street_address_sm" in obj:
         address = " ".join(obj["street_address_sm"])
 
-    return f"{address}"
+    return "Institution Description Goes Here"

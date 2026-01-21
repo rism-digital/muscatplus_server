@@ -1,4 +1,3 @@
-import logging
 from collections.abc import Callable
 from typing import Any
 
@@ -21,12 +20,10 @@ from search_server.helpers.solr_connection import SolrResult
 #
 type LabelConfig = dict[str, tuple[str, Callable | None]]
 
-log = logging.getLogger("mp_server")
-
 FIELD_CONFIG: LabelConfig = {
     "main_title_s": ("records.standardized_title", None),
     "scoring_summary_sm": ("records.scoring_summary", None),
-    "source_title_s": ("records.title_on_source", None),
+    "source_title_sm": ("records.title_on_source", None),
     "additional_title_s": ("records.additional_title", None),
 }
 

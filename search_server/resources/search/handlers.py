@@ -1,13 +1,9 @@
-import logging
-
 from small_asc.client import JsonAPIRequest
 
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.search_request import SearchRequest
 from search_server.resources.search.base_search import serialize_response
 from search_server.resources.search.search_results import SearchResults
-
-log = logging.getLogger("mp_server")
 
 
 async def handle_search_request(req) -> dict:
@@ -24,6 +20,7 @@ async def handle_search_request(req) -> dict:
     }
 
     return await serialize_response(req, solr_params, SearchResults, extra_context)  # type: ignore
+
 
 # This is the result of a failed experiment with requesting only certain
 # fields in search results. It seemed to crash the searches since an exhaustive

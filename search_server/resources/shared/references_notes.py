@@ -35,6 +35,10 @@ class ReferencesNotesSection(ypres.DictSerializer):
                 "records.general_note",
                 url_detecting_translator,
             ),
+            "work_general_notes_smni": (
+                "records.general_note",
+                url_detecting_translator,
+            ),
             "publication_general_notes_smni": (
                 "records.general_note",
                 url_detecting_translator,
@@ -49,6 +53,10 @@ class ReferencesNotesSection(ypres.DictSerializer):
             ),
             "bibliographic_references_json": (
                 "records.bibliographic_reference",
+                secondary_literature_json_value_translator,
+            ),
+            "source_data_found_json": (
+                "records.source_data_found",
                 secondary_literature_json_value_translator,
             ),
         }

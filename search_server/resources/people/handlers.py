@@ -1,5 +1,4 @@
-import logging
-
+from sanic.log import logger
 from small_asc.client import JsonAPIRequest, SolrError
 
 from search_server.exceptions import InvalidQueryException
@@ -8,8 +7,6 @@ from search_server.helpers.solr_connection import SolrConnection
 from search_server.resources.people.person import Person
 from search_server.resources.people.person_search import PersonResults
 from search_server.resources.search.base_search import serialize_response
-
-log = logging.getLogger("mp_server")
 
 
 async def handle_person_request(req, person_id: str) -> dict | None:
@@ -36,7 +33,7 @@ def _prepare_query(
         ]
         solr_params: JsonAPIRequest = request_compiler.compile()
     except InvalidQueryException as e:
-        log.exception("Invalid query: %s", e)
+        logger.exception("Invalid query: %s", e)
         raise
 
     return solr_params, request_compiler.query_report

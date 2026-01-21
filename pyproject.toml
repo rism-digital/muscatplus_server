@@ -13,9 +13,9 @@ dependencies = [
     "small-asc @ git+https://github.com/rism-digital/small-asc.git@main",
     "ypres @ git+https://github.com/rism-digital/ypres.git@main",
     "sanic (>=24.0.0,<26.0.0)",
-    "sentry-sdk[sanic] (>=2.19.0,<4.0.0)",
+    "sentry-sdk[sanic] (>=2.19.0,<3.0.0)",
     "httpx (>=0.28.1,<0.29.0)",
-    "verovio>=5.2.1",
+    "verovio>=5.7.0",
     "async-lru>=2.0.5",
     "cdifflib>=1.2.9",
 ]
@@ -31,6 +31,7 @@ dev = [
     "pip>=25.0.1",
     "types-pyyaml>=6.0.12.20250402",
     "pyright>=1.1.405",
+    "aiosqlite>=0.21.0",
 ]
 
 [tool.uv]
