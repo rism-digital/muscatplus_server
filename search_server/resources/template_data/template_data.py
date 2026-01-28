@@ -6,13 +6,8 @@ import ypres
 
 from search_server.helpers.display_translators import SOURCE_SIGLA_COUNTRY_MAP
 from search_server.helpers.formatters import (
-    format_institution_description,
     format_institution_label,
-    format_person_description,
     format_person_label,
-    format_source_description,
-    format_work_description,
-    format_work_label,
 )
 from search_server.resources.countries.country import CountryList
 
