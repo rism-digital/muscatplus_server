@@ -92,7 +92,11 @@ async def handle_request(
         if data_obj:
             response_code = 410
         else:
-            data_obj = {"message": "The requested resource was not found"}
+            data_obj = {
+                "id": "",
+                "message": "The requested resource was not found",
+                "type": "rism:NotFound",
+            }
             response_code = 404
 
     if accept and (HTML_MEDIA_TYPE in accept):
