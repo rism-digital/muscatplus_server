@@ -9,3 +9,4 @@ scripts/package.json
 scripts/yarn.lock
 logs/*.log
 logs/*
+llm_data/ldb
