@@ -1,10 +1,11 @@
-from sanic.log import logger
 import ypres
+from sanic.log import logger
 
 from search_server.helpers.display_translators import work_catalogue_status_translator
 from search_server.helpers.formatters import format_source_label
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.record_types import create_source_types_block
+from search_server.resources.shared.external_resources import ExternalResource
 
 
 # TODO: Ensure the required fields are present in the object before serializing
@@ -157,7 +158,7 @@ def _get_source_member_part_of(req, obj: dict, translations: dict) -> dict:
         record_type, source_type, content_types, translations
     )
 
-    return {
+    parent_block = {
         "relationshipType": "rism:PrimaryPartOf",
         "relatedTo": {
             "id": ident,
@@ -167,6 +168,14 @@ def _get_source_member_part_of(req, obj: dict, translations: dict) -> dict:
             "label": {"none": [label]},
         },
     }
+
+    if extresources := source_membership.get("external_resources"):
+        external_resources_block: list = ExternalResource(
+            extresources, many=True
+        ).serialized_many
+        parent_block["relatedTo"]["externalResources"] = external_resources_block
+
+    return parent_block
 
 
 def _get_incipit_part_of(req, obj: dict, translations: dict) -> dict:
