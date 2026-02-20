@@ -22,6 +22,18 @@ def extract_page_label(obj: dict) -> str:
     return "RISM Online"
 
 
+def extract_creator_label(obj: dict) -> str:
+    if (
+        "creator" not in obj
+        or "relatedTo" not in obj["creator"]
+        or "label" not in obj["creator"]["relatedTo"]
+    ):
+        return ""
+    elif "none" in obj["creator"]["relatedTo"]["label"]:
+        return obj["creator"]["relatedTo"]["label"]["none"][0]
+    return ""
+
+
 class TemplateData(ypres.DictSerializer):
     record_url = ypres.MethodField()
     record_data = ypres.MethodField()
@@ -114,7 +126,10 @@ class WorkTemplateData(TemplateData):
     record_image_url = ypres.MethodField()
 
     def get_record_title(self, obj: dict) -> str:
-        return extract_page_label(obj)
+        creator: str = extract_creator_label(obj)
+        label: str = extract_page_label(obj)
+
+        return f"{creator}{': ' if creator else ''}{label}"
 
     def get_record_description(self, obj: dict) -> str | None:
         return None
