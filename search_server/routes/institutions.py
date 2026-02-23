@@ -1,6 +1,10 @@
 from sanic import Blueprint, response
 
-from search_server.request_handlers import handle_request, handle_search
+from search_server.request_handlers import (
+    handle_request,
+    handle_search,
+    send_json_response,
+)
 from search_server.resources.institutions.geojson import (
     handle_institution_geojson_request,
 )
@@ -78,4 +82,5 @@ async def geo_coordinates(req, institution_id: str):
         handle_institution_geojson_request,
         suppress_context=True,
         institution_id=institution_id,
+        raw_json_response=True,
     )

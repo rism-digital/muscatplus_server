@@ -56,7 +56,11 @@ def send_json_response(
 
 
 async def handle_request(
-    req: request.Request, handler: Callable, suppress_context: bool = False, **kwargs
+    req: request.Request,
+    handler: Callable,
+    suppress_context: bool = False,
+    raw_json_response: bool = False,
+    **kwargs,
 ) -> response.HTTPResponse:
     """
     Takes in a request object and a function for handling the request. This function should return
@@ -69,6 +73,7 @@ async def handle_request(
     :param req: A Sanic request object
     :param handler: A function for handling the request
     :param suppress_context: Whether to suppress the @context when delivering
+    :param raw_json_response: Treat the serialized object as a raw response, bypassing JSON-LD and Template processes
     :param kwargs: A set of options to be passed to the
     :return: A JSON Response, or an error if not successful.
     """
@@ -99,15 +104,26 @@ async def handle_request(
             }
             response_code = 404
 
-    if accept and (HTML_MEDIA_TYPE in accept):
-        # If we have an HTML request, then this will serve the template with the
-        # appropriate status code. Anything beyond this point is an API request.
+    # If we have an HTML request, then this will serve the template with the
+    # appropriate status code. Anything beyond this point is an API request.
+    # If the handler sets a raw JSON response, then bypass whatever Accept values
+    # they requested. This means bypassing the HTML rendering.
+    if accept and (HTML_MEDIA_TYPE in accept) and not raw_json_response:
         rendered_template: str = render_template(app_context, req, data_obj)
         return response.html(rendered_template, status=response_code)
 
-    # Anything past this point is a data API response.
+    # Anything past this point is a data API response. If we have set
+    # a non-200 response code, ship it out here.
     if response_code in (410, 404, 500):
         return response.json(data_obj, status=response_code)
+
+    # We can bypass all the JSON-LD stuff and return early if we have
+    # the raw JSON response set.
+    if raw_json_response:
+        return response.json(
+            data_obj,
+            option=orjson.OPT_INDENT_2 if app_context.config["common"]["debug"] else 0,
+        )
 
     # Add the appropriate context to the result dictionary
     if req.route and req.route.name in RouteContextMap:
