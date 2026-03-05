@@ -11,6 +11,9 @@ from search_server.helpers.solr_connection import (
 async def handle_subject_request(req, subject_id: str) -> dict | None:
     subject_record: dict | None = await SolrConnection.get(f"subject_{subject_id}")  # type: ignore
 
+    if not subject_record:
+        return None
+
     return await Subject(
         subject_record, context={"request": req, "direct_request": True}
     ).serialized
