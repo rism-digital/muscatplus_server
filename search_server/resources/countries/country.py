@@ -7,12 +7,6 @@ from search_server.helpers.display_translators import (
 from search_server.helpers.identifiers import get_identifier
 
 
-async def handle_country_request(req, country_id: str) -> dict | None:
-    # Placeholder
-    # fq: list = ["type:place"]
-    return None
-
-
 async def handle_country_list_request(req) -> dict | None:
     return CountryList(
         SOURCE_SIGLA_COUNTRY_MAP, context={"request": req, "direct_request": True}

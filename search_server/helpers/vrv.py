@@ -361,7 +361,7 @@ def render_incipit(
     if query_pae_features is None:
         # If we don't do the highlighting phase, exit now. We don't need to use
         # the CRC for the incipit.
-        logger.info("No query features provided, skipping highlighting")
+        logger.warning("No query features provided, skipping highlighting")
         return render_pae(pae_code, is_mensural=is_mensural)
 
     svg, b64midi = render_pae(pae_code, use_crc=True, is_mensural=is_mensural)
