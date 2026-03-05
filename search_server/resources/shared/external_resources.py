@@ -135,6 +135,7 @@ class ExternalResource(ypres.DictSerializer):
             "IIIF",
             "IIIF manifest (digitized source)",
             "IIIF manifest (other)",
+            "IIIF manifest",
         ):
             rtype = "IIIFManifestLink"
         elif link_type in ("Digitalization", "Digitized"):
