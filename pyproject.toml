@@ -14,7 +14,7 @@ dependencies = [
     "ypres @ git+https://github.com/rism-digital/ypres.git@main",
     "sanic (>=24.0.0,<26.0.0)",
     "sentry-sdk[sanic] (>=2.19.0,<3.0.0)",
-    "httpx (>=0.28.1,<0.29.0)",
+    "pyreqwest (>=0.11.2,<0.12.0)",
     "verovio>=5.7.0",
     "async-lru>=2.0.5",
     "cdifflib>=1.2.9",

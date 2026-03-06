@@ -7,14 +7,15 @@ import asyncio
 import logging.config
 import sqlite3
 import timeit
+from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
 import aiosqlite
-import httpx
 import orjson
 import rdflib
 import yaml
+from pyreqwest.client import Client, ClientBuilder
 from sanic import Request
 from sanic.compat import Header
 from sanic.models.protocol_types import TransportProtocol
@@ -113,7 +114,7 @@ async def run_serializer_from_doc(
     this_doc: dict[str, Any],
     serializer_cls,
     ctx_val: dict[str, Any],
-    session: httpx.AsyncClient,
+    session: Client,
     sqlconn: aiosqlite.Connection,
     db_lock: asyncio.Lock,
 ) -> None:
@@ -214,16 +215,21 @@ async def process_record_type(
         db_lock = asyncio.Lock()
 
         # HTTP client for any downstream network I/O in serializers
-        limits = httpx.Limits(
-            max_connections=8, max_keepalive_connections=4, keepalive_expiry=30.0
+        client_builder = (
+            ClientBuilder()
+            .max_connections(8)
+            .pool_max_idle_per_host(4)
+            .pool_idle_timeout(timedelta(seconds=30))
+            .timeout(timedelta(seconds=20))
+            .connect_timeout(timedelta(seconds=10))
+            .read_timeout(timedelta(seconds=20))
         )
-        timeout = httpx.Timeout(20.0, connect=10.0, read=20.0, write=20.0)
 
         start_time = timeit.default_timer()
         last_log_time = start_time
         last_count = 0
 
-        async with httpx.AsyncClient(limits=limits, timeout=timeout) as session:
+        async with client_builder.build() as session:
             sem = asyncio.Semaphore(concurrency)
             in_flight: set[asyncio.Task] = set()
             processed = 0
