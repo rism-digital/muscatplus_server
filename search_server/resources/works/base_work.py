@@ -5,7 +5,6 @@ from search_server.helpers.display_translators import (
     key_mode_value_translator,
     title_json_value_translator,
 )
-from search_server.helpers.formatters import format_work_label
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.shared.part_of import PartOfSection
@@ -29,7 +28,10 @@ class BaseWork(ypres.AsyncDictSerializer):
         return get_identifier(req, "works.work", work_id=work_id)
 
     def get_slabel(self, obj: SolrResult) -> dict:
-        return {"none": [format_work_label(obj)]}
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return title_json_value_translator(obj.get("standard_titles_json", []), transl)
 
     def get_creator(self, obj: SolrResult) -> dict | None:
         if "creator_json" not in obj:

@@ -756,6 +756,8 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
         holding_siglum: str | None = v.get("holding_siglum")
         holding_shelfmark: str | None = v.get("holding_shelfmark")
         source_type: str = v.get("source_type", "")
+        catalogue: str | None = v.get("catalogue")
+        number_page: str | None = v.get("number_page")
         subheading_trans = arrangement_trans = key_mode_trans = source_type_trans = {}
 
         if subheading:
@@ -797,8 +799,10 @@ def title_json_value_translator(values: list, translations: dict) -> dict:
             cath = f"; {catalogue_numbers}" if catalogue_numbers else ""
             hsigh = f"; {holding_siglum}" if holding_siglum else ""
             hsmh = f" {holding_shelfmark}" if holding_shelfmark else ""
+            catl = f", {catalogue}" if catalogue else ""
+            pgn = f" {number_page}" if number_page else ""
 
-            full_title: str = f"{tith}{keyh}{exarr}{styp}{cath}{hsigh}{hsmh}"
+            full_title: str = f"{tith}{keyh}{exarr}{styp}{cath}{hsigh}{hsmh}{catl}{pgn}"
 
             result[lang].append(full_title)
 

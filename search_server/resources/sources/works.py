@@ -1,5 +1,6 @@
 import ypres
 
+from search_server.helpers.display_translators import title_json_value_translator
 from search_server.helpers.identifiers import (
     EXTERNAL_IDS,
     get_identifier,
@@ -25,7 +26,7 @@ class WorksSection(ypres.DictSerializer):
         return transl["records.work"]
 
     def get_works_catalogues(self, obj: SolrResult) -> dict | None:
-        if "works_catalogue_json" not in obj:
+        if "works_json" not in obj:
             return None
 
         return WorksCataloguesSection(
@@ -78,11 +79,8 @@ class WorksCataloguesSection(ypres.DictSerializer):
         transl: dict = req.ctx.translations
         return transl["records.work_catalogs"]
 
-    def get_work_number(self, obj: dict) -> str | None:
-        return obj.get("pages")
-
     def get_items(self, obj: dict) -> list[dict]:
-        work_catalogues = obj["works_catalogue_json"]
+        work_catalogues = obj["works_json"]
         req = self.context["request"]
 
         return [
@@ -91,15 +89,22 @@ class WorksCataloguesSection(ypres.DictSerializer):
         ]
 
 
-def format_work_catalogue(req, work_catalogue: dict) -> dict:
-    catalogue_id = strip_prefix(work_catalogue["id"])
+def format_work_label(obj: dict) -> str:
+    title: str = obj.get("title", "")
+    catalogue: str = f" {obj.get('catalogue', '')}"
+    catalogue_num: str = f" {obj.get('number_page', '')}"
+
+    return f"{title} {catalogue}{catalogue_num}"
+
+
+def format_work_catalogue(req, work_catalogue_entry: dict) -> dict:
+    transl = req.ctx.translations
+    catalogue_id = strip_prefix(work_catalogue_entry["id"])
 
     return {
-        "id": get_identifier(
-            req, "publications.publication", publication_id=catalogue_id
-        ),
-        "label": {"none": [work_catalogue["title"]]},
-        "type": "rism:Publication",
+        "id": get_identifier(req, "works.work", work_id=catalogue_id),
+        "label": title_json_value_translator([work_catalogue_entry], transl),
+        "type": "rism:Work",
     }
 
 
