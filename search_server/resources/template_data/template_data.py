@@ -52,21 +52,10 @@ class TemplateData(ypres.DictSerializer):
         return orjson.dumps(country_list).decode("utf-8")
 
     def get_record_url(self, obj: dict) -> str | None:
-        return obj["id"]
+        return obj.get("id")
 
     def get_record_image_url(self, obj: dict) -> str | None:
-        """
-        Creates a URL to an image in the form of:
-
-        https://rism.online/og/img/10/source_123410.png
-
-        :param obj:
-        :return:
-        """
-        if obj["type"] not in ("rism:Source",):
-            return None
-
-        return urljoin(obj["id"], "image.png")
+        return None
 
     def get_record_created(self, obj: dict) -> str | None:
         return None
@@ -205,32 +194,37 @@ class OpenGraphSvg(ypres.DictSerializer):
         # Returns a list that can be iterated on in the template. Must be
         # no longer than two elements. The textwrap library imposes these
         # constraints automatically.
-        title: str
 
-        if obj["type"] == "source":
-            main_title: str = obj.get("main_title_s", "[No title]")
-            #  TODO: Translate source types
-            source_types: list | None = obj.get("material_source_types_sm")
-            shelfmark: str | None = obj.get("shelfmark_s")
-            siglum: str | None = obj.get("siglum_s")
-
-            label: str = main_title
-            if source_types:
-                label = f"{label}; {', '.join(source_types)}"
-            if siglum and shelfmark:
-                label = f"{label}; {siglum} {shelfmark}"
-
-            title = label
-        elif obj["type"] == "person":
-            title = format_person_label(obj)
-        elif obj["type"] == "institution":
-            title = format_institution_label(obj)
-        else:
+        record_type = obj.get("type")
+        if record_type is None:
             return ["[Unknown title]"]
 
-        tw: list = textwrap.wrap(title, width=36, max_lines=2)
+        match record_type:
+            case "source":
+                main_title: str = obj.get("main_title_s", "[No title]")
+                # TODO: Translate source types
+                source_types: list | None = obj.get("material_source_types_sm")
+                shelfmark: str | None = obj.get("shelfmark_s")
+                siglum: str | None = obj.get("siglum_s")
 
-        return tw
+                label = main_title
+                if source_types:
+                    label = f"{label}; {', '.join(source_types)}"
+                if siglum and shelfmark:
+                    label = f"{label}; {siglum} {shelfmark}"
+
+                title = label
+
+            case "person":
+                title = format_person_label(obj)
+
+            case "institution":
+                title = format_institution_label(obj)
+
+            case _:
+                return ["[Unknown title]"]
+
+        return textwrap.wrap(title, width=36, max_lines=2)
 
     # These lines return a tuple of (icon, text). If the return value is
     # None then this line will be omitted. The icon names are defined in the
