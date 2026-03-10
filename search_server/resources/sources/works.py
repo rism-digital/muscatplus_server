@@ -1,6 +1,12 @@
 import ypres
 
-from search_server.helpers.display_translators import title_json_value_translator
+from search_server.helpers.display_fields import LabelConfig, get_display_fields
+from search_server.helpers.display_translators import (
+    secondary_literature_json_value_translator,
+    title_json_value_translator,
+    compile_publication_info,
+    format_publication_info,
+)
 from search_server.helpers.identifiers import (
     EXTERNAL_IDS,
     get_identifier,
@@ -14,6 +20,7 @@ class WorksSection(ypres.DictSerializer):
     stype = ypres.StaticField(label="type", value="rism:WorksSection")
     # for sources, only a single work reference is stored
     work_reference = ypres.MethodField(label="workReference")
+    works = ypres.MethodField()
     # for people, they can have multiple work references
     work_references = ypres.MethodField(label="workReferences")
     works_catalogues = ypres.MethodField(label="worksCatalogs")
@@ -25,11 +32,23 @@ class WorksSection(ypres.DictSerializer):
         # TODO: Check label
         return transl["records.work"]
 
-    def get_works_catalogues(self, obj: SolrResult) -> dict | None:
+    def get_works(self, obj: SolrResult) -> dict | None:
         if "works_json" not in obj:
             return None
 
-        return WorksCataloguesSection(
+        # For sources
+        return WorksListSection(
+            obj, context={"request": self.context["request"]}
+        ).serialized
+
+    # Works catalogues in sources are for showing in the bibliography section in sources.
+    # So we will skip rendering it in this section if it is present on a source.
+    # For people it is valid.
+    def get_works_catalogues(self, obj: SolrResult) -> dict | None:
+        if obj["type"] == "source" or "works_catalogue_json" not in obj:
+            return None
+
+        return WorksCatalogueSection(
             obj, context={"request": self.context["request"]}
         ).serialized
 
@@ -69,7 +88,43 @@ class ExternalWorkReferencesSection(ypres.DictSerializer):
         return [format_work_node(req, work_node) for work_node in work_nodes]
 
 
-class WorksCataloguesSection(ypres.DictSerializer):
+class WorksCatalogueSection(ypres.DictSerializer):
+    stype = ypres.StaticField(label="type", value="rism:WorksCataloguesSection")
+    section_label = ypres.MethodField(label="sectionLabel")
+    items = ypres.MethodField()
+
+    def get_section_label(self, obj: dict) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+        return transl["records.work_catalogs"]
+
+    def get_items(self, obj: dict) -> list[dict]:
+        req = self.context["request"]
+        transl = req.ctx.translations
+
+        out = []
+        for v in obj["works_catalogue_json"]:
+            _, prepped_entry = compile_publication_info(v)
+            formatted_entry = format_publication_info(prepped_entry)
+            publication_id = strip_prefix(v["id"])
+            d = {
+                "label": transl["records.catalog_works"],
+                "value": {"none": [formatted_entry]},
+                "relatedTo": {
+                    "id": get_identifier(
+                        req, "publications.publication", publication_id=publication_id
+                    ),
+                    "label": {"none": ["View on RISM Online"]},
+                    "type": "rism:Publication",
+                    "status": v.get("status"),
+                },
+            }
+            out.append(d)
+
+        return out
+
+
+class WorksListSection(ypres.DictSerializer):
     stype = ypres.StaticField(label="type", value="rism:WorksCataloguesSection")
     section_label = ypres.MethodField(label="sectionLabel")
     items = ypres.MethodField()
@@ -84,8 +139,7 @@ class WorksCataloguesSection(ypres.DictSerializer):
         req = self.context["request"]
 
         return [
-            format_work_catalogue(req, work_catalogue)
-            for work_catalogue in work_catalogues
+            format_work_entry(req, work_catalogue) for work_catalogue in work_catalogues
         ]
 
 
@@ -97,13 +151,13 @@ def format_work_label(obj: dict) -> str:
     return f"{title} {catalogue}{catalogue_num}"
 
 
-def format_work_catalogue(req, work_catalogue_entry: dict) -> dict:
+def format_work_entry(req, work_entry: dict) -> dict:
     transl = req.ctx.translations
-    catalogue_id = strip_prefix(work_catalogue_entry["id"])
+    work_id = strip_prefix(work_entry["id"])
 
     return {
-        "id": get_identifier(req, "works.work", work_id=catalogue_id),
-        "label": title_json_value_translator([work_catalogue_entry], transl),
+        "id": get_identifier(req, "works.work", work_id=work_id),
+        "label": title_json_value_translator([work_entry], transl),
         "type": "rism:Work",
     }
 

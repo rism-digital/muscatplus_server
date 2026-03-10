@@ -644,34 +644,56 @@ def printing_techniques_translator(values: list, translations: dict) -> dict:
 def secondary_literature_json_value_translator(
     values: list, translations: dict
 ) -> dict:
+    compiled_publications: list = []
+    for work in values:
+        if compiled := compile_publication_info(work):
+            compiled_publications.append(compiled)
+
     # all_works: { "publication_123": {"formatted": "blah blah", pages: ["12", "13", "14", etc.]} }
     all_works: dict = {}
-    for work in values:
-        work_id = work.get("id")
+    for work_id, publication in compiled_publications:
         if work_id not in all_works:
-            all_works[work_id] = {
-                "formatted": work.get("formatted"),
-                "pages": [],
-                "short_name": work.get("short_name"),
-                "info": work.get("info"),
-            }
+            all_works[work_id] = publication
+            continue
 
-        if p := work.get("pages"):
-            all_works[work_id]["pages"].append(p)
+        if p := publication.get("pages"):
+            all_works[work_id]["pages"].extend(p)
 
     works: list = []
-
     for _, fmtwks in all_works.items():
-        number_page: str = f", {'; '.join(p)}" if (p := fmtwks.get("pages")) else ""
-        short_name: str = f"{n}" if (n := fmtwks.get("short_name")) else ""
-        info: str = f" {nf}" if (nf := fmtwks.get("info")) else ""
-        source_ref = f"[{short_name}{number_page}{info}]"
-        reference: str = fmtwks.get("formatted", "")
-        ref = f"{reference} {source_ref}"
-        ref += f"{'' if ref.strip().endswith('.') else '.'}"
-        works.append(ref)
+        works.append(format_publication_info(fmtwks))
 
     return {"none": works}
+
+
+def compile_publication_info(work: dict) -> tuple[str, dict] | None:
+    work_id = work.get("id")
+    if not work_id:
+        return None
+
+    entry: dict = {
+        "formatted": work.get("formatted"),
+        "pages": [],
+        "short_name": work.get("short_name"),
+        "info": work.get("info"),
+    }
+
+    if p := work.get("pages"):
+        entry["pages"].append(p)
+
+    return work_id, entry
+
+
+def format_publication_info(fmtwks: dict) -> str:
+    number_page: str = f", {'; '.join(p)}" if (p := fmtwks.get("pages")) else ""
+    short_name: str = f"{n}" if (n := fmtwks.get("short_name")) else ""
+    info: str = f" {nf}" if (nf := fmtwks.get("info")) else ""
+    source_ref = f"[{short_name}{number_page}{info}]"
+    reference: str = fmtwks.get("formatted", "")
+    ref = f"{reference} {source_ref}"
+    ref += f"{'' if ref.strip().endswith('.') else '.'}"
+
+    return ref
 
 
 def scoring_json_value_translator(values: list, translations: dict) -> dict:
