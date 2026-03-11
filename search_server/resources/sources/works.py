@@ -1,11 +1,9 @@
 import ypres
 
-from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.display_translators import (
-    secondary_literature_json_value_translator,
-    title_json_value_translator,
     compile_publication_info,
     format_publication_info,
+    title_json_value_translator,
 )
 from search_server.helpers.identifiers import (
     EXTERNAL_IDS,
