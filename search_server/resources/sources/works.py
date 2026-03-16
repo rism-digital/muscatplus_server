@@ -112,7 +112,7 @@ class WorksCatalogueSection(ypres.DictSerializer):
                     "id": get_identifier(
                         req, "publications.publication", publication_id=publication_id
                     ),
-                    "label": {"none": ["View on RISM Online"]},
+                    "label": {"none": ["View Work Catalog on RISM Online"]},
                     "type": "rism:Publication",
                     "status": v.get("status"),
                 },
