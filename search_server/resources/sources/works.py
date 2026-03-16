@@ -27,8 +27,7 @@ class WorksSection(ypres.DictSerializer):
         req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        # TODO: Check label
-        return transl["records.work"]
+        return transl["records.works"]
 
     def get_works(self, obj: SolrResult) -> dict | None:
         if "works_json" not in obj:
@@ -130,7 +129,7 @@ class WorksListSection(ypres.DictSerializer):
     def get_section_label(self, obj: dict) -> dict:
         req = self.context["request"]
         transl: dict = req.ctx.translations
-        return transl["records.work_catalogs"]
+        return transl["records.work"]
 
     def get_items(self, obj: dict) -> list[dict]:
         work_catalogues = obj["works_json"]
