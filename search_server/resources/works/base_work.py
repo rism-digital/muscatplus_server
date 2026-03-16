@@ -51,6 +51,7 @@ class BaseWork(ypres.AsyncDictSerializer):
             "scoring_summary_sm": ("records.scoring_summary", None),
             "text_incipit_sm": ("records.text_incipit", None),
             "creation_places_sm": ("records.place_of_creation", None),
+            "standard_title_s": ("records.standardized_title", None),
             "alternative_titles_json": (
                 "records.alternative_work_title",
                 title_json_value_translator,
