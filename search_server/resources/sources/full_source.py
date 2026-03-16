@@ -152,7 +152,7 @@ class FullSource(BaseSource):
         ).serialized
 
     def get_works(self, obj: SolrResult) -> dict | None:
-        if {"work_node_json", "works_catalogue_json"}.isdisjoint(obj.keys()):
+        if {"work_node_json", "works_json"}.isdisjoint(obj.keys()):
             return None
 
         return WorksSection(  # type: ignore

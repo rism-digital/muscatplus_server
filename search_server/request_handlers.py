@@ -1,7 +1,7 @@
 from collections.abc import Callable
 
-import httpx
 import orjson
+from pyreqwest.client import ClientBuilder
 from sanic import request, response
 from sanic.log import logger
 from small_asc.client import SolrError
@@ -167,15 +167,15 @@ async def handle_request(
             "Authorization": f"Token {app_context.config['common']['muscat_auth']}"
         }
 
-        async with httpx.AsyncClient(headers=auth_headers) as client:
+        async with ClientBuilder().default_headers(auth_headers).build() as client:
             muscat_req = await client.get(
                 f"https://muscat.rism.info/data/{rtype}/{rid}"
-            )
-            muscat_resp = muscat_req.text
-            if muscat_req.status_code != 200:
+            ).build().send()
+            if muscat_req.status != 200:
                 return response.json(
                     {"message": "Could not retrieve MARCXML from upstream"}, status=500
                 )
+            muscat_resp = await muscat_req.text()
 
         return response.text(muscat_resp, content_type=MARCXML_MEDIA_TYPE)
 

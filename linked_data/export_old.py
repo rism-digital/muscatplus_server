@@ -9,11 +9,12 @@ import logging.config
 import sqlite3
 import subprocess
 import timeit
+from datetime import timedelta
 from pathlib import Path
 
-import httpx
 import orjson
 import rdflib
+from pyreqwest.client import ClientBuilder
 
 try:
     import uvloop
@@ -200,7 +201,13 @@ async def serialize(id_group: list, record_type: str, semaphore, dbname: str) ->
 
     sqlconn = sqlite3.connect(dbname)
 
-    async with httpx.AsyncClient() as session:
+    async with (
+        ClientBuilder()
+        .timeout(timedelta(seconds=20))
+        .connect_timeout(timedelta(seconds=10))
+        .read_timeout(timedelta(seconds=20))
+        .build()
+    ) as session:
         for docid in id_group:
             task = asyncio.create_task(
                 run_serializer(docid, serializer, ctx_val, semaphore, session, sqlconn)

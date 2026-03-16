@@ -14,7 +14,7 @@ from search_server.resources.template_data.template_data import (
 
 def render_template(app_context, req, data_obj: dict | None) -> str:
     record_tmpl = app_context.template_env.get_template("main.html.j2")
-    record_type = data_obj["type"]
+    record_type: str | None = data_obj.get("type")
     request_ctx = {"request": req}
     logger.debug("Record type: %s", record_type)
     tmpl_vars: dict

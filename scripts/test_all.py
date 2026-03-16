@@ -3,8 +3,10 @@ import asyncio
 import logging
 import random
 import sys
+from datetime import timedelta
 
-import httpx
+from pyreqwest import exceptions
+from pyreqwest.client import Client, ClientBuilder
 from small_asc.client import Solr
 
 solr_conn = Solr("http://localhost:8983/solr/muscatplus_live")
@@ -13,13 +15,11 @@ VALID_CODES = {200, 410}
 
 # ---- tune these for your environment ----
 MAX_CONCURRENCY = 50  # cap simultaneous requests
-LIMITS = httpx.Limits(  # connection pool sizing
-    max_connections=200,
-    max_keepalive_connections=50,
-)
-TIMEOUT = httpx.Timeout(  # per-request timeouts
-    connect=10.0, read=10.0, write=10.0, pool=10.0
-)
+MAX_CONNECTIONS = 200
+MAX_KEEPALIVE_CONNECTIONS = 50
+CONNECT_TIMEOUT = timedelta(seconds=10)
+READ_TIMEOUT = timedelta(seconds=10)
+POOL_TIMEOUT = timedelta(seconds=10)
 USE_HTTP2 = True
 # ----------------------------------------
 
@@ -51,26 +51,32 @@ def id_from_solr_record(record: dict) -> str:
 
 
 async def fetch_url(
-    url: str, client: httpx.AsyncClient, sem: asyncio.Semaphore
+    url: str, client: Client, sem: asyncio.Semaphore
 ) -> tuple[str, bool, int | None, str | None]:
     log.debug("Fetching %s", url)
     async with sem:
         try:
-            r = await client.get(url)
+            r = await (
+                client.get(url)
+                .timeout(READ_TIMEOUT)
+                .error_for_status(False)
+                .build()
+                .send()
+            )
             # read the body so the connection is reusable (even if you don’t need it)
-            await r.aread()
-            return url, r.status_code in VALID_CODES, r.status_code, None
-        except httpx.HTTPStatusError as e:
-            # only raised if raise_for_status() used; included for completeness
+            await r.bytes()
+            return url, r.status in VALID_CODES, r.status, None
+        except exceptions.StatusError as e:
+            # only raised if error_for_status() used; included for completeness
             return (
                 url,
                 False,
-                e.response.status_code if e.response else None,
-                f"HTTPStatusError: {e}",
+                None,
+                f"StatusError: {e}",
             )
-        except httpx.TimeoutException:
+        except exceptions.RequestTimeoutError:
             return url, False, None, "Timeout"
-        except httpx.RequestError as e:
+        except exceptions.RequestError as e:
             # DNS errors, TLS errors, refused connections, etc.
             return url, False, None, f"RequestError: {e}"
         except Exception as e:
@@ -115,9 +121,19 @@ async def main(args: argparse.Namespace) -> bool:
     list_of_urls: list = await get_ids(args.type, args.baseurl, args.limit)
 
     sem = asyncio.Semaphore(MAX_CONCURRENCY)
-    async with httpx.AsyncClient(
-        headers={"Accept": "application/ld+json", "X-API-Accept-Language": "en"}
-    ) as client:
+    client_builder = (
+        ClientBuilder()
+        .default_headers(
+            {"Accept": "application/ld+json", "X-API-Accept-Language": "en"}
+        )
+        .max_connections(MAX_CONNECTIONS)
+        .pool_max_idle_per_host(MAX_KEEPALIVE_CONNECTIONS)
+        .connect_timeout(CONNECT_TIMEOUT)
+        .read_timeout(READ_TIMEOUT)
+        .pool_timeout(POOL_TIMEOUT)
+        .http2(USE_HTTP2)
+    )
+    async with client_builder.build() as client:
         tasks = [fetch_url(url, client, sem) for url in list_of_urls]
         results = await asyncio.gather(*tasks)
 
@@ -167,7 +183,7 @@ if __name__ == "__main__":
 
     log = logging.getLogger("link_test")
     logging.getLogger("httpcore").setLevel(logging.WARNING)
-    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("pyreqwest").setLevel(logging.WARNING)
     logging.getLogger("asyncio").setLevel(logging.WARNING)
 
     log.info("Parsed args: %s", parsed_args)

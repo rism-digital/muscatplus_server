@@ -5,9 +5,10 @@ import urllib.parse
 from difflib import Match
 
 import cdifflib  # type: ignore
-import httpx
 import orjson
 import verovio
+from pyreqwest import exceptions
+from pyreqwest.client import ClientBuilder
 from sanic.log import logger
 
 from search_server.helpers.identifiers import get_identifier, strip_prefix
@@ -123,20 +124,20 @@ async def render_url(url: str) -> str | None:
     :param url:
     :return:
     """
-    async with httpx.AsyncClient() as client:
+    async with ClientBuilder().build() as client:
         try:
-            res = await client.get(url)
-        except httpx.RequestError:
+            res = await client.get(url).build().send()
+        except exceptions.RequestError:
             logger.error("Request error for %s", url)
             return None
 
-        if res.status_code != 200:
+        if res.status != 200:
             logger.error(
-                "Server responded with non-success status code: %s", res.status_code
+                "Server responded with non-success status code: %s", res.status
             )
             return None
 
-        mei: str = res.text
+        mei: str = await res.text()
         vrv_opts: dict = VEROVIO_BASE_OPTIONS.copy()
         vrv_opts.update(
             {
