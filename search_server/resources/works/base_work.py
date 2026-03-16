@@ -47,6 +47,7 @@ class BaseWork(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         field_config: LabelConfig = {
+            "opus_numbers_sm": ("records.opus_number", None),
             "key_mode_s": ("records.key_or_mode", key_mode_value_translator),
             "scoring_summary_sm": ("records.scoring_summary", None),
             "text_incipit_sm": ("records.text_incipit", None),
