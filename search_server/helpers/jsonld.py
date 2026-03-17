@@ -120,6 +120,36 @@ __SUMMARY = {
     }
 }
 
+__DATES = {
+    "dates": {
+        "@id": "rism:hasDates",
+        "@context": {
+            "earliestDate": {
+                "@id": "rism:earliestDate",
+                "@type": "xsd:integer",
+            },
+            "latestDate": {
+                "@id": "rism:latestDate",
+                "@type": "xsd:integer",
+            },
+            "dateStatement": {
+                "@id": "rism:dateStatement",
+            },
+        },
+    },
+}
+
+__PROPERTIES = {
+    "properties": "@nest",
+    "keyMode": {
+        "@id": "rism:hasKeyMode",
+    },
+    "physicalDimensions": {
+        "@id": "rism:hasPhysicalDimensions",
+        "@container": "@list",
+    },
+}
+
 RISM_JSONLD_DEFAULT_CONTEXT: ContextDocument = {**__BASE_CONTEXT}
 RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
@@ -157,6 +187,8 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     **__PARTOF,
     **__CREATOR,
     **__SUMMARY,
+    **__DATES,
+    **__PROPERTIES,
 }
 
 RISM_JSONLD_PUBLICATION_CONTEXT: ContextDocument = {
@@ -171,22 +203,8 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     **__INCIPITS,
     **__PARTOF,
     **__CREATOR,
-    "dates": {
-        "@id": "rism:hasDates",
-        "@context": {
-            "earliestDate": {
-                "@id": "rism:earliestDate",
-                "@type": "xsd:integer",
-            },
-            "latestDate": {
-                "@id": "rism:latestDate",
-                "@type": "xsd:integer",
-            },
-            "dateStatement": {
-                "@id": "rism:dateStatement",
-            },
-        },
-    },
+    **__DATES,
+    **__PROPERTIES,
     "materialGroups": {
         "@id": "rism:hasMaterialGroup",
         "@type": "@id",
