@@ -215,6 +215,65 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
 
 RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
+    **__RELATIONSHIPS,
+    "typeLabel": {
+        "@id": "rism:typeLabel",
+        "@container": ["@language", "@set"],
+    },
+    "sectionLabel": {
+        "@id": "rism:sectionLabel",
+        "@container": ["@language", "@set"],
+    },
+    "organizationDetails": {
+        "@id": "rism:organizationDetails",
+        "@type": "@id",
+        "@context": {"summary": {"@id": "rism:hasSummary", "@container": "@set"}},
+    },
+    "recordHistory": {
+        "@id": "rism:recordHistory",
+        "@type": "@id",
+        "@context": {
+            "created": {
+                "@id": "dcterms:created",
+                "@type": "@id",
+            },
+            "updated": {
+                "@id": "dcterms:modified",
+                "@type": "@id",
+            },
+            "value": {
+                "@id": "rdf:value",
+                "@type": "xsd:dateTime",
+            },
+        },
+    },
+    "sources": {
+        "@id": "rism:sources",
+        "@type": "@id",
+        "@context": {
+            "totalItems": {
+                "@id": "rism:totalItems",
+                "@type": "xsd:integer",
+            },
+        },
+    },
+    "externalAuthorities": {
+        "@id": "rism:externalAuthorities",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+    },
+    "notes": {
+        "@id": "rism:notes",
+        "@type": "@id",
+        "@context": {"notes": {"@id": "rism:hasNote", "@container": "@set"}},
+    },
+    "externalResources": {
+        "@id": "rism:externalResources",
+        "@type": "@id",
+        "@context": {
+            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"}
+        },
+    },
     "properties": "@nest",
     "siglum": {
         "@id": "rism:hasSiglum",
@@ -230,7 +289,14 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
         "@id": "rism:hasLocation",
         "@type": "@id",
         "@context": {
-            "coordinates": {"@id": "geojson:coordinates"},
+            "sectionLabel": {
+                "@id": "rism:sectionLabel",
+                "@container": ["@language", "@set"],
+            },
+            "addresses": {"@id": "rism:addresses", "@container": "@set"},
+            "website": {"@id": "rism:website"},
+            "email": {"@id": "rism:emailAddress"},
+            "coordinates": {"@id": "geojson:coordinates", "@container": "@list"},
             "geometry": {"@id": "geojson:geometry", "@type": "@id"},
             "lat": {"@id": "geo:lat", "@type": "xsd:float"},
             "long": {"@id": "geo:long", "@type": "xsd:float"},
