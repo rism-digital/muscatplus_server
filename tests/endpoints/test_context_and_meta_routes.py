@@ -214,6 +214,114 @@ def test_institution_context_expands_semantic_sections(client):
 
 @pytest.mark.endpoint
 @pytest.mark.contract
+def test_work_context_expands_semantic_sections(client):
+    _, ctx_resp = client.get("/api/v1/work.json")
+    assert_json_contract(ctx_resp, status=200, required_keys=["@context"])
+    work_context = ctx_resp.json["@context"]
+
+    work_doc = {
+        "@context": work_context,
+        "id": "https://rism.online/works/49509",
+        "type": "rism:Work",
+        "label": {"en": ["Demetrio, WotG 1A.2"]},
+        "creator": {
+            "role": {
+                "label": {"en": ["Composer/Author"]},
+                "value": "cre",
+                "id": "http://id.loc.gov/vocabulary/relators/cre",
+            },
+            "relatedTo": {
+                "id": "https://rism.online/people/67338",
+                "label": {"none": ["Gluck, Christoph Willibald (1714-1787)"]},
+                "type": "rism:Person",
+            },
+        },
+        "summary": [
+            {
+                "label": {"en": ["Text incipit"]},
+                "value": {"none": ["Se fecondo e vigoroso crescer vede un arboscello"]},
+            }
+        ],
+        "recordHistory": {
+            "type": "rism:RecordHistory",
+            "created": {"label": {"en": ["Created on"]}, "value": "2025-04-15T11:39:17Z"},
+            "updated": {
+                "label": {"en": ["Last modification"]},
+                "value": "2026-03-16T09:38:14Z",
+            },
+        },
+        "partOf": {
+            "label": {"en": ["Item part of"]},
+            "type": "rism:PartOfSection",
+            "items": [
+                {
+                    "relationshipType": "rism:PrimaryPartOf",
+                    "relatedTo": {
+                        "id": "https://rism.online/publications/121",
+                        "label": {"none": ["Catalogue"]},
+                        "type": "rism:Publication",
+                    },
+                    "workNumber": "WotG 1A.2",
+                }
+            ],
+        },
+        "sources": {
+            "sectionLabel": {"en": ["Sources"]},
+            "url": "https://rism.online/works/49509/sources",
+            "totalItems": 18,
+        },
+        "formOfWork": {
+            "sectionLabel": {"en": ["Form of work"]},
+            "items": [
+                {
+                    "id": "https://rism.online/subjects/25160",
+                    "type": "rism:Subject",
+                    "label": {"none": ["Operas"]},
+                    "value": "Operas",
+                }
+            ],
+        },
+        "referencesNotes": {
+            "sectionLabel": {"en": ["References and notes"]},
+            "type": "rism:ReferencesNotesSection",
+            "notes": [
+                {
+                    "label": {"en": ["Catalog of works"]},
+                    "value": {"none": ["Reference text"]},
+                }
+            ],
+        },
+        "incipits": {
+            "items": [
+                {
+                    "label": {"en": ["Incipit"]},
+                    "rendered": [{"format": "image/svg+xml", "data": "<svg/>"}],
+                    "notation": "4CDEF",
+                }
+            ]
+        },
+    }
+
+    graph = Graph()
+    graph.parse(data=json.dumps(work_doc), format="json-ld")
+
+    subject = URIRef("https://rism.online/works/49509")
+    rism = Namespace("https://rism.online/api/v1#")
+
+    predicates = {str(pred) for pred in graph.predicates()}
+    assert len(predicates) > 10
+    assert (subject, RDF.type, rism.Work) in graph
+    assert sum(1 for _ in graph.objects(subject, RDFS.label)) == 1
+    assert any(graph.objects(subject, rism.recordHistory))
+    assert any(graph.objects(subject, rism.sources))
+    assert any(graph.objects(subject, rism.formOfWork))
+    assert any(graph.objects(subject, rism.referencesNotes))
+    assert any(graph.objects(subject, rism.hasSummary))
+    assert not any(graph.subject_objects(rism.rendered))
+
+
+@pytest.mark.endpoint
+@pytest.mark.contract
 def test_front_route_returns_html(client, mocker):
     async def fake_front(_req):
         return response.html("<html><body>ok</body></html>")

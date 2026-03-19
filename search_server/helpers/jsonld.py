@@ -83,6 +83,7 @@ __INCIPITS = {
                     },
                 },
             },
+            "rendered": None,
             "partOf": {
                 "@value": "null",
                 "propagate": "false",
@@ -152,18 +153,21 @@ __PROPERTIES = {
     },
 }
 
-RISM_JSONLD_DEFAULT_CONTEXT: ContextDocument = {**__BASE_CONTEXT}
-RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
-    **__BASE_CONTEXT,
-    **__RELATIONSHIPS,
+__TYPE_LABEL = {
     "typeLabel": {
         "@id": "rism:typeLabel",
         "@container": ["@language", "@set"],
-    },
+    }
+}
+
+__SECTION_LABEL = {
     "sectionLabel": {
         "@id": "rism:sectionLabel",
         "@container": ["@language", "@set"],
-    },
+    }
+}
+
+__RECORD_HISTORY = {
     "recordHistory": {
         "@id": "rism:recordHistory",
         "@type": "@id",
@@ -181,7 +185,16 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
                 "@type": "xsd:dateTime",
             },
         },
-    },
+    }
+}
+
+RISM_JSONLD_DEFAULT_CONTEXT: ContextDocument = {**__BASE_CONTEXT}
+RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__RELATIONSHIPS,
+    **__TYPE_LABEL,
+    **__SECTION_LABEL,
+    **__RECORD_HISTORY,
     "biographicalDetails": {
         "@id": "rism:biographicalDetails",
         "@type": "@id",
@@ -216,37 +229,14 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
 RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
     **__RELATIONSHIPS,
-    "typeLabel": {
-        "@id": "rism:typeLabel",
-        "@container": ["@language", "@set"],
-    },
-    "sectionLabel": {
-        "@id": "rism:sectionLabel",
-        "@container": ["@language", "@set"],
-    },
+    **__TYPE_LABEL,
+    **__SECTION_LABEL,
     "organizationDetails": {
         "@id": "rism:organizationDetails",
         "@type": "@id",
         "@context": {"summary": {"@id": "rism:hasSummary", "@container": "@set"}},
     },
-    "recordHistory": {
-        "@id": "rism:recordHistory",
-        "@type": "@id",
-        "@context": {
-            "created": {
-                "@id": "dcterms:created",
-                "@type": "@id",
-            },
-            "updated": {
-                "@id": "dcterms:modified",
-                "@type": "@id",
-            },
-            "value": {
-                "@id": "rdf:value",
-                "@type": "xsd:dateTime",
-            },
-        },
-    },
+    **__RECORD_HISTORY,
     "sources": {
         "@id": "rism:sources",
         "@type": "@id",
@@ -289,10 +279,7 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
         "@id": "rism:hasLocation",
         "@type": "@id",
         "@context": {
-            "sectionLabel": {
-                "@id": "rism:sectionLabel",
-                "@container": ["@language", "@set"],
-            },
+            **__SECTION_LABEL,
             "addresses": {"@id": "rism:addresses", "@container": "@set"},
             "website": {"@id": "rism:website"},
             "email": {"@id": "rism:emailAddress"},
@@ -306,12 +293,45 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
 
 RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
+    **__RELATIONSHIPS,
     **__INCIPITS,
     **__PARTOF,
     **__CREATOR,
     **__SUMMARY,
     **__DATES,
     **__PROPERTIES,
+    **__TYPE_LABEL,
+    **__SECTION_LABEL,
+    **__RECORD_HISTORY,
+    "sources": {
+        "@id": "rism:sources",
+        "@type": "@id",
+        "@context": {
+            **__SECTION_LABEL,
+            "url": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
+            "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
+        },
+    },
+    "formOfWork": {
+        "@id": "rism:formOfWork",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+    },
+    "referencesNotes": {
+        "@id": "rism:referencesNotes",
+        "@type": "@id",
+        "@context": {"notes": {"@id": "rism:hasNote", "@container": "@set"}},
+    },
+    "externalAuthorities": {
+        "@id": "rism:externalAuthorities",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+    },
+    "externalResources": {
+        "@id": "rism:externalResources",
+        "@type": "@id",
+        "@context": {"externalRecords": {"@id": "rism:externalRecord", "@container": "@set"}},
+    },
 }
 
 RISM_JSONLD_PUBLICATION_CONTEXT: ContextDocument = {
