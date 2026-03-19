@@ -154,6 +154,61 @@ RISM_JSONLD_DEFAULT_CONTEXT: ContextDocument = {**__BASE_CONTEXT}
 RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
     **__RELATIONSHIPS,
+    "typeLabel": {
+        "@id": "rism:typeLabel",
+        "@container": ["@language", "@set"],
+    },
+    "sectionLabel": {
+        "@id": "rism:sectionLabel",
+        "@container": ["@language", "@set"],
+    },
+    "recordHistory": {
+        "@id": "rism:recordHistory",
+        "@type": "@id",
+        "@context": {
+            "created": {
+                "@id": "dcterms:created",
+                "@type": "@id",
+            },
+            "updated": {
+                "@id": "dcterms:modified",
+                "@type": "@id",
+            },
+            "value": {
+                "@id": "rdf:value",
+                "@type": "xsd:dateTime",
+            },
+        },
+    },
+    "biographicalDetails": {
+        "@id": "rism:biographicalDetails",
+        "@type": "@id",
+        "@context": {"summary": {"@id": "rism:hasSummary", "@container": "@set"}},
+    },
+    "externalAuthorities": {
+        "@id": "rism:externalAuthorities",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+    },
+    "nameVariants": {
+        "@id": "rism:nameVariants",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+    },
+    "notes": {
+        "@id": "rism:notes",
+        "@type": "@id",
+        "@context": {"notes": {"@id": "rism:hasNote", "@container": "@set"}},
+    },
+    "works": {
+        "@id": "rism:works",
+        "@type": "@id",
+        "@context": {
+            "workReferences": {"@id": "rism:workReferences", "@type": "@id"},
+            "worksCatalogs": {"@id": "rism:worksCatalogs", "@type": "@id"},
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
+        },
+    },
 }
 
 RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
