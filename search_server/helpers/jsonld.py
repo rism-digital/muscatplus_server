@@ -35,6 +35,7 @@ __BASE_CONTEXT = {
     "value": {
         "@id": "rdf:value",
         "@container": ["@language", "@set"],
+        "@protected": False,
     },
 }
 
@@ -174,15 +175,14 @@ __RECORD_HISTORY = {
         "@context": {
             "created": {
                 "@id": "dcterms:created",
-                "@type": "@id",
             },
             "updated": {
                 "@id": "dcterms:modified",
-                "@type": "@id",
             },
             "value": {
                 "@id": "rdf:value",
                 "@type": "xsd:dateTime",
+                "@protected": False,
             },
         },
     }
@@ -308,7 +308,6 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
-            "url": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
             "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
         },
     },
@@ -330,7 +329,9 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     "externalResources": {
         "@id": "rism:externalResources",
         "@type": "@id",
-        "@context": {"externalRecords": {"@id": "rism:externalRecord", "@container": "@set"}},
+        "@context": {
+            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"}
+        },
     },
 }
 
