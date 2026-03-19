@@ -1,4 +1,5 @@
 import itertools
+import re
 from collections.abc import Callable
 
 import ypres
@@ -14,9 +15,14 @@ from search_server.helpers.display_translators import (
 )
 from search_server.helpers.identifiers import (
     EXTERNAL_IDS,
+    LOC_RELATOR_BASE,
+    RDAU_BASE,
+    RISM_RELATIONSHIP_BASE,
     get_identifier,
     strip_prefix,
 )
+
+_LOC_RELATOR_CODE_RE = re.compile(r"^[a-z]{3}$")
 
 
 class RelationshipsSection(ypres.DictSerializer):
@@ -78,17 +84,12 @@ class Relationship(ypres.DictSerializer):
         if not relationship_translator:
             return {"none": ["[Unknown relationship]"]}
 
-        # If the relator codes are already formatted as a namespace, then don't double
-        # namespace them.
-        if relationship_value.startswith("rdau"):
-            rel = f"{relationship_value}"
-        else:
-            rel = f"relators:{relationship_value.replace(' ', '_')}"
+        canonical_id: str = _canonical_role_id(relationship_value)
 
         return {
+            "id": canonical_id,
             "label": relationship_translator(relationship_value, transl),
-            "value": f"{rel}",
-            "id": f"{rel}",
+            "value": relationship_value,
         }
 
     def get_qualifier(self, obj: dict) -> dict | None:
@@ -271,3 +272,36 @@ def _relationship_translator(obj: dict) -> Callable | None:
         return place_relationship_labels_translator
     else:
         return None
+
+
+def _canonical_role_id(relationship_value: str) -> str:
+    """Canonical URI for relationship roles in JSON-LD output."""
+    if relationship_value.startswith("http://") or relationship_value.startswith(
+        "https://"
+    ):
+        return relationship_value
+
+    if relationship_value.startswith("rdau:"):
+        return relationship_value.replace("rdau:", RDAU_BASE, 1)
+
+    relator_code = relationship_value
+    if relationship_value.startswith("relators:"):
+        relator_code = relationship_value.split(":", 1)[1]
+
+    # MARC relator codes remain in LoC namespace.
+    if _LOC_RELATOR_CODE_RE.match(relator_code):
+        return f"{LOC_RELATOR_BASE}{relator_code}"
+
+    slug_source = (
+        relator_code
+        if relationship_value.startswith("relators:")
+        else relationship_value
+    )
+    slug = (
+        slug_source.strip()
+        .lower()
+        .replace(":", "_")
+        .replace(" ", "_")
+        .replace("-", "_")
+    )
+    return f"{RISM_RELATIONSHIP_BASE}{slug}"
