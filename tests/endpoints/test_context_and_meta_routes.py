@@ -496,8 +496,12 @@ def test_source_context_expands_semantic_sections(client):
     assert not any(graph.objects(subject, rism.contents))
 
     history_node = next(graph.objects(subject, rism.recordHistory))
-    assert any(graph.objects(history_node, dcterms.created))
-    assert any(graph.objects(history_node, dcterms.modified))
+    created_node = next(graph.objects(history_node, dcterms.created))
+    updated_node = next(graph.objects(history_node, dcterms.modified))
+    created_value = next(graph.objects(created_node, RDF.value))
+    updated_value = next(graph.objects(updated_node, RDF.value))
+    assert created_value.datatype == XSD.dateTime
+    assert updated_value.datatype == XSD.dateTime
 
     source_items_node = next(graph.objects(subject, rism.hasSourceItem))
     source_items_url = next(graph.objects(source_items_node, schemaorg.url))

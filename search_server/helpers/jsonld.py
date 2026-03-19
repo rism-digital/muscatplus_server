@@ -339,6 +339,58 @@ RISM_JSONLD_PUBLICATION_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
     **__SUMMARY,
     **__RELATIONSHIPS,
+    **__CREATOR,
+    **__TYPE_LABEL,
+    **__SECTION_LABEL,
+    **__RECORD_HISTORY,
+    "composer": {
+        "@id": "rism:composer",
+        "@type": "@id",
+    },
+    "properties": {
+        "@id": "@nest",
+    },
+    "shortTitle": {
+        "@id": "rism:shortTitle",
+        "@container": ["@language", "@set"],
+    },
+    "publicationDates": {
+        "@id": "rism:publicationDates",
+        "@container": ["@language", "@set"],
+    },
+    "status": {
+        "@id": "rism:status",
+        "@type": "@id",
+        "@context": {
+            "label": {
+                "@id": "rdfs:label",
+                "@container": ["@language", "@set"],
+            },
+            "value": {"@id": "rdf:value"},
+        },
+    },
+    "notes": {
+        "@id": "rism:notes",
+        "@type": "@id",
+        "@context": {"notes": {"@id": "rism:hasNote", "@container": "@set"}},
+    },
+    "works": {
+        "@id": "rism:works",
+        "@type": "@id",
+        "@context": {
+            **__SECTION_LABEL,
+            "url": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
+            "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
+        },
+    },
+    "externalResources": {
+        "@id": "rism:externalResources",
+        "@type": "@id",
+        "@context": {
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"},
+        },
+    },
 }
 
 RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
@@ -359,7 +411,11 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@context": {
             "recordType": {"@id": "rism:recordType", "@type": "@id"},
             "sourceType": {"@id": "rism:sourceType", "@type": "@id"},
-            "contentTypes": {"@id": "rism:contentTypes", "@container": "@set", "@type": "@id"},
+            "contentTypes": {
+                "@id": "rism:contentTypes",
+                "@container": "@set",
+                "@type": "@id",
+            },
         },
     },
     "materialGroups": {
@@ -406,7 +462,10 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@type": "@id",
         "@context": {
             "notes": {"@id": "rism:hasNote", "@container": "@set"},
-            "performanceLocations": {"@id": "rism:performanceLocations", "@type": "@id"},
+            "performanceLocations": {
+                "@id": "rism:performanceLocations",
+                "@type": "@id",
+            },
             "liturgicalFestivals": {"@id": "rism:liturgicalFestivals", "@type": "@id"},
         },
     },
