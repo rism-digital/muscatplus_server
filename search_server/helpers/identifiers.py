@@ -144,3 +144,7 @@ SOLR_FIELD_DATA_TYPES: FieldDataType = {
     "dramatic_roles_json": ["pmo:MediumOfPerformance"],
     "scoring_json": ["pmo:MediumOfPerformance"],
 }
+
+RISM_RELATIONSHIP_BASE = "https://rism.online/vocabulary/relationship/"
+LOC_RELATOR_BASE = "http://id.loc.gov/vocabulary/relators/"
+RDAU_BASE = "http://rdaregistry.info/Elements/u/"
