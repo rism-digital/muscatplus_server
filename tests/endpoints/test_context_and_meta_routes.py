@@ -4,7 +4,7 @@ import json
 
 import pytest
 from rdflib import Graph, URIRef
-from rdflib.namespace import RDF, RDFS, Namespace
+from rdflib.namespace import RDF, RDFS, XSD, Namespace
 from sanic import response
 
 from tests.conftest import assert_content_type, assert_json_contract
@@ -318,6 +318,313 @@ def test_work_context_expands_semantic_sections(client):
     assert any(graph.objects(subject, rism.referencesNotes))
     assert any(graph.objects(subject, rism.hasSummary))
     assert not any(graph.subject_objects(rism.rendered))
+
+
+@pytest.mark.endpoint
+@pytest.mark.contract
+def test_source_context_expands_semantic_sections(client):
+    _, ctx_resp = client.get("/api/v1/source.json")
+    assert_json_contract(ctx_resp, status=200, required_keys=["@context"])
+    source_context = ctx_resp.json["@context"]
+
+    source_doc = {
+        "@context": source_context,
+        "id": "https://rism.online/sources/117580",
+        "type": "rism:Source",
+        "typeLabel": {"en": ["Source"]},
+        "label": {"en": ["16 Keyboard pieces; Manuscript copy; US-U x786.4108/M319"]},
+        "sourceTypes": {
+            "recordType": {"label": {"en": ["Collection"]}, "type": "rism:CollectionRecord"},
+            "sourceType": {"label": {"en": ["Manuscript"]}, "type": "rism:ManuscriptSource"},
+            "contentTypes": [
+                {"label": {"en": ["Notated music"]}, "type": "rism:MusicalContent"}
+            ],
+        },
+        "recordHistory": {
+            "type": "rism:RecordHistory",
+            "created": {"label": {"en": ["Created on"]}, "value": "2013-01-29T00:00:00Z"},
+            "updated": {
+                "label": {"en": ["Last modification"]},
+                "value": "2025-08-13T20:20:04Z",
+            },
+        },
+        "contents": {
+            "sectionLabel": {"en": ["Title and content description"]},
+            "summary": [
+                {
+                    "label": {"en": ["Standardized title"]},
+                    "value": {"none": ["16 Keyboard pieces"]},
+                    "type": ["dcterms:title", "rism:StandardizedTitle"],
+                }
+            ],
+            "subjects": {
+                "sectionLabel": {"en": ["Subject headings"]},
+                "items": [
+                    {
+                        "id": "https://rism.online/subjects/25234",
+                        "type": "rism:Subject",
+                        "label": {"none": ["Anthems"]},
+                        "value": "Anthems",
+                    }
+                ],
+            },
+        },
+        "materialGroups": {
+            "sectionLabel": {"en": ["Material description"]},
+            "items": [
+                {
+                    "id": "https://rism.online/sources/117580/material-groups/01",
+                    "label": {"none": ["Group 01"]},
+                    "summary": [{"label": {"en": ["Date"]}, "value": {"none": ["1700 (1700c)"]}}],
+                }
+            ],
+        },
+        "relationships": {
+            "sectionLabel": {"en": ["Relations"]},
+            "items": [
+                {
+                    "role": {
+                        "label": {"en": ["Former owner"]},
+                        "value": "fmo",
+                        "id": "http://id.loc.gov/vocabulary/relators/fmo",
+                    },
+                    "relatedTo": {
+                        "id": "https://rism.online/people/30031975",
+                        "label": {"none": ["Woodcock, Deborah"]},
+                        "type": "rism:Person",
+                    },
+                }
+            ],
+        },
+        "referencesNotes": {
+            "sectionLabel": {"en": ["References and notes"]},
+            "type": "rism:ReferencesNotesSection",
+            "notes": [
+                {
+                    "label": {"en": ["General note"]},
+                    "value": {"none": ["Manuscript of English provenance"]},
+                }
+            ],
+        },
+        "exemplars": {
+            "id": "https://rism.online/sources/117580/holdings",
+            "type": "rism:ExemplarsSection",
+            "sectionLabel": {"en": ["Exemplars"]},
+            "items": [
+                {
+                    "id": "https://rism.online/sources/117580/holdings/30000011",
+                    "type": "rism:Holding",
+                    "holdingType": "rism:ManuscriptHolding",
+                    "sectionLabel": {"en": ["Exemplar"]},
+                    "label": {"none": ["Example Holding"]},
+                    "heldBy": {
+                        "id": "https://rism.online/institutions/30000011",
+                        "type": "rism:Institution",
+                        "label": {"none": ["Example Institution"]},
+                    },
+                }
+            ],
+        },
+        "sourceItems": {
+            "sectionLabel": {"en": ["Items in this source"]},
+            "url": "https://rism.online/sources/117580/contents",
+            "totalItems": 2,
+            "items": [
+                {
+                    "id": "https://rism.online/sources/117581",
+                    "type": "rism:Source",
+                    "typeLabel": {"en": ["Source"]},
+                    "label": {"none": ["Nested item"]},
+                    "sourceTypes": {
+                        "recordType": {
+                            "label": {"en": ["Single item"]},
+                            "type": "rism:SingleItemRecord",
+                        }
+                    },
+                    "recordHistory": {
+                        "type": "rism:RecordHistory",
+                        "created": {
+                            "label": {"en": ["Created on"]},
+                            "value": "2014-01-01T00:00:00Z",
+                        },
+                    },
+                }
+            ],
+        },
+        "externalResources": {
+            "sectionLabel": {"en": ["Related resources"]},
+            "items": [
+                {
+                    "type": "rism:ExternalResource",
+                    "url": "https://example.org/iiif/manifest",
+                    "label": {"none": ["IIIF manifest"]},
+                    "resourceType": "rism:IIIFManifestLink",
+                }
+            ],
+        },
+        "dates": {
+            "earliestDate": 1700,
+            "latestDate": 1700,
+            "dateStatement": "1700 (1700c)",
+        },
+        "properties": {
+            "physicalDimensions": ["20 x 26 cm"],
+        },
+    }
+
+    graph = Graph()
+    graph.parse(data=json.dumps(source_doc), format="json-ld")
+
+    subject = URIRef("https://rism.online/sources/117580")
+    rism = Namespace("https://rism.online/api/v1#")
+    dcterms = Namespace("http://purl.org/dc/terms/")
+    schemaorg = Namespace("https://schema.org/")
+
+    predicates = {str(pred) for pred in graph.predicates()}
+    assert len(predicates) > 10
+    assert (subject, RDF.type, rism.Source) in graph
+    assert any(graph.objects(subject, rism.recordHistory))
+    assert any(graph.objects(subject, rism.sourceTypes))
+    assert any(graph.objects(subject, rism.hasMaterialGroup))
+    assert any(graph.objects(subject, rism.hasRelationship))
+    assert any(graph.objects(subject, rism.referencesNotes))
+    assert any(graph.objects(subject, rism.hasHolding))
+    assert any(graph.objects(subject, rism.hasSourceItem))
+    assert any(graph.objects(subject, rism.externalResources))
+    assert any(graph.objects(subject, rism.hasSummary))
+    assert any(graph.objects(subject, rism.hasSubject))
+    assert not any(graph.objects(subject, rism.contents))
+
+    history_node = next(graph.objects(subject, rism.recordHistory))
+    assert any(graph.objects(history_node, dcterms.created))
+    assert any(graph.objects(history_node, dcterms.modified))
+
+    source_items_node = next(graph.objects(subject, rism.hasSourceItem))
+    source_items_url = next(graph.objects(source_items_node, schemaorg.url))
+    assert source_items_url.datatype == XSD.anyURI
+    source_items_count = next(graph.objects(source_items_node, rism.totalItems))
+    assert source_items_count.datatype == XSD.integer
+
+
+@pytest.mark.endpoint
+@pytest.mark.contract
+def test_publication_context_expands_semantic_sections(client):
+    _, ctx_resp = client.get("/api/v1/publication.json")
+    assert_json_contract(ctx_resp, status=200, required_keys=["@context"])
+    publication_context = ctx_resp.json["@context"]
+
+    publication_doc = {
+        "@context": publication_context,
+        "id": "https://rism.online/publications/50007683",
+        "type": "rism:Publication",
+        "typeLabel": {"en": ["Work catalog"]},
+        "label": {"none": ["KV 2024"]},
+        "creator": {
+            "role": {"label": {"en": ["Author"]}, "value": "aut", "id": "relators:aut"},
+            "relatedTo": {
+                "id": "https://rism.online/people/27690",
+                "label": {"none": ["Köchel, Ludwig von (1800-1877)"]},
+                "type": "rism:Person",
+            },
+        },
+        "composer": {
+            "id": "https://rism.online/people/115324",
+            "label": {"none": ["Mozart, Wolfgang Amadeus (1756-1791)"]},
+            "type": "rism:Person",
+        },
+        "properties": {
+            "shortTitle": {"none": ["KV 2024"]},
+            "publicationDates": {"none": ["2024"]},
+        },
+        "status": {
+            "label": {"en": ["Partially completed"]},
+            "value": "partial",
+        },
+        "recordHistory": {
+            "type": "rism:RecordHistory",
+            "created": {"label": {"en": ["Created on"]}, "value": "2024-04-02T14:59:15Z"},
+            "updated": {
+                "label": {"en": ["Last modification"]},
+                "value": "2025-06-20T10:13:55Z",
+            },
+        },
+        "summary": [
+            {"label": {"en": ["Short title"]}, "value": {"none": ["KV 2024"]}},
+            {"label": {"en": ["Date"]}, "value": {"none": ["2024"]}},
+        ],
+        "relationships": {
+            "sectionLabel": {"en": ["Relations"]},
+            "items": [
+                {
+                    "role": {
+                        "label": {"en": ["Composer cross-reference"]},
+                        "value": "att",
+                        "id": "relators:att",
+                    },
+                    "relatedTo": {
+                        "id": "https://rism.online/people/115324",
+                        "label": {"none": ["Mozart, Wolfgang Amadeus (1756-1791)"]},
+                        "type": "rism:Person",
+                    },
+                }
+            ],
+        },
+        "notes": {
+            "label": {"en": ["References and notes"]},
+            "type": "rism:NotesSection",
+            "notes": [
+                {
+                    "label": {"en": ["General note"]},
+                    "value": {"none": ["Vorwort in Deutsch und Englisch"]},
+                }
+            ],
+        },
+        "works": {
+            "sectionLabel": {"none": ["Works in this publication"]},
+            "url": "https://rism.online/publications/50007683/works",
+            "totalItems": 816,
+        },
+        "externalResources": {
+            "sectionLabel": {"en": ["Related resources"]},
+            "items": [
+                {
+                    "type": "rism:ExternalResource",
+                    "url": "https://example.org/resource",
+                    "label": {"none": ["Digitized"]},
+                    "resourceType": "rism:DigitizationLink",
+                }
+            ],
+        },
+    }
+
+    graph = Graph()
+    graph.parse(data=json.dumps(publication_doc), format="json-ld")
+
+    subject = URIRef("https://rism.online/publications/50007683")
+    rism = Namespace("https://rism.online/api/v1#")
+    dcterms = Namespace("http://purl.org/dc/terms/")
+    schemaorg = Namespace("https://schema.org/")
+
+    predicates = {str(pred) for pred in graph.predicates()}
+    assert len(predicates) > 10
+    assert (subject, RDF.type, rism.Publication) in graph
+    assert any(graph.objects(subject, dcterms.creator))
+    assert any(graph.objects(subject, rism.composer))
+    assert any(graph.objects(subject, rism.shortTitle))
+    assert any(graph.objects(subject, rism.publicationDates))
+    assert any(graph.objects(subject, rism.status))
+    assert any(graph.objects(subject, rism.recordHistory))
+    assert any(graph.objects(subject, rism.hasSummary))
+    assert any(graph.objects(subject, rism.hasRelationship))
+    assert any(graph.objects(subject, rism.notes))
+    assert any(graph.objects(subject, rism.works))
+    assert any(graph.objects(subject, rism.externalResources))
+
+    works_node = next(graph.objects(subject, rism.works))
+    works_url = next(graph.objects(works_node, schemaorg.url))
+    assert works_url.datatype == XSD.anyURI
+    works_count = next(graph.objects(works_node, rism.totalItems))
+    assert works_count.datatype == XSD.integer
 
 
 @pytest.mark.endpoint

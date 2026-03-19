@@ -346,26 +346,46 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     **__INCIPITS,
     **__PARTOF,
     **__CREATOR,
+    **__SUMMARY,
     **__DATES,
     **__PROPERTIES,
+    **__TYPE_LABEL,
+    **__SECTION_LABEL,
+    **__RECORD_HISTORY,
+    "sourceTypes": {
+        "@id": "rism:sourceTypes",
+        "@type": "@id",
+        "@context": {
+            "recordType": {"@id": "rism:recordType", "@type": "@id"},
+            "sourceType": {"@id": "rism:sourceType", "@type": "@id"},
+            "contentTypes": {"@id": "rism:contentTypes", "@container": "@set", "@type": "@id"},
+        },
+    },
     "materialGroups": {
         "@id": "rism:hasMaterialGroup",
         "@type": "@id",
         "@context": {
-            "items": "@set",
+            **__SECTION_LABEL,
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
             **__SUMMARY,
         },
     },
     "sourceItems": {
         "@id": "rism:hasSourceItem",
         "@type": "@id",
-        "@context": {"items": "@set"},
+        "@context": {
+            **__SECTION_LABEL,
+            "url": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
+            "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
+        },
     },
     "exemplars": {
         "@id": "rism:hasHolding",
         "@type": "@id",
         "@context": {
-            "items": "@set",
+            **__SECTION_LABEL,
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
             "heldBy": {"@id": "rism:hasHoldingInstitution"},
         },
     },
@@ -375,15 +395,37 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     "subjects": {
         "@id": "rism:hasSubject",
         "@type": "@id",
-        "@context": {"items": "@set"},
+        "@context": {
+            **__SECTION_LABEL,
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
+        },
     },
-    "properties": "@nest",
-    "keyMode": {
-        "@id": "rism:hasKeyMode",
+    "referencesNotes": {
+        "@id": "rism:referencesNotes",
+        "@type": "@id",
+        "@context": {
+            "notes": {"@id": "rism:hasNote", "@container": "@set"},
+            "performanceLocations": {"@id": "rism:performanceLocations", "@type": "@id"},
+            "liturgicalFestivals": {"@id": "rism:liturgicalFestivals", "@type": "@id"},
+        },
     },
-    "physicalDimensions": {
-        "@id": "rism:hasPhysicalDimensions",
-        "@container": "@list",
+    "externalResources": {
+        "@id": "rism:externalResources",
+        "@type": "@id",
+        "@context": {
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"},
+        },
+    },
+    "works": {
+        "@id": "rism:works",
+        "@type": "@id",
+        "@context": {
+            "workReference": {"@id": "rism:workReference", "@type": "@id"},
+            "works": {"@id": "rism:works", "@type": "@id"},
+            "workReferences": {"@id": "rism:workReferences", "@type": "@id"},
+            "worksCatalogs": {"@id": "rism:worksCatalogs", "@type": "@id"},
+        },
     },
 }
 
