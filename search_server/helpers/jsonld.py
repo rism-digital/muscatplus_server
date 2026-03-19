@@ -1,5 +1,6 @@
-from collections import namedtuple
 from typing import NamedTuple
+
+from search_server.helpers.identifiers import RISM_RELATIONSHIP_BASE
 
 # Create a type for Context Documents
 ContextDocument = dict
@@ -7,9 +8,11 @@ ContextDocument = dict
 __BASE_CONTEXT = {
     "@version": 1.1,
     "@protected": True,
+    "@vocab": "https://rism.online/api/v1#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rism": "https://rism.online/api/v1#",
+    "rismrel": f"{RISM_RELATIONSHIP_BASE}",
     # "rismdata": "https://rism.online/api/datatypes-v1#",
     "pmo": "http://performedmusicontology.org/ontology/",
     "relators": "http://id.loc.gov/vocabulary/relators/",
@@ -43,7 +46,6 @@ __RELATIONSHIPS = {
             "items": "@set",
             "role": {
                 "@id": "rism:hasRole",
-                "@type": "@vocab",
             },
             "qualifier": {
                 "@id": "rism:hasQualifier",
