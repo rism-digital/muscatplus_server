@@ -386,12 +386,14 @@ async def process_record_type(
                         if (now - last_log_time) >= 60 or (seen - last_count) >= 1000:
                             elapsed = now - start_time
                             per_min = seen / (elapsed / 60) if elapsed else 0
+                            pending = max(seen - (succeeded + failed), 0)
                             log.info(
-                                "[%s] Progress: seen=%d success=%d failed=%d retried=%d | %.1f docs/min | elapsed %.1f min",
+                                "[%s] Progress: seen=%d success=%d failed=%d pending=%d retried=%d | %.1f docs/min | elapsed %.1f min",
                                 record_type,
                                 seen,
                                 succeeded,
                                 failed,
+                                pending,
                                 retried,
                                 per_min,
                                 elapsed / 60,
