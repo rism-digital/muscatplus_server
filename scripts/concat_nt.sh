@@ -14,16 +14,23 @@ Arguments:
 
 Options:
   -f, --force  Overwrite output file if it already exists.
+  --no-progress
+               Disable progress display even when 'pv' is installed.
   -h, --help   Show this help message.
 EOF
 }
 
 force=0
+show_progress=1
 
 while (($#)); do
   case "$1" in
     -f|--force)
       force=1
+      shift
+      ;;
+    --no-progress)
+      show_progress=0
       shift
       ;;
     -h|--help)
@@ -82,7 +89,27 @@ if [[ ! -s "$list_file" ]]; then
   exit 1
 fi
 
-xargs -0 cat < "$list_file" | gzip -n -c > "$tmp_output"
+file_count=$(tr -cd '\0' < "$list_file" | wc -c | tr -d ' ')
+
+if stat -f %z "$output_dir" >/dev/null 2>&1; then
+  total_bytes=$(xargs -0 stat -f %z < "$list_file" | awk '{s+=$1} END{print s+0}')
+else
+  total_bytes=$(xargs -0 stat -c %s < "$list_file" | awk '{s+=$1} END{print s+0}')
+fi
+
+echo "Found $file_count .nt files (${total_bytes} bytes total)." >&2
+echo "Compressing to: $output_file" >&2
+
+if [[ $show_progress -eq 1 ]] && command -v pv >/dev/null 2>&1; then
+  xargs -0 cat < "$list_file" \
+    | pv -f -p -t -e -r -b -s "$total_bytes" \
+    | gzip -n -c > "$tmp_output"
+else
+  if [[ $show_progress -eq 1 ]]; then
+    echo "Note: 'pv' not found; running without live ETA/progress." >&2
+  fi
+  xargs -0 cat < "$list_file" | gzip -n -c > "$tmp_output"
+fi
 
 if [[ $force -eq 1 ]]; then
   rm -f "$output_file"
@@ -90,4 +117,10 @@ fi
 
 mv "$tmp_output" "$output_file"
 
-echo "Wrote: $output_file"
+if stat -f %z "$output_file" >/dev/null 2>&1; then
+  out_size=$(stat -f %z "$output_file")
+else
+  out_size=$(stat -c %s "$output_file")
+fi
+
+echo "Wrote: $output_file (${out_size} bytes)" >&2
