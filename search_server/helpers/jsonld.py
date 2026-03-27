@@ -45,16 +45,12 @@ __RELATIONSHIPS = {
         "@type": "@id",
         "@context": {
             "items": "@set",
-            "role": {
-                "@id": "rism:hasRole",
-            },
+            "role": {"@id": "rism:hasRole", "@type": "@vocab"},
             "qualifier": {
                 "@id": "rism:hasQualifier",
                 "@type": "@vocab",
             },
-            "relatedTo": {
-                "@id": "dcterms:relation",
-            },
+            "relatedTo": {"@id": "dcterms:relation", "@type": "@id"},
         },
     }
 }
@@ -85,10 +81,7 @@ __INCIPITS = {
                 },
             },
             "rendered": None,
-            "partOf": {
-                "@value": "null",
-                "propagate": "false",
-            },
+            "partOf": {"@id": "rism:isPartOf", "@type": "@id"},
         },
     }
 }
@@ -104,7 +97,7 @@ __PARTOF = {
                 "@type": "@vocab",
             },
             "workNumber": {"@id": "rism:hasWorkNumber"},
-            "relatedTo": {"@id": "rism:Publication"},
+            "relatedTo": {"@id": "dcterms:relation", "@type": "@id"},
         },
     },
 }
@@ -113,7 +106,10 @@ __CREATOR = {
     "creator": {
         "@id": "dcterms:creator",
         "@type": "@id",
-        "@context": {"relatedTo": "@nest"},
+        "@context": {
+            "role": {"@id": "rism:hasRole", "@type": "@vocab"},
+            "relatedTo": {"@id": "dcterms:relation", "@type": "@id"},
+        },
     }
 }
 
@@ -173,12 +169,8 @@ __RECORD_HISTORY = {
         "@id": "rism:recordHistory",
         "@type": "@id",
         "@context": {
-            "created": {
-                "@id": "dcterms:created",
-            },
-            "updated": {
-                "@id": "dcterms:modified",
-            },
+            "created": {"@id": "dcterms:created", "@type": "xsd:dateTime"},
+            "updated": {"@id": "dcterms:modified", "@type": "xsd:dateTime"},
             "value": {
                 "@id": "rdf:value",
                 "@type": "xsd:dateTime",
@@ -319,7 +311,19 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     "referencesNotes": {
         "@id": "rism:referencesNotes",
         "@type": "@id",
-        "@context": {"notes": {"@id": "rism:hasNote", "@container": "@set"}},
+        "@context": {
+            "notes": {"@id": "rism:hasNote", "@container": "@set"},
+            "performanceLocations": {
+                "@id": "rism:performanceLocations",
+                "@type": "@id",
+                "@container": "@set",
+            },
+            "liturgicalFestivals": {
+                "@id": "rism:liturgicalFestivals",
+                "@type": "@id",
+                "@container": "@set",
+            },
+        },
     },
     "externalAuthorities": {
         "@id": "rism:externalAuthorities",
@@ -330,7 +334,11 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
         "@id": "rism:externalResources",
         "@type": "@id",
         "@context": {
-            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"}
+            "externalRecords": {
+                "@id": "rism:externalRecord",
+                "@container": "@set",
+                "@type": "@id",
+            }
         },
     },
 }
@@ -409,12 +417,12 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@id": "rism:sourceTypes",
         "@type": "@id",
         "@context": {
-            "recordType": {"@id": "rism:recordType", "@type": "@id"},
-            "sourceType": {"@id": "rism:sourceType", "@type": "@id"},
+            "recordType": {"@id": "rism:recordType", "@type": "@vocab"},
+            "sourceType": {"@id": "rism:sourceType", "@type": "@vocab"},
             "contentTypes": {
                 "@id": "rism:contentTypes",
                 "@container": "@set",
-                "@type": "@id",
+                "@type": "@vocab",
             },
         },
     },
@@ -443,7 +451,15 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@context": {
             **__SECTION_LABEL,
             "items": {"@id": "rism:hasItem", "@container": "@set"},
-            "heldBy": {"@id": "rism:hasHoldingInstitution"},
+            "heldBy": {
+                "@id": "rism:hasHoldingInstitution",
+                "@type": "@id",
+                "@context": {
+                    "siglum": {"@id": "rism:hasSiglum"},
+                    "countryCode": {"@id": "rism:hasCountryCodes"},
+                    "city": {"@id": "rism:hasCityName"},
+                },
+            },
         },
     },
     "contents": {
