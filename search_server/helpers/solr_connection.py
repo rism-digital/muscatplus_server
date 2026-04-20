@@ -20,7 +20,7 @@ with open("configuration.yml") as yml:
 
 solr_url = config["solr"]["server"]
 
-SolrConnection: Solr = Solr(solr_url)
+SolrConnection: Solr = Solr(solr_url, expand_json_fields=True)
 
 logger.debug("Solr connection set to %s", solr_url)
 
