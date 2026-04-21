@@ -943,8 +943,8 @@ wheels = [
 
 [[package]]
 name = "small-asc"
-version = "0.33.0"
-source = { git = "https://github.com/rism-digital/small-asc.git?rev=main#f2291c648a46e5b95641c6316d906abed6f5811b" }
+version = "0.34.0"
+source = { git = "https://github.com/rism-digital/small-asc.git?rev=main#1933460b028705c939ef78cfb93beff32a904480" }
 dependencies = [
     { name = "orjson" },
     { name = "parsimonious" },
