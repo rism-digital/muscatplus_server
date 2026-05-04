@@ -34,9 +34,21 @@ def render_svg(
         "-",
         outpath,
     ]
-    proc = subprocess.Popen(  # noqa: S603
-        command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    # resvg path and font directory are loaded from trusted server configuration.
+    proc = subprocess.run(  # noqa: S603
+        command,
+        input=svginput.encode(),
+        capture_output=True,
+        check=False,
     )
-    stdout, stderr = proc.communicate(input=svginput.encode())
-    logger.info("%s, %s", stdout, stderr)
-    return proc.returncode >= 0
+    if proc.returncode != 0:
+        logger.error(
+            "resvg failed with exit code %s; stdout=%s stderr=%s",
+            proc.returncode,
+            proc.stdout,
+            proc.stderr,
+        )
+        return False
+
+    logger.debug("Rendered incipit to PNG")
+    return True

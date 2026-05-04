@@ -1,5 +1,6 @@
-from collections import namedtuple
 from typing import NamedTuple
+
+from search_server.helpers.identifiers import RISM_RELATIONSHIP_BASE
 
 # Create a type for Context Documents
 ContextDocument = dict
@@ -7,9 +8,11 @@ ContextDocument = dict
 __BASE_CONTEXT = {
     "@version": 1.1,
     "@protected": True,
+    "@vocab": "https://rism.online/api/v1#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rism": "https://rism.online/api/v1#",
+    "rismrel": f"{RISM_RELATIONSHIP_BASE}",
     # "rismdata": "https://rism.online/api/datatypes-v1#",
     "pmo": "http://performedmusicontology.org/ontology/",
     "relators": "http://id.loc.gov/vocabulary/relators/",
@@ -32,6 +35,7 @@ __BASE_CONTEXT = {
     "value": {
         "@id": "rdf:value",
         "@container": ["@language", "@set"],
+        "@protected": False,
     },
 }
 
@@ -41,17 +45,12 @@ __RELATIONSHIPS = {
         "@type": "@id",
         "@context": {
             "items": "@set",
-            "role": {
-                "@id": "rism:hasRole",
-                "@type": "@vocab",
-            },
+            "role": {"@id": "rism:hasRole", "@type": "@vocab"},
             "qualifier": {
                 "@id": "rism:hasQualifier",
                 "@type": "@vocab",
             },
-            "relatedTo": {
-                "@id": "dcterms:relation",
-            },
+            "relatedTo": {"@id": "dcterms:relation", "@type": "@id"},
         },
     }
 }
@@ -81,10 +80,8 @@ __INCIPITS = {
                     },
                 },
             },
-            "partOf": {
-                "@value": "null",
-                "propagate": "false",
-            },
+            "rendered": None,
+            "partOf": {"@id": "rism:isPartOf", "@type": "@id"},
         },
     }
 }
@@ -100,7 +97,7 @@ __PARTOF = {
                 "@type": "@vocab",
             },
             "workNumber": {"@id": "rism:hasWorkNumber"},
-            "relatedTo": {"@id": "rism:Publication"},
+            "relatedTo": {"@id": "dcterms:relation", "@type": "@id"},
         },
     },
 }
@@ -109,7 +106,10 @@ __CREATOR = {
     "creator": {
         "@id": "dcterms:creator",
         "@type": "@id",
-        "@context": {"relatedTo": "@nest"},
+        "@context": {
+            "role": {"@id": "rism:hasRole", "@type": "@vocab"},
+            "relatedTo": {"@id": "dcterms:relation", "@type": "@id"},
+        },
     }
 }
 
@@ -120,57 +120,7 @@ __SUMMARY = {
     }
 }
 
-RISM_JSONLD_DEFAULT_CONTEXT: ContextDocument = {**__BASE_CONTEXT}
-RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
-    **__BASE_CONTEXT,
-    **__RELATIONSHIPS,
-}
-
-RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
-    **__BASE_CONTEXT,
-    "properties": "@nest",
-    "siglum": {
-        "@id": "rism:hasSiglum",
-    },
-    "countryCodes": {
-        "@id": "rism:hasCountryCodes",
-        "@container": "@set",
-    },
-    "city": {
-        "@id": "rism:hasCityName",
-    },
-    "location": {
-        "@id": "rism:hasLocation",
-        "@type": "@id",
-        "@context": {
-            "coordinates": {"@id": "geojson:coordinates"},
-            "geometry": {"@id": "geojson:geometry", "@type": "@id"},
-            "lat": {"@id": "geo:lat", "@type": "xsd:float"},
-            "long": {"@id": "geo:long", "@type": "xsd:float"},
-        },
-    },
-}
-
-RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
-    **__BASE_CONTEXT,
-    **__INCIPITS,
-    **__PARTOF,
-    **__CREATOR,
-    **__SUMMARY,
-}
-
-RISM_JSONLD_PUBLICATION_CONTEXT: ContextDocument = {
-    **__BASE_CONTEXT,
-    **__SUMMARY,
-    **__RELATIONSHIPS,
-}
-
-RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
-    **__BASE_CONTEXT,
-    **__RELATIONSHIPS,
-    **__INCIPITS,
-    **__PARTOF,
-    **__CREATOR,
+__DATES = {
     "dates": {
         "@id": "rism:hasDates",
         "@context": {
@@ -187,25 +137,329 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
             },
         },
     },
+}
+
+__PROPERTIES = {
+    "properties": "@nest",
+    "keyMode": {
+        "@id": "rism:hasKeyMode",
+    },
+    "physicalDimensions": {
+        "@id": "rism:hasPhysicalDimensions",
+        "@container": "@list",
+    },
+}
+
+__TYPE_LABEL = {
+    "typeLabel": {
+        "@id": "rism:typeLabel",
+        "@container": ["@language", "@set"],
+    }
+}
+
+__SECTION_LABEL = {
+    "sectionLabel": {
+        "@id": "rism:sectionLabel",
+        "@container": ["@language", "@set"],
+    }
+}
+
+__RECORD_HISTORY = {
+    "recordHistory": {
+        "@id": "rism:recordHistory",
+        "@type": "@id",
+        "@context": {
+            "created": {"@id": "dcterms:created", "@type": "xsd:dateTime"},
+            "updated": {"@id": "dcterms:modified", "@type": "xsd:dateTime"},
+            "value": {
+                "@id": "rdf:value",
+                "@type": "xsd:dateTime",
+                "@protected": False,
+            },
+        },
+    }
+}
+
+RISM_JSONLD_DEFAULT_CONTEXT: ContextDocument = {**__BASE_CONTEXT}
+RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__RELATIONSHIPS,
+    **__TYPE_LABEL,
+    **__SECTION_LABEL,
+    **__RECORD_HISTORY,
+    "biographicalDetails": {
+        "@id": "rism:biographicalDetails",
+        "@type": "@id",
+        "@context": {"summary": {"@id": "rism:hasSummary", "@container": "@set"}},
+    },
+    "externalAuthorities": {
+        "@id": "rism:externalAuthorities",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+    },
+    "nameVariants": {
+        "@id": "rism:nameVariants",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+    },
+    "notes": {
+        "@id": "rism:notes",
+        "@type": "@id",
+        "@context": {"notes": {"@id": "rism:hasNote", "@container": "@set"}},
+    },
+    "works": {
+        "@id": "rism:works",
+        "@type": "@id",
+        "@context": {
+            "workReferences": {"@id": "rism:workReferences", "@type": "@id"},
+            "worksCatalogs": {"@id": "rism:worksCatalogs", "@type": "@id"},
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
+        },
+    },
+}
+
+RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__RELATIONSHIPS,
+    **__TYPE_LABEL,
+    **__SECTION_LABEL,
+    "organizationDetails": {
+        "@id": "rism:organizationDetails",
+        "@type": "@id",
+        "@context": {"summary": {"@id": "rism:hasSummary", "@container": "@set"}},
+    },
+    **__RECORD_HISTORY,
+    "sources": {
+        "@id": "rism:sources",
+        "@type": "@id",
+        "@context": {
+            "totalItems": {
+                "@id": "rism:totalItems",
+                "@type": "xsd:integer",
+            },
+        },
+    },
+    "externalAuthorities": {
+        "@id": "rism:externalAuthorities",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+    },
+    "notes": {
+        "@id": "rism:notes",
+        "@type": "@id",
+        "@context": {"notes": {"@id": "rism:hasNote", "@container": "@set"}},
+    },
+    "externalResources": {
+        "@id": "rism:externalResources",
+        "@type": "@id",
+        "@context": {
+            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"}
+        },
+    },
+    "properties": "@nest",
+    "siglum": {
+        "@id": "rism:hasSiglum",
+    },
+    "countryCodes": {
+        "@id": "rism:hasCountryCodes",
+        "@container": "@set",
+    },
+    "city": {
+        "@id": "rism:hasCityName",
+    },
+    "location": {
+        "@id": "rism:hasLocation",
+        "@type": "@id",
+        "@context": {
+            **__SECTION_LABEL,
+            "addresses": {"@id": "rism:addresses", "@container": "@set"},
+            "website": {"@id": "rism:website"},
+            "email": {"@id": "rism:emailAddress"},
+            "coordinates": {"@id": "geojson:coordinates", "@container": "@list"},
+            "geometry": {"@id": "geojson:geometry", "@type": "@id"},
+            "lat": {"@id": "geo:lat", "@type": "xsd:float"},
+            "long": {"@id": "geo:long", "@type": "xsd:float"},
+        },
+    },
+}
+
+RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__RELATIONSHIPS,
+    **__INCIPITS,
+    **__PARTOF,
+    **__CREATOR,
+    **__SUMMARY,
+    **__DATES,
+    **__PROPERTIES,
+    **__TYPE_LABEL,
+    **__SECTION_LABEL,
+    **__RECORD_HISTORY,
+    "sources": {
+        "@id": "rism:sources",
+        "@type": "@id",
+        "@context": {
+            **__SECTION_LABEL,
+            "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
+        },
+    },
+    "formOfWork": {
+        "@id": "rism:formOfWork",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+    },
+    "referencesNotes": {
+        "@id": "rism:referencesNotes",
+        "@type": "@id",
+        "@context": {
+            "notes": {"@id": "rism:hasNote", "@container": "@set"},
+            "performanceLocations": {
+                "@id": "rism:performanceLocations",
+                "@type": "@id",
+                "@container": "@set",
+            },
+            "liturgicalFestivals": {
+                "@id": "rism:liturgicalFestivals",
+                "@type": "@id",
+                "@container": "@set",
+            },
+        },
+    },
+    "externalAuthorities": {
+        "@id": "rism:externalAuthorities",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+    },
+    "externalResources": {
+        "@id": "rism:externalResources",
+        "@type": "@id",
+        "@context": {
+            "externalRecords": {
+                "@id": "rism:externalRecord",
+                "@container": "@set",
+                "@type": "@id",
+            }
+        },
+    },
+}
+
+RISM_JSONLD_PUBLICATION_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__SUMMARY,
+    **__RELATIONSHIPS,
+    **__CREATOR,
+    **__TYPE_LABEL,
+    **__SECTION_LABEL,
+    **__RECORD_HISTORY,
+    "composer": {
+        "@id": "rism:composer",
+        "@type": "@id",
+    },
+    "properties": {
+        "@id": "@nest",
+    },
+    "shortTitle": {
+        "@id": "rism:shortTitle",
+        "@container": ["@language", "@set"],
+    },
+    "publicationDates": {
+        "@id": "rism:publicationDates",
+        "@container": ["@language", "@set"],
+    },
+    "status": {
+        "@id": "rism:status",
+        "@type": "@id",
+        "@context": {
+            "label": {
+                "@id": "rdfs:label",
+                "@container": ["@language", "@set"],
+            },
+            "value": {"@id": "rdf:value"},
+        },
+    },
+    "notes": {
+        "@id": "rism:notes",
+        "@type": "@id",
+        "@context": {"notes": {"@id": "rism:hasNote", "@container": "@set"}},
+    },
+    "works": {
+        "@id": "rism:works",
+        "@type": "@id",
+        "@context": {
+            **__SECTION_LABEL,
+            "url": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
+            "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
+        },
+    },
+    "externalResources": {
+        "@id": "rism:externalResources",
+        "@type": "@id",
+        "@context": {
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"},
+        },
+    },
+}
+
+RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__RELATIONSHIPS,
+    **__INCIPITS,
+    **__PARTOF,
+    **__CREATOR,
+    **__SUMMARY,
+    **__DATES,
+    **__PROPERTIES,
+    **__TYPE_LABEL,
+    **__SECTION_LABEL,
+    **__RECORD_HISTORY,
+    "sourceTypes": {
+        "@id": "rism:sourceTypes",
+        "@type": "@id",
+        "@context": {
+            "recordType": {"@id": "rism:recordType", "@type": "@vocab"},
+            "sourceType": {"@id": "rism:sourceType", "@type": "@vocab"},
+            "contentTypes": {
+                "@id": "rism:contentTypes",
+                "@container": "@set",
+                "@type": "@vocab",
+            },
+        },
+    },
     "materialGroups": {
         "@id": "rism:hasMaterialGroup",
         "@type": "@id",
         "@context": {
-            "items": "@set",
+            **__SECTION_LABEL,
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
             **__SUMMARY,
         },
     },
     "sourceItems": {
         "@id": "rism:hasSourceItem",
         "@type": "@id",
-        "@context": {"items": "@set"},
+        "@context": {
+            **__SECTION_LABEL,
+            "url": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
+            "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
+        },
     },
     "exemplars": {
         "@id": "rism:hasHolding",
         "@type": "@id",
         "@context": {
-            "items": "@set",
-            "heldBy": {"@id": "rism:hasHoldingInstitution"},
+            **__SECTION_LABEL,
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "heldBy": {
+                "@id": "rism:hasHoldingInstitution",
+                "@type": "@id",
+                "@context": {
+                    "siglum": {"@id": "rism:hasSiglum"},
+                    "countryCode": {"@id": "rism:hasCountryCodes"},
+                    "city": {"@id": "rism:hasCityName"},
+                },
+            },
         },
     },
     "contents": {
@@ -214,15 +468,40 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     "subjects": {
         "@id": "rism:hasSubject",
         "@type": "@id",
-        "@context": {"items": "@set"},
+        "@context": {
+            **__SECTION_LABEL,
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
+        },
     },
-    "properties": "@nest",
-    "keyMode": {
-        "@id": "rism:hasKeyMode",
+    "referencesNotes": {
+        "@id": "rism:referencesNotes",
+        "@type": "@id",
+        "@context": {
+            "notes": {"@id": "rism:hasNote", "@container": "@set"},
+            "performanceLocations": {
+                "@id": "rism:performanceLocations",
+                "@type": "@id",
+            },
+            "liturgicalFestivals": {"@id": "rism:liturgicalFestivals", "@type": "@id"},
+        },
     },
-    "physicalDimensions": {
-        "@id": "rism:hasPhysicalDimensions",
-        "@container": "@list",
+    "externalResources": {
+        "@id": "rism:externalResources",
+        "@type": "@id",
+        "@context": {
+            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"},
+        },
+    },
+    "works": {
+        "@id": "rism:works",
+        "@type": "@id",
+        "@context": {
+            "workReference": {"@id": "rism:workReference", "@type": "@id"},
+            "works": {"@id": "rism:works", "@type": "@id"},
+            "workReferences": {"@id": "rism:workReferences", "@type": "@id"},
+            "worksCatalogs": {"@id": "rism:worksCatalogs", "@type": "@id"},
+        },
     },
 }
 

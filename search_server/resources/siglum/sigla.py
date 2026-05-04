@@ -95,8 +95,7 @@ async def handle_siglum_search_request(req) -> dict | None:
         "filter": fq,
         "offset": start_row,
         "limit": rows,
-        "sort": "score desc",
-        "params": {"boost": ["scale(field(total_sources_i), 1, 100)"]},
+        "sort": "score desc"
     }
 
     results: Results = await SolrConnection.search(

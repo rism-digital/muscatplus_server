@@ -26,6 +26,8 @@ class FullWork(BaseWork):
     form_of_work = ypres.MethodField(label="formOfWork")
     references_notes = ypres.MethodField(label="referencesNotes")
     relationships = ypres.MethodField()
+    properties = ypres.MethodField()
+    dates = ypres.MethodField()
 
     async def get_incipits(self, obj: SolrResult) -> dict | None:
         if not obj.get("has_incipits_b", False):
@@ -108,6 +110,27 @@ class FullWork(BaseWork):
             return None
 
         return refnotes
+
+    def get_dates(self, obj: SolrResult) -> dict | None:
+        if "date_ranges_im" not in obj:
+            return None
+
+        earliest, latest = obj.get("date_ranges_im", [None, None])
+
+        d: dict = {
+            "earliestDate": earliest,
+            "latestDate": latest,
+            "dateStatement": obj.get("date_statement_s", []),
+        }
+
+        return {k: v for k, v in d.items() if v}
+
+    def get_properties(self, obj: SolrResult) -> dict | None:
+        d: dict = {
+            "keyMode": obj.get("key_mode_s"),
+        }
+
+        return {k: v for k, v in d.items() if v} or None
 
 
 class FormOfWorkSection(ypres.DictSerializer):
