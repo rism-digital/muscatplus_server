@@ -3,6 +3,7 @@ import ypres
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.incipits.incipit import IncipitsSection
+from search_server.resources.inventories.inventory_item import InventoryItemSection
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.references_notes import ReferencesNotesSection
@@ -42,6 +43,7 @@ class FullSource(BaseSource):
     source_items = ypres.MethodField(label="sourceItems")
     external_resources = ypres.MethodField(label="externalResources")
     digital_objects = ypres.MethodField(label="digitalObjects")
+    inventory_items = ypres.MethodField(label="inventoryItems")
     dates = ypres.MethodField()
     works = ypres.MethodField()
     properties = ypres.MethodField()
@@ -160,6 +162,14 @@ class FullSource(BaseSource):
             context={
                 "request": self.context["request"],
             },
+        ).serialized
+
+    async def get_inventory_items(self, obj: SolrResult) -> dict | None:
+        if not obj.get("has_inventory_items_b", False):
+            return None
+
+        return await InventoryItemSection(
+            obj, context={"request": self.context["request"], "direct_request": False}
         ).serialized
 
     def get_dates(self, obj: SolrResult) -> dict | None:
