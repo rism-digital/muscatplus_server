@@ -7,6 +7,10 @@ from search_server.resources.incipits.handlers import (
     handle_mei_download,
     handle_png_download,
 )
+from search_server.resources.inventories.handlers import (
+    handle_inventory_item_request,
+    handle_inventory_items_list_request,
+)
 from search_server.resources.sources.contents_search import (
     handle_contents_probe_request,
     handle_contents_search_request,
@@ -206,12 +210,19 @@ async def holding_digital_object(req, source_id: str, holding_id: str, dobject_i
 
 @sources_blueprint.route("/<source_id:str>/inventory-items/")
 async def inventory_items(req, source_id: str):
-    return response.json({"message": "Not implemented"}, status=501)
+    return await handle_request(
+        req, handle_inventory_items_list_request, source_id=source_id
+    )
 
 
 @sources_blueprint.route("/<source_id:str>/inventory-items/<inventory_item_id:str>")
 async def inventory_item(req, source_id: str, inventory_item_id: str):
-    return response.json({"message": "Not implemented"}, status=501)
+    return await handle_request(
+        req,
+        handle_inventory_item_request,
+        source_id=source_id,
+        inventory_item_id=inventory_item_id,
+    )
 
 
 @sources_blueprint.route(
