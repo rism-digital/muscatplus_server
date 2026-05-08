@@ -1,19 +1,22 @@
 import ypres
 from small_asc.client import Results
 
+from search_server.helpers.display_translators import title_json_value_translator
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
+from search_server.resources.shared.contents import ContentsSection
 from search_server.resources.shared.relationship import (
     Relationship,
     RelationshipsSection,
 )
-from search_server.resources.shared.subjects import SubjectsSection
 
 
 class InventoryItemSection(ypres.AsyncDictSerializer):
     sid = ypres.MethodField(label="id")
+    stype = ypres.StaticField(value="rism:InventoryItemSection", label="type")
     section_label = ypres.MethodField(label="sectionLabel")
     items = ypres.MethodField()
+    total_items = ypres.IntField(attr="num_inventory_items_i", label="totalItems")
 
     def get_sid(self, obj: SolrResult) -> str:
         req = self.context["request"]
@@ -53,10 +56,12 @@ class InventoryItemSection(ypres.AsyncDictSerializer):
 
 class InventoryItem(ypres.AsyncDictSerializer):
     iid = ypres.MethodField(label="id")
-    label = ypres.MethodField()
+    slabel = ypres.MethodField(label="label")
+    stype = ypres.StaticField(value="rism:InventoryItem", label="type")
     creator = ypres.MethodField()
+    contents = ypres.MethodField()
     relationships = ypres.MethodField()
-    subjects = ypres.MethodField()
+    inventory = ypres.MethodField()
 
     def get_iid(self, obj: SolrResult) -> str:
         req = self.context["request"]
@@ -70,8 +75,14 @@ class InventoryItem(ypres.AsyncDictSerializer):
             inventory_item_id=inventory_item_id,
         )
 
-    def get_label(self, obj: SolrResult) -> dict:
-        return {"none": ["This is a title to be replaced."]}
+    def get_slabel(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        t: dict | None = title_json_value_translator(
+            obj.get("standard_titles_json", []), transl
+        )
+        return t or {"none": ["[No title]"]}
 
     def get_creator(self, obj: SolrResult) -> dict | None:
         if "creator_json" not in obj:
@@ -80,6 +91,13 @@ class InventoryItem(ypres.AsyncDictSerializer):
         return Relationship(
             obj["creator_json"][0], context={"request": self.context["request"]}
         ).serialized
+
+    def get_contents(self, obj: SolrResult) -> dict | None:
+        if not self.context.get("direct_request", False):
+            return None
+
+        req = self.context["request"]
+        return ContentsSection(obj, context={"request": req}).serialized
 
     def get_relationships(self, obj: SolrResult) -> dict | None:
         if not self.context.get("direct_request", False):
@@ -97,13 +115,18 @@ class InventoryItem(ypres.AsyncDictSerializer):
         req = self.context["request"]
         return RelationshipsSection(obj, context={"request": req}).serialized
 
-    def get_subjects(self, obj: SolrResult) -> dict | None:
-        if "subjects_json" not in obj:
+    def get_inventory(self, obj: SolrResult) -> dict | None:
+        if {
+            "inventory_source_s",
+            "inventory_section_s",
+            "inventory_number_s",
+        }.isdisjoint(obj.keys()):
             return None
 
-        return SubjectsSection(
-            obj,
-            context={
-                "request": self.context["request"],
-            },
-        ).serialized
+        d = {
+            "inventorySource": obj.get("inventory_source_s"),
+            "inventorySection": obj.get("inventory_section_s"),
+            "inventoryNumber": obj.get("inventory_number_s"),
+        }
+
+        return {k: v for k, v in d.items() if v}
