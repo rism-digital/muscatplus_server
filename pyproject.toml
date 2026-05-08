@@ -12,10 +12,10 @@ dependencies = [
     "orjson (>=3.9.15,<4.0.0)",
     "small-asc @ git+https://github.com/rism-digital/small-asc.git@main",
     "ypres @ git+https://github.com/rism-digital/ypres.git@main",
-    "sanic (>=24.0.0,<26.0.0)",
+    "sanic (>=25.0.0,<27.0.0)",
     "sentry-sdk[sanic] (>=2.19.0,<3.0.0)",
     "pyreqwest (>=0.11.2,<0.12.0)",
-    "verovio>=5.7.0",
+    "verovio>=6.1.0",
     "async-lru>=2.0.5",
     "cdifflib>=1.2.9",
 ]
@@ -30,12 +30,12 @@ dev = [
     "pytest-xdist>=3.8.0,<4",
     "sanic-testing>=24.6.0,<25",
     "aiofiles>=24.0.0,<25",
-    "mypy>=1.15.0,<2",
     "pip>=25.0.1",
     "types-pyyaml>=6.0.12.20250402",
     "pyright>=1.1.405",
     "aiosqlite>=0.21.0",
     "httpx<1",
+    "ty>=0.0.34",
 ]
 
 [tool.uv]
@@ -55,7 +55,7 @@ explicit = true
 [tool.uv.sources]
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = [
