@@ -5,6 +5,9 @@ from search_server.helpers.display_translators import title_json_value_translato
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.shared.contents import ContentsSection
+from search_server.resources.shared.external_resources import ExternalResourcesSection
+from search_server.resources.shared.record_history import get_record_history
+from search_server.resources.shared.references_notes import ReferencesNotesSection
 from search_server.resources.shared.relationship import (
     Relationship,
     RelationshipsSection,
@@ -60,8 +63,11 @@ class InventoryItem(ypres.AsyncDictSerializer):
     stype = ypres.StaticField(value="rism:InventoryItem", label="type")
     creator = ypres.MethodField()
     contents = ypres.MethodField()
+    references_notes = ypres.MethodField(label="referencesNotes")
     relationships = ypres.MethodField()
     inventory = ypres.MethodField()
+    external_resources = ypres.MethodField(label="externalResources")
+    record_history = ypres.MethodField(label="recordHistory")
 
     def get_iid(self, obj: SolrResult) -> str:
         req = self.context["request"]
@@ -99,6 +105,21 @@ class InventoryItem(ypres.AsyncDictSerializer):
         req = self.context["request"]
         return ContentsSection(obj, context={"request": req}).serialized
 
+    def get_references_notes(self, obj: SolrResult) -> dict | None:
+        req = self.context["request"]
+        refnotes: dict = ReferencesNotesSection(
+            obj, context={"request": req}
+        ).serialized
+
+        # if the only two keys in the references and notes section is 'label' and 'type'
+        # then there is no content and we can hide this section.
+        if {"notes", "performanceLocations", "liturgicalFestivals"}.isdisjoint(
+            refnotes.keys()
+        ):
+            return None
+
+        return refnotes
+
     def get_relationships(self, obj: SolrResult) -> dict | None:
         if not self.context.get("direct_request", False):
             return None
@@ -130,3 +151,22 @@ class InventoryItem(ypres.AsyncDictSerializer):
         }
 
         return {k: v for k, v in d.items() if v}
+
+    def get_external_resources(self, obj: SolrResult) -> dict | None:
+        if "external_resources_json" not in obj and not obj.get(
+            "has_external_record_b", False
+        ):
+            return None
+
+        return ExternalResourcesSection(
+            obj,
+            context={
+                "request": self.context["request"],
+            },
+        ).serialized
+
+    def get_record_history(self, obj: SolrResult) -> dict | None:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return get_record_history(obj, transl)
