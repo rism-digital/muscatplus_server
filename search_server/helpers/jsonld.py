@@ -427,7 +427,7 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         },
     },
     "materialGroups": {
-        "@id": "rism:hasMaterialGroup",
+        "@id": "rism:materialGroups",
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
@@ -436,7 +436,7 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         },
     },
     "sourceItems": {
-        "@id": "rism:hasSourceItem",
+        "@id": "rism:sourceItems",
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
@@ -446,11 +446,11 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         },
     },
     "exemplars": {
-        "@id": "rism:hasHolding",
+        "@id": "rism:holdings",
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "items": {"@id": "rism:holding", "@container": "@set"},
             "heldBy": {
                 "@id": "rism:hasHoldingInstitution",
                 "@type": "@id",
@@ -466,11 +466,11 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@id": "@nest",
     },
     "subjects": {
-        "@id": "rism:hasSubject",
+        "@id": "rism:subjects",
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "items": {"@id": "rism:subject", "@container": "@set"},
         },
     },
     "referencesNotes": {

@@ -222,11 +222,17 @@ class Holding(ypres.AsyncDictSerializer):
             req, "institutions.institution", institution_id=institution_id
         )
         institution_name: str = format_institution_label(obj)
+        siglum: str | None = obj.get("siglum_s")
+        country_code: str | None = obj.get("country_code_s")
+        city: str | None = obj.get("city_s")
 
         return {
             "id": obj_ident,
             "type": "rism:Institution",
             "label": {"none": [f"{institution_name}"]},
+            "siglum": siglum,
+            "countryCode": country_code,
+            "city": city,
         }
 
     def get_relationships(self, obj: SolrResult) -> dict | None:
