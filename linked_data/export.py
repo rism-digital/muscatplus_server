@@ -1,12 +1,11 @@
-import sys
-
 import argparse
 import asyncio
 import json
 import logging.config
 import sqlite3
+import sys
 import timeit
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -142,7 +141,7 @@ def _failure_payload(
         "attempts": attempts,
         "error_class": err.__class__.__name__,
         "error_message": str(err),
-        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
     }
 
 
@@ -169,7 +168,7 @@ async def run_serializer_from_doc(
             "attempts": 0,
             "error_class": "ValueError",
             "error_message": "Empty source document",
-            "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         }
         return {"ok": False, "attempts": 0, "failure": payload}
     doc_id = this_doc.get("id")
@@ -193,9 +192,7 @@ async def run_serializer_from_doc(
             return {
                 "ok": False,
                 "attempts": attempts,
-                "failure": _failure_payload(
-                    doc_id, doc_type, "serialize", attempts, e
-                ),
+                "failure": _failure_payload(doc_id, doc_type, "serialize", attempts, e),
             }
 
         try:
@@ -204,7 +201,9 @@ async def run_serializer_from_doc(
             if not ntrips:
                 raise ValueError("No N-Triples output")
         except Exception as e:
-            log.exception("N-Triples conversion failed for %s on attempt %s", doc_id, attempts)
+            log.exception(
+                "N-Triples conversion failed for %s on attempt %s", doc_id, attempts
+            )
             if _is_transient_error("convert", e) and attempts <= max_retries:
                 await asyncio.sleep(backoff_seconds * (2 ** (attempts - 1)))
                 continue
@@ -221,7 +220,9 @@ async def run_serializer_from_doc(
                     (doc_id, doc_type, ntrips),
                 )
         except Exception as e:
-            log.exception("Database write failed for %s on attempt %s", doc_id, attempts)
+            log.exception(
+                "Database write failed for %s on attempt %s", doc_id, attempts
+            )
             if _is_transient_error("db", e) and attempts <= max_retries:
                 await asyncio.sleep(backoff_seconds * (2 ** (attempts - 1)))
                 continue
@@ -239,6 +240,69 @@ async def run_serializer_from_doc(
         "attempts": attempts,
         "failure": _failure_payload(doc_id, doc_type, "unknown", attempts, unexpected),
     }
+
+
+JSON_FIELD_SUFFIX = "_json"
+JSON_MULTI_FIELD_SUFFIX = "_jsonm"
+JSON_FIELD_SUFFIXES = (JSON_FIELD_SUFFIX, JSON_MULTI_FIELD_SUFFIX)
+
+
+def _expand_json_fields(doc: dict[str, Any]) -> dict[str, Any]:
+    expanded_fields: dict[str, Any] | None = None
+
+    for key, value in doc.items():
+        if not key.endswith(JSON_FIELD_SUFFIXES):
+            continue
+
+        val = _parse_json_field(key, value)
+        if val is None:
+            continue
+
+        if expanded_fields is None:
+            expanded_fields = {}
+        expanded_fields[key] = val
+
+    if expanded_fields is None:
+        return doc
+
+    return {**doc, **expanded_fields}
+
+
+def _parse_json_field(field_name: str, field_value: Any) -> Any | None:
+    if field_value is None:
+        return None
+
+    if field_name.endswith(JSON_MULTI_FIELD_SUFFIX):
+        return _parse_json_multi_field(field_name, field_value)
+
+    if not isinstance(field_value, str | bytes | bytearray):
+        log.error("Field '%s' must be a JSON string before expansion.", field_name)
+        return None
+
+    try:
+        return orjson.loads(field_value)
+    except orjson.JSONDecodeError:
+        log.error("Field '%s' contains invalid JSON.", field_name)
+        return None
+
+
+def _parse_json_multi_field(field_name: str, field_value: Any) -> list[Any] | None:
+    if not isinstance(field_value, list):
+        log.error("Field '%s' must be a list before expansion.", field_name)
+        return None
+
+    expanded_values: list[Any] = []
+    for item in field_value:
+        if not isinstance(item, str | bytes | bytearray):
+            log.error("Field '%s' contains a non-JSON string value.", field_name)
+            return None
+        try:
+            expanded_values.append(orjson.loads(item))
+        except orjson.JSONDecodeError:
+            log.error("Field '%s' contains invalid JSON.", field_name)
+            return None
+
+    return expanded_values
 
 
 # -------------------------------------------------------------------
@@ -266,7 +330,11 @@ async def stream_solr_docs_for_type(
     log.info("Solr query received %s results", res.hits)
     async for sdoc in res:
         log.debug("Processing solr document")
-        yield sdoc, res  # res carries .hits if you want to log totals at the end
+        expanded_doc = _expand_json_fields(sdoc)
+        yield (
+            expanded_doc,
+            res,
+        )  # res carries .hits if you want to log totals at the end
 
 
 # -------------------------------------------------------------------
@@ -516,8 +584,8 @@ def main(args: argparse.Namespace) -> bool:
         for rec_type in types_to_serialize:
             log.info("Running serialization for %s", rec_type)
 
-            db_file = Path(args.output, f"{rec_type}.db")
-            db_name = str(db_file)
+            db_file_path = Path(args.output, f"{rec_type}.db")
+            db_name = str(db_file_path)
 
             start_serialize = timeit.default_timer()
             stats = await process_record_type(
