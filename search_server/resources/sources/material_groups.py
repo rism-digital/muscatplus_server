@@ -34,6 +34,7 @@ class MaterialGroupsSection(ypres.DictSerializer):
 
 class MaterialGroup(ypres.DictSerializer):
     sid = ypres.MethodField(label="id")
+    stype = ypres.StaticField(value="rism:MaterialGroup", label="type")
     slabel = ypres.MethodField(label="label")
     summary = ypres.MethodField()
     notes = ypres.MethodField()

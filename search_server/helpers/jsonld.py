@@ -195,12 +195,14 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
     "externalAuthorities": {
         "@id": "rism:externalAuthorities",
         "@type": "@id",
-        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+        "@context": {
+            "items": {"@id": "rism:hasExternalAuthority", "@container": "@set"}
+        },
     },
     "nameVariants": {
         "@id": "rism:nameVariants",
         "@type": "@id",
-        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+        "@context": {"items": {"@id": "rism:hasNameVariant", "@container": "@set"}},
     },
     "notes": {
         "@id": "rism:notes",
@@ -211,9 +213,50 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
         "@id": "rism:works",
         "@type": "@id",
         "@context": {
-            "workReferences": {"@id": "rism:workReferences", "@type": "@id"},
-            "worksCatalogs": {"@id": "rism:worksCatalogs", "@type": "@id"},
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "workReferences": {
+                "@id": "rism:workReferences",
+                "@type": "@id",
+                "@context": {
+                    "items": {"@id": "rism:hasWorkNode", "@container": "@set"}
+                },
+            },
+            "worksCatalogs": {
+                "@id": "rism:worksCatalogs",
+                "@type": "@id",
+                "@context": {
+                    "items": {
+                        "@id": "rism:hasWorkCatalogReference",
+                        "@container": "@set",
+                    }
+                },
+            },
+            "works": {
+                "@id": "rism:works",
+                "@type": "@id",
+                "@context": {
+                    "items": {"@id": "rism:hasWork", "@container": "@set"}
+                },
+            },
+            "items": {"@id": "rism:hasWork", "@container": "@set"},
+        },
+    },
+    "externalResources": {
+        "@id": "rism:externalResources",
+        "@type": "@id",
+        "@context": {
+            "items": {"@id": "rism:hasExternalResource", "@container": "@set"},
+            "externalRecords": {
+                "@id": "rism:hasExternalRecord",
+                "@container": "@set",
+                "@type": "@id",
+            },
+        },
+    },
+    "digitalObjects": {
+        "@id": "rism:digitalObjects",
+        "@type": "@id",
+        "@context": {
+            "items": {"@id": "rism:hasDigitalObject", "@container": "@set"}
         },
     },
 }
@@ -242,7 +285,9 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     "externalAuthorities": {
         "@id": "rism:externalAuthorities",
         "@type": "@id",
-        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+        "@context": {
+            "items": {"@id": "rism:hasExternalAuthority", "@container": "@set"}
+        },
     },
     "notes": {
         "@id": "rism:notes",
@@ -253,7 +298,19 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
         "@id": "rism:externalResources",
         "@type": "@id",
         "@context": {
-            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"}
+            "items": {"@id": "rism:hasExternalResource", "@container": "@set"},
+            "externalRecords": {
+                "@id": "rism:hasExternalRecord",
+                "@container": "@set",
+                "@type": "@id",
+            },
+        },
+    },
+    "digitalObjects": {
+        "@id": "rism:digitalObjects",
+        "@type": "@id",
+        "@context": {
+            "items": {"@id": "rism:hasDigitalObject", "@container": "@set"}
         },
     },
     "properties": "@nest",
@@ -306,7 +363,7 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     "formOfWork": {
         "@id": "rism:formOfWork",
         "@type": "@id",
-        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+        "@context": {"items": {"@id": "rism:hasFormOfWork", "@container": "@set"}},
     },
     "referencesNotes": {
         "@id": "rism:referencesNotes",
@@ -328,14 +385,17 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     "externalAuthorities": {
         "@id": "rism:externalAuthorities",
         "@type": "@id",
-        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+        "@context": {
+            "items": {"@id": "rism:hasExternalAuthority", "@container": "@set"}
+        },
     },
     "externalResources": {
         "@id": "rism:externalResources",
         "@type": "@id",
         "@context": {
+            "items": {"@id": "rism:hasExternalResource", "@container": "@set"},
             "externalRecords": {
-                "@id": "rism:externalRecord",
+                "@id": "rism:hasExternalRecord",
                 "@container": "@set",
                 "@type": "@id",
             }
@@ -395,8 +455,12 @@ RISM_JSONLD_PUBLICATION_CONTEXT: ContextDocument = {
         "@id": "rism:externalResources",
         "@type": "@id",
         "@context": {
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
-            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"},
+            "items": {"@id": "rism:hasExternalResource", "@container": "@set"},
+            "externalRecords": {
+                "@id": "rism:hasExternalRecord",
+                "@container": "@set",
+                "@type": "@id",
+            },
         },
     },
 }
@@ -431,7 +495,7 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "items": {"@id": "rism:hasMaterialGroup", "@container": "@set"},
             **__SUMMARY,
         },
     },
@@ -442,7 +506,7 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
             **__SECTION_LABEL,
             "url": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
             "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "items": {"@id": "rism:hasSourceItem", "@container": "@set"},
         },
     },
     "exemplars": {
@@ -450,7 +514,7 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
-            "items": {"@id": "rism:holding", "@container": "@set"},
+            "items": {"@id": "rism:hasHolding", "@container": "@set"},
             "heldBy": {
                 "@id": "rism:hasHoldingInstitution",
                 "@type": "@id",
@@ -470,7 +534,7 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
-            "items": {"@id": "rism:subject", "@container": "@set"},
+            "items": {"@id": "rism:hasSubject", "@container": "@set"},
         },
     },
     "referencesNotes": {
@@ -489,8 +553,12 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@id": "rism:externalResources",
         "@type": "@id",
         "@context": {
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
-            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"},
+            "items": {"@id": "rism:hasExternalResource", "@container": "@set"},
+            "externalRecords": {
+                "@id": "rism:hasExternalRecord",
+                "@container": "@set",
+                "@type": "@id",
+            },
         },
     },
     "works": {
@@ -498,9 +566,45 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@type": "@id",
         "@context": {
             "workReference": {"@id": "rism:workReference", "@type": "@id"},
-            "works": {"@id": "rism:works", "@type": "@id"},
-            "workReferences": {"@id": "rism:workReferences", "@type": "@id"},
-            "worksCatalogs": {"@id": "rism:worksCatalogs", "@type": "@id"},
+            "works": {
+                "@id": "rism:works",
+                "@type": "@id",
+                "@context": {
+                    "items": {"@id": "rism:hasWork", "@container": "@set"}
+                },
+            },
+            "workReferences": {
+                "@id": "rism:workReferences",
+                "@type": "@id",
+                "@context": {
+                    "items": {"@id": "rism:hasWorkNode", "@container": "@set"}
+                },
+            },
+            "worksCatalogs": {
+                "@id": "rism:worksCatalogs",
+                "@type": "@id",
+                "@context": {
+                    "items": {
+                        "@id": "rism:hasWorkCatalogReference",
+                        "@container": "@set",
+                    }
+                },
+            },
+        },
+    },
+    "digitalObjects": {
+        "@id": "rism:digitalObjects",
+        "@type": "@id",
+        "@context": {
+            "items": {"@id": "rism:hasDigitalObject", "@container": "@set"}
+        },
+    },
+    "inventoryItems": {
+        "@id": "rism:inventoryItems",
+        "@type": "@id",
+        "@context": {
+            "items": {"@id": "rism:hasInventoryItem", "@container": "@set"},
+            "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
         },
     },
 }
