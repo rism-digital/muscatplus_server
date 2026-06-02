@@ -30,6 +30,37 @@ def test_api_context_endpoints(client, path: str):
 
 @pytest.mark.endpoint
 @pytest.mark.contract
+def test_api_contexts_do_not_use_generic_has_item_predicates(client):
+    def iter_context_values(value):
+        if isinstance(value, dict):
+            yield value
+            for child in value.values():
+                yield from iter_context_values(child)
+        elif isinstance(value, list):
+            for child in value:
+                yield from iter_context_values(child)
+
+    for path in [
+        "/api/v1/person.json",
+        "/api/v1/institution.json",
+        "/api/v1/work.json",
+        "/api/v1/publication.json",
+        "/api/v1/source.json",
+    ]:
+        _, resp = client.get(path)
+        assert_json_contract(resp, status=200, required_keys=["@context"])
+
+        ids = {
+            value.get("@id")
+            for value in iter_context_values(resp.json["@context"])
+            if isinstance(value, dict)
+        }
+        assert "rism:hasItem" not in ids
+        assert "rism:MaterialGroup" not in ids
+
+
+@pytest.mark.endpoint
+@pytest.mark.contract
 def test_person_context_expands_semantic_sections(client):
     _, ctx_resp = client.get("/api/v1/person.json")
     assert_json_contract(ctx_resp, status=200, required_keys=["@context"])
@@ -114,6 +145,10 @@ def test_person_context_expands_semantic_sections(client):
     assert relationship_nodes
     assert any(graph.objects(relationship_nodes[0], rism.hasRole))
     assert any(graph.objects(relationship_nodes[0], dcterms.relation))
+
+    works_node = next(graph.objects(subject, rism.works))
+    work_references_node = next(graph.objects(works_node, rism.workReferences))
+    assert any(graph.objects(work_references_node, rism.hasWorkNode))
 
 
 @pytest.mark.endpoint
@@ -319,6 +354,9 @@ def test_work_context_expands_semantic_sections(client):
     assert any(graph.objects(subject, rism.hasSummary))
     assert not any(graph.subject_objects(rism.rendered))
 
+    form_of_work_node = next(graph.objects(subject, rism.formOfWork))
+    assert any(graph.objects(form_of_work_node, rism.hasFormOfWork))
+
 
 @pytest.mark.endpoint
 @pytest.mark.contract
@@ -374,6 +412,7 @@ def test_source_context_expands_semantic_sections(client):
             "items": [
                 {
                     "id": "https://rism.online/sources/117580/material-groups/01",
+                    "type": "rism:MaterialGroup",
                     "label": {"none": ["Group 01"]},
                     "summary": [{"label": {"en": ["Date"]}, "value": {"none": ["1700 (1700c)"]}}],
                 }
@@ -485,15 +524,28 @@ def test_source_context_expands_semantic_sections(client):
     assert (subject, RDF.type, rism.Source) in graph
     assert any(graph.objects(subject, rism.recordHistory))
     assert any(graph.objects(subject, rism.sourceTypes))
-    assert any(graph.objects(subject, rism.hasMaterialGroup))
+    assert any(graph.objects(subject, rism.materialGroups))
     assert any(graph.objects(subject, rism.hasRelationship))
     assert any(graph.objects(subject, rism.referencesNotes))
-    assert any(graph.objects(subject, rism.hasHolding))
-    assert any(graph.objects(subject, rism.hasSourceItem))
+    assert any(graph.objects(subject, rism.holdings))
+    assert any(graph.objects(subject, rism.sourceItems))
     assert any(graph.objects(subject, rism.externalResources))
     assert any(graph.objects(subject, rism.hasSummary))
-    assert any(graph.objects(subject, rism.hasSubject))
+    assert any(graph.objects(subject, rism.subjects))
     assert not any(graph.objects(subject, rism.contents))
+
+    material_groups_node = next(graph.objects(subject, rism.materialGroups))
+    material_group_node = next(graph.objects(material_groups_node, rism.hasMaterialGroup))
+    assert (material_group_node, RDF.type, rism.MaterialGroup) in graph
+
+    holdings_node = next(graph.objects(subject, rism.holdings))
+    assert any(graph.objects(holdings_node, rism.hasHolding))
+
+    subjects_node = next(graph.objects(subject, rism.subjects))
+    assert any(graph.objects(subjects_node, rism.hasSubject))
+
+    external_resources_node = next(graph.objects(subject, rism.externalResources))
+    assert any(graph.objects(external_resources_node, rism.hasExternalResource))
 
     history_node = next(graph.objects(subject, rism.recordHistory))
     created_node = next(graph.objects(history_node, dcterms.created))
@@ -503,7 +555,8 @@ def test_source_context_expands_semantic_sections(client):
     assert created_value.datatype == XSD.dateTime
     assert updated_value.datatype == XSD.dateTime
 
-    source_items_node = next(graph.objects(subject, rism.hasSourceItem))
+    source_items_node = next(graph.objects(subject, rism.sourceItems))
+    assert any(graph.objects(source_items_node, rism.hasSourceItem))
     source_items_url = next(graph.objects(source_items_node, schemaorg.url))
     assert source_items_url.datatype == XSD.anyURI
     source_items_count = next(graph.objects(source_items_node, rism.totalItems))
@@ -623,6 +676,9 @@ def test_publication_context_expands_semantic_sections(client):
     assert any(graph.objects(subject, rism.notes))
     assert any(graph.objects(subject, rism.works))
     assert any(graph.objects(subject, rism.externalResources))
+
+    external_resources_node = next(graph.objects(subject, rism.externalResources))
+    assert any(graph.objects(external_resources_node, rism.hasExternalResource))
 
     works_node = next(graph.objects(subject, rism.works))
     works_url = next(graph.objects(works_node, schemaorg.url))
