@@ -2,6 +2,7 @@ import ypres
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
 from search_server.helpers.display_translators import (
+    rism_series_translator,
     secondary_literature_json_value_translator,
     url_detecting_translator,
 )
@@ -54,6 +55,10 @@ class ReferencesNotesSection(ypres.DictSerializer):
             "bibliographic_references_json": (
                 "records.bibliographic_reference",
                 secondary_literature_json_value_translator,
+            ),
+            "rism_series_json": (
+                "general.rism_series_a_b_references",
+                rism_series_translator,
             ),
             "source_data_found_json": (
                 "records.source_data_found",

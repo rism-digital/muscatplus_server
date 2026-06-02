@@ -885,3 +885,13 @@ def url_detecting_translator(values: list, translations: dict) -> dict | None:
 
 def rism_source_id_translator(value: str, translations: dict) -> dict:
     return {"none": [f"sources/{value}"]}
+
+
+def rism_series_translator(values: list, translations: dict) -> dict:
+    rism_series: list = []
+    for series in values:
+        ref: str = series.get("reference", "")
+        series_id: str = series.get("series_id", "")
+        rism_series.append(f"{ref}; {series_id}")
+
+    return {"none": rism_series}
