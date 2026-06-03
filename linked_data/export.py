@@ -13,7 +13,6 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import aiosqlite
 import orjson
-import rdflib
 import yaml
 from pyreqwest.client import Client, ClientBuilder
 from sanic import Request
@@ -30,6 +29,7 @@ from search_server.helpers.jsonld import (
     RISM_JSONLD_WORK_CONTEXT,
 )
 from search_server.helpers.languages import filter_languages, load_translations
+from search_server.helpers.linked_data import to_ntriples
 from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
 from search_server.resources.publications.publication import Publication
@@ -102,16 +102,6 @@ CONTEXTS: dict[str, Any] = {
 }
 
 RECORD_TYPES: list[str] = list(serializer_map.keys())
-
-
-def to_ntriples(data: dict[str, Any]) -> str:
-    json_serialized: str = orjson.dumps(data).decode("utf-8")
-    graph_object: rdflib.Graph = rdflib.Graph().parse(
-        data=json_serialized, format="application/ld+json"
-    )
-    ntrips = graph_object.serialize(format="nt")
-    return ntrips.decode("utf-8") if isinstance(ntrips, (bytes, bytearray)) else ntrips
-
 
 def _is_transient_error(stage: str, err: Exception) -> bool:
     if isinstance(err, (asyncio.TimeoutError, TimeoutError, ConnectionError)):
@@ -309,7 +299,11 @@ def _parse_json_multi_field(field_name: str, field_value: Any) -> list[Any] | No
 # Solr streaming: single paginated search per record type
 # -------------------------------------------------------------------
 async def stream_solr_docs_for_type(
-    solr_conn: Solr, record_type: str, country_code: str | None, page_size: int
+    solr_conn: Solr,
+    record_type: str,
+    country_code: str | None,
+    page_size: int,
+    limit: int | None = None,
 ):
     """
     Async generator that yields full documents for a given record type using a Solr cursor.
@@ -328,9 +322,13 @@ async def stream_solr_docs_for_type(
     }
     res = await solr_conn.search(params, cursor=True)
     log.info("Solr query received %s results", res.hits)
+    yielded = 0
     async for sdoc in res:
+        if limit is not None and yielded >= limit:
+            break
         log.debug("Processing solr document")
         expanded_doc = _expand_json_fields(sdoc)
+        yielded += 1
         yield (
             expanded_doc,
             res,
@@ -347,6 +345,7 @@ async def process_record_type(
     dbname: str,
     concurrency: int,
     page_size: int,
+    limit: int | None,
     output_path: Path,
     max_retries: int,
     retry_backoff_ms: int,
@@ -444,7 +443,7 @@ async def process_record_type(
             with open(report_path, "w", encoding="utf-8") as report_file:
                 try:
                     async for doc, res in stream_solr_docs_for_type(
-                        solr_conn, record_type, country_code, page_size
+                        solr_conn, record_type, country_code, page_size, limit
                     ):
                         res_last = res
                         seen += 1
@@ -595,6 +594,7 @@ def main(args: argparse.Namespace) -> bool:
                 dbname=db_name,
                 concurrency=args.concurrency,
                 page_size=args.page_size,
+                limit=args.limit,
                 output_path=output_path,
                 max_retries=args.max_retries,
                 retry_backoff_ms=args.retry_backoff_ms,
@@ -661,6 +661,11 @@ if __name__ == "__main__":
         type=int,
         default=500,
         help="Solr cursor page size (number of docs per page).",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        help="Stop after this many Solr documents per record type.",
     )
     parser.add_argument(
         "--max-retries",

@@ -12,8 +12,6 @@ import timeit
 from datetime import timedelta
 from pathlib import Path
 
-import orjson
-import rdflib
 from pyreqwest.client import ClientBuilder
 
 try:
@@ -38,6 +36,7 @@ from search_server.helpers.jsonld import (
     RISM_JSONLD_WORK_CONTEXT,
 )
 from search_server.helpers.languages import filter_languages, load_translations
+from search_server.helpers.linked_data import to_ntriples
 from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
 from search_server.resources.sources.full_source import FullSource
@@ -86,14 +85,6 @@ serializer_map: dict = {
     "institution": Institution,
     "work": FullWork,
 }
-
-
-def to_ntriples(data: dict) -> str:
-    json_serialized: str = orjson.dumps(data).decode("utf-8")
-    graph_object: rdflib.Graph = rdflib.Graph().parse(
-        data=json_serialized, format="application/ld+json"
-    )
-    return graph_object.serialize(format="nt")
 
 
 async def create_id_groups(

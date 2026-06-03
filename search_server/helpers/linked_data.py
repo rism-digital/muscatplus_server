@@ -1,33 +1,57 @@
+from typing import Any
+
 import orjson
-import rdflib
+from pyoxigraph import RdfFormat, parse, serialize
 from sanic.log import logger
 
+TURTLE_PREFIXES = {
+    "dcterms": "http://purl.org/dc/terms/",
+    "geo": "http://www.w3.org/2003/01/geo/wgs84_pos#",
+    "geojson": "https://purl.org/geojson/vocab#",
+    "pmo": "http://performedmusicontology.org/ontology/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdau": "http://rdaregistry.info/Elements/u/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "relators": "http://id.loc.gov/vocabulary/relators/",
+    "rism": "https://rism.online/api/v1#",
+    "schemaorg": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+}
 
-def _to_graph_object(data: dict) -> rdflib.Graph:
+
+def _parse_jsonld(data: dict[str, Any]):
     """
-    Takes a serialized JSON-LD object and runs it through rdflib to produce an abstract graph. This can
-    then be sent to different format serializers for returning the data via a request. Applies the namespaces
-    defined in the JSON-LD context to the graph so that it can properly namespace all the prefixed strings.
+    Parse JSON-LD into deduplicated RDF quads.
 
-    :param data: A dictionary coming from one of the JSON-LD serializers
-    :return: An rdflib.Graph object.
+    PyOxigraph streams parsed quads and may surface duplicate quads from repeated
+    JSON-LD values. Returning a set keeps output graph semantics stable across
+    Turtle, JSON-LD, and N-Triples serialization.
     """
-    json_serialized: str = orjson.dumps(data).decode("utf8")
-    return rdflib.Graph().parse(data=json_serialized, format="application/ld+json")
+    json_serialized = orjson.dumps(data)
+    return set(
+        parse(
+            input=json_serialized,
+            format=RdfFormat.JSON_LD,
+            without_named_graphs=True,
+            lenient=True,
+        )
+    )
 
 
-def to_turtle(data: dict) -> str:
-    logger.debug("Creating graph from data")
-    graph_object: rdflib.Graph = _to_graph_object(data)
-    logger.debug("Created graph object")
-    return graph_object.serialize(format="turtle")
+def _serialize(data: dict[str, Any], rdf_format: RdfFormat) -> str:
+    logger.debug("Creating RDF output from JSON-LD")
+    prefixes = TURTLE_PREFIXES if rdf_format == RdfFormat.TURTLE else None
+    output = serialize(_parse_jsonld(data), format=rdf_format, prefixes=prefixes)
+    return output.decode("utf-8") if isinstance(output, bytes | bytearray) else output
 
 
-def to_expanded_jsonld(data: dict) -> str:
-    graph_object: rdflib.Graph = _to_graph_object(data)
-    return graph_object.serialize(format="json-ld")
+def to_turtle(data: dict[str, Any]) -> str:
+    return _serialize(data, RdfFormat.TURTLE)
 
 
-def to_ntriples(data: dict) -> str:
-    graph_object: rdflib.Graph = _to_graph_object(data)
-    return graph_object.serialize(format="nt")
+def to_expanded_jsonld(data: dict[str, Any]) -> str:
+    return _serialize(data, RdfFormat.JSON_LD)
+
+
+def to_ntriples(data: dict[str, Any]) -> str:
+    return _serialize(data, RdfFormat.N_TRIPLES)

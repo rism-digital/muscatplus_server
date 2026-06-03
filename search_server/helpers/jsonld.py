@@ -41,10 +41,10 @@ __BASE_CONTEXT = {
 
 __RELATIONSHIPS = {
     "relationships": {
-        "@id": "rism:hasRelationship",
+        "@id": "rism:relationships",
         "@type": "@id",
         "@context": {
-            "items": "@set",
+            "items": {"@id": "rism:hasRelationship", "@container": "@set"},
             "role": {"@id": "rism:hasRole", "@type": "@vocab"},
             "qualifier": {
                 "@id": "rism:hasQualifier",
@@ -57,10 +57,10 @@ __RELATIONSHIPS = {
 
 __INCIPITS = {
     "incipits": {
-        "@id": "rism:hasIncipit",
+        "@id": "rism:incipits",
         "@type": "@id",
         "@context": {
-            "items": "@set",
+            "items": {"@id": "rism:hasIncipit", "@container": "@set"},
             "properties": "@nest",
             "clef": {"@id": "rism:hasPAEClef"},
             "keysig": {"@id": "rism:hasPAEKeysig"},
@@ -88,10 +88,10 @@ __INCIPITS = {
 
 __PARTOF = {
     "partOf": {
-        "@id": "rism:isPartOf",
+        "@id": "rism:partOf",
         "@type": "@id",
         "@context": {
-            "items": "@set",
+            "items": {"@id": "rism:isPartOf", "@container": "@set"},
             "relationshipType": {
                 "@id": "rism:workCatalogRelationship",
                 "@type": "@vocab",

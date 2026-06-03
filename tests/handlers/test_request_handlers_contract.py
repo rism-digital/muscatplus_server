@@ -1,3 +1,5 @@
+# ruff: noqa: S101
+
 from __future__ import annotations
 
 import asyncio
@@ -5,6 +7,7 @@ from types import SimpleNamespace
 
 import orjson
 import pytest
+from pyoxigraph import RdfFormat, parse
 
 from search_server.request_handlers import handle_request, handle_search
 
@@ -124,3 +127,35 @@ def test_handle_request_raw_json_response(mocker):
     resp = run(handle_request(req, fake_handler, raw_json_response=True))
     assert resp.status == 200
     assert json_body(resp) == {"id": "x"}
+
+
+@pytest.mark.unit
+@pytest.mark.contract
+def test_handle_request_text_turtle_returns_turtle(mocker):
+    async def fake_handler(_req, **_kwargs):
+        return {
+            "id": "https://rism.online/sources/1",
+            "type": "rism:Source",
+            "label": {"en": ["Example source"]},
+        }
+
+    async def fake_tombstone(_req):
+        return None
+
+    mocker.patch("search_server.request_handlers.handle_tombstone", side_effect=fake_tombstone)
+    req = DummyReq(accept="text/turtle")
+
+    resp = run(handle_request(req, fake_handler))
+    body = resp.body.decode("utf-8")
+
+    assert resp.status == 200
+    assert resp.content_type == "text/turtle"
+    assert "@prefix rism:" in body
+    assert "rism:Source" in body
+    assert set(
+        parse(
+            input=body.encode("utf-8"),
+            format=RdfFormat.TURTLE,
+            without_named_graphs=True,
+        )
+    )

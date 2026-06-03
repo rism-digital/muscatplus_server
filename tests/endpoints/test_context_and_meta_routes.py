@@ -1,13 +1,86 @@
+# ruff: noqa: S101
+
 from __future__ import annotations
 
 import json
 
 import pytest
-from rdflib import Graph, URIRef
-from rdflib.namespace import RDF, RDFS, XSD, Namespace
+from pyoxigraph import NamedNode, RdfFormat, parse
 from sanic import response
 
 from tests.conftest import assert_content_type, assert_json_contract
+
+
+class Namespace:
+    def __init__(self, base: str) -> None:
+        self.base = base
+
+    def __getattr__(self, name: str) -> NamedNode:
+        return NamedNode(f"{self.base}{name}")
+
+
+class _RDF:
+    type = NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+    value = NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#value")
+
+
+class _RDFS:
+    label = NamedNode("http://www.w3.org/2000/01/rdf-schema#label")
+
+
+class _XSD:
+    dateTime = NamedNode("http://www.w3.org/2001/XMLSchema#dateTime")
+    anyURI = NamedNode("http://www.w3.org/2001/XMLSchema#anyURI")
+    integer = NamedNode("http://www.w3.org/2001/XMLSchema#integer")
+
+
+RDF = _RDF()
+RDFS = _RDFS()
+XSD = _XSD()
+URIRef = NamedNode
+
+
+class Graph:
+    def __init__(self) -> None:
+        self.quads = set()
+
+    def parse(self, data: str, format: str):
+        rdf_format = RdfFormat.JSON_LD if format == "json-ld" else RdfFormat.N_TRIPLES
+        self.quads = set(
+            parse(
+                input=data.encode("utf-8"),
+                format=rdf_format,
+                without_named_graphs=True,
+                lenient=True,
+            )
+        )
+        return self
+
+    def predicates(self):
+        return (quad.predicate for quad in self.quads)
+
+    def objects(self, subject, predicate):
+        return (
+            quad.object
+            for quad in self.quads
+            if quad.subject == subject and quad.predicate == predicate
+        )
+
+    def subject_objects(self, predicate):
+        return (
+            (quad.subject, quad.object)
+            for quad in self.quads
+            if quad.predicate == predicate
+        )
+
+    def __contains__(self, triple) -> bool:
+        subject, predicate, obj = triple
+        return any(
+            quad.subject == subject
+            and quad.predicate == predicate
+            and quad.object == obj
+            for quad in self.quads
+        )
 
 
 @pytest.mark.endpoint
@@ -57,6 +130,13 @@ def test_api_contexts_do_not_use_generic_has_item_predicates(client):
         }
         assert "rism:hasItem" not in ids
         assert "rism:MaterialGroup" not in ids
+
+        item_aliases = [
+            value.get("items")
+            for value in iter_context_values(resp.json["@context"])
+            if isinstance(value, dict) and "items" in value
+        ]
+        assert "@set" not in item_aliases
 
 
 @pytest.mark.endpoint
@@ -141,7 +221,8 @@ def test_person_context_expands_semantic_sections(client):
 
     # Verify explicit mapping for record history and relationships.
     assert any(graph.objects(subject, rism.recordHistory))
-    relationship_nodes = list(graph.objects(subject, rism.hasRelationship))
+    relationship_section = next(graph.objects(subject, rism.relationships))
+    relationship_nodes = list(graph.objects(relationship_section, rism.hasRelationship))
     assert relationship_nodes
     assert any(graph.objects(relationship_nodes[0], rism.hasRole))
     assert any(graph.objects(relationship_nodes[0], dcterms.relation))
@@ -241,7 +322,8 @@ def test_institution_context_expands_semantic_sections(client):
     assert any(graph.objects(subject, rism.hasLocation))
     assert any(graph.objects(subject, rism.sources))
 
-    relationship_nodes = list(graph.objects(subject, rism.hasRelationship))
+    relationship_section = next(graph.objects(subject, rism.relationships))
+    relationship_nodes = list(graph.objects(relationship_section, rism.hasRelationship))
     assert relationship_nodes
     assert any(graph.objects(relationship_nodes[0], rism.hasRole))
     assert any(graph.objects(relationship_nodes[0], dcterms.relation))
@@ -352,6 +434,10 @@ def test_work_context_expands_semantic_sections(client):
     assert any(graph.objects(subject, rism.formOfWork))
     assert any(graph.objects(subject, rism.referencesNotes))
     assert any(graph.objects(subject, rism.hasSummary))
+    part_of_section = next(graph.objects(subject, rism.partOf))
+    assert any(graph.objects(part_of_section, rism.isPartOf))
+    incipits_section = next(graph.objects(subject, rism.incipits))
+    assert any(graph.objects(incipits_section, rism.hasIncipit))
     assert not any(graph.subject_objects(rism.rendered))
 
     form_of_work_node = next(graph.objects(subject, rism.formOfWork))
@@ -525,7 +611,8 @@ def test_source_context_expands_semantic_sections(client):
     assert any(graph.objects(subject, rism.recordHistory))
     assert any(graph.objects(subject, rism.sourceTypes))
     assert any(graph.objects(subject, rism.materialGroups))
-    assert any(graph.objects(subject, rism.hasRelationship))
+    relationship_section = next(graph.objects(subject, rism.relationships))
+    assert any(graph.objects(relationship_section, rism.hasRelationship))
     assert any(graph.objects(subject, rism.referencesNotes))
     assert any(graph.objects(subject, rism.holdings))
     assert any(graph.objects(subject, rism.sourceItems))
@@ -672,7 +759,8 @@ def test_publication_context_expands_semantic_sections(client):
     assert any(graph.objects(subject, rism.status))
     assert any(graph.objects(subject, rism.recordHistory))
     assert any(graph.objects(subject, rism.hasSummary))
-    assert any(graph.objects(subject, rism.hasRelationship))
+    relationship_section = next(graph.objects(subject, rism.relationships))
+    assert any(graph.objects(relationship_section, rism.hasRelationship))
     assert any(graph.objects(subject, rism.notes))
     assert any(graph.objects(subject, rism.works))
     assert any(graph.objects(subject, rism.externalResources))
