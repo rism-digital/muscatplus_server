@@ -39,14 +39,14 @@ def _parse_jsonld(data: dict[str, Any]):
     )
 
 
-def _serialize(data: dict[str, Any], rdf_format: RdfFormat) -> str:
+def _serialize(data: dict[str, Any], rdf_format: RdfFormat) -> str | None:
     logger.debug("Creating RDF output from JSON-LD")
     prefixes = TURTLE_PREFIXES if rdf_format == RdfFormat.TURTLE else None
     output = serialize(_parse_jsonld(data), format=rdf_format, prefixes=prefixes)
     return output.decode("utf-8") if isinstance(output, bytes | bytearray) else output
 
 
-def to_turtle(data: dict[str, Any]) -> str:
+def to_turtle(data: dict[str, Any]) -> str | None:
     turtle = _serialize(data, RdfFormat.TURTLE)
     try:
         return format_turtle(turtle)
@@ -56,8 +56,8 @@ def to_turtle(data: dict[str, Any]) -> str:
 
 
 def to_expanded_jsonld(data: dict[str, Any]) -> str:
-    return _serialize(data, RdfFormat.JSON_LD)
+    return _serialize(data, RdfFormat.JSON_LD) or ""
 
 
 def to_ntriples(data: dict[str, Any]) -> str:
-    return _serialize(data, RdfFormat.N_TRIPLES)
+    return _serialize(data, RdfFormat.N_TRIPLES) or ""
