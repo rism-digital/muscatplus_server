@@ -2,6 +2,7 @@ from typing import Any
 
 import orjson
 from pyoxigraph import RdfFormat, parse, serialize
+from pyprttl import PrttlError, format_turtle
 from sanic.log import logger
 
 TURTLE_PREFIXES = {
@@ -46,7 +47,12 @@ def _serialize(data: dict[str, Any], rdf_format: RdfFormat) -> str:
 
 
 def to_turtle(data: dict[str, Any]) -> str:
-    return _serialize(data, RdfFormat.TURTLE)
+    turtle = _serialize(data, RdfFormat.TURTLE)
+    try:
+        return format_turtle(turtle)
+    except PrttlError:
+        logger.exception("Turtle pretty-printing failed; returning raw Turtle output")
+        return turtle
 
 
 def to_expanded_jsonld(data: dict[str, Any]) -> str:

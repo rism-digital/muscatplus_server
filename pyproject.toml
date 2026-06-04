@@ -18,6 +18,7 @@ dependencies = [
     "async-lru>=2.0.5",
     "cdifflib>=1.2.9",
     "pyoxigraph>=0.5.8",
+    "pyprttl",
 ]
 
 [dependency-groups]
@@ -53,6 +54,7 @@ url = "https://test.pypi.org/simple/"
 explicit = true
 
 [tool.uv.sources]
+pyprttl = { git = "https://github.com/rism-digital/pyprttl.git", rev = "main" }
 
 [tool.ruff]
 target-version = "py314"

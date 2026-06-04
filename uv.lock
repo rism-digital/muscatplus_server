@@ -584,6 +584,11 @@ wheels = [
 ]
 
 [[package]]
+name = "pyprttl"
+version = "0.1.0"
+source = { git = "https://github.com/rism-digital/pyprttl.git?rev=main#1a24b25bc15f4412c05abb52a513a99108155907" }
+
+[[package]]
 name = "pyreqwest"
 version = "0.11.8"
 source = { registry = "https://pypi.org/simple/" }
@@ -803,6 +808,7 @@ dependencies = [
     { name = "jinja2" },
     { name = "orjson" },
     { name = "pyoxigraph" },
+    { name = "pyprttl" },
     { name = "pyreqwest" },
     { name = "pyyaml" },
     { name = "sanic" },
@@ -837,6 +843,7 @@ requires-dist = [
     { name = "jinja2", specifier = ">=3.1.2,<4.0.0" },
     { name = "orjson", specifier = ">=3.9.15,<4.0.0" },
     { name = "pyoxigraph", specifier = ">=0.5.8" },
+    { name = "pyprttl", git = "https://github.com/rism-digital/pyprttl.git?rev=main" },
     { name = "pyreqwest", specifier = ">=0.11.2,<0.12.0" },
     { name = "pyyaml", specifier = ">=6.0.1,<7.0.0" },
     { name = "sanic", specifier = ">=25.0.0,<27.0.0" },

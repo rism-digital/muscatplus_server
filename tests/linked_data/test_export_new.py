@@ -109,6 +109,7 @@ def test_turtle_conversion_emits_turtle_not_ntriples():
 
     assert "@prefix rism:" in turtle
     assert "rism:Source" in turtle
+    assert "\n\n<https://rism.online/sources/1>" in turtle
     assert quads_from_ntriples(to_ntriples(doc)) == set(
         parse(
             input=turtle.encode("utf-8"),
