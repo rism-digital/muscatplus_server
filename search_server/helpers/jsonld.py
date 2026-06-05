@@ -488,6 +488,11 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
                 "@container": "@set",
                 "@type": "@vocab",
             },
+            "materialTypes": {
+                "@id": "rism:materialTypes",
+                "@container": "@set",
+                "@type": "@vocab",
+            },
         },
     },
     "materialGroups": {

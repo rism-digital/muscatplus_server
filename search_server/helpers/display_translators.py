@@ -30,17 +30,19 @@ _WORK_CATALOGUE_STATUS_MAP: dict = {
 }
 
 _MATERIAL_SOURCE_TYPE_MAP: dict = {
-    "Manuscript copy": "records.manuscript_copy",
-    "Print": "records.print",
+    "Additional manuscript material": "records.additional_manuscript_material",
+    "Additional printed material": "records.additional_printed_material",
     "Autograph manuscript": "records.autograph_manuscript",
-    "Possible autograph manuscript": "records.possible_autograph_manuscript",
-    "Partial autograph": "records.partial_autograph",
-    "Other": "records.other",
+    "Composite": "records.composite",
+    "Manuscript copy": "records.manuscript_copy",
     "Manuscript copy with autograph annotations": "records.manuscript_copy_with_autograph_annotations",
+    "Other": "records.other",
+    "Partial autograph": "records.partial_autograph",
+    "Possible autograph manuscript": "records.possible_autograph_manuscript",
+    "Print": "records.print",
     "Print with autograph annotations": "records.print_with_autograph_annotations",
     "Print with non-autograph annotations": "records.print_with_non_autograph_annotations",
-    "Composite": "records.composite",
-    "Additional printed material": "records.additional_printed_material",
+    "Uncertain": "records.unknown",
 }
 
 _MATERIAL_CONTENT_TYPE_MAP: dict = {
@@ -587,6 +589,10 @@ def content_type_translator(value: str, translations: dict) -> dict:
 
 def material_source_types_translator(values: list, translations: dict) -> dict:
     return __lookup_translations_list(values, translations, _MATERIAL_SOURCE_TYPE_MAP)
+
+
+def material_source_type_translator(value: str, translations: dict) -> dict:
+    return __lookup_translations(value, translations, _MATERIAL_SOURCE_TYPE_MAP)
 
 
 def material_content_types_translator(values: list, translations: dict) -> dict:

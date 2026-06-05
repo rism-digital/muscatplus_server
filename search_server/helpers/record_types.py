@@ -1,5 +1,6 @@
 from search_server.helpers.display_translators import (
     content_type_translator,
+    material_source_type_translator,
     record_type_translator,
     source_type_translator,
 )
@@ -27,9 +28,29 @@ CONTENT_TYPE_MAP: dict = {
     "inventory": "rism:InventoryContent",
 }
 
+MATERIAL_SOURCE_TYPE_MAP: dict = {
+    "Autograph manuscript": "rism:AutographMaterial",
+    "Additional manuscript material": "rism:AdditionalManuscriptMaterial",
+    "Additional printed material": "rism:AdditionalPrintedMaterial",
+    "Composite": "rism:CompositeMaterial",
+    "Manuscript copy": "rism:ManuscriptCopyMaterial",
+    "Manuscript copy with autograph annotations": "rism:ManuscriptCopyWithAutographMaterial",
+    "Other": "rism:OtherMaterial",
+    "Partial autograph": "rism:PartialAutographMaterial",
+    "Possible autograph manuscript": "rism:PossibleAutographMaterial",
+    "Print": "rism:PrintMaterial",
+    "Print with autograph annotations": "rism:PrintWithAutographMaterial",
+    "Print with non-autograph annotations": "rism:PrintWithNonAutographMaterial",
+    "Uncertain": "rism:UncertainMaterial",
+}
+
 
 def create_source_types_block(
-    record_type: str, source_type: str, content_types: list[str], translations: dict
+    record_type: str,
+    source_type: str,
+    content_types: list[str],
+    material_source_types: list[str],
+    translations: dict,
 ) -> dict:
     type_identifier: str = SOURCE_TYPE_MAP[source_type]
     content_type_block: list = []
@@ -40,6 +61,16 @@ def create_source_types_block(
             {"label": label, "type": CONTENT_TYPE_MAP.get(c, "rism:MusicalSource")}
         )
 
+    material_type_block: list = []
+    for m in material_source_types:
+        label = material_source_type_translator(m, translations)
+        material_type_block.append(
+            {
+                "label": label,
+                "type": MATERIAL_SOURCE_TYPE_MAP.get(m, "rism:OtherMaterial"),
+            }
+        )
+
     record_type_identifier: str = RECORD_TYPE_MAP[record_type]
     record_type_label = record_type_translator(record_type, translations)
     source_type_label = source_type_translator(source_type, translations)
@@ -47,4 +78,5 @@ def create_source_types_block(
         "recordType": {"label": record_type_label, "type": record_type_identifier},
         "sourceType": {"label": source_type_label, "type": type_identifier},
         "contentTypes": content_type_block,
+        "materialTypes": material_type_block,
     }

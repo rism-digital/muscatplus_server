@@ -106,9 +106,10 @@ class BaseSource(ypres.AsyncDictSerializer):
         source_type: str = obj.get("source_type_s", "unspecified")
         content_identifiers: list[str] = obj.get("content_types_sm", [])
         record_type: str = obj.get("record_type_s", "item")
+        material_source_types: list[str] = obj.get("material_source_types_sm", [])
 
         return create_source_types_block(
-            record_type, source_type, content_identifiers, transl
+            record_type, source_type, content_identifiers, material_source_types, transl
         )
 
     def get_record_history(self, obj: SolrResult) -> dict | None:
