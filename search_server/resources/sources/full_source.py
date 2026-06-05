@@ -44,7 +44,6 @@ class FullSource(BaseSource):
     external_resources = ypres.MethodField(label="externalResources")
     digital_objects = ypres.MethodField(label="digitalObjects")
     inventory_items = ypres.MethodField(label="inventoryItems")
-    dates = ypres.MethodField()
     works = ypres.MethodField()
     properties = ypres.MethodField()
 
@@ -172,24 +171,28 @@ class FullSource(BaseSource):
             obj, context={"request": self.context["request"], "direct_request": False}
         ).serialized
 
-    def get_dates(self, obj: SolrResult) -> dict | None:
-        if "date_ranges_im" not in obj:
-            return None
-
-        earliest, latest = obj.get("date_ranges_im", [None, None])
-
-        d: dict = {
-            "earliestDate": earliest,
-            "latestDate": latest,
-            "dateStatement": ", ".join(obj.get("date_statements_sm", [])),
-        }
-
-        return {k: v for k, v in d.items() if v}
-
     def get_properties(self, obj: SolrResult) -> dict | None:
+        # Properties are places where we want to surface information in the JSON-LD so that it
+        # can be easily converted to RDF, but we don't want to put it in the larger structures.
         d: dict = {
             "keyMode": obj.get("key_mode_s"),
             "physicalDimensions": obj.get("physical_dimensions_sm"),
+            "dates": _get_dates(obj),
         }
 
         return {k: v for k, v in d.items() if v} or None
+
+
+def _get_dates(obj: SolrResult) -> dict | None:
+    if "date_ranges_im" not in obj:
+        return None
+
+    earliest, latest = obj.get("date_ranges_im", [None, None])
+
+    d: dict = {
+        "earliestDate": earliest,
+        "latestDate": latest,
+        "dateStatement": ", ".join(obj.get("date_statements_sm", [])),
+    }
+
+    return {k: v for k, v in d.items() if v}

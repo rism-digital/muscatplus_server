@@ -148,6 +148,7 @@ __PROPERTIES = {
         "@id": "rism:hasPhysicalDimensions",
         "@container": "@list",
     },
+    **__DATES,
 }
 
 __TYPE_LABEL = {
@@ -233,9 +234,7 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
             "works": {
                 "@id": "rism:works",
                 "@type": "@id",
-                "@context": {
-                    "items": {"@id": "rism:hasWork", "@container": "@set"}
-                },
+                "@context": {"items": {"@id": "rism:hasWork", "@container": "@set"}},
             },
             "items": {"@id": "rism:hasWork", "@container": "@set"},
         },
@@ -255,9 +254,7 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
     "digitalObjects": {
         "@id": "rism:digitalObjects",
         "@type": "@id",
-        "@context": {
-            "items": {"@id": "rism:hasDigitalObject", "@container": "@set"}
-        },
+        "@context": {"items": {"@id": "rism:hasDigitalObject", "@container": "@set"}},
     },
 }
 
@@ -309,9 +306,7 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     "digitalObjects": {
         "@id": "rism:digitalObjects",
         "@type": "@id",
-        "@context": {
-            "items": {"@id": "rism:hasDigitalObject", "@container": "@set"}
-        },
+        "@context": {"items": {"@id": "rism:hasDigitalObject", "@container": "@set"}},
     },
     "properties": "@nest",
     "siglum": {
@@ -347,7 +342,6 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     **__PARTOF,
     **__CREATOR,
     **__SUMMARY,
-    **__DATES,
     **__PROPERTIES,
     **__TYPE_LABEL,
     **__SECTION_LABEL,
@@ -398,7 +392,7 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
                 "@id": "rism:hasExternalRecord",
                 "@container": "@set",
                 "@type": "@id",
-            }
+            },
         },
     },
 }
@@ -472,7 +466,6 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     **__PARTOF,
     **__CREATOR,
     **__SUMMARY,
-    **__DATES,
     **__PROPERTIES,
     **__TYPE_LABEL,
     **__SECTION_LABEL,
@@ -574,9 +567,7 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
             "works": {
                 "@id": "rism:works",
                 "@type": "@id",
-                "@context": {
-                    "items": {"@id": "rism:hasWork", "@container": "@set"}
-                },
+                "@context": {"items": {"@id": "rism:hasWork", "@container": "@set"}},
             },
             "workReferences": {
                 "@id": "rism:workReferences",
@@ -600,9 +591,7 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     "digitalObjects": {
         "@id": "rism:digitalObjects",
         "@type": "@id",
-        "@context": {
-            "items": {"@id": "rism:hasDigitalObject", "@container": "@set"}
-        },
+        "@context": {"items": {"@id": "rism:hasDigitalObject", "@container": "@set"}},
     },
     "inventoryItems": {
         "@id": "rism:inventoryItems",
