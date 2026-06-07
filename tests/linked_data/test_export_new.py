@@ -7,11 +7,14 @@ import json
 from pyoxigraph import RdfFormat, parse
 
 from linked_data.export_new import (
+    DEFAULT_SOLR_SORT,
     clean_output_for_types,
     expand_json_fields,
     failure_report_path,
     shard_final_path,
     shard_tmp_path,
+    solr_request_limit,
+    solr_sort,
     to_ntriples_pyoxigraph,
     write_manifest,
 )
@@ -194,3 +197,26 @@ def test_clean_output_for_types_removes_generated_shards_only(tmp_path):
     assert not generated[2].exists()
     assert generated[3].exists()
     assert keep.exists()
+
+
+def test_solr_sort_defaults_to_stable_id_sort():
+    assert solr_sort(randomize=False, random_seed=None) == DEFAULT_SOLR_SORT
+
+
+def test_solr_sort_uses_random_seed_with_id_tiebreaker():
+    assert solr_sort(randomize=True, random_seed=12345) == "random_12345 asc,id asc"
+
+
+def test_solr_sort_requires_seed_for_random_sort():
+    try:
+        solr_sort(randomize=True, random_seed=None)
+    except ValueError as err:
+        assert "random seed" in str(err)
+    else:
+        raise AssertionError("Expected random Solr sort to require a seed")
+
+
+def test_solr_request_limit_respects_smaller_export_limit():
+    assert solr_request_limit(page_size=1000, limit=100) == 100
+    assert solr_request_limit(page_size=1000, limit=2000) == 1000
+    assert solr_request_limit(page_size=1000, limit=None) == 1000

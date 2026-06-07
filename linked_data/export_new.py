@@ -3,6 +3,7 @@ import asyncio
 import logging.config
 import multiprocessing as mp
 import queue
+import secrets
 import sys
 import timeit
 from collections.abc import Iterable
@@ -87,6 +88,8 @@ CONTEXTS: dict[str, Any] = {
 }
 
 RECORD_TYPES: list[str] = list(serializer_map.keys())
+DEFAULT_SOLR_SORT = "id asc"
+RANDOM_SEED_MAX = 2**31 - 1
 
 JSON_FIELD_SUFFIX = "_json"
 JSON_MULTI_FIELD_SUFFIX = "_jsonm"
@@ -410,23 +413,45 @@ def worker_entrypoint(
         )
 
 
+def generate_random_seed() -> int:
+    return secrets.randbelow(RANDOM_SEED_MAX) + 1
+
+
+def solr_sort(randomize: bool, random_seed: int | None) -> str:
+    if not randomize:
+        return DEFAULT_SOLR_SORT
+    if random_seed is None:
+        raise ValueError("Random Solr sort requires a random seed")
+    return f"random_{random_seed} asc,id asc"
+
+
+def solr_request_limit(page_size: int, limit: int | None) -> int:
+    if limit is not None:
+        return min(page_size, limit)
+    return page_size
+
+
 async def stream_solr_docs_for_type(
     solr_conn: Solr,
     record_type: str,
     country_code: str | None,
     page_size: int,
     limit: int | None = None,
+    randomize: bool = False,
+    random_seed: int | None = None,
 ):
     fq = [f"type:{record_type}", "!project_s:[* TO *]"]
     if record_type == "source" and country_code:
         fq.append(f"country_codes_sm:{country_code.upper()}")
 
+    sort = solr_sort(randomize, random_seed)
     params: JsonAPIRequest = {
         "query": "*:*",
         "filter": fq,
-        "sort": "id asc",
-        "limit": page_size,
+        "sort": sort,
+        "limit": solr_request_limit(page_size, limit),
     }
+    log.info("Solr query for %s using sort %s", record_type, sort)
     res = await solr_conn.search(params, cursor=True)
     log.info("Solr query for %s received %s results", record_type, res.hits)
     yielded = 0
@@ -447,6 +472,8 @@ async def export_record_type(
     worker_concurrency: int,
     flush_every: int,
     limit: int | None,
+    randomize: bool,
+    random_seed: int | None,
 ) -> list[dict[str, Any]]:
     if record_type not in serializer_map:
         raise ValueError(f"Unsupported record type: {record_type}")
@@ -480,7 +507,13 @@ async def export_record_type(
 
     try:
         async for doc in stream_solr_docs_for_type(
-            solr_conn, record_type, country_code, page_size, limit
+            solr_conn,
+            record_type,
+            country_code,
+            page_size,
+            limit,
+            randomize=randomize,
+            random_seed=random_seed,
         ):
             worker_id = seen % workers
             batches[worker_id].append(doc)
@@ -565,6 +598,7 @@ def main(args: argparse.Namespace) -> bool:
     output_path: Path = args.output
     output_path.mkdir(parents=True, exist_ok=True)
     record_types = RECORD_TYPES if not args.include else args.include
+    random_seed = generate_random_seed() if args.random else None
 
     if args.empty:
         clean_output_for_types(output_path, record_types)
@@ -584,6 +618,8 @@ def main(args: argparse.Namespace) -> bool:
                 worker_concurrency=args.worker_concurrency,
                 flush_every=args.flush_every,
                 limit=args.limit,
+                randomize=args.random,
+                random_seed=random_seed,
             )
             all_manifests.extend(manifests)
             write_manifest(output_path, all_manifests)
@@ -629,6 +665,11 @@ if __name__ == "__main__":
         "--limit",
         type=int,
         help="Stop after this many Solr documents per record type.",
+    )
+    parser.add_argument(
+        "--random",
+        action="store_true",
+        help="Sort each Solr record-type query in random order before applying --limit.",
     )
     parser.add_argument(
         "--batch-size",
