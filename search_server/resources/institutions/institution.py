@@ -3,7 +3,7 @@ from collections.abc import Callable
 import ypres
 
 from search_server.helpers.display_fields import assemble_label_value
-from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier, strip_prefix
 from search_server.helpers.languages import merge_language_maps
 from search_server.helpers.solr_connection import SolrResult, result_count
 from search_server.helpers.utilities import is_number
@@ -150,10 +150,29 @@ class Institution(BaseInstitution):
         return d or None
 
     def get_properties(self, obj: SolrResult) -> dict | None:
+        authority_links: list[dict] = []
+        same_as: list[str] = []
+
+        for ext in obj.get("external_ids", []):
+            source, ident = ext.split(":", 1)
+            authority_meta = EXTERNAL_IDS.get(source)
+            if not authority_meta:
+                continue
+
+            link: dict[str, str] = {"scheme": source, "identifier": ident}
+            if uri_tmpl := authority_meta.get("ident"):
+                uri = uri_tmpl.format(ident=ident)
+                link["uri"] = uri
+                same_as.append(uri)
+
+            authority_links.append(link)
+
         d = {
             "siglum": obj.get("siglum_s"),
             "countryCodes": obj.get("country_codes_sm", []),
             "city": obj.get("city_s"),
+            "authorityLinks": authority_links,
+            "sameAs": same_as,
         }
 
         return {k: v for k, v in d.items() if v} or None

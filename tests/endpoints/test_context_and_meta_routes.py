@@ -201,6 +201,22 @@ def test_person_context_expands_semantic_sections(client):
                 ],
             },
         },
+        "properties": {
+            "authorityLinks": [
+                {
+                    "scheme": "viaf",
+                    "identifier": "32197206",
+                    "uri": "https://viaf.org/viaf/32197206",
+                },
+                {
+                    "scheme": "iccu",
+                    "identifier": "CFIV019276",
+                },
+            ],
+            "sameAs": [
+                "https://viaf.org/viaf/32197206",
+            ],
+        },
         "sources": {
             "url": "https://rism.online/people/115324/sources",
             "totalItems": 19113,
@@ -213,6 +229,7 @@ def test_person_context_expands_semantic_sections(client):
     subject = URIRef("https://rism.online/people/115324")
     rism = Namespace("https://rism.online/api/v1#")
     dcterms = Namespace("http://purl.org/dc/terms/")
+    schemaorg = Namespace("https://schema.org/")
 
     predicates = {str(pred) for pred in graph.predicates()}
     assert len(predicates) > 6
@@ -230,6 +247,16 @@ def test_person_context_expands_semantic_sections(client):
     works_node = next(graph.objects(subject, rism.works))
     work_references_node = next(graph.objects(works_node, rism.workReferences))
     assert any(graph.objects(work_references_node, rism.hasWorkNode))
+    assert any(graph.objects(subject, schemaorg.sameAs))
+
+    authority_nodes = list(graph.objects(subject, rism.hasExternalAuthority))
+    assert len(authority_nodes) == 2
+    authority_scheme_values = {
+        next(graph.objects(authority_node, rism.authorityScheme)).value
+        for authority_node in authority_nodes
+    }
+    assert authority_scheme_values == {"viaf", "iccu"}
+    assert any(graph.objects(subject, schemaorg.sameAs))
 
 
 @pytest.mark.endpoint
@@ -303,6 +330,20 @@ def test_institution_context_expands_semantic_sections(client):
             "siglum": "D-Dl",
             "countryCodes": ["D"],
             "city": "Dresden",
+            "authorityLinks": [
+                {
+                    "scheme": "dnb",
+                    "identifier": "123456-7",
+                    "uri": "https://d-nb.info/gnd/123456-7",
+                },
+                {
+                    "scheme": "isil",
+                    "identifier": "DE-588",
+                },
+            ],
+            "sameAs": [
+                "https://d-nb.info/gnd/123456-7",
+            ],
         },
     }
 
@@ -312,6 +353,7 @@ def test_institution_context_expands_semantic_sections(client):
     subject = URIRef("https://rism.online/institutions/30000042")
     rism = Namespace("https://rism.online/api/v1#")
     dcterms = Namespace("http://purl.org/dc/terms/")
+    schemaorg = Namespace("https://schema.org/")
 
     predicates = {str(pred) for pred in graph.predicates()}
     assert len(predicates) > 10
@@ -321,12 +363,34 @@ def test_institution_context_expands_semantic_sections(client):
     assert any(graph.objects(subject, rism.recordHistory))
     assert any(graph.objects(subject, rism.hasLocation))
     assert any(graph.objects(subject, rism.sources))
+    assert any(graph.objects(subject, schemaorg.sameAs))
 
     relationship_section = next(graph.objects(subject, rism.relationships))
     relationship_nodes = list(graph.objects(relationship_section, rism.hasRelationship))
     assert relationship_nodes
     assert any(graph.objects(relationship_nodes[0], rism.hasRole))
     assert any(graph.objects(relationship_nodes[0], dcterms.relation))
+
+    authority_nodes = list(graph.objects(subject, rism.hasExternalAuthority))
+    assert len(authority_nodes) == 2
+    authority_scheme_values = {
+        next(graph.objects(authority_node, rism.authorityScheme)).value
+        for authority_node in authority_nodes
+        if any(graph.objects(authority_node, rism.authorityScheme))
+    }
+    assert authority_scheme_values == {"dnb", "isil"}
+    authority_identifier_values = {
+        next(graph.objects(authority_node, RDF.value)).value
+        for authority_node in authority_nodes
+        if any(graph.objects(authority_node, RDF.value))
+    }
+    assert authority_identifier_values == {"123456-7", "DE-588"}
+    authority_urls = [
+        obj
+        for authority_node in authority_nodes
+        for obj in graph.objects(authority_node, schemaorg.url)
+    ]
+    assert len(authority_urls) == 1
 
 
 @pytest.mark.endpoint

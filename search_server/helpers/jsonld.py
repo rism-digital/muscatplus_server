@@ -151,6 +151,24 @@ __PROPERTIES = {
     **__DATES,
 }
 
+__AUTHORITY_LINKS = {
+    "properties": "@nest",
+    "authorityLinks": {
+        "@id": "rism:hasExternalAuthority",
+        "@container": "@set",
+        "@context": {
+            "scheme": {"@id": "rism:authorityScheme"},
+            "identifier": {"@id": "rdf:value"},
+            "uri": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
+        },
+    },
+    "sameAs": {
+        "@id": "schemaorg:sameAs",
+        "@type": "xsd:anyURI",
+        "@container": "@set",
+    },
+}
+
 __TYPE_LABEL = {
     "typeLabel": {
         "@id": "rism:typeLabel",
@@ -200,6 +218,7 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
             "items": {"@id": "rism:hasExternalAuthority", "@container": "@set"}
         },
     },
+    **__AUTHORITY_LINKS,
     "nameVariants": {
         "@id": "rism:nameVariants",
         "@type": "@id",
@@ -319,6 +338,7 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     "city": {
         "@id": "rism:hasCityName",
     },
+    **__AUTHORITY_LINKS,
     "location": {
         "@id": "rism:hasLocation",
         "@type": "@id",

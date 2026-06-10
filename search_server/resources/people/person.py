@@ -5,7 +5,7 @@ from search_server.helpers.display_translators import (
     person_gender_translator,
     person_name_variant_labels_translator,
 )
-from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrResult, result_count
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
@@ -26,6 +26,7 @@ class Person(BasePerson):
     works = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
     digital_objects = ypres.MethodField(label="digitalObjects")
+    properties = ypres.MethodField()
 
     def get_biographical_details(self, obj: SolrResult) -> dict | None:
         bio_details: dict = BiographicalDetails(
@@ -143,6 +144,31 @@ class Person(BasePerson):
                 "request": self.context["request"],
             },
         ).serialized
+
+    def get_properties(self, obj: SolrResult) -> dict | None:
+        authority_links: list[dict] = []
+        same_as: list[str] = []
+
+        for ext in obj.get("external_ids", []):
+            source, ident = ext.split(":", 1)
+            authority_meta = EXTERNAL_IDS.get(source)
+            if not authority_meta:
+                continue
+
+            link: dict[str, str] = {"scheme": source, "identifier": ident}
+            if uri_tmpl := authority_meta.get("ident"):
+                uri = uri_tmpl.format(ident=ident)
+                link["uri"] = uri
+                same_as.append(uri)
+
+            authority_links.append(link)
+
+        d = {
+            "authorityLinks": authority_links,
+            "sameAs": same_as,
+        }
+
+        return {k: v for k, v in d.items() if v} or None
 
 
 class BiographicalDetails(ypres.DictSerializer):
