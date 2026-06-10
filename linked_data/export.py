@@ -26,6 +26,7 @@ from search_server.helpers.jsonld import (
     RISM_JSONLD_DEFAULT_CONTEXT,
     RISM_JSONLD_INSTITUTION_CONTEXT,
     RISM_JSONLD_PERSON_CONTEXT,
+    RISM_JSONLD_PLACE_CONTEXT,
     RISM_JSONLD_PUBLICATION_CONTEXT,
     RISM_JSONLD_SOURCE_CONTEXT,
     RISM_JSONLD_WORK_CONTEXT,
@@ -34,6 +35,7 @@ from search_server.helpers.languages import filter_languages, load_translations
 from search_server.helpers.linked_data import to_ntriples as to_ntriples_pyoxigraph
 from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
+from search_server.resources.places.place import Place
 from search_server.resources.publications.publication import Publication
 from search_server.resources.sources.full_source import FullSource
 from search_server.resources.works.full_work import FullWork
@@ -77,6 +79,7 @@ serializer_map: dict[str, Any] = {
     "institution": Institution,
     "work": FullWork,
     "publication": Publication,
+    "place": Place,
 }
 
 CONTEXTS: dict[str, Any] = {
@@ -85,6 +88,7 @@ CONTEXTS: dict[str, Any] = {
     "institution": RISM_JSONLD_INSTITUTION_CONTEXT,
     "work": RISM_JSONLD_WORK_CONTEXT,
     "publication": RISM_JSONLD_PUBLICATION_CONTEXT,
+    "place": RISM_JSONLD_PLACE_CONTEXT,
 }
 
 RECORD_TYPES: list[str] = list(serializer_map.keys())
@@ -287,7 +291,9 @@ async def run_worker_async(
         sem = asyncio.Semaphore(max(concurrency, 1))
         pending: set[asyncio.Task] = set()
 
-        async def process_one(doc: dict[str, Any]) -> tuple[str, StageTimings, dict[str, Any] | None]:
+        async def process_one(
+            doc: dict[str, Any],
+        ) -> tuple[str, StageTimings, dict[str, Any] | None]:
             async with sem:
                 try:
                     ntriples, doc_timings = await serialize_doc(
@@ -374,7 +380,9 @@ async def run_worker_async(
         records_succeeded=succeeded,
         records_failed=failed,
         elapsed_seconds=worker_elapsed_seconds,
-        docs_per_second=seen / worker_elapsed_seconds if worker_elapsed_seconds else 0.0,
+        docs_per_second=seen / worker_elapsed_seconds
+        if worker_elapsed_seconds
+        else 0.0,
         timings=asdict(timings),
         completed=True,
     )
