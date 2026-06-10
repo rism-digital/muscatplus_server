@@ -108,7 +108,16 @@ class MaterialGroup(ypres.DictSerializer):
             return None
 
         return RelationshipsSection(
-            obj, context={"request": self.context["request"]}
+            obj,
+            context={
+                "request": self.context["request"],
+                "route_params": {
+                    "source_id": strip_prefix(obj["source_id"]),
+                    "mg_id": obj["group_num"],
+                },
+                "section_route": "sources.material_group_relationships",
+                "item_route": "sources.material_group_relationship",
+            },
         ).serialized
 
     def get_external_resources(self, obj: dict) -> dict | None:

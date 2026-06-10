@@ -29,6 +29,45 @@ async def work_probe(req, work_id: str):
     return await handle_search(req, handle_work_probe_request, work_id=work_id)
 
 
+@works_blueprint.route("/<work_id:str>/relationships/")
+async def work_relationships(req, work_id: str) -> response.HTTPResponse:
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@works_blueprint.route("/<work_id:str>/relationships/<relationship_id:str>")
+async def work_relationship(
+    req, work_id: str, relationship_id: str
+) -> response.HTTPResponse:
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@works_blueprint.route("/<work_id:str>/external-authorities/")
+async def work_external_authorities(req, work_id: str) -> response.HTTPResponse:
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@works_blueprint.route("/<work_id:str>/external-authorities/<authority_id:str>")
+async def work_external_authority(
+    req, work_id: str, authority_id: str
+) -> response.HTTPResponse:
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@works_blueprint.route("/<work_id:str>/references-notes/")
+async def work_references_notes(req, work_id: str) -> response.HTTPResponse:
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@works_blueprint.route("/<work_id:str>/performance-locations/")
+async def work_performance_locations(req, work_id: str) -> response.HTTPResponse:
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@works_blueprint.route("/<work_id:str>/liturgical-festivals/")
+async def work_liturgical_festivals(req, work_id: str) -> response.HTTPResponse:
+    return response.json({"message": "Not implemented"}, status=501)
+
+
 @works_blueprint.route("/<work_id:str>/incipits/")
 async def incipits_list(req, work_id: str) -> response.HTTPResponse:
     return response.json({"message": "Not implemented"}, status=501)

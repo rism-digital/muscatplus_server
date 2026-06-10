@@ -2,7 +2,7 @@ from collections.abc import Callable
 
 import ypres
 
-from search_server.helpers.display_fields import assemble_label_value
+from search_server.helpers.display_fields import LabelConfig, assemble_label_value
 from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier, strip_prefix
 from search_server.helpers.languages import merge_language_maps
 from search_server.helpers.solr_connection import SolrResult, result_count
@@ -70,8 +70,15 @@ class Institution(BaseInstitution):
         if "external_ids" not in obj:
             return None
 
+        institution_id = strip_prefix(obj["institution_id"])
         return ExternalAuthoritiesSection(
-            obj, context={"request": self.context["request"]}
+            obj,
+            context={
+                "request": self.context["request"],
+                "route_params": {"institution_id": institution_id},
+                "section_route": "institutions.institution_external_authorities",
+                "item_route": "institutions.institution_external_authority",
+            },
         ).serialized
 
     def get_relationships(self, obj: SolrResult) -> dict | None:
@@ -91,11 +98,26 @@ class Institution(BaseInstitution):
 
         req = self.context["request"]
 
-        return RelationshipsSection(obj, context={"request": req}).serialized
+        institution_id = strip_prefix(obj["institution_id"])
+        return RelationshipsSection(
+            obj,
+            context={
+                "request": req,
+                "route_params": {"institution_id": institution_id},
+                "section_route": "institutions.relationships",
+                "item_route": "institutions.relationship",
+            },
+        ).serialized
 
     def get_notes(self, obj: SolrResult) -> dict | None:
+        institution_id = strip_prefix(obj["institution_id"])
         notes: dict = NotesSection(
-            obj, context={"request": self.context["request"]}
+            obj,
+            context={
+                "request": self.context["request"],
+                "route_params": {"institution_id": institution_id},
+                "section_route": "institutions.institution_notes",
+            },
         ).serialized
 
         if "notes" in notes:
@@ -124,7 +146,7 @@ class Institution(BaseInstitution):
             },
         ).serialized
 
-    def get_contributions(self, obj) -> dict | None:
+    def get_contributions(self, obj: dict) -> dict | None:
         if not obj.get("is_contributing_project_b"):
             return None
 
@@ -139,7 +161,7 @@ class Institution(BaseInstitution):
         )
         sources_count: int = obj.get("sources_contribution_count_i", 0)
 
-        d = {"label": {"none": ["RISM Contributions"]}}
+        d: dict[str, object] = {"label": {"none": ["RISM Contributions"]}}
 
         if people_count > 0:
             d["people"] = {"url": people_search_url, "count": people_count}
@@ -152,6 +174,7 @@ class Institution(BaseInstitution):
     def get_properties(self, obj: SolrResult) -> dict | None:
         authority_links: list[dict] = []
         same_as: list[str] = []
+        institution_id = strip_prefix(obj["institution_id"])
 
         for ext in obj.get("external_ids", []):
             source, ident = ext.split(":", 1)
@@ -159,7 +182,16 @@ class Institution(BaseInstitution):
             if not authority_meta:
                 continue
 
-            link: dict[str, str] = {"scheme": source, "identifier": ident}
+            link: dict[str, str] = {
+                "id": get_identifier(
+                    self.context["request"],
+                    "institutions.institution_external_authority",
+                    institution_id=institution_id,
+                    authority_id=ext,
+                ),
+                "scheme": source,
+                "identifier": ident,
+            }
             if uri_tmpl := authority_meta.get("ident"):
                 uri = uri_tmpl.format(ident=ident)
                 link["uri"] = uri
@@ -200,7 +232,7 @@ class LocationAddressSection(ypres.DictSerializer):
         transl: dict = req.ctx.translations
 
         all_addresses = []
-        mailing_address_field_config: dict = {
+        mailing_address_field_config: LabelConfig = {
             "street": ("records.street_address", None),
             "city": ("records.city", None),
             "county": ("records.county_province", None),
@@ -212,7 +244,7 @@ class LocationAddressSection(ypres.DictSerializer):
         for address in obj.get("addresses_json", []):
             out_addr = {}
             for k, _ in address.items():
-                label: tuple[str, Callable | None] = mailing_address_field_config.get(k)
+                label = mailing_address_field_config.get(k)
                 if not label:
                     continue
 

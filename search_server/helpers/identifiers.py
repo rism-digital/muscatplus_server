@@ -78,8 +78,10 @@ def get_identifier(req: request.Request, viewname: str, **kwargs) -> str:  # noq
     fwd_scheme_header = req.headers.get("X-Forwarded-Proto")
     fwd_host_header = req.headers.get("X-Forwarded-Host")
 
-    scheme: str = fwd_scheme_header if fwd_scheme_header else req.scheme
-    server: str = fwd_host_header if fwd_host_header else req.host
+    scheme: str = (
+        fwd_scheme_header if isinstance(fwd_scheme_header, str) else req.scheme
+    )
+    server: str = fwd_host_header if isinstance(fwd_host_header, str) else req.host
 
     return req.app.url_for(
         viewname, _external=True, _scheme=scheme, _server=server, **kwargs
@@ -101,12 +103,12 @@ def get_site(req: request.Request) -> str:
     fwd_scheme_header = req.headers.get("X-Forwarded-Proto")
     fwd_host_header = req.headers.get("X-Forwarded-Host")
 
-    scheme: str = fwd_scheme_header if fwd_scheme_header else req.scheme
-    server: str = fwd_host_header if fwd_host_header else req.host
+    scheme: str = (
+        fwd_scheme_header if isinstance(fwd_scheme_header, str) else req.scheme
+    )
+    server: str = fwd_host_header if isinstance(fwd_host_header, str) else req.host
 
     return f"{scheme}://{server}"
-
-
 def get_url_from_type(
     req: request.Request, record_type: str, record_id: str
 ) -> str | None:
@@ -145,6 +147,6 @@ SOLR_FIELD_DATA_TYPES: FieldDataType = {
     "scoring_json": ["pmo:MediumOfPerformance"],
 }
 
-RISM_RELATIONSHIP_BASE = "https://rism.online/vocabulary/relationship/"
+RISM_RELATIONSHIP_BASE = "https://rism.online/vocabulary/relationship/#"
 LOC_RELATOR_BASE = "http://id.loc.gov/vocabulary/relators/"
 RDAU_BASE = "http://rdaregistry.info/Elements/u/"

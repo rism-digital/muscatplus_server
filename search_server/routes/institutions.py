@@ -65,6 +65,25 @@ async def relationship(req, institution_id: str, relationship_id: str):
     return response.json({"message": "Not implemented"}, status=501)
 
 
+@institutions_blueprint.route("/<institution_id:str>/external-authorities/")
+async def institution_external_authorities(req, institution_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@institutions_blueprint.route(
+    "/<institution_id:str>/external-authorities/<authority_id:str>"
+)
+async def institution_external_authority(
+    req, institution_id: str, authority_id: str
+):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@institutions_blueprint.route("/<institution_id:str>/notes/")
+async def institution_notes(req, institution_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
 @institutions_blueprint.route("/<institution_id:str>/digital-objects/")
 async def digital_object_list(req, institution_id: str):
     return response.json({"message": "Not implemented"}, status=501)

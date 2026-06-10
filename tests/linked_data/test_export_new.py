@@ -6,7 +6,7 @@ import json
 
 from pyoxigraph import RdfFormat, parse
 
-from linked_data.export_new import (
+from linked_data.export import (
     DEFAULT_SOLR_SORT,
     clean_output_for_types,
     expand_json_fields,

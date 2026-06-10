@@ -107,8 +107,20 @@ class InventoryItem(ypres.AsyncDictSerializer):
 
     def get_references_notes(self, obj: SolrResult) -> dict | None:
         req = self.context["request"]
+        source_id = strip_prefix(obj["source_id"])
+        inventory_item_id = strip_prefix(obj["id"])
         refnotes: dict = ReferencesNotesSection(
-            obj, context={"request": req}
+            obj,
+            context={
+                "request": req,
+                "route_params": {
+                    "source_id": source_id,
+                    "inventory_item_id": inventory_item_id,
+                },
+                "section_route": "sources.inventory_item_references_notes",
+                "performance_locations_route": "sources.inventory_item_performance_locations",
+                "liturgical_festivals_route": "sources.inventory_item_liturgical_festivals",
+            },
         ).serialized
 
         # if the only two keys in the references and notes section is 'label' and 'type'
@@ -134,7 +146,20 @@ class InventoryItem(ypres.AsyncDictSerializer):
             return None
 
         req = self.context["request"]
-        return RelationshipsSection(obj, context={"request": req}).serialized
+        source_id = strip_prefix(obj["source_id"])
+        inventory_item_id = strip_prefix(obj["id"])
+        return RelationshipsSection(
+            obj,
+            context={
+                "request": req,
+                "route_params": {
+                    "source_id": source_id,
+                    "inventory_item_id": inventory_item_id,
+                },
+                "section_route": "sources.inventory_item_relationships",
+                "item_route": "sources.inventory_item_relationship",
+            },
+        ).serialized
 
     def get_inventory(self, obj: SolrResult) -> dict | None:
         if {

@@ -79,7 +79,16 @@ class FullSource(BaseSource):
             return None
 
         req = self.context["request"]
-        return RelationshipsSection(obj, context={"request": req}).serialized
+        source_id = strip_prefix(obj["id"])
+        return RelationshipsSection(
+            obj,
+            context={
+                "request": req,
+                "route_params": {"source_id": source_id},
+                "section_route": "sources.relationships",
+                "item_route": "sources.relationship",
+            },
+        ).serialized
 
     async def get_incipits(self, obj: SolrResult) -> dict | None:
         if not obj.get("has_incipits_b", False):
@@ -90,8 +99,16 @@ class FullSource(BaseSource):
 
     def get_references_notes(self, obj: SolrResult) -> dict | None:
         req = self.context["request"]
+        source_id = strip_prefix(obj["id"])
         refnotes: dict = ReferencesNotesSection(
-            obj, context={"request": req}
+            obj,
+            context={
+                "request": req,
+                "route_params": {"source_id": source_id},
+                "section_route": "sources.source_references_notes",
+                "performance_locations_route": "sources.source_performance_locations",
+                "liturgical_festivals_route": "sources.source_liturgical_festivals",
+            },
         ).serialized
 
         # if the only two keys in the references and notes section is 'label' and 'type'

@@ -48,6 +48,21 @@ async def relationship(req, person_id: str, relationship_id: str):
     return response.json({"message": "Not implemented"}, status=501)
 
 
+@people_blueprint.route("/<person_id:str>/external-authorities/")
+async def person_external_authorities(req, person_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@people_blueprint.route("/<person_id:str>/external-authorities/<authority_id:str>")
+async def person_external_authority(req, person_id: str, authority_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@people_blueprint.route("/<person_id:str>/notes/")
+async def person_notes(req, person_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
 @people_blueprint.route("/<person_id:str>/digital-objects/")
 async def digital_object_list(req, person_id):
     return response.json({"message": "Not implemented"}, status=501)

@@ -152,6 +152,21 @@ async def relationship(req, source_id: str, relationship_id: str):
     return response.json({"message": "Not implemented"}, status=501)
 
 
+@sources_blueprint.route("/<source_id:str>/references-notes/")
+async def source_references_notes(req, source_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route("/<source_id:str>/performance-locations/")
+async def source_performance_locations(req, source_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route("/<source_id:str>/liturgical-festivals/")
+async def source_liturgical_festivals(req, source_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
 @sources_blueprint.route("/<source_id:str>/material-groups/")
 async def material_groups_list(req, source_id: str):
     return response.json({"message": "Not implemented"}, status=501)
@@ -164,6 +179,15 @@ async def material_group(req, source_id: str, mg_id: str):
 
 @sources_blueprint.route("/<source_id:str>/material-groups/<mg_id:str>/relationships/")
 async def material_group_relationships(req, source_id: str, mg_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/material-groups/<mg_id:str>/relationships/<relationship_id:str>"
+)
+async def material_group_relationship(
+    req, source_id: str, mg_id: str, relationship_id: str
+):
     return response.json({"message": "Not implemented"}, status=501)
 
 
@@ -196,6 +220,15 @@ async def holding_relationships(req, source_id: str, holding_id: str):
     return response.json({"message": "Not implemented"}, status=501)
 
 
+@sources_blueprint.route(
+    "/<source_id:str>/holdings/<holding_id:str>/relationships/<relationship_id:str>"
+)
+async def holding_relationship(
+    req, source_id: str, holding_id: str, relationship_id: str
+):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
 @sources_blueprint.route("/<source_id:str>/holdings/<holding_id:str>/digital-objects")
 async def holding_digital_object_list(req, source_id: str, holding_id: str):
     return response.json({"message": "Not implemented"}, status=501)
@@ -223,6 +256,51 @@ async def inventory_item(req, source_id: str, inventory_item_id: str):
         source_id=source_id,
         inventory_item_id=inventory_item_id,
     )
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/inventory-items/<inventory_item_id:str>/relationships/"
+)
+async def inventory_item_relationships(
+    req, source_id: str, inventory_item_id: str
+):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/inventory-items/<inventory_item_id:str>/relationships/<relationship_id:str>"
+)
+async def inventory_item_relationship(
+    req, source_id: str, inventory_item_id: str, relationship_id: str
+):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/inventory-items/<inventory_item_id:str>/references-notes/"
+)
+async def inventory_item_references_notes(
+    req, source_id: str, inventory_item_id: str
+):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/inventory-items/<inventory_item_id:str>/performance-locations/"
+)
+async def inventory_item_performance_locations(
+    req, source_id: str, inventory_item_id: str
+):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@sources_blueprint.route(
+    "/<source_id:str>/inventory-items/<inventory_item_id:str>/liturgical-festivals/"
+)
+async def inventory_item_liturgical_festivals(
+    req, source_id: str, inventory_item_id: str
+):
+    return response.json({"message": "Not implemented"}, status=501)
 
 
 @sources_blueprint.route(

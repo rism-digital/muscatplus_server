@@ -159,13 +159,30 @@ __AUTHORITY_LINKS = {
         "@context": {
             "scheme": {"@id": "rism:authorityScheme"},
             "identifier": {"@id": "rdf:value"},
-            "uri": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
+            "uri": {"@id": "rism:authorityUrl", "@type": "xsd:anyURI"},
         },
     },
     "sameAs": {
         "@id": "schemaorg:sameAs",
         "@type": "xsd:anyURI",
         "@container": "@set",
+    },
+}
+
+__EXTERNAL_AUTHORITIES = {
+    "externalAuthorities": {
+        "@id": "rism:externalAuthorities",
+        "@type": "@id",
+        "@context": {
+            "items": {
+                "@id": "rism:hasExternalAuthority",
+                "@container": "@set",
+                "@context": {
+                    "base": {"@id": "rism:authorityBase", "@type": "xsd:anyURI"},
+                    "url": {"@id": "rism:authorityUrl", "@type": "xsd:anyURI"},
+                },
+            }
+        },
     },
 }
 
@@ -211,13 +228,7 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
         "@type": "@id",
         "@context": {"summary": {"@id": "rism:hasSummary", "@container": "@set"}},
     },
-    "externalAuthorities": {
-        "@id": "rism:externalAuthorities",
-        "@type": "@id",
-        "@context": {
-            "items": {"@id": "rism:hasExternalAuthority", "@container": "@set"}
-        },
-    },
+    **__EXTERNAL_AUTHORITIES,
     **__AUTHORITY_LINKS,
     "nameVariants": {
         "@id": "rism:nameVariants",
@@ -298,13 +309,7 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
             },
         },
     },
-    "externalAuthorities": {
-        "@id": "rism:externalAuthorities",
-        "@type": "@id",
-        "@context": {
-            "items": {"@id": "rism:hasExternalAuthority", "@container": "@set"}
-        },
-    },
+    **__EXTERNAL_AUTHORITIES,
     "notes": {
         "@id": "rism:notes",
         "@type": "@id",
@@ -396,13 +401,7 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
             },
         },
     },
-    "externalAuthorities": {
-        "@id": "rism:externalAuthorities",
-        "@type": "@id",
-        "@context": {
-            "items": {"@id": "rism:hasExternalAuthority", "@container": "@set"}
-        },
-    },
+    **__EXTERNAL_AUTHORITIES,
     "externalResources": {
         "@id": "rism:externalResources",
         "@type": "@id",

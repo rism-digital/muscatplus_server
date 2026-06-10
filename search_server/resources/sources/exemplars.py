@@ -248,6 +248,12 @@ class Holding(ypres.AsyncDictSerializer):
             obj,
             context={
                 "request": req,
+                "route_params": {
+                    "source_id": strip_prefix(obj["source_id"]),
+                    "holding_id": strip_prefix(obj["id"].split("-")[0]),
+                },
+                "section_route": "sources.holding_relationships",
+                "item_route": "sources.holding_relationship",
             },
         ).serialized
 

@@ -1,7 +1,7 @@
 import ypres
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
-from search_server.helpers.identifiers import get_identifier
+from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.languages import languages_translator
 from search_server.resources.publications.base_publication import BasePublication
 from search_server.resources.shared.external_resources import ExternalResourcesSection
@@ -39,12 +39,29 @@ class Publication(BasePublication):
             return None
 
         return RelationshipsSection(
-            obj, context={"request": self.context["request"]}
+            obj,
+            context={
+                "request": self.context["request"],
+                "route_params": {
+                    "publication_id": strip_prefix(obj["id"]),
+                },
+                "section_route": "publications.publication_relationships",
+                "item_route": "publications.publication_relationship",
+            },
         ).serialized
 
     def get_notes(self, obj: dict) -> dict | None:
         req = self.context["request"]
-        notelist: dict = NotesSection(obj, context={"request": req}).serialized
+        notelist: dict = NotesSection(
+            obj,
+            context={
+                "request": req,
+                "route_params": {
+                    "publication_id": strip_prefix(obj["id"]),
+                },
+                "section_route": "publications.publication_notes",
+            },
+        ).serialized
 
         # if the only two keys in the references and notes section is 'label' and 'type'
         # then there is no content and we can hide this section.

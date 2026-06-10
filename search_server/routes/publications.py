@@ -29,3 +29,22 @@ async def publication_works(req, publication_id: str) -> response.HTTPResponse:
     return await handle_search(
         req, handle_publication_search_request, publication_id=publication_id
     )
+
+
+@publications_blueprint.route("/<publication_id:str>/relationships/")
+async def publication_relationships(req, publication_id: str) -> response.HTTPResponse:
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@publications_blueprint.route(
+    "/<publication_id:str>/relationships/<relationship_id:str>"
+)
+async def publication_relationship(
+    req, publication_id: str, relationship_id: str
+) -> response.HTTPResponse:
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@publications_blueprint.route("/<publication_id:str>/notes/")
+async def publication_notes(req, publication_id: str) -> response.HTTPResponse:
+    return response.json({"message": "Not implemented"}, status=501)
