@@ -125,7 +125,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-find "$input_dir" -maxdepth 1 -type f -name '*.nt' -print0 | sort -z > "$list_file"
+find "$input_dir" -maxdepth 2 -type f -name '*.nt' -print0 | sort -z > "$list_file"
 
 if [[ ! -s "$list_file" ]]; then
   echo "Error: no .nt files found in: $input_dir" >&2
