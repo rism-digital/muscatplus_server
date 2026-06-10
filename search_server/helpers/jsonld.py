@@ -364,6 +364,8 @@ RISM_JSONLD_PLACE_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
     **__SUMMARY,
     **__TYPE_LABEL,
+    **__EXTERNAL_AUTHORITIES,
+    **__AUTHORITY_LINKS,
     "sources": None,
     "people": None,
     "institutions": None,

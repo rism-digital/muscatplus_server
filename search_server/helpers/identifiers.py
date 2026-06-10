@@ -62,6 +62,10 @@ EXTERNAL_IDS: dict = {
         "label": "Corpus Musicae Ottomanicae (CMO)",
         "ident": "https://corpus-musicae-ottomanicae.de/receive/{ident}",
     },
+    "tgn": {
+        "label": "Getty Thesaurus of Geographic Names",
+        "ident": "https://vocab.getty.edu/tgn/{ident}",
+    },
 }
 
 
@@ -109,6 +113,8 @@ def get_site(req: request.Request) -> str:
     server: str = fwd_host_header if isinstance(fwd_host_header, str) else req.host
 
     return f"{scheme}://{server}"
+
+
 def get_url_from_type(
     req: request.Request, record_type: str, record_id: str
 ) -> str | None:

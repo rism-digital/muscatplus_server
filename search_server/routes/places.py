@@ -19,3 +19,13 @@ async def place(req, place_id: str):
 @places_blueprint.route("/<place_id:str>/relationships/<relationship_id:str>")
 async def relationship(req, place_id: str, relationship_id: str):
     return response.json({"message": "Not implemented"}, status=501)
+
+
+@places_blueprint.route("/<place_id:str>/external-authorities")
+async def place_external_authorities(req, place_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
+
+
+@places_blueprint.route("/<place_id:str>/external-authorities/<authority_id:str>")
+async def place_external_authority(req, place_id: str, authority_id: str):
+    return response.json({"message": "Not implemented"}, status=501)
