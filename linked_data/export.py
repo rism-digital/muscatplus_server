@@ -1,17 +1,19 @@
 import argparse
 import asyncio
-import json
 import logging.config
-import sqlite3
+import multiprocessing as mp
+import queue
+import secrets
 import sys
 import timeit
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-import aiosqlite
 import orjson
 import yaml
 from pyreqwest.client import Client, ClientBuilder
@@ -29,7 +31,7 @@ from search_server.helpers.jsonld import (
     RISM_JSONLD_WORK_CONTEXT,
 )
 from search_server.helpers.languages import filter_languages, load_translations
-from search_server.helpers.linked_data import to_ntriples
+from search_server.helpers.linked_data import to_ntriples as to_ntriples_pyoxigraph
 from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
 from search_server.resources.publications.publication import Publication
@@ -37,9 +39,6 @@ from search_server.resources.sources.full_source import FullSource
 from search_server.resources.works.full_work import FullWork
 from search_server.server import app
 
-# -------------------------------------------------------------------
-# Logging
-# -------------------------------------------------------------------
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 
@@ -48,26 +47,17 @@ with open(SCRIPT_DIR / "logging.yml") as lg:
 logging.config.dictConfig(log_config)
 log = logging.getLogger("ld_export")
 
-# -------------------------------------------------------------------
-# Config
-# -------------------------------------------------------------------
 with open(PROJECT_ROOT / "configuration.yml") as cf:
     config: dict[str, Any] = yaml.safe_load(cf)
 
 SOLR_SERVER: str = config["solr"]["server"]
 
 
-# -------------------------------------------------------------------
-# Minimal request stub for serializers (exposes .app and common attrs)
-# -------------------------------------------------------------------
 class MockRoute:
     def __init__(self) -> None:
         self.name = ""
 
 
-# Alters the response to make all the URIs appear to be coming from the production site.
-# Since every URL in the serializers runs through the `get_identifier` function, it will
-# pick up on this info for constructing the URI.
 headers: Header = Header(
     {
         "X-Forwarded-Proto": "https",
@@ -81,10 +71,6 @@ req = Request(bytes("/foo", "ascii"), headers, "", "GET", TransportProtocol(), a
 req.ctx.translations = filt_translations
 req.route = MockRoute()  # type: ignore
 
-
-# -------------------------------------------------------------------
-# Serialization helpers
-# -------------------------------------------------------------------
 serializer_map: dict[str, Any] = {
     "source": FullSource,
     "person": Person,
@@ -102,149 +88,69 @@ CONTEXTS: dict[str, Any] = {
 }
 
 RECORD_TYPES: list[str] = list(serializer_map.keys())
-
-def _is_transient_error(stage: str, err: Exception) -> bool:
-    if isinstance(err, (asyncio.TimeoutError, TimeoutError, ConnectionError)):
-        return True
-    if stage in {"serialize", "db"} and isinstance(err, OSError):
-        return True
-    if stage == "db" and isinstance(err, sqlite3.OperationalError):
-        return True
-    msg = str(err).lower()
-    return any(
-        hint in msg
-        for hint in ("timeout", "temporar", "connection reset", "connection refused")
-    )
-
-
-def _failure_payload(
-    doc_id: Any,
-    doc_type: Any,
-    stage: str,
-    attempts: int,
-    err: Exception,
-) -> dict[str, Any]:
-    return {
-        "id": doc_id,
-        "type": doc_type,
-        "stage": stage,
-        "attempts": attempts,
-        "error_class": err.__class__.__name__,
-        "error_message": str(err),
-        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
-    }
-
-
-def _write_failure_report_line(report_file: Any, payload: dict[str, Any]) -> None:
-    report_file.write(json.dumps(payload, ensure_ascii=False))
-    report_file.write("\n")
-
-
-async def run_serializer_from_doc(
-    this_doc: dict[str, Any],
-    serializer_cls: Any,
-    ctx_val: dict[str, Any],
-    session: Client,
-    sqlconn: aiosqlite.Connection,
-    db_lock: asyncio.Lock,
-    max_retries: int,
-    retry_backoff_ms: int,
-) -> dict[str, Any]:
-    if not this_doc:
-        payload = {
-            "id": None,
-            "type": None,
-            "stage": "input",
-            "attempts": 0,
-            "error_class": "ValueError",
-            "error_message": "Empty source document",
-            "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
-        }
-        return {"ok": False, "attempts": 0, "failure": payload}
-    doc_id = this_doc.get("id")
-    doc_type = this_doc.get("type")
-
-    attempts = 0
-    backoff_seconds = max(retry_backoff_ms, 0) / 1000.0
-
-    while attempts <= max_retries:
-        attempts += 1
-        try:
-            serialized = await serializer_cls(
-                this_doc,
-                context={"request": req, "direct_request": True, "client": session},
-            ).serialized
-        except Exception as e:
-            log.exception("Serializer failed for %s on attempt %s", doc_id, attempts)
-            if _is_transient_error("serialize", e) and attempts <= max_retries:
-                await asyncio.sleep(backoff_seconds * (2 ** (attempts - 1)))
-                continue
-            return {
-                "ok": False,
-                "attempts": attempts,
-                "failure": _failure_payload(doc_id, doc_type, "serialize", attempts, e),
-            }
-
-        try:
-            doc = {"@context": ctx_val["@context"], **serialized}
-            ntrips: str = to_ntriples(doc)
-            if not ntrips:
-                raise ValueError("No N-Triples output")
-        except Exception as e:
-            log.exception(
-                "N-Triples conversion failed for %s on attempt %s", doc_id, attempts
-            )
-            if _is_transient_error("convert", e) and attempts <= max_retries:
-                await asyncio.sleep(backoff_seconds * (2 ** (attempts - 1)))
-                continue
-            return {
-                "ok": False,
-                "attempts": attempts,
-                "failure": _failure_payload(doc_id, doc_type, "convert", attempts, e),
-            }
-
-        try:
-            async with db_lock:
-                await sqlconn.execute(
-                    "INSERT OR REPLACE INTO serialized VALUES (?, ?, ?)",
-                    (doc_id, doc_type, ntrips),
-                )
-        except Exception as e:
-            log.exception(
-                "Database write failed for %s on attempt %s", doc_id, attempts
-            )
-            if _is_transient_error("db", e) and attempts <= max_retries:
-                await asyncio.sleep(backoff_seconds * (2 ** (attempts - 1)))
-                continue
-            return {
-                "ok": False,
-                "attempts": attempts,
-                "failure": _failure_payload(doc_id, doc_type, "db", attempts, e),
-            }
-
-        return {"ok": True, "attempts": attempts}
-
-    unexpected = RuntimeError("Retry loop exhausted without result")
-    return {
-        "ok": False,
-        "attempts": attempts,
-        "failure": _failure_payload(doc_id, doc_type, "unknown", attempts, unexpected),
-    }
-
+DEFAULT_SOLR_SORT = "id asc"
+RANDOM_SEED_MAX = 2**31 - 1
 
 JSON_FIELD_SUFFIX = "_json"
 JSON_MULTI_FIELD_SUFFIX = "_jsonm"
 JSON_FIELD_SUFFIXES = (JSON_FIELD_SUFFIX, JSON_MULTI_FIELD_SUFFIX)
 
 
-def _expand_json_fields(doc: dict[str, Any]) -> dict[str, Any]:
+@dataclass
+class StageTimings:
+    json_expand_seconds: float = 0.0
+    serialize_seconds: float = 0.0
+    convert_seconds: float = 0.0
+    write_seconds: float = 0.0
+
+
+@dataclass
+class WorkerManifest:
+    record_type: str
+    worker_id: int
+    shard_tmp_path: str
+    shard_path: str
+    failure_report_path: str
+    records_seen: int
+    records_succeeded: int
+    records_failed: int
+    elapsed_seconds: float
+    docs_per_second: float
+    timings: dict[str, float]
+    completed: bool
+
+
+def utc_timestamp() -> str:
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
+
+
+def failure_payload(
+    doc_id: Any,
+    doc_type: Any,
+    stage: str,
+    err: Exception,
+    worker_id: int | None = None,
+) -> dict[str, Any]:
+    return {
+        "id": doc_id,
+        "type": doc_type,
+        "stage": stage,
+        "worker_id": worker_id,
+        "error_class": err.__class__.__name__,
+        "error_message": str(err),
+        "timestamp": utc_timestamp(),
+    }
+
+
+def expand_json_fields(doc: dict[str, Any]) -> tuple[dict[str, Any], float]:
+    expand_started_at = timeit.default_timer()
     expanded_fields: dict[str, Any] | None = None
 
     for key, value in doc.items():
         if not key.endswith(JSON_FIELD_SUFFIXES):
             continue
 
-        val = _parse_json_field(key, value)
+        val = parse_json_field(key, value)
         if val is None:
             continue
 
@@ -252,18 +158,18 @@ def _expand_json_fields(doc: dict[str, Any]) -> dict[str, Any]:
             expanded_fields = {}
         expanded_fields[key] = val
 
+    expand_elapsed_seconds = timeit.default_timer() - expand_started_at
     if expanded_fields is None:
-        return doc
+        return doc, expand_elapsed_seconds
+    return {**doc, **expanded_fields}, expand_elapsed_seconds
 
-    return {**doc, **expanded_fields}
 
-
-def _parse_json_field(field_name: str, field_value: Any) -> Any | None:
+def parse_json_field(field_name: str, field_value: Any) -> Any | None:
     if field_value is None:
         return None
 
     if field_name.endswith(JSON_MULTI_FIELD_SUFFIX):
-        return _parse_json_multi_field(field_name, field_value)
+        return parse_json_multi_field(field_name, field_value)
 
     if not isinstance(field_value, str | bytes | bytearray):
         log.error("Field '%s' must be a JSON string before expansion.", field_name)
@@ -276,7 +182,7 @@ def _parse_json_field(field_name: str, field_value: Any) -> Any | None:
         return None
 
 
-def _parse_json_multi_field(field_name: str, field_value: Any) -> list[Any] | None:
+def parse_json_multi_field(field_name: str, field_value: Any) -> list[Any] | None:
     if not isinstance(field_value, list):
         log.error("Field '%s' must be a list before expansion.", field_name)
         return None
@@ -295,347 +201,444 @@ def _parse_json_multi_field(field_name: str, field_value: Any) -> list[Any] | No
     return expanded_values
 
 
-# -------------------------------------------------------------------
-# Solr streaming: single paginated search per record type
-# -------------------------------------------------------------------
+def shard_tmp_path(output_path: Path, record_type: str, worker_id: int) -> Path:
+    return output_path / record_type / f"part-{worker_id:05d}.nt.tmp"
+
+
+def shard_final_path(output_path: Path, record_type: str, worker_id: int) -> Path:
+    return output_path / record_type / f"part-{worker_id:05d}.nt"
+
+
+def failure_report_path(output_path: Path, record_type: str, worker_id: int) -> Path:
+    return output_path / record_type / f"failed-records-{worker_id:05d}.jsonl"
+
+
+def record_type_context(record_type: str) -> dict[str, Any]:
+    return {"@context": CONTEXTS.get(record_type, RISM_JSONLD_DEFAULT_CONTEXT)}
+
+
+async def serialize_doc(
+    doc: dict[str, Any],
+    serializer_cls: Any,
+    ctx_val: dict[str, Any],
+    session: Client,
+) -> tuple[str, StageTimings]:
+    timings = StageTimings()
+
+    expanded_doc, timings.json_expand_seconds = expand_json_fields(doc)
+
+    serialize_started_at = timeit.default_timer()
+    serialized = await serializer_cls(
+        expanded_doc,
+        context={"request": req, "direct_request": True, "client": session},
+    ).serialized
+    timings.serialize_seconds = timeit.default_timer() - serialize_started_at
+
+    convert_started_at = timeit.default_timer()
+    ntriples = to_ntriples_pyoxigraph({"@context": ctx_val["@context"], **serialized})
+    timings.convert_seconds = timeit.default_timer() - convert_started_at
+
+    if not ntriples:
+        raise ValueError("No N-Triples output")
+
+    return ntriples, timings
+
+
+async def run_worker_async(
+    worker_id: int,
+    record_type: str,
+    input_queue: mp.Queue,
+    result_queue: mp.Queue,
+    output_path: Path,
+    concurrency: int,
+    flush_every: int,
+) -> None:
+    serializer_cls = serializer_map[record_type]
+    ctx_val = record_type_context(record_type)
+    tmp_path = shard_tmp_path(output_path, record_type, worker_id)
+    final_path = shard_final_path(output_path, record_type, worker_id)
+    failures_path = failure_report_path(output_path, record_type, worker_id)
+
+    tmp_path.parent.mkdir(parents=True, exist_ok=True)
+    if tmp_path.exists():
+        tmp_path.unlink()
+    if final_path.exists():
+        final_path.unlink()
+    if failures_path.exists():
+        failures_path.unlink()
+
+    start_time = timeit.default_timer()
+    seen = 0
+    succeeded = 0
+    failed = 0
+    since_flush = 0
+    timings = StageTimings()
+
+    async with (
+        ClientBuilder()
+        .max_connections(max(concurrency, 1))
+        .pool_max_idle_per_host(max(concurrency, 1))
+        .pool_idle_timeout(timedelta(seconds=30))
+        .timeout(timedelta(seconds=20))
+        .connect_timeout(timedelta(seconds=10))
+        .read_timeout(timedelta(seconds=20))
+        .build()
+    ) as session:
+        sem = asyncio.Semaphore(max(concurrency, 1))
+        pending: set[asyncio.Task] = set()
+
+        async def process_one(doc: dict[str, Any]) -> tuple[str, StageTimings, dict[str, Any] | None]:
+            async with sem:
+                try:
+                    ntriples, doc_timings = await serialize_doc(
+                        doc, serializer_cls, ctx_val, session
+                    )
+                    return ntriples, doc_timings, None
+                except Exception as err:
+                    payload = failure_payload(
+                        doc.get("id"),
+                        doc.get("type"),
+                        "serialize",
+                        err,
+                        worker_id=worker_id,
+                    )
+                    return "", StageTimings(), payload
+
+        async def drain_completed(
+            tasks: Iterable[asyncio.Task],
+            nt_out: Any,
+            failure_out: Any,
+        ) -> None:
+            nonlocal succeeded, failed, since_flush, timings
+            for task in tasks:
+                ntriples, doc_timings, failure = task.result()
+                if failure:
+                    failed += 1
+                    failure_out.write(orjson.dumps(failure).decode("utf-8"))
+                    failure_out.write("\n")
+                    continue
+
+                write_start = timeit.default_timer()
+                nt_out.write(ntriples)
+                if not ntriples.endswith("\n"):
+                    nt_out.write("\n")
+                timings.write_seconds += timeit.default_timer() - write_start
+
+                timings.json_expand_seconds += doc_timings.json_expand_seconds
+                timings.serialize_seconds += doc_timings.serialize_seconds
+                timings.convert_seconds += doc_timings.convert_seconds
+                succeeded += 1
+                since_flush += 1
+
+                if since_flush >= flush_every:
+                    nt_out.flush()
+                    failure_out.flush()
+                    since_flush = 0
+
+        with (
+            open(tmp_path, "w", encoding="utf-8") as nt_out,
+            open(failures_path, "w", encoding="utf-8") as failure_out,
+        ):
+            while True:
+                batch = await asyncio.to_thread(input_queue.get)
+                if batch is None:
+                    break
+
+                for doc in batch:
+                    seen += 1
+                    pending.add(asyncio.create_task(process_one(doc)))
+
+                    if len(pending) >= concurrency:
+                        done, pending = await asyncio.wait(
+                            pending, return_when=asyncio.FIRST_COMPLETED
+                        )
+                        await drain_completed(done, nt_out, failure_out)
+
+            if pending:
+                done, _ = await asyncio.wait(pending)
+                await drain_completed(done, nt_out, failure_out)
+
+            nt_out.flush()
+            failure_out.flush()
+
+    tmp_path.replace(final_path)
+
+    worker_elapsed_seconds = timeit.default_timer() - start_time
+    manifest = WorkerManifest(
+        record_type=record_type,
+        worker_id=worker_id,
+        shard_tmp_path=str(tmp_path),
+        shard_path=str(final_path),
+        failure_report_path=str(failures_path),
+        records_seen=seen,
+        records_succeeded=succeeded,
+        records_failed=failed,
+        elapsed_seconds=worker_elapsed_seconds,
+        docs_per_second=seen / worker_elapsed_seconds if worker_elapsed_seconds else 0.0,
+        timings=asdict(timings),
+        completed=True,
+    )
+    result_queue.put(asdict(manifest))
+
+
+def worker_entrypoint(
+    worker_id: int,
+    record_type: str,
+    input_queue: mp.Queue,
+    result_queue: mp.Queue,
+    output_path: str,
+    concurrency: int,
+    flush_every: int,
+) -> None:
+    try:
+        asyncio.run(
+            run_worker_async(
+                worker_id=worker_id,
+                record_type=record_type,
+                input_queue=input_queue,
+                result_queue=result_queue,
+                output_path=Path(output_path),
+                concurrency=concurrency,
+                flush_every=flush_every,
+            )
+        )
+    except Exception as err:
+        result_queue.put(
+            {
+                "record_type": record_type,
+                "worker_id": worker_id,
+                "completed": False,
+                "error": failure_payload(None, record_type, "worker", err, worker_id),
+            }
+        )
+
+
+def generate_random_seed() -> int:
+    return secrets.randbelow(RANDOM_SEED_MAX) + 1
+
+
+def solr_sort(randomize: bool, random_seed: int | None) -> str:
+    if not randomize:
+        return DEFAULT_SOLR_SORT
+    if random_seed is None:
+        raise ValueError("Random Solr sort requires a random seed")
+    return f"random_{random_seed} asc,id asc"
+
+
+def solr_request_limit(page_size: int, limit: int | None) -> int:
+    if limit is not None:
+        return min(page_size, limit)
+    return page_size
+
+
 async def stream_solr_docs_for_type(
     solr_conn: Solr,
     record_type: str,
     country_code: str | None,
     page_size: int,
     limit: int | None = None,
+    randomize: bool = False,
+    random_seed: int | None = None,
 ):
-    """
-    Async generator that yields full documents for a given record type using a Solr cursor.
-    Assumes the client handles cursor paging when cursor=True.
-    """
     fq = [f"type:{record_type}", "!project_s:[* TO *]"]
     if record_type == "source" and country_code:
         fq.append(f"country_codes_sm:{country_code.upper()}")
 
+    sort = solr_sort(randomize, random_seed)
     params: JsonAPIRequest = {
         "query": "*:*",
         "filter": fq,
-        # "fields": ["*"],  # request full docs so serializers don't need per-id fetch
-        "sort": "id asc",
-        "limit": page_size,  # cursor page size
+        "sort": sort,
+        "limit": solr_request_limit(page_size, limit),
     }
+    log.info("Solr query for %s using sort %s", record_type, sort)
     res = await solr_conn.search(params, cursor=True)
-    log.info("Solr query received %s results", res.hits)
+    log.info("Solr query for %s received %s results", record_type, res.hits)
     yielded = 0
     async for sdoc in res:
         if limit is not None and yielded >= limit:
             break
-        log.debug("Processing solr document")
-        expanded_doc = _expand_json_fields(sdoc)
         yielded += 1
-        yield (
-            expanded_doc,
-            res,
-        )  # res carries .hits if you want to log totals at the end
+        yield sdoc
 
 
-# -------------------------------------------------------------------
-# Main async pipeline for one record type
-# -------------------------------------------------------------------
-async def process_record_type(
-    solr_conn: Solr,
+async def export_record_type(
     record_type: str,
-    country_code: str | None,
-    dbname: str,
-    concurrency: int,
-    page_size: int,
-    limit: int | None,
     output_path: Path,
-    max_retries: int,
-    retry_backoff_ms: int,
-    commit_every: int,
-    failure_report_prefix: str,
-) -> dict[str, int]:
-    """
-    Performs a single paginated search via the client's cursor and serializes each document.
-    Returns summary counts.
-    """
-    ctx_val = {"@context": CONTEXTS.get(record_type, RISM_JSONLD_DEFAULT_CONTEXT)}
-    serializer_cls = serializer_map.get(record_type)
+    country_code: str | None,
+    workers: int,
+    page_size: int,
+    batch_size: int,
+    worker_concurrency: int,
+    flush_every: int,
+    limit: int | None,
+    randomize: bool,
+    random_seed: int | None,
+) -> list[dict[str, Any]]:
+    if record_type not in serializer_map:
+        raise ValueError(f"Unsupported record type: {record_type}")
 
-    # If you have a Publication serializer, add it to serializer_map instead of this fallback.
-    if record_type == "publication" and serializer_cls is None:
-        log.warning(
-            "No explicit serializer for 'publication'; using FullWork as a fallback."
+    ctx = mp.get_context("spawn")
+    result_queue = ctx.Queue()
+    worker_queues = [ctx.Queue(maxsize=4) for _ in range(workers)]
+    processes = [
+        ctx.Process(
+            target=worker_entrypoint,
+            args=(
+                worker_id,
+                record_type,
+                worker_queues[worker_id],
+                result_queue,
+                str(output_path),
+                worker_concurrency,
+                flush_every,
+            ),
         )
-        serializer_cls = FullWork
+        for worker_id in range(workers)
+    ]
 
-    if not serializer_cls:
-        log.critical("No serializer class for %s", record_type)
-        return {"seen": 0, "succeeded": 0, "failed": 0, "retried": 0}
+    for process in processes:
+        process.start()
 
-    # DB connection (async)
-    async with aiosqlite.connect(dbname) as sqlconn:
-        await sqlconn.executescript(
-            """
-            PRAGMA journal_mode=WAL;
-            PRAGMA synchronous=NORMAL;
-            CREATE TABLE IF NOT EXISTS serialized(
-                id   TEXT PRIMARY KEY,
-                type TEXT,
-                ttl  TEXT
-            );
-            """
-        )
-        db_lock = asyncio.Lock()
-        commit_every = max(commit_every, 1)
-        report_path = output_path / f"{failure_report_prefix}_{record_type}.jsonl"
+    solr_conn = Solr(SOLR_SERVER)
+    batches: list[list[dict[str, Any]]] = [[] for _ in range(workers)]
+    seen = 0
+    record_type_started_at = timeit.default_timer()
 
-        # HTTP client for any downstream network I/O in serializers
-        client_builder = (
-            ClientBuilder()
-            .max_connections(8)
-            .pool_max_idle_per_host(4)
-            .pool_idle_timeout(timedelta(seconds=30))
-            .timeout(timedelta(seconds=20))
-            .connect_timeout(timedelta(seconds=10))
-            .read_timeout(timedelta(seconds=20))
-        )
-
-        start_time = timeit.default_timer()
-        last_log_time = start_time
-        last_count = 0
-
-        async with client_builder.build() as session:
-            sem = asyncio.Semaphore(concurrency)
-            in_flight: set[asyncio.Task] = set()
-            seen = 0
-            succeeded = 0
-            failed = 0
-            retried = 0
-            since_commit = 0
-
-            async def run_one(doc: dict[str, Any]) -> dict[str, Any]:
-                async with sem:
-                    return await run_serializer_from_doc(
-                        doc,
-                        serializer_cls,
-                        ctx_val,
-                        session,
-                        sqlconn,
-                        db_lock,
-                        max_retries=max_retries,
-                        retry_backoff_ms=retry_backoff_ms,
-                    )
-
-            def consume_result(result: dict[str, Any], report_file: Any) -> None:
-                nonlocal succeeded, failed, retried, since_commit
-                attempts = int(result.get("attempts", 0))
-                if attempts > 1:
-                    retried += attempts - 1
-                if result.get("ok"):
-                    succeeded += 1
-                    since_commit += 1
-                    return
-                failed += 1
-                failure = result.get("failure")
-                if isinstance(failure, dict):
-                    _write_failure_report_line(report_file, failure)
-
-            # Single Solr cursor stream
-            res_last = None
-            with open(report_path, "w", encoding="utf-8") as report_file:
-                try:
-                    async for doc, res in stream_solr_docs_for_type(
-                        solr_conn, record_type, country_code, page_size, limit
-                    ):
-                        res_last = res
-                        seen += 1
-
-                        # ---- rate logging every 60s (or every 1000 docs, whichever comes first)
-                        now = timeit.default_timer()
-                        if (now - last_log_time) >= 60 or (seen - last_count) >= 1000:
-                            elapsed = now - start_time
-                            per_min = seen / (elapsed / 60) if elapsed else 0
-                            pending = max(seen - (succeeded + failed), 0)
-                            log.info(
-                                "[%s] Progress: seen=%d success=%d failed=%d pending=%d retried=%d | %.1f docs/min | elapsed %.1f min",
-                                record_type,
-                                seen,
-                                succeeded,
-                                failed,
-                                pending,
-                                retried,
-                                per_min,
-                                elapsed / 60,
-                            )
-                            last_log_time = now
-                            last_count = seen
-                        # ----------------------------------------------------------
-
-                        t = asyncio.create_task(run_one(doc))
-                        in_flight.add(t)
-
-                        if len(in_flight) >= concurrency:
-                            done, in_flight = await asyncio.wait(
-                                in_flight, return_when=asyncio.FIRST_COMPLETED
-                            )
-                            for finished in done:
-                                try:
-                                    consume_result(finished.result(), report_file)
-                                except Exception as e:
-                                    failed += 1
-                                    payload = _failure_payload(
-                                        None, record_type, "task", 1, e
-                                    )
-                                    _write_failure_report_line(report_file, payload)
-                            if since_commit >= commit_every:
-                                async with db_lock:
-                                    await sqlconn.commit()
-                                since_commit = 0
-                except Exception:
-                    log.exception(
-                        "Cursor stream failed for record type %s; finishing in-flight tasks",
-                        record_type,
-                    )
-
-                if in_flight:
-                    done, _ = await asyncio.wait(in_flight)
-                    for finished in done:
-                        try:
-                            consume_result(finished.result(), report_file)
-                        except Exception as e:
-                            failed += 1
-                            payload = _failure_payload(None, record_type, "task", 1, e)
-                            _write_failure_report_line(report_file, payload)
-
-            async with db_lock:
-                await sqlconn.commit()
-
-    # Log total hits if available
-    if res_last is not None and getattr(res_last, "hits", None) is not None:
-        log.info(
-            "Completed %s export: seen=%s success=%s failed=%s retried=%s (Solr hits reported: %s)",
+    try:
+        async for doc in stream_solr_docs_for_type(
+            solr_conn,
             record_type,
-            seen,
-            succeeded,
-            failed,
-            retried,
-            res_last.hits,  # type: ignore[attr-defined]
-        )
-    else:
-        log.info(
-            "Completed %s export: seen=%s success=%s failed=%s retried=%s",
-            record_type,
-            seen,
-            succeeded,
-            failed,
-            retried,
-        )
+            country_code,
+            page_size,
+            limit,
+            randomize=randomize,
+            random_seed=random_seed,
+        ):
+            worker_id = seen % workers
+            batches[worker_id].append(doc)
+            seen += 1
 
-    return {
-        "seen": seen,
-        "succeeded": succeeded,
-        "failed": failed,
-        "retried": retried,
+            if len(batches[worker_id]) >= batch_size:
+                worker_queues[worker_id].put(batches[worker_id])
+                batches[worker_id] = []
+
+            if seen % 10000 == 0:
+                queue_elapsed_seconds = timeit.default_timer() - record_type_started_at
+                log.info(
+                    "[%s] queued=%d | %.2f docs/s",
+                    record_type,
+                    seen,
+                    seen / queue_elapsed_seconds if queue_elapsed_seconds else 0.0,
+                )
+    finally:
+        for worker_id, batch in enumerate(batches):
+            if batch:
+                worker_queues[worker_id].put(batch)
+        for worker_queue in worker_queues:
+            worker_queue.put(None)
+
+    manifests = []
+    for _ in processes:
+        try:
+            manifests.append(result_queue.get(timeout=60 * 60))
+        except queue.Empty as err:
+            raise TimeoutError("Timed out waiting for exporter worker") from err
+
+    for process in processes:
+        process.join()
+        if process.exitcode != 0:
+            raise RuntimeError(
+                f"Worker process {process.pid} exited with {process.exitcode}"
+            )
+
+    record_type_elapsed_seconds = timeit.default_timer() - record_type_started_at
+    log.info(
+        "Completed %s queueing/export: queued=%d elapsed=%.2fs rate=%.2f docs/s",
+        record_type,
+        seen,
+        record_type_elapsed_seconds,
+        seen / record_type_elapsed_seconds if record_type_elapsed_seconds else 0.0,
+    )
+    return manifests
+
+
+def write_manifest(output_path: Path, manifests: list[dict[str, Any]]) -> None:
+    output_path.mkdir(parents=True, exist_ok=True)
+    manifest_path = output_path / "manifest.json"
+    payload = {
+        "created": utc_timestamp(),
+        "manifests": manifests,
+        "totals": {
+            "records_seen": sum(int(m.get("records_seen", 0)) for m in manifests),
+            "records_succeeded": sum(
+                int(m.get("records_succeeded", 0)) for m in manifests
+            ),
+            "records_failed": sum(int(m.get("records_failed", 0)) for m in manifests),
+        },
     }
+    manifest_path.write_text(
+        orjson.dumps(payload, option=orjson.OPT_INDENT_2).decode("utf-8"),
+        encoding="utf-8",
+    )
 
 
-# -------------------------------------------------------------------
-# Orchestration (no multiprocessing; one cursor per type)
-# -------------------------------------------------------------------
-def dump_nt_from_db(db_path: Path, nt_path: Path) -> None:
-    log.info("Writing N-Triples output to %s", str(nt_path))
-    with (
-        sqlite3.connect(str(db_path)) as db,
-        open(nt_path, "w", encoding="utf-8") as nt_out,
-    ):
-        for (ttl,) in db.execute("SELECT ttl FROM serialized ORDER BY id"):
-            if ttl:
-                nt_out.write(ttl)
-                if not ttl.endswith("\n"):
-                    nt_out.write("\n")
+def clean_output_for_types(output_path: Path, record_types: Iterable[str]) -> None:
+    for record_type in record_types:
+        record_dir = output_path / record_type
+        if not record_dir.exists():
+            continue
+        for path in record_dir.glob("part-*.nt*"):
+            path.unlink()
+        for path in record_dir.glob("failed-records-*.jsonl"):
+            path.unlink()
 
 
 def main(args: argparse.Namespace) -> bool:
-    types_to_serialize: list[str] = RECORD_TYPES if not args.include else args.include
-
     output_path: Path = args.output
     output_path.mkdir(parents=True, exist_ok=True)
+    record_types = RECORD_TYPES if not args.include else args.include
+    random_seed = generate_random_seed() if args.random else None
 
-    # Optional cleanup
     if args.empty:
-        for rec_type in types_to_serialize:
-            nt_path = Path(args.output, f"{rec_type}.nt")
-            db_file = Path(args.output, f"{rec_type}.db")
-            failure_report = Path(
-                args.output, f"{args.failure_report_prefix}_{rec_type}.jsonl"
-            )
-            if nt_path.exists():
-                log.info("Removing %s", str(nt_path))
-                nt_path.unlink(missing_ok=True)
-            if db_file.exists():
-                log.info("Removing %s", str(db_file))
-                db_file.unlink(missing_ok=True)
-            if failure_report.exists():
-                log.info("Removing %s", str(failure_report))
-                failure_report.unlink(missing_ok=True)
+        clean_output_for_types(output_path, record_types)
+
+    all_manifests: list[dict[str, Any]] = []
 
     async def run_all() -> None:
-        solr_conn = Solr(SOLR_SERVER)
-
-        for rec_type in types_to_serialize:
-            log.info("Running serialization for %s", rec_type)
-
-            db_file_path = Path(args.output, f"{rec_type}.db")
-            db_name = str(db_file_path)
-
-            start_serialize = timeit.default_timer()
-            stats = await process_record_type(
-                solr_conn=solr_conn,
-                record_type=rec_type,
-                country_code=args.country,
-                dbname=db_name,
-                concurrency=args.concurrency,
-                page_size=args.page_size,
-                limit=args.limit,
+        for record_type in record_types:
+            log.info("Starting %s export with %d workers", record_type, args.workers)
+            manifests = await export_record_type(
+                record_type=record_type,
                 output_path=output_path,
-                max_retries=args.max_retries,
-                retry_backoff_ms=args.retry_backoff_ms,
-                commit_every=args.commit_every,
-                failure_report_prefix=args.failure_report_prefix,
+                country_code=args.country,
+                workers=args.workers,
+                page_size=args.page_size,
+                batch_size=args.batch_size,
+                worker_concurrency=args.worker_concurrency,
+                flush_every=args.flush_every,
+                limit=args.limit,
+                randomize=args.random,
+                random_seed=random_seed,
             )
-            elapsed = timeit.default_timer() - start_serialize
-            rate = (stats["seen"] / elapsed) if elapsed else 0.0
-            log.info(
-                "Total time to serialize %s: %.3fs | seen=%d success=%d failed=%d retried=%d | rate=%.2f docs/s",
-                rec_type,
-                elapsed,
-                stats["seen"],
-                stats["succeeded"],
-                stats["failed"],
-                stats["retried"],
-                rate,
-            )
-
-            # Dump N-Triples to per-type file
-            nt_path = Path(args.output, f"{rec_type}.nt")
-            dump_nt_from_db(db_file, nt_path)
+            all_manifests.extend(manifests)
+            write_manifest(output_path, all_manifests)
 
     asyncio.run(run_all())
     return True
 
 
-# -------------------------------------------------------------------
-# CLI
-# -------------------------------------------------------------------
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-o", "--output", default="../ttl", type=Path, help="Output directory"
+        "-o", "--output", default="../ttl-new", type=Path, help="Output directory"
     )
     parser.add_argument(
         "-e",
         "--empty",
         dest="empty",
         action="store_true",
-        help="Empty the output directory before starting",
+        help="Empty generated shard files before starting",
     )
     parser.add_argument("-c", "--country", help="Optional country code for sources")
     parser.add_argument(
@@ -650,45 +653,40 @@ if __name__ == "__main__":
         choices=RECORD_TYPES,
         help="Limit to specific record types",
     )
+    parser.add_argument("--workers", type=int, default=4, help="Worker processes")
     parser.add_argument(
-        "--concurrency",
+        "--worker-concurrency",
         type=int,
-        default=8,
-        help="Max concurrent serializer tasks (affects CPU/DB only; Solr is single-cursor).",
+        default=4,
+        help="Concurrent serializer tasks inside each worker process",
     )
-    parser.add_argument(
-        "--page-size",
-        type=int,
-        default=500,
-        help="Solr cursor page size (number of docs per page).",
-    )
+    parser.add_argument("--page-size", type=int, default=1000, help="Solr page size")
     parser.add_argument(
         "--limit",
         type=int,
         help="Stop after this many Solr documents per record type.",
     )
     parser.add_argument(
-        "--max-retries",
-        type=int,
-        default=2,
-        help="Maximum retries for transient per-record failures.",
+        "--random",
+        action="store_true",
+        help="Sort each Solr record-type query in random order before applying --limit.",
     )
     parser.add_argument(
-        "--retry-backoff-ms",
+        "--batch-size",
+        type=int,
+        default=100,
+        help="Number of Solr documents sent to a worker at a time",
+    )
+    parser.add_argument(
+        "--flush-every",
         type=int,
         default=500,
-        help="Base backoff in milliseconds for retries.",
+        help="Flush shard and failure files after this many successful writes",
     )
     parser.add_argument(
-        "--commit-every",
-        type=int,
-        default=500,
-        help="Commit SQLite after this many successful inserts.",
-    )
-    parser.add_argument(
-        "--failure-report-prefix",
-        default="failed_records",
-        help="Filename prefix for per-type JSONL failure reports.",
+        "--profile-export",
+        action="store_true",
+        help="Reserved for compatibility; profile timings are always written to the manifest.",
     )
 
     incoming_args = parser.parse_args()
@@ -700,16 +698,15 @@ if __name__ == "__main__":
     else:
         log.setLevel(logging.INFO)
 
-    start = timeit.default_timer()
-    result: bool = main(incoming_args)
-    elapsed = timeit.default_timer() - start
-
-    hours, remainder = divmod(elapsed, 60 * 60)
+    script_started_at = timeit.default_timer()
+    main(incoming_args)
+    script_elapsed_seconds = timeit.default_timer() - script_started_at
+    hours, remainder = divmod(script_elapsed_seconds, 60 * 60)
     minutes, seconds = divmod(remainder, 60)
     log.info(
         "Total time to run: %02d:%02d:%02d (Total: %.3fs)",
         int(hours),
         int(minutes),
         round(seconds),
-        elapsed,
+        script_elapsed_seconds,
     )
