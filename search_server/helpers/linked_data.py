@@ -103,6 +103,9 @@ def to_turtle(data: dict[str, Any]) -> str | None:
     except PrttlError:
         logger.exception("Turtle pretty-printing failed; returning raw Turtle output")
         return turtle
+    except BaseException:
+        logger.exception("Turtle pretty-printing panicked; returning raw Turtle output")
+        return turtle
 
 
 def to_expanded_jsonld(data: dict[str, Any]) -> str:

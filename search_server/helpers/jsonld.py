@@ -360,6 +360,15 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     },
 }
 
+RISM_JSONLD_PLACE_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__SUMMARY,
+    **__TYPE_LABEL,
+    "sources": None,
+    "people": None,
+    "institutions": None,
+}
+
 RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
     **__RELATIONSHIPS,
@@ -640,6 +649,9 @@ RouteContextMap: dict[str, RouteOptions] = {
     ),
     "mp_server.institutions.institution": RouteOptions(
         "api.institution_context", RISM_JSONLD_INSTITUTION_CONTEXT
+    ),
+    "mp_server.places.place": RouteOptions(
+        "api.place_context", RISM_JSONLD_PLACE_CONTEXT
     ),
     "mp_server.sources.source": RouteOptions(
         "api.source_context", RISM_JSONLD_SOURCE_CONTEXT

@@ -3,6 +3,7 @@ from sanic import Blueprint, response
 from search_server.helpers.jsonld import (
     RISM_JSONLD_DEFAULT_CONTEXT,
     RISM_JSONLD_INSTITUTION_CONTEXT,
+    RISM_JSONLD_PLACE_CONTEXT,
     RISM_JSONLD_PERSON_CONTEXT,
     RISM_JSONLD_PUBLICATION_CONTEXT,
     RISM_JSONLD_SOURCE_CONTEXT,
@@ -25,6 +26,11 @@ async def person_context(req) -> response.HTTPResponse:
 @api_blueprint.route("/institution.json")
 async def institution_context(req) -> response.HTTPResponse:
     return response.json({"@context": RISM_JSONLD_INSTITUTION_CONTEXT})
+
+
+@api_blueprint.route("/place.json")
+async def place_context(req) -> response.HTTPResponse:
+    return response.json({"@context": RISM_JSONLD_PLACE_CONTEXT})
 
 
 @api_blueprint.route("/work.json")
