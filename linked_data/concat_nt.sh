@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: concat_nt.sh [--force] <input_dir> [output_file]
+Usage: concat_nt.sh [--force] [--dedup] <input_dir> [output_file]
 
 Concatenate all .nt files from <input_dir> in lexicographic order and write
 one gzip-compressed output file.
@@ -14,6 +14,8 @@ Arguments:
 
 Options:
   -f, --force  Overwrite output file if it already exists.
+  --dedup      Remove exact duplicate lines with GNU sort before compression.
+               This reorders output lexicographically.
   --no-progress
                Disable progress display even when 'pv' is installed.
   -h, --help   Show this help message.
@@ -21,12 +23,48 @@ EOF
 }
 
 force=0
+dedup=0
 show_progress=1
+
+detect_gnu_sort() {
+  local uname_s
+  uname_s=$(uname -s)
+
+  if [[ "$uname_s" == "Darwin" ]]; then
+    if ! command -v gsort >/dev/null 2>&1; then
+      echo "Error: --dedup requires GNU sort; install 'gsort' on macOS." >&2
+      exit 1
+    fi
+    echo "gsort"
+    return
+  fi
+
+  if ! command -v sort >/dev/null 2>&1; then
+    echo "Error: sort not found." >&2
+    exit 1
+  fi
+
+  if ! sort --version >/dev/null 2>&1; then
+    echo "Error: --dedup requires GNU sort; current 'sort' does not support --version." >&2
+    exit 1
+  fi
+
+  if ! sort --version 2>/dev/null | grep -qi "GNU coreutils"; then
+    echo "Error: --dedup requires GNU sort." >&2
+    exit 1
+  fi
+
+  echo "sort"
+}
 
 while (($#)); do
   case "$1" in
     -f|--force)
       force=1
+      shift
+      ;;
+    --dedup)
+      dedup=1
       shift
       ;;
     --no-progress)
@@ -76,9 +114,14 @@ mkdir -p "$output_dir"
 
 list_file=$(mktemp "${TMPDIR:-/tmp}/concat-nt-list.XXXXXX")
 tmp_output=$(mktemp "$output_dir/.triples.gz.tmp.XXXXXX")
+sort_tmpdir=""
+sort_bin=""
 
 cleanup() {
   rm -f "$list_file" "$tmp_output"
+  if [[ -n "$sort_tmpdir" ]]; then
+    rm -rf "$sort_tmpdir"
+  fi
 }
 trap cleanup EXIT
 
@@ -100,15 +143,40 @@ fi
 echo "Found $file_count .nt files (${total_bytes} bytes total)." >&2
 echo "Compressing to: $output_file" >&2
 
+if [[ $dedup -eq 1 ]]; then
+  sort_bin=$(detect_gnu_sort)
+  mkdir -p "$input_dir/tmp"
+  sort_tmpdir=$(mktemp -d "$input_dir/tmp/concat-nt-sort.XXXXXX")
+
+  echo "De-duplication enabled: removing exact duplicate lines." >&2
+  echo "Output order will be lexicographic." >&2
+  echo "Using GNU sort binary: $sort_bin" >&2
+  echo "Using GNU sort buffer size: 50%" >&2
+  echo "Using GNU sort temp directory: $sort_tmpdir" >&2
+fi
+
 if [[ $show_progress -eq 1 ]] && command -v pv >/dev/null 2>&1; then
-  xargs -0 cat < "$list_file" \
-    | pv -f -p -t -e -r -b -s "$total_bytes" \
-    | gzip -n -c > "$tmp_output"
+  if [[ $dedup -eq 1 ]]; then
+    xargs -0 cat < "$list_file" \
+      | pv -f -p -t -e -r -b -s "$total_bytes" \
+      | LC_ALL=C "$sort_bin" -u -S 50% -T "$sort_tmpdir" \
+      | gzip -n -c > "$tmp_output"
+  else
+    xargs -0 cat < "$list_file" \
+      | pv -f -p -t -e -r -b -s "$total_bytes" \
+      | gzip -n -c > "$tmp_output"
+  fi
 else
   if [[ $show_progress -eq 1 ]]; then
     echo "Note: 'pv' not found; running without live ETA/progress." >&2
   fi
-  xargs -0 cat < "$list_file" | gzip -n -c > "$tmp_output"
+  if [[ $dedup -eq 1 ]]; then
+    xargs -0 cat < "$list_file" \
+      | LC_ALL=C "$sort_bin" -u -S 50% -T "$sort_tmpdir" \
+      | gzip -n -c > "$tmp_output"
+  else
+    xargs -0 cat < "$list_file" | gzip -n -c > "$tmp_output"
+  fi
 fi
 
 if [[ $force -eq 1 ]]; then
