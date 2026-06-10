@@ -92,6 +92,7 @@ class Graph:
         "/api/v1/source.json",
         "/api/v1/person.json",
         "/api/v1/institution.json",
+        "/api/v1/place.json",
         "/api/v1/work.json",
         "/api/v1/publication.json",
         "/api/v1/context.json",
@@ -117,6 +118,7 @@ def test_api_contexts_do_not_use_generic_has_item_predicates(client):
     for path in [
         "/api/v1/person.json",
         "/api/v1/institution.json",
+        "/api/v1/place.json",
         "/api/v1/work.json",
         "/api/v1/publication.json",
         "/api/v1/source.json",
@@ -472,6 +474,118 @@ def test_institution_context_expands_semantic_sections(client):
         for obj in graph.objects(authority_node, rism.authorityUrl)
     ]
     assert len(authority_urls) == 1
+
+
+@pytest.mark.endpoint
+@pytest.mark.contract
+def test_place_context_expands_semantic_sections(client):
+    _, ctx_resp = client.get("/api/v1/place.json")
+    assert_json_contract(ctx_resp, status=200, required_keys=["@context"])
+    place_context = ctx_resp.json["@context"]
+
+    place_doc = {
+        "@context": place_context,
+        "id": "https://rism.online/places/30000655",
+        "type": "rism:Place",
+        "typeLabel": {"en": ["Place"]},
+        "label": {"none": ["Berlin"]},
+        "summary": [
+            {
+                "label": {"en": ["Country"]},
+                "value": {"none": ["Germany"]},
+            }
+        ],
+        "externalAuthorities": {
+            "id": "https://rism.online/places/30000655/external-authorities",
+            "label": {"en": ["Other standard identifier"]},
+            "type": "rism:ExternalAuthoritiesSection",
+            "items": [
+                {
+                    "id": "https://rism.online/places/30000655/external-authorities/wkp:Q64",
+                    "type": "rism:ExternalAuthority",
+                    "url": "https://www.wikidata.org/wiki/Q64",
+                    "base": "https://www.wikidata.org/wiki/",
+                    "label": {"none": ["Wikidata: Q64"]},
+                    "value": {"none": ["Q64"]},
+                }
+            ],
+        },
+        "sources": {
+            "type": "rism:PlaceSourceList",
+            "items": [
+                {
+                    "id": "https://rism.online/sources/117580",
+                    "type": "rism:Source",
+                    "label": {"none": ["Example Source"]},
+                }
+            ],
+        },
+        "people": {
+            "type": "rism:PlacePersonList",
+            "items": [
+                {
+                    "id": "https://rism.online/people/115324",
+                    "type": "rism:Person",
+                    "label": {"none": ["Mozart, Wolfgang Amadeus (1756-1791)"]},
+                }
+            ],
+        },
+        "institutions": {
+            "type": "rism:PlaceInstitutionList",
+            "items": [
+                {
+                    "id": "https://rism.online/institutions/30000655",
+                    "type": "rism:Institution",
+                    "label": {"none": ["Staatsbibliothek zu Berlin - Preußischer Kulturbesitz"]},
+                }
+            ],
+        },
+        "properties": {
+            "authorityLinks": [
+                {
+                    "id": "https://rism.online/places/30000655/external-authorities/wkp:Q64",
+                    "scheme": "wkp",
+                    "identifier": "Q64",
+                    "uri": "https://www.wikidata.org/wiki/Q64",
+                },
+                {
+                    "id": "https://rism.online/places/30000655/external-authorities/isil:DE-1",
+                    "scheme": "isil",
+                    "identifier": "DE-1",
+                },
+            ],
+            "sameAs": [
+                "https://www.wikidata.org/wiki/Q64",
+            ],
+        },
+    }
+
+    graph = Graph()
+    graph.parse(data=json.dumps(place_doc), format="json-ld")
+
+    subject = URIRef("https://rism.online/places/30000655")
+    rism = Namespace("https://rism.online/api/v1#")
+    schemaorg = Namespace("https://schema.org/")
+
+    predicates = {str(pred) for pred in graph.predicates()}
+    assert len(predicates) > 5
+    assert (subject, RDF.type, rism.Place) in graph
+    assert sum(1 for _ in graph.objects(subject, RDFS.label)) == 1
+    assert any(graph.objects(subject, rism.hasSummary))
+    assert not any(graph.objects(subject, rism.sources))
+    assert not any(graph.objects(subject, rism.people))
+    assert not any(graph.objects(subject, rism.institutions))
+    assert any(graph.objects(subject, rism.externalAuthorities))
+    assert any(graph.objects(subject, schemaorg.sameAs))
+
+    authority_nodes = list(graph.objects(subject, rism.hasExternalAuthority))
+    assert len(authority_nodes) == 2
+    authority_scheme_values = {
+        next(graph.objects(authority_node, rism.authorityScheme)).value
+        for authority_node in authority_nodes
+        if any(graph.objects(authority_node, rism.authorityScheme))
+    }
+    assert authority_scheme_values == {"wkp", "isil"}
 
 
 @pytest.mark.endpoint

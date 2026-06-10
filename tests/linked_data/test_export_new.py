@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from unittest.mock import patch
 
 from pyoxigraph import RdfFormat, parse
 
@@ -120,6 +121,36 @@ def test_turtle_conversion_emits_turtle_not_ntriples():
             without_named_graphs=True,
         )
     )
+
+
+def test_turtle_conversion_falls_back_when_pretty_printer_panics():
+    class PanicException(BaseException):
+        pass
+
+    doc = {
+        "@context": {
+            "rism": "https://rism.online/api/v1#",
+            "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+            "id": "@id",
+            "type": "@type",
+            "label": {
+                "@id": "rdfs:label",
+                "@container": ["@language", "@set"],
+            },
+        },
+        "id": "https://rism.online/sources/1",
+        "type": "rism:Source",
+        "label": {"en": ["Example source"]},
+    }
+
+    with patch(
+        "search_server.helpers.linked_data.format_turtle",
+        side_effect=PanicException("formatter panic"),
+    ):
+        turtle = to_turtle(doc)
+
+    assert "@prefix rism:" in turtle
+    assert "rism:Source" in turtle
 
 
 def test_expand_json_fields_parses_single_and_multi_values():

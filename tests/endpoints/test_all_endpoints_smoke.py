@@ -151,6 +151,8 @@ NOT_IMPLEMENTED_PATHS = {
     "people/<person_id:str>/relationships",
     "people/<person_id:str>/relationships/<relationship_id:str>",
     "places",
+    "places/<place_id:str>/external-authorities",
+    "places/<place_id:str>/external-authorities/<authority_id:str>",
     "places/<place_id:str>/relationships/<relationship_id:str>",
     "publications/<publication_id:str>/notes",
     "publications/<publication_id:str>/relationships",
