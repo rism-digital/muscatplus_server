@@ -2,7 +2,12 @@ import ypres
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
-from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier, strip_prefix
+from search_server.helpers.identifiers import (
+    EXTERNAL_IDS,
+    get_external_authority_identifier,
+    get_identifier,
+    strip_prefix,
+)
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.institutions.base_institution import (
     BaseInstitution,
@@ -161,7 +166,7 @@ class Place(ypres.AsyncDictSerializer):
                     self.context["request"],
                     "places.place_external_authority",
                     place_id=place_id,
-                    authority_id=ext,
+                    authority_id=get_external_authority_identifier(ext),
                 ),
                 "scheme": source,
                 "identifier": ident,

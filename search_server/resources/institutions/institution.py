@@ -3,7 +3,12 @@ from collections.abc import Callable
 import ypres
 
 from search_server.helpers.display_fields import LabelConfig, assemble_label_value
-from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier, strip_prefix
+from search_server.helpers.identifiers import (
+    EXTERNAL_IDS,
+    get_external_authority_identifier,
+    get_identifier,
+    strip_prefix,
+)
 from search_server.helpers.languages import merge_language_maps
 from search_server.helpers.solr_connection import SolrResult, result_count
 from search_server.helpers.utilities import is_number
@@ -187,7 +192,7 @@ class Institution(BaseInstitution):
                     self.context["request"],
                     "institutions.institution_external_authority",
                     institution_id=institution_id,
-                    authority_id=ext,
+                    authority_id=get_external_authority_identifier(ext),
                 ),
                 "scheme": source,
                 "identifier": ident,

@@ -197,7 +197,7 @@ def test_person_context_expands_semantic_sections(client):
             "type": "rism:ExternalAuthoritiesSection",
             "items": [
                 {
-                    "id": "https://rism.online/people/115324/external-authorities/viaf:32197206",
+                    "id": "https://rism.online/people/115324/external-authorities/viaf32197206",
                     "type": "rism:ExternalAuthority",
                     "url": "https://viaf.org/viaf/32197206",
                     "base": "https://viaf.org/viaf/",
@@ -223,13 +223,13 @@ def test_person_context_expands_semantic_sections(client):
         "properties": {
             "authorityLinks": [
                 {
-                    "id": "https://rism.online/people/115324/external-authorities/viaf:32197206",
+                    "id": "https://rism.online/people/115324/external-authorities/viaf32197206",
                     "scheme": "viaf",
                     "identifier": "32197206",
                     "uri": "https://viaf.org/viaf/32197206",
                 },
                 {
-                    "id": "https://rism.online/people/115324/external-authorities/iccu:CFIV019276",
+                    "id": "https://rism.online/people/115324/external-authorities/iccuCFIV019276",
                     "scheme": "iccu",
                     "identifier": "CFIV019276",
                 },
@@ -413,13 +413,13 @@ def test_institution_context_expands_semantic_sections(client):
             "city": "Dresden",
             "authorityLinks": [
                 {
-                    "id": "https://rism.online/institutions/30000042/external-authorities/dnb:123456-7",
+                    "id": "https://rism.online/institutions/30000042/external-authorities/dnb123456-7",
                     "scheme": "dnb",
                     "identifier": "123456-7",
                     "uri": "https://d-nb.info/gnd/123456-7",
                 },
                 {
-                    "id": "https://rism.online/institutions/30000042/external-authorities/isil:DE-588",
+                    "id": "https://rism.online/institutions/30000042/external-authorities/isilDE-588",
                     "scheme": "isil",
                     "identifier": "DE-588",
                 },
@@ -501,7 +501,7 @@ def test_place_context_expands_semantic_sections(client):
             "type": "rism:ExternalAuthoritiesSection",
             "items": [
                 {
-                    "id": "https://rism.online/places/30000655/external-authorities/wkp:Q64",
+                    "id": "https://rism.online/places/30000655/external-authorities/wkpQ64",
                     "type": "rism:ExternalAuthority",
                     "url": "https://www.wikidata.org/wiki/Q64",
                     "base": "https://www.wikidata.org/wiki/",
@@ -543,13 +543,13 @@ def test_place_context_expands_semantic_sections(client):
         "properties": {
             "authorityLinks": [
                 {
-                    "id": "https://rism.online/places/30000655/external-authorities/wkp:Q64",
+                    "id": "https://rism.online/places/30000655/external-authorities/wkpQ64",
                     "scheme": "wkp",
                     "identifier": "Q64",
                     "uri": "https://www.wikidata.org/wiki/Q64",
                 },
                 {
-                    "id": "https://rism.online/places/30000655/external-authorities/isil:DE-1",
+                    "id": "https://rism.online/places/30000655/external-authorities/isilDE-1",
                     "scheme": "isil",
                     "identifier": "DE-1",
                 },

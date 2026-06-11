@@ -1,6 +1,10 @@
 import ypres
 
-from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier
+from search_server.helpers.identifiers import (
+    EXTERNAL_IDS,
+    get_external_authority_identifier,
+    get_identifier,
+)
 
 
 class ExternalAuthoritiesSection(ypres.DictSerializer):
@@ -40,7 +44,8 @@ class ExternalAuthoritiesSection(ypres.DictSerializer):
             route_name = self.context.get("item_route")
             route_params = self.context["route_params"]
             if isinstance(route_name, str):
-                new_route_params = {**route_params, "authority_id": ext}
+                authority_id = get_external_authority_identifier(ext)
+                new_route_params = {**route_params, "authority_id": authority_id}
                 record["id"] = get_identifier(req, route_name, **new_route_params)
 
             # Do this first so the URL field appears first in the dictionary

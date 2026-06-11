@@ -1,4 +1,5 @@
 from sanic import request
+from urllib.parse import quote
 
 
 def strip_prefix(ident: str) -> str:
@@ -90,6 +91,16 @@ def get_identifier(req: request.Request, viewname: str, **kwargs) -> str:  # noq
     return req.app.url_for(
         viewname, _external=True, _scheme=scheme, _server=server, **kwargs
     )
+
+
+def get_external_authority_identifier(ext: str) -> str:
+    """
+    Normalize an external authority token for use in a path segment.
+
+    Colons are removed before percent-encoding so authority route identifiers do
+    not depend on reserved path characters.
+    """
+    return quote(ext.replace(":", ""), safe="")
 
 
 def get_site(req: request.Request) -> str:

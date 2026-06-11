@@ -5,7 +5,12 @@ from search_server.helpers.display_translators import (
     person_gender_translator,
     person_name_variant_labels_translator,
 )
-from search_server.helpers.identifiers import EXTERNAL_IDS, get_identifier, strip_prefix
+from search_server.helpers.identifiers import (
+    EXTERNAL_IDS,
+    get_external_authority_identifier,
+    get_identifier,
+    strip_prefix,
+)
 from search_server.helpers.solr_connection import SolrResult, result_count
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
@@ -183,7 +188,7 @@ class Person(BasePerson):
                     self.context["request"],
                     "people.person_external_authority",
                     person_id=person_id,
-                    authority_id=ext,
+                    authority_id=get_external_authority_identifier(ext),
                 ),
                 "scheme": source,
                 "identifier": ident,
