@@ -1,5 +1,3 @@
-from collections.abc import Callable
-
 import ypres
 
 from search_server.helpers.display_fields import LabelConfig, assemble_label_value
@@ -247,7 +245,7 @@ class LocationAddressSection(ypres.DictSerializer):
         }
 
         for address in obj.get("addresses_json", []):
-            out_addr = {}
+            out_addr = {"type": "schemaorg:PostalAddress"}
             for k, _ in address.items():
                 label = mailing_address_field_config.get(k)
                 if not label:

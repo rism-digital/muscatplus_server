@@ -349,7 +349,18 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
-            "addresses": {"@id": "rism:addresses", "@container": "@set"},
+            "addresses": {
+                "@id": "schemaorg:address",
+                "@container": "@set",
+                "@context": {
+                    "street": {"@id": "schemaorg:streetAddress"},
+                    "city": {"@id": "schemaorg:addressLocality"},
+                    "postcode": {"@id": "schemaorg:postalCode"},
+                    "country": {"@id": "schemaorg:addressCountry"},
+                    "county": {"@id": "schemaorg:addressRegion"},
+                    "note": {"@id": "schemaorg:description"},
+                },
+            },
             "website": {"@id": "rism:website"},
             "email": {"@id": "rism:emailAddress"},
             "coordinates": {"@id": "geojson:coordinates", "@container": "@list"},

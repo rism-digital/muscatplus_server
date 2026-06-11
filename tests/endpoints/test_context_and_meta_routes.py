@@ -376,6 +376,34 @@ def test_institution_context_expands_semantic_sections(client):
         "location": {
             "type": "rism:LocationAddressSection",
             "label": {"en": ["Location and address"]},
+            "addresses": [
+                {
+                    "street": {
+                        "label": {"en": ["Street address"]},
+                        "value": {"none": ["Schlossstrasse 1"]},
+                    },
+                    "city": {
+                        "label": {"en": ["City"]},
+                        "value": {"none": ["Dresden"]},
+                    },
+                    "postcode": {
+                        "label": {"en": ["Postal code"]},
+                        "value": {"none": ["01067"]},
+                    },
+                    "country": {
+                        "label": {"en": ["Country"]},
+                        "value": {"none": ["Germany"]},
+                    },
+                    "county": {
+                        "label": {"en": ["County / province"]},
+                        "value": {"none": ["Saxony"]},
+                    },
+                    "note": {
+                        "label": {"en": ["Public note"]},
+                        "value": {"none": ["Main entrance on west side"]},
+                    },
+                }
+            ],
             "coordinates": {
                 "id": "https://rism.online/institutions/30000042/location.geojson",
                 "sectionLabel": {"en": ["Location"]},
@@ -447,6 +475,16 @@ def test_institution_context_expands_semantic_sections(client):
     assert any(graph.objects(subject, rism.hasLocation))
     assert any(graph.objects(subject, rism.sources))
     assert any(graph.objects(subject, schemaorg.sameAs))
+
+    location_node = next(graph.objects(subject, rism.hasLocation))
+    address_nodes = list(graph.objects(location_node, schemaorg.address))
+    assert address_nodes
+    assert any(graph.objects(address_nodes[0], schemaorg.streetAddress))
+    assert any(graph.objects(address_nodes[0], schemaorg.addressLocality))
+    assert any(graph.objects(address_nodes[0], schemaorg.postalCode))
+    assert any(graph.objects(address_nodes[0], schemaorg.addressCountry))
+    assert any(graph.objects(address_nodes[0], schemaorg.addressRegion))
+    assert any(graph.objects(address_nodes[0], schemaorg.description))
 
     relationship_section = next(graph.objects(subject, rism.relationships))
     relationship_nodes = list(graph.objects(relationship_section, rism.hasRelationship))
