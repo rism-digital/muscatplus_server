@@ -1,3 +1,4 @@
+from sanic import request
 from sanic.log import logger
 from small_asc.client import JsonAPIRequest, SolrError
 
@@ -66,3 +67,30 @@ async def handle_publication_search_request(req, publication_id: str) -> dict:
 
 async def handle_publication_list_request(req) -> dict | None:
     return await PublicationList({}, context={"request": req}).serialized
+
+
+async def handle_publication_probe_request(
+    req: request.Request, publication_id: str
+) -> dict:
+    try:
+        solr_params, query_report = _prepare_query(req, publication_id, probe=True)
+    except InvalidQueryException:
+        raise
+
+    extra_context: dict = {
+        "direct_request": True,
+        "probe_request": True,
+        "query_validation": query_report,
+    }
+
+    try:
+        result_data: dict = await serialize_response(
+            req,
+            solr_params,
+            WorkResults,
+            extra_context,  # type: ignore
+        )
+    except SolrError:
+        raise
+
+    return result_data

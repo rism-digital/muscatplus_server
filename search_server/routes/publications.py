@@ -3,6 +3,7 @@ from sanic import Blueprint, response
 from search_server.request_handlers import handle_request, handle_search
 from search_server.resources.publications.handlers import (
     handle_publication_list_request,
+    handle_publication_probe_request,
     handle_publication_request,
     handle_publication_search_request,
 )
@@ -28,6 +29,13 @@ async def publications_list(req) -> response.HTTPResponse:
 async def publication_works(req, publication_id: str) -> response.HTTPResponse:
     return await handle_search(
         req, handle_publication_search_request, publication_id=publication_id
+    )
+
+
+@publications_blueprint.route("/<publication_id:str>/works/probe/")
+async def publication_works_probe(req, publication_id: str) -> response.HTTPResponse:
+    return await handle_search(
+        req, handle_publication_probe_request, publication_id=publication_id
     )
 
 
