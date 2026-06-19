@@ -8,8 +8,9 @@ from search_server.resources.incipits.handlers import (
     handle_png_download,
 )
 from search_server.resources.inventories.handlers import (
+    handle_inventory_item_probe_request,
     handle_inventory_item_request,
-    handle_inventory_items_list_request,
+    handle_inventory_item_search_request,
 )
 from search_server.resources.sources.contents_search import (
     handle_contents_probe_request,
@@ -243,8 +244,15 @@ async def holding_digital_object(req, source_id: str, holding_id: str, dobject_i
 
 @sources_blueprint.route("/<source_id:str>/inventory-items/")
 async def inventory_items(req, source_id: str):
-    return await handle_request(
-        req, handle_inventory_items_list_request, source_id=source_id
+    return await handle_search(
+        req, handle_inventory_item_search_request, source_id=source_id
+    )
+
+
+@sources_blueprint.route("/<source_id:str>/inventory-items/probe/")
+async def inventory_items_probe(req, source_id: str):
+    return await handle_search(
+        req, handle_inventory_item_probe_request, source_id=source_id
     )
 
 
@@ -261,9 +269,7 @@ async def inventory_item(req, source_id: str, inventory_item_id: str):
 @sources_blueprint.route(
     "/<source_id:str>/inventory-items/<inventory_item_id:str>/relationships/"
 )
-async def inventory_item_relationships(
-    req, source_id: str, inventory_item_id: str
-):
+async def inventory_item_relationships(req, source_id: str, inventory_item_id: str):
     return response.json({"message": "Not implemented"}, status=501)
 
 
@@ -279,9 +285,7 @@ async def inventory_item_relationship(
 @sources_blueprint.route(
     "/<source_id:str>/inventory-items/<inventory_item_id:str>/references-notes/"
 )
-async def inventory_item_references_notes(
-    req, source_id: str, inventory_item_id: str
-):
+async def inventory_item_references_notes(req, source_id: str, inventory_item_id: str):
     return response.json({"message": "Not implemented"}, status=501)
 
 

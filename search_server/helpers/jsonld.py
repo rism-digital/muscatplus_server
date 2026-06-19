@@ -639,6 +639,8 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@type": "@id",
         "@context": {
             "items": {"@id": "rism:hasInventoryItem", "@container": "@set"},
+            **__SECTION_LABEL,
+            "url": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
             "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
         },
     },

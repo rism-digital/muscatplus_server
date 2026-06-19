@@ -3,7 +3,6 @@ import ypres
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.incipits.incipit import IncipitsSection
-from search_server.resources.inventories.inventory_item import InventoryItemSection
 from search_server.resources.shared.contents import ContentsSection
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
@@ -184,9 +183,21 @@ class FullSource(BaseSource):
         if not obj.get("has_inventory_items_b", False):
             return None
 
-        return await InventoryItemSection(
-            obj, context={"request": self.context["request"], "direct_request": False}
-        ).serialized
+        num_inventory_items: int = obj.get("num_inventory_items_i", 0)
+        if num_inventory_items == 0:
+            return None
+
+        source_id = obj["rism_id"]
+
+        return {
+            "sectionLabel": {"none": ["Inventory items"]},
+            "url": get_identifier(
+                self.context["request"],
+                "sources.inventory_items",
+                source_id=source_id,
+            ),
+            "totalItems": num_inventory_items,
+        }
 
     def get_properties(self, obj: SolrResult) -> dict | None:
         # Properties are places where we want to surface information in the JSON-LD so that it

@@ -83,6 +83,7 @@ COVERED_ROUTE_PATHS: set[str] = {
     "sources/<source_id:str>/incipits/<work_num:str>/mei",
     "sources/<source_id:str>/incipits/<work_num:str>/png",
     "sources/<source_id:str>/inventory-items",
+    "sources/<source_id:str>/inventory-items/probe",
     "sources/<source_id:str>/inventory-items/<inventory_item_id:str>",
     "sources/<source_id:str>/inventory-items/<inventory_item_id:str>/incipits/<work_num:str>/mei",
     "sources/<source_id:str>/inventory-items/<inventory_item_id:str>/incipits/<work_num:str>/png",

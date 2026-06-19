@@ -852,6 +852,11 @@ def test_source_context_expands_semantic_sections(client):
                 }
             ],
         },
+        "inventoryItems": {
+            "sectionLabel": {"en": ["Inventory items"]},
+            "url": "https://rism.online/sources/117580/inventory-items",
+            "totalItems": 4,
+        },
         "sourceItems": {
             "sectionLabel": {"en": ["Items in this source"]},
             "url": "https://rism.online/sources/117580/contents",
@@ -920,6 +925,7 @@ def test_source_context_expands_semantic_sections(client):
     references_notes_node = next(graph.objects(subject, rism.referencesNotes))
     assert isinstance(references_notes_node, URIRef)
     assert any(graph.objects(subject, rism.holdings))
+    assert any(graph.objects(subject, rism.inventoryItems))
     assert any(graph.objects(subject, rism.sourceItems))
     assert any(graph.objects(subject, rism.externalResources))
     assert any(graph.objects(subject, rism.hasSummary))
@@ -932,6 +938,12 @@ def test_source_context_expands_semantic_sections(client):
 
     holdings_node = next(graph.objects(subject, rism.holdings))
     assert any(graph.objects(holdings_node, rism.hasHolding))
+
+    inventory_items_node = next(graph.objects(subject, rism.inventoryItems))
+    inventory_items_url = next(graph.objects(inventory_items_node, schemaorg.url))
+    assert inventory_items_url.datatype == XSD.anyURI
+    inventory_items_count = next(graph.objects(inventory_items_node, rism.totalItems))
+    assert inventory_items_count.datatype == XSD.integer
 
     subjects_node = next(graph.objects(subject, rism.subjects))
     assert any(graph.objects(subjects_node, rism.hasSubject))
