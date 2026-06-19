@@ -1,5 +1,6 @@
-from sanic import request
 from urllib.parse import quote
+
+from sanic import request
 
 
 def strip_prefix(ident: str) -> str:
@@ -27,13 +28,17 @@ EXTERNAL_IDS: dict = {
     "isil": {
         "label": "International Standard Identifier for Libraries and Related Organizations (ISIL)"
     },
-    "bne": {"label": "Biblioteca Nacional de España"},
+    "bne": {
+        "label": "Biblioteca Nacional de España",
+        "ident": "https://datos.bne.es/entidad/{ident}",
+    },
     "bnf": {
         "label": "Bibliothèque Nationale de France",
         "ident": "https://ark.bnf.fr/{ident}",
     },
     "iccu": {
-        "label": "Istituto Centrale per il Catalogo Unico"
+        "label": "Istituto Centrale per il Catalogo Unico",
+        "ident": "http://id.sbn.it/bid/{ident}",
     },  # No stable URI for authorities
     "isni": {
         "label": "International Standard Name Identifier",
@@ -43,8 +48,14 @@ EXTERNAL_IDS: dict = {
         "label": "Library of Congress",
         "ident": "http://id.loc.gov/authorities/names/{ident}",
     },
-    "nlp": {"label": "Biblioteka Narodowa"},
-    "nkc": {"label": "Národní knihovna České republiky"},
+    "nlp": {
+        "label": "Biblioteka Narodowa",
+        "ident": "https://dbn.bn.org.pl/descriptor-details/{ident}",
+    },
+    "nkc": {
+        "label": "Národní knihovna České republiky",
+        "ident": "https://aleph.nkp.cz/F/?func=find-c&local_base=aut&ccl_term=ica={ident}",
+    },
     "swnl": {"label": "Schweizerische Nationalbibliothek"},
     "moc": {"label": "MARC Organization Code"},  # No URI possible.
     "orcid": {
@@ -66,6 +77,13 @@ EXTERNAL_IDS: dict = {
     "tgn": {
         "label": "Getty Thesaurus of Geographic Names",
         "ident": "https://vocab.getty.edu/tgn/{ident}",
+    },
+    "corago": {
+        "label": "Corago: Repertorio e archivio di libretti del melodramma italiano dal 1600 al 1900"
+    },
+    "oclc": {
+        "label": "OCLC Entities",
+        "ident": "https://entities.oclc.org/worldcat/entity/{ident}",
     },
 }
 
