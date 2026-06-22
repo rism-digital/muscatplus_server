@@ -63,6 +63,7 @@ COVERED_ROUTE_PATHS: set[str] = {
     "publications/<publication_id:str>/relationships",
     "publications/<publication_id:str>/relationships/<relationship_id:str>",
     "publications/<publication_id:str>/works",
+    "publications/<publication_id:str>/works/probe",
     "search",
     "sigla",
     "sigla/<siglum:str>",

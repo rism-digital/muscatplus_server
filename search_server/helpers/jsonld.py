@@ -27,6 +27,7 @@ __BASE_CONTEXT = {
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "type": "@type",
     "id": "@id",
+    "included": "@included",
     # "none": "@none",
     "label": {
         "@id": "rdfs:label",
@@ -187,10 +188,7 @@ __EXTERNAL_AUTHORITIES = {
 }
 
 __TYPE_LABEL = {
-    "typeLabel": {
-        "@id": "rism:typeLabel",
-        "@container": ["@language", "@set"],
-    }
+    "typeLabel": None
 }
 
 __SECTION_LABEL = {
@@ -677,3 +675,127 @@ RouteContextMap: dict[str, RouteOptions] = {
     ),
     "__default": RouteOptions("api.default_context", RISM_JSONLD_DEFAULT_CONTEXT),
 }
+
+
+def _normalize_type_values(value: str | list[str] | None) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, str)]
+
+    return []
+
+
+def _merge_labels(
+    collected: dict[str, dict[str, list[str]]], type_iri: str, labels: dict
+) -> dict[str, dict[str, list[str]]]:
+    # Keep this helper copy-on-write so callers do not have to rely on mutation
+    # of a shared accumulator while walking the JSON-LD tree.
+    merged = {
+        iri: {lang: values.copy() for lang, values in label_map.items()}
+        for iri, label_map in collected.items()
+    }
+    existing = merged.setdefault(type_iri, {})
+    for lang, values in labels.items():
+        if not isinstance(lang, str) or not isinstance(values, list):
+            continue
+
+        lang_values = existing.setdefault(lang, [])
+        for value in values:
+            if isinstance(value, str) and value not in lang_values:
+                lang_values.append(value)
+
+    return merged
+
+
+def _collect_included_type_labels(
+    value,
+    collected: dict[str, dict[str, list[str]]] | None = None,
+    in_source_types: bool = False,
+    ignored_keys: set[str] | None = None,
+    depth: int = 0,
+) -> dict[str, dict[str, list[str]]]:
+    # We synthesize @included class nodes from inline type/typeLabel pairs so
+    # downstream RDF expansion also yields rdfs:label triples for those classes.
+    # The ignored top-level keys come from null-mapped context terms; those
+    # subtrees must stay in the JSON response but must not contribute RDF.
+    collected = collected or {}
+
+    if isinstance(value, list):
+        for item in value:
+            collected = _collect_included_type_labels(
+                item,
+                collected,
+                in_source_types,
+                ignored_keys=ignored_keys,
+                depth=depth + 1,
+            )
+        return collected
+
+    if not isinstance(value, dict):
+        return collected
+
+    type_label = value.get("typeLabel")
+    if isinstance(type_label, dict):
+        for type_iri in _normalize_type_values(value.get("type")):
+            collected = _merge_labels(collected, type_iri, type_label)
+    elif in_source_types:
+        label = value.get("label")
+        if isinstance(label, dict):
+            for type_iri in _normalize_type_values(value.get("type")):
+                collected = _merge_labels(collected, type_iri, label)
+
+    for key, child in value.items():
+        if key in {"@context", "included"}:
+            continue
+
+        if depth == 0 and ignored_keys and key in ignored_keys:
+            continue
+
+        collected = _collect_included_type_labels(
+            child,
+            collected,
+            in_source_types=(in_source_types or key == "sourceTypes"),
+            ignored_keys=ignored_keys,
+            depth=depth + 1,
+        )
+
+    return collected
+
+
+def null_context_terms(context: dict) -> set[str]:
+    # A null term in the route context means "leave this JSON untouched by RDF
+    # processing", so callers use this to stop included-node harvesting there.
+    return {key for key, value in context.items() if value is None}
+
+
+def with_included_type_nodes(data: dict, ignored_keys: set[str] | None = None) -> dict:
+    # Add synthesized @included nodes for classes that only appear inline in the
+    # response, while preserving any explicit included nodes already present.
+    collected = _collect_included_type_labels(data, ignored_keys=ignored_keys)
+
+    if not collected and "included" not in data:
+        return data
+
+    included: list[dict] = []
+    included_ids: set[str] = set()
+
+    existing_included = data.get("included")
+    if isinstance(existing_included, list):
+        for node in existing_included:
+            if isinstance(node, dict):
+                included.append(node)
+                if isinstance(node.get("id"), str):
+                    included_ids.add(node["id"])
+
+    for type_iri, labels in collected.items():
+        if type_iri in included_ids:
+            continue
+
+        included.append({"id": type_iri, "label": labels})
+
+    if not included:
+        return data
+
+    return {**data, "included": included}

@@ -78,8 +78,8 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
 class Holding(ypres.AsyncDictSerializer):
     sid = ypres.MethodField(label="id")
     stype = ypres.StaticField(label="type", value="rism:Holding")
+    type_label = ypres.MethodField(label="typeLabel")
     holding_type = ypres.MethodField(label="holdingType")
-    section_label = ypres.MethodField(label="sectionLabel")
     hlabel = ypres.MethodField(label="label")
     summary = ypres.MethodField()
     notes = ypres.MethodField()
@@ -123,7 +123,7 @@ class Holding(ypres.AsyncDictSerializer):
             req, "sources.holding", source_id=source_id, holding_id=holding_id
         )
 
-    def get_section_label(self, obj: dict) -> dict:
+    def get_type_label(self, obj: dict) -> dict:
         req = self.context["request"]
         transl: dict = req.ctx.translations
 

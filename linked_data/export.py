@@ -67,7 +67,9 @@ headers: Header = Header(
     }
 )
 translations: dict = load_translations(str(PROJECT_ROOT / "locales")) or {}
-filt_translations: dict = filter_languages({"en"}, translations)
+filt_translations: dict = filter_languages(
+    {"en", "fr", "de", "it", "pl", "pt", "es"}, translations
+)
 
 req = Request(bytes("/foo", "ascii"), headers, "", "GET", TransportProtocol(), app)
 req.ctx.translations = filt_translations

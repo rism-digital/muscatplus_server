@@ -58,7 +58,7 @@ def create_source_types_block(
     for c in content_types:
         label = content_type_translator(c, translations)
         content_type_block.append(
-            {"label": label, "type": CONTENT_TYPE_MAP.get(c, "rism:MusicalSource")}
+            {"typeLabel": label, "type": CONTENT_TYPE_MAP.get(c, "rism:MusicalSource")}
         )
 
     material_type_block: list = []
@@ -66,7 +66,7 @@ def create_source_types_block(
         label = material_source_type_translator(m, translations)
         material_type_block.append(
             {
-                "label": label,
+                "typeLabel": label,
                 "type": MATERIAL_SOURCE_TYPE_MAP.get(m, "rism:OtherMaterial"),
             }
         )
@@ -75,8 +75,8 @@ def create_source_types_block(
     record_type_label = record_type_translator(record_type, translations)
     source_type_label = source_type_translator(source_type, translations)
     return {
-        "recordType": {"label": record_type_label, "type": record_type_identifier},
-        "sourceType": {"label": source_type_label, "type": type_identifier},
+        "recordType": {"typeLabel": record_type_label, "type": record_type_identifier},
+        "sourceType": {"typeLabel": source_type_label, "type": type_identifier},
         "contentTypes": content_type_block,
         "materialTypes": material_type_block,
     }

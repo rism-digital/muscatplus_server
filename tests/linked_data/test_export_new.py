@@ -123,6 +123,34 @@ def test_turtle_conversion_emits_turtle_not_ntriples():
     )
 
 
+def test_jsonld_included_materializes_class_labels_without_instance_type_label():
+    doc = {
+        "@context": {
+            "rism": "https://rism.online/api/v1#",
+            "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+            "id": "@id",
+            "type": "@type",
+            "included": "@included",
+            "typeLabel": None,
+            "label": {
+                "@id": "rdfs:label",
+                "@container": ["@language", "@set"],
+            },
+        },
+        "id": "https://rism.online/people/1",
+        "type": "rism:Person",
+        "typeLabel": {"en": ["Person"]},
+        "label": {"none": ["Example person"]},
+        "included": [{"id": "rism:Person", "label": {"en": ["Person"]}}],
+    }
+
+    ntriples = to_ntriples(doc)
+
+    assert '<https://rism.online/people/1> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://rism.online/api/v1#Person> .' in ntriples
+    assert '<https://rism.online/api/v1#Person> <http://www.w3.org/2000/01/rdf-schema#label> "Person"@en .' in ntriples
+    assert "typeLabel" not in ntriples
+
+
 def test_turtle_conversion_falls_back_when_pretty_printer_panics():
     class PanicException(BaseException):
         pass
