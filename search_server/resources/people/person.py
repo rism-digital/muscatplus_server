@@ -5,7 +5,12 @@ from search_server.helpers.display_translators import (
     person_gender_translator,
     person_name_variant_labels_translator,
 )
-from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.identifiers import (
+    EXTERNAL_IDS,
+    get_external_authority_identifier,
+    get_identifier,
+    strip_prefix,
+)
 from search_server.helpers.solr_connection import SolrResult, result_count
 from search_server.resources.people.base_person import BasePerson
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
@@ -26,6 +31,7 @@ class Person(BasePerson):
     works = ypres.MethodField()
     external_resources = ypres.MethodField(label="externalResources")
     digital_objects = ypres.MethodField(label="digitalObjects")
+    properties = ypres.MethodField()
 
     def get_biographical_details(self, obj: SolrResult) -> dict | None:
         bio_details: dict = BiographicalDetails(
@@ -41,8 +47,15 @@ class Person(BasePerson):
         if "external_ids" not in obj:
             return None
 
+        person_id = strip_prefix(obj["person_id"])
         return ExternalAuthoritiesSection(
-            obj, context={"request": self.context["request"]}
+            obj,
+            context={
+                "request": self.context["request"],
+                "route_params": {"person_id": person_id},
+                "section_route": "people.person_external_authorities",
+                "item_route": "people.person_external_authority",
+            },
         ).serialized
 
     def get_name_variants(self, obj: SolrResult) -> dict | None:
@@ -102,11 +115,26 @@ class Person(BasePerson):
             return None
 
         req = self.context["request"]
-        return RelationshipsSection(obj, context={"request": req}).serialized
+        person_id = strip_prefix(obj["person_id"])
+        return RelationshipsSection(
+            obj,
+            context={
+                "request": req,
+                "route_params": {"person_id": person_id},
+                "section_route": "people.relationships",
+                "item_route": "people.relationship",
+            },
+        ).serialized
 
     def get_notes(self, obj: SolrResult) -> dict | None:
+        person_id = strip_prefix(obj["person_id"])
         notelist: dict = NotesSection(
-            obj, context={"request": self.context["request"]}
+            obj,
+            context={
+                "request": self.context["request"],
+                "route_params": {"person_id": person_id},
+                "section_route": "people.person_notes",
+            },
         ).serialized
 
         # Check that the items is not empty; if not, return the note list object.
@@ -143,6 +171,41 @@ class Person(BasePerson):
                 "request": self.context["request"],
             },
         ).serialized
+
+    def get_properties(self, obj: SolrResult) -> dict | None:
+        authority_links: list[dict] = []
+        same_as: list[str] = []
+        person_id = strip_prefix(obj["person_id"])
+
+        for ext in obj.get("external_ids", []):
+            source, ident = ext.split(":", 1)
+            authority_meta = EXTERNAL_IDS.get(source)
+            if not authority_meta:
+                continue
+
+            link: dict[str, str] = {
+                "id": get_identifier(
+                    self.context["request"],
+                    "people.person_external_authority",
+                    person_id=person_id,
+                    authority_id=get_external_authority_identifier(ext),
+                ),
+                "scheme": source,
+                "identifier": ident,
+            }
+            if uri_tmpl := authority_meta.get("ident"):
+                uri = uri_tmpl.format(ident=ident)
+                link["uri"] = uri
+                same_as.append(uri)
+
+            authority_links.append(link)
+
+        d = {
+            "authorityLinks": authority_links,
+            "sameAs": same_as,
+        }
+
+        return {k: v for k, v in d.items() if v} or None
 
 
 class BiographicalDetails(ypres.DictSerializer):

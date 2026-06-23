@@ -2,12 +2,18 @@ import ypres
 from small_asc.client import JsonAPIRequest, Results
 
 from search_server.helpers.display_fields import LabelConfig, get_display_fields
-from search_server.helpers.identifiers import get_identifier, strip_prefix
+from search_server.helpers.identifiers import (
+    EXTERNAL_IDS,
+    get_external_authority_identifier,
+    get_identifier,
+    strip_prefix,
+)
 from search_server.helpers.solr_connection import SolrConnection, SolrResult
 from search_server.resources.institutions.base_institution import (
     BaseInstitution,
 )
 from search_server.resources.people.base_person import BasePerson
+from search_server.resources.shared.external_authority import ExternalAuthoritiesSection
 from search_server.resources.sources.base_source import (
     BaseSource,
 )
@@ -30,9 +36,11 @@ class Place(ypres.AsyncDictSerializer):
     type_label = ypres.MethodField(label="typeLabel")
     slabel = ypres.MethodField(label="label")
     summary = ypres.MethodField()
+    external_authorities = ypres.MethodField(label="externalAuthorities")
     sources = ypres.MethodField()
     people = ypres.MethodField()
     institutions = ypres.MethodField()
+    properties = ypres.MethodField()
 
     def get_pid(self, obj: SolrResult) -> str:
         req = self.context["request"]
@@ -58,6 +66,21 @@ class Place(ypres.AsyncDictSerializer):
         }
 
         return get_display_fields(obj, transl, field_config)
+
+    def get_external_authorities(self, obj: SolrResult) -> dict | None:
+        if "external_ids" not in obj:
+            return None
+
+        place_id = strip_prefix(obj["id"])
+        return ExternalAuthoritiesSection(
+            obj,
+            context={
+                "request": self.context["request"],
+                "route_params": {"place_id": place_id},
+                "section_route": "places.place_external_authorities",
+                "item_route": "places.place_external_authority",
+            },
+        ).serialized
 
     async def get_sources(self, obj: SolrResult) -> dict | None:
         # if there are no sources attached to this place, return None
@@ -126,3 +149,38 @@ class Place(ypres.AsyncDictSerializer):
         ).serialized_many
 
         return {"type": "rism:PlaceInstitutionList", "items": institution_list}
+
+    def get_properties(self, obj: SolrResult) -> dict | None:
+        authority_links: list[dict] = []
+        same_as: list[str] = []
+        place_id = strip_prefix(obj["id"])
+
+        for ext in obj.get("external_ids", []):
+            source, ident = ext.split(":", 1)
+            authority_meta = EXTERNAL_IDS.get(source)
+            if not authority_meta:
+                continue
+
+            link: dict[str, str] = {
+                "id": get_identifier(
+                    self.context["request"],
+                    "places.place_external_authority",
+                    place_id=place_id,
+                    authority_id=get_external_authority_identifier(ext),
+                ),
+                "scheme": source,
+                "identifier": ident,
+            }
+            if uri_tmpl := authority_meta.get("ident"):
+                uri = uri_tmpl.format(ident=ident)
+                link["uri"] = uri
+                same_as.append(uri)
+
+            authority_links.append(link)
+
+        d = {
+            "authorityLinks": authority_links,
+            "sameAs": same_as,
+        }
+
+        return {k: v for k, v in d.items() if v} or None

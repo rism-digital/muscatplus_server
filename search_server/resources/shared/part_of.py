@@ -114,9 +114,14 @@ def _get_source_part_of(req, obj: dict, translations: dict) -> dict:
     source_type: str = obj.get("source_type_s", "unspecified")
     content_identifiers: list[str] = obj.get("content_types_sm", [])
     record_type: str = obj.get("record_type_s", "item")
+    material_source_types: list[str] = obj.get("material_source_types_sm", [])
 
     source_types_block = create_source_types_block(
-        record_type, source_type, content_identifiers, translations
+        record_type,
+        source_type,
+        content_identifiers,
+        material_source_types,
+        translations,
     )
 
     return {
@@ -153,9 +158,10 @@ def _get_source_member_part_of(req, obj: dict, translations: dict) -> dict:
     record_type: str = source_membership.get("record_type", "item")
     source_type: str = source_membership.get("source_type", "unspecified")
     content_types: list[str] = source_membership.get("content_types", [])
+    material_source_types: list[str] = obj.get("material_source_types_sm", [])
 
     source_types_block: dict = create_source_types_block(
-        record_type, source_type, content_types, translations
+        record_type, source_type, content_types, material_source_types, translations
     )
 
     parent_block = {
@@ -188,9 +194,14 @@ def _get_incipit_part_of(req, obj: dict, translations: dict) -> dict:
             record_type: str = obj.get("record_type", "item")
             source_type: str = obj.get("source_type", "unspecified")
             content_types: list[str] = obj.get("content_types", [])
+            material_source_types: list[str] = obj.get("material_source_types_sm", [])
 
             source_types_block: dict = create_source_types_block(
-                record_type, source_type, content_types, translations
+                record_type,
+                source_type,
+                content_types,
+                material_source_types,
+                translations,
             )
             return {
                 "relationshipType": "rism:PrimaryPartOf",

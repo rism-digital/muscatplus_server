@@ -3,12 +3,12 @@ import ypres
 from search_server.helpers.identifiers import get_identifier, strip_prefix
 from search_server.helpers.solr_connection import SolrResult
 from search_server.resources.incipits.incipit import IncipitsSection
+from search_server.resources.shared.contents import ContentsSection
 from search_server.resources.shared.digital_objects import DigitalObjectsSection
 from search_server.resources.shared.external_resources import ExternalResourcesSection
 from search_server.resources.shared.references_notes import ReferencesNotesSection
 from search_server.resources.shared.relationship import RelationshipsSection
 from search_server.resources.sources.base_source import BaseSource
-from search_server.resources.sources.contents import ContentsSection
 from search_server.resources.sources.exemplars import ExemplarsSection
 from search_server.resources.sources.material_groups import MaterialGroupsSection
 from search_server.resources.sources.source_items import SourceItemsSection
@@ -42,7 +42,7 @@ class FullSource(BaseSource):
     source_items = ypres.MethodField(label="sourceItems")
     external_resources = ypres.MethodField(label="externalResources")
     digital_objects = ypres.MethodField(label="digitalObjects")
-    dates = ypres.MethodField()
+    inventory_items = ypres.MethodField(label="inventoryItems")
     works = ypres.MethodField()
     properties = ypres.MethodField()
 
@@ -78,7 +78,16 @@ class FullSource(BaseSource):
             return None
 
         req = self.context["request"]
-        return RelationshipsSection(obj, context={"request": req}).serialized
+        source_id = strip_prefix(obj["id"])
+        return RelationshipsSection(
+            obj,
+            context={
+                "request": req,
+                "route_params": {"source_id": source_id},
+                "section_route": "sources.relationships",
+                "item_route": "sources.relationship",
+            },
+        ).serialized
 
     async def get_incipits(self, obj: SolrResult) -> dict | None:
         if not obj.get("has_incipits_b", False):
@@ -89,8 +98,16 @@ class FullSource(BaseSource):
 
     def get_references_notes(self, obj: SolrResult) -> dict | None:
         req = self.context["request"]
+        source_id = strip_prefix(obj["id"])
         refnotes: dict = ReferencesNotesSection(
-            obj, context={"request": req}
+            obj,
+            context={
+                "request": req,
+                "route_params": {"source_id": source_id},
+                "section_route": "sources.source_references_notes",
+                "performance_locations_route": "sources.source_performance_locations",
+                "liturgical_festivals_route": "sources.source_liturgical_festivals",
+            },
         ).serialized
 
         # if the only two keys in the references and notes section is 'label' and 'type'
@@ -162,24 +179,48 @@ class FullSource(BaseSource):
             },
         ).serialized
 
-    def get_dates(self, obj: SolrResult) -> dict | None:
-        if "date_ranges_im" not in obj:
+    async def get_inventory_items(self, obj: SolrResult) -> dict | None:
+        if not obj.get("has_inventory_items_b", False):
             return None
 
-        earliest, latest = obj.get("date_ranges_im", [None, None])
+        num_inventory_items: int = obj.get("num_inventory_items_i", 0)
+        if num_inventory_items == 0:
+            return None
 
-        d: dict = {
-            "earliestDate": earliest,
-            "latestDate": latest,
-            "dateStatement": ", ".join(obj.get("date_statements_sm", [])),
+        source_id = obj["rism_id"]
+
+        return {
+            "sectionLabel": {"none": ["Inventory items"]},
+            "url": get_identifier(
+                self.context["request"],
+                "sources.inventory_items",
+                source_id=source_id,
+            ),
+            "totalItems": num_inventory_items,
         }
 
-        return {k: v for k, v in d.items() if v}
-
     def get_properties(self, obj: SolrResult) -> dict | None:
+        # Properties are places where we want to surface information in the JSON-LD so that it
+        # can be easily converted to RDF, but we don't want to put it in the larger structures.
         d: dict = {
             "keyMode": obj.get("key_mode_s"),
             "physicalDimensions": obj.get("physical_dimensions_sm"),
+            "dates": _get_dates(obj),
         }
 
         return {k: v for k, v in d.items() if v} or None
+
+
+def _get_dates(obj: SolrResult) -> dict | None:
+    if "date_ranges_im" not in obj:
+        return None
+
+    earliest, latest = obj.get("date_ranges_im", [None, None])
+
+    d: dict = {
+        "earliestDate": earliest,
+        "latestDate": latest,
+        "dateStatement": ", ".join(obj.get("date_statements_sm", [])),
+    }
+
+    return {k: v for k, v in d.items() if v}

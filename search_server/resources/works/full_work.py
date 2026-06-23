@@ -27,7 +27,6 @@ class FullWork(BaseWork):
     references_notes = ypres.MethodField(label="referencesNotes")
     relationships = ypres.MethodField()
     properties = ypres.MethodField()
-    dates = ypres.MethodField()
 
     async def get_incipits(self, obj: SolrResult) -> dict | None:
         if not obj.get("has_incipits_b", False):
@@ -55,8 +54,15 @@ class FullWork(BaseWork):
         if "external_ids" not in obj:
             return None
 
+        work_id = strip_prefix(obj["id"])
         return ExternalAuthoritiesSection(
-            obj, context={"request": self.context["request"]}
+            obj,
+            context={
+                "request": self.context["request"],
+                "route_params": {"work_id": work_id},
+                "section_route": "works.work_external_authorities",
+                "item_route": "works.work_external_authority",
+            },
         ).serialized
 
     def get_sources(self, obj: SolrResult) -> dict | None:
@@ -94,12 +100,29 @@ class FullWork(BaseWork):
             return None
 
         req = self.context["request"]
-        return RelationshipsSection(obj, context={"request": req}).serialized
+        work_id = strip_prefix(obj["id"])
+        return RelationshipsSection(
+            obj,
+            context={
+                "request": req,
+                "route_params": {"work_id": work_id},
+                "section_route": "works.work_relationships",
+                "item_route": "works.work_relationship",
+            },
+        ).serialized
 
     def get_references_notes(self, obj: SolrResult) -> dict | None:
         req = self.context["request"]
+        work_id = strip_prefix(obj["id"])
         refnotes: dict = ReferencesNotesSection(
-            obj, context={"request": req}
+            obj,
+            context={
+                "request": req,
+                "route_params": {"work_id": work_id},
+                "section_route": "works.work_references_notes",
+                "performance_locations_route": "works.work_performance_locations",
+                "liturgical_festivals_route": "works.work_liturgical_festivals",
+            },
         ).serialized
 
         # if the only two keys in the references and notes section is 'label' and 'type'
@@ -111,26 +134,25 @@ class FullWork(BaseWork):
 
         return refnotes
 
-    def get_dates(self, obj: SolrResult) -> dict | None:
-        if "date_ranges_im" not in obj:
-            return None
-
-        earliest, latest = obj.get("date_ranges_im", [None, None])
-
-        d: dict = {
-            "earliestDate": earliest,
-            "latestDate": latest,
-            "dateStatement": obj.get("date_statement_s", []),
-        }
-
-        return {k: v for k, v in d.items() if v}
-
     def get_properties(self, obj: SolrResult) -> dict | None:
-        d: dict = {
-            "keyMode": obj.get("key_mode_s"),
-        }
+        d: dict = {"keyMode": obj.get("key_mode_s"), "dates": _get_dates(obj)}
 
         return {k: v for k, v in d.items() if v} or None
+
+
+def _get_dates(obj: SolrResult) -> dict | None:
+    if "date_ranges_im" not in obj:
+        return None
+
+    earliest, latest = obj.get("date_ranges_im", [None, None])
+
+    d: dict = {
+        "earliestDate": earliest,
+        "latestDate": latest,
+        "dateStatement": obj.get("date_statement_s", []),
+    }
+
+    return {k: v for k, v in d.items() if v}
 
 
 class FormOfWorkSection(ypres.DictSerializer):

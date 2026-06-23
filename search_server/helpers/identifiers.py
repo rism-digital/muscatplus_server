@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from sanic import request
 
 
@@ -26,13 +28,17 @@ EXTERNAL_IDS: dict = {
     "isil": {
         "label": "International Standard Identifier for Libraries and Related Organizations (ISIL)"
     },
-    "bne": {"label": "Biblioteca Nacional de España"},
+    "bne": {
+        "label": "Biblioteca Nacional de España",
+        "ident": "https://datos.bne.es/entidad/{ident}",
+    },
     "bnf": {
         "label": "Bibliothèque Nationale de France",
         "ident": "https://ark.bnf.fr/{ident}",
     },
     "iccu": {
-        "label": "Istituto Centrale per il Catalogo Unico"
+        "label": "Istituto Centrale per il Catalogo Unico",
+        "ident": "http://id.sbn.it/bid/{ident}",
     },  # No stable URI for authorities
     "isni": {
         "label": "International Standard Name Identifier",
@@ -42,8 +48,14 @@ EXTERNAL_IDS: dict = {
         "label": "Library of Congress",
         "ident": "http://id.loc.gov/authorities/names/{ident}",
     },
-    "nlp": {"label": "Biblioteka Narodowa"},
-    "nkc": {"label": "Národní knihovna České republiky"},
+    "nlp": {
+        "label": "Biblioteka Narodowa",
+        "ident": "https://dbn.bn.org.pl/descriptor-details/{ident}",
+    },
+    "nkc": {
+        "label": "Národní knihovna České republiky",
+        "ident": "https://aleph.nkp.cz/F/?func=find-c&local_base=aut&ccl_term=ica={ident}",
+    },
     "swnl": {"label": "Schweizerische Nationalbibliothek"},
     "moc": {"label": "MARC Organization Code"},  # No URI possible.
     "orcid": {
@@ -62,6 +74,17 @@ EXTERNAL_IDS: dict = {
         "label": "Corpus Musicae Ottomanicae (CMO)",
         "ident": "https://corpus-musicae-ottomanicae.de/receive/{ident}",
     },
+    "tgn": {
+        "label": "Getty Thesaurus of Geographic Names",
+        "ident": "https://vocab.getty.edu/tgn/{ident}",
+    },
+    "corago": {
+        "label": "Corago: Repertorio e archivio di libretti del melodramma italiano dal 1600 al 1900"
+    },
+    "oclc": {
+        "label": "OCLC Entities",
+        "ident": "https://entities.oclc.org/worldcat/entity/{ident}",
+    },
 }
 
 
@@ -78,12 +101,24 @@ def get_identifier(req: request.Request, viewname: str, **kwargs) -> str:  # noq
     fwd_scheme_header = req.headers.get("X-Forwarded-Proto")
     fwd_host_header = req.headers.get("X-Forwarded-Host")
 
-    scheme: str = fwd_scheme_header if fwd_scheme_header else req.scheme
-    server: str = fwd_host_header if fwd_host_header else req.host
+    scheme: str = (
+        fwd_scheme_header if isinstance(fwd_scheme_header, str) else req.scheme
+    )
+    server: str = fwd_host_header if isinstance(fwd_host_header, str) else req.host
 
     return req.app.url_for(
         viewname, _external=True, _scheme=scheme, _server=server, **kwargs
     )
+
+
+def get_external_authority_identifier(ext: str) -> str:
+    """
+    Normalize an external authority token for use in a path segment.
+
+    Colons are removed before percent-encoding so authority route identifiers do
+    not depend on reserved path characters.
+    """
+    return quote(ext.replace(":", ""), safe="")
 
 
 def get_site(req: request.Request) -> str:
@@ -101,8 +136,10 @@ def get_site(req: request.Request) -> str:
     fwd_scheme_header = req.headers.get("X-Forwarded-Proto")
     fwd_host_header = req.headers.get("X-Forwarded-Host")
 
-    scheme: str = fwd_scheme_header if fwd_scheme_header else req.scheme
-    server: str = fwd_host_header if fwd_host_header else req.host
+    scheme: str = (
+        fwd_scheme_header if isinstance(fwd_scheme_header, str) else req.scheme
+    )
+    server: str = fwd_host_header if isinstance(fwd_host_header, str) else req.host
 
     return f"{scheme}://{server}"
 
@@ -145,6 +182,6 @@ SOLR_FIELD_DATA_TYPES: FieldDataType = {
     "scoring_json": ["pmo:MediumOfPerformance"],
 }
 
-RISM_RELATIONSHIP_BASE = "https://rism.online/vocabulary/relationship/"
+RISM_RELATIONSHIP_BASE = "https://rism.online/vocabulary/relationship/#"
 LOC_RELATOR_BASE = "http://id.loc.gov/vocabulary/relators/"
 RDAU_BASE = "http://rdaregistry.info/Elements/u/"

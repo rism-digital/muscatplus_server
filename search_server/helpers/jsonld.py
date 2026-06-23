@@ -27,6 +27,7 @@ __BASE_CONTEXT = {
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "type": "@type",
     "id": "@id",
+    "included": "@included",
     # "none": "@none",
     "label": {
         "@id": "rdfs:label",
@@ -41,10 +42,10 @@ __BASE_CONTEXT = {
 
 __RELATIONSHIPS = {
     "relationships": {
-        "@id": "rism:hasRelationship",
+        "@id": "rism:relationships",
         "@type": "@id",
         "@context": {
-            "items": "@set",
+            "items": {"@id": "rism:hasRelationship", "@container": "@set"},
             "role": {"@id": "rism:hasRole", "@type": "@vocab"},
             "qualifier": {
                 "@id": "rism:hasQualifier",
@@ -57,10 +58,10 @@ __RELATIONSHIPS = {
 
 __INCIPITS = {
     "incipits": {
-        "@id": "rism:hasIncipit",
+        "@id": "rism:incipits",
         "@type": "@id",
         "@context": {
-            "items": "@set",
+            "items": {"@id": "rism:hasIncipit", "@container": "@set"},
             "properties": "@nest",
             "clef": {"@id": "rism:hasPAEClef"},
             "keysig": {"@id": "rism:hasPAEKeysig"},
@@ -88,10 +89,10 @@ __INCIPITS = {
 
 __PARTOF = {
     "partOf": {
-        "@id": "rism:isPartOf",
+        "@id": "rism:partOf",
         "@type": "@id",
         "@context": {
-            "items": "@set",
+            "items": {"@id": "rism:isPartOf", "@container": "@set"},
             "relationshipType": {
                 "@id": "rism:workCatalogRelationship",
                 "@type": "@vocab",
@@ -148,13 +149,46 @@ __PROPERTIES = {
         "@id": "rism:hasPhysicalDimensions",
         "@container": "@list",
     },
+    **__DATES,
+}
+
+__AUTHORITY_LINKS = {
+    "properties": "@nest",
+    "authorityLinks": {
+        "@id": "rism:hasExternalAuthority",
+        "@container": "@set",
+        "@context": {
+            "scheme": {"@id": "rism:authorityScheme"},
+            "identifier": {"@id": "rdf:value"},
+            "uri": {"@id": "rism:authorityUrl", "@type": "xsd:anyURI"},
+        },
+    },
+    "sameAs": {
+        "@id": "schemaorg:sameAs",
+        "@type": "xsd:anyURI",
+        "@container": "@set",
+    },
+}
+
+__EXTERNAL_AUTHORITIES = {
+    "externalAuthorities": {
+        "@id": "rism:externalAuthorities",
+        "@type": "@id",
+        "@context": {
+            "items": {
+                "@id": "rism:hasExternalAuthority",
+                "@container": "@set",
+                "@context": {
+                    "base": {"@id": "rism:authorityBase", "@type": "xsd:anyURI"},
+                    "url": {"@id": "rism:authorityUrl", "@type": "xsd:anyURI"},
+                },
+            }
+        },
+    },
 }
 
 __TYPE_LABEL = {
-    "typeLabel": {
-        "@id": "rism:typeLabel",
-        "@container": ["@language", "@set"],
-    }
+    "typeLabel": None
 }
 
 __SECTION_LABEL = {
@@ -192,15 +226,12 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
         "@type": "@id",
         "@context": {"summary": {"@id": "rism:hasSummary", "@container": "@set"}},
     },
-    "externalAuthorities": {
-        "@id": "rism:externalAuthorities",
-        "@type": "@id",
-        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
-    },
+    **__EXTERNAL_AUTHORITIES,
+    **__AUTHORITY_LINKS,
     "nameVariants": {
         "@id": "rism:nameVariants",
         "@type": "@id",
-        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+        "@context": {"items": {"@id": "rism:hasNameVariant", "@container": "@set"}},
     },
     "notes": {
         "@id": "rism:notes",
@@ -211,10 +242,47 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
         "@id": "rism:works",
         "@type": "@id",
         "@context": {
-            "workReferences": {"@id": "rism:workReferences", "@type": "@id"},
-            "worksCatalogs": {"@id": "rism:worksCatalogs", "@type": "@id"},
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "workReferences": {
+                "@id": "rism:workReferences",
+                "@type": "@id",
+                "@context": {
+                    "items": {"@id": "rism:hasWorkNode", "@container": "@set"}
+                },
+            },
+            "worksCatalogs": {
+                "@id": "rism:worksCatalogs",
+                "@type": "@id",
+                "@context": {
+                    "items": {
+                        "@id": "rism:hasWorkCatalogReference",
+                        "@container": "@set",
+                    }
+                },
+            },
+            "works": {
+                "@id": "rism:works",
+                "@type": "@id",
+                "@context": {"items": {"@id": "rism:hasWork", "@container": "@set"}},
+            },
+            "items": {"@id": "rism:hasWork", "@container": "@set"},
         },
+    },
+    "externalResources": {
+        "@id": "rism:externalResources",
+        "@type": "@id",
+        "@context": {
+            "items": {"@id": "rism:hasExternalResource", "@container": "@set"},
+            "externalRecords": {
+                "@id": "rism:hasExternalRecord",
+                "@container": "@set",
+                "@type": "@id",
+            },
+        },
+    },
+    "digitalObjects": {
+        "@id": "rism:digitalObjects",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasDigitalObject", "@container": "@set"}},
     },
 }
 
@@ -239,11 +307,7 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
             },
         },
     },
-    "externalAuthorities": {
-        "@id": "rism:externalAuthorities",
-        "@type": "@id",
-        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
-    },
+    **__EXTERNAL_AUTHORITIES,
     "notes": {
         "@id": "rism:notes",
         "@type": "@id",
@@ -253,8 +317,18 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
         "@id": "rism:externalResources",
         "@type": "@id",
         "@context": {
-            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"}
+            "items": {"@id": "rism:hasExternalResource", "@container": "@set"},
+            "externalRecords": {
+                "@id": "rism:hasExternalRecord",
+                "@container": "@set",
+                "@type": "@id",
+            },
         },
+    },
+    "digitalObjects": {
+        "@id": "rism:digitalObjects",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasDigitalObject", "@container": "@set"}},
     },
     "properties": "@nest",
     "siglum": {
@@ -267,12 +341,24 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     "city": {
         "@id": "rism:hasCityName",
     },
+    **__AUTHORITY_LINKS,
     "location": {
         "@id": "rism:hasLocation",
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
-            "addresses": {"@id": "rism:addresses", "@container": "@set"},
+            "addresses": {
+                "@id": "schemaorg:address",
+                "@container": "@set",
+                "@context": {
+                    "street": {"@id": "schemaorg:streetAddress"},
+                    "city": {"@id": "schemaorg:addressLocality"},
+                    "postcode": {"@id": "schemaorg:postalCode"},
+                    "country": {"@id": "schemaorg:addressCountry"},
+                    "county": {"@id": "schemaorg:addressRegion"},
+                    "note": {"@id": "schemaorg:description"},
+                },
+            },
             "website": {"@id": "rism:website"},
             "email": {"@id": "rism:emailAddress"},
             "coordinates": {"@id": "geojson:coordinates", "@container": "@list"},
@@ -283,6 +369,17 @@ RISM_JSONLD_INSTITUTION_CONTEXT: ContextDocument = {
     },
 }
 
+RISM_JSONLD_PLACE_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__SUMMARY,
+    **__TYPE_LABEL,
+    **__EXTERNAL_AUTHORITIES,
+    **__AUTHORITY_LINKS,
+    "sources": None,
+    "people": None,
+    "institutions": None,
+}
+
 RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
     **__RELATIONSHIPS,
@@ -290,7 +387,6 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     **__PARTOF,
     **__CREATOR,
     **__SUMMARY,
-    **__DATES,
     **__PROPERTIES,
     **__TYPE_LABEL,
     **__SECTION_LABEL,
@@ -306,7 +402,7 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
     "formOfWork": {
         "@id": "rism:formOfWork",
         "@type": "@id",
-        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
+        "@context": {"items": {"@id": "rism:hasFormOfWork", "@container": "@set"}},
     },
     "referencesNotes": {
         "@id": "rism:referencesNotes",
@@ -325,20 +421,17 @@ RISM_JSONLD_WORK_CONTEXT: ContextDocument = {
             },
         },
     },
-    "externalAuthorities": {
-        "@id": "rism:externalAuthorities",
-        "@type": "@id",
-        "@context": {"items": {"@id": "rism:hasItem", "@container": "@set"}},
-    },
+    **__EXTERNAL_AUTHORITIES,
     "externalResources": {
         "@id": "rism:externalResources",
         "@type": "@id",
         "@context": {
+            "items": {"@id": "rism:hasExternalResource", "@container": "@set"},
             "externalRecords": {
-                "@id": "rism:externalRecord",
+                "@id": "rism:hasExternalRecord",
                 "@container": "@set",
                 "@type": "@id",
-            }
+            },
         },
     },
 }
@@ -395,8 +488,24 @@ RISM_JSONLD_PUBLICATION_CONTEXT: ContextDocument = {
         "@id": "rism:externalResources",
         "@type": "@id",
         "@context": {
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
-            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"},
+            "items": {"@id": "rism:hasExternalResource", "@container": "@set"},
+            "externalRecords": {
+                "@id": "rism:hasExternalRecord",
+                "@container": "@set",
+                "@type": "@id",
+            },
+        },
+    },
+}
+RISM_JSONLD_SUBJECT_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__TYPE_LABEL,
+    "sources": {
+        "@id": "rism:sources",
+        "@type": "@id",
+        "@context": {
+            "id": "@id",
+            "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
         },
     },
 }
@@ -408,7 +517,6 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     **__PARTOF,
     **__CREATOR,
     **__SUMMARY,
-    **__DATES,
     **__PROPERTIES,
     **__TYPE_LABEL,
     **__SECTION_LABEL,
@@ -424,33 +532,38 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
                 "@container": "@set",
                 "@type": "@vocab",
             },
+            "materialTypes": {
+                "@id": "rism:materialTypes",
+                "@container": "@set",
+                "@type": "@vocab",
+            },
         },
     },
     "materialGroups": {
-        "@id": "rism:hasMaterialGroup",
+        "@id": "rism:materialGroups",
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "items": {"@id": "rism:hasMaterialGroup", "@container": "@set"},
             **__SUMMARY,
         },
     },
     "sourceItems": {
-        "@id": "rism:hasSourceItem",
+        "@id": "rism:sourceItems",
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
             "url": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
             "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "items": {"@id": "rism:hasSourceItem", "@container": "@set"},
         },
     },
     "exemplars": {
-        "@id": "rism:hasHolding",
+        "@id": "rism:holdings",
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "items": {"@id": "rism:hasHolding", "@container": "@set"},
             "heldBy": {
                 "@id": "rism:hasHoldingInstitution",
                 "@type": "@id",
@@ -466,11 +579,11 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@id": "@nest",
     },
     "subjects": {
-        "@id": "rism:hasSubject",
+        "@id": "rism:subjects",
         "@type": "@id",
         "@context": {
             **__SECTION_LABEL,
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
+            "items": {"@id": "rism:hasSubject", "@container": "@set"},
         },
     },
     "referencesNotes": {
@@ -489,8 +602,12 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@id": "rism:externalResources",
         "@type": "@id",
         "@context": {
-            "items": {"@id": "rism:hasItem", "@container": "@set"},
-            "externalRecords": {"@id": "rism:externalRecord", "@container": "@set"},
+            "items": {"@id": "rism:hasExternalResource", "@container": "@set"},
+            "externalRecords": {
+                "@id": "rism:hasExternalRecord",
+                "@container": "@set",
+                "@type": "@id",
+            },
         },
     },
     "works": {
@@ -498,9 +615,43 @@ RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
         "@type": "@id",
         "@context": {
             "workReference": {"@id": "rism:workReference", "@type": "@id"},
-            "works": {"@id": "rism:works", "@type": "@id"},
-            "workReferences": {"@id": "rism:workReferences", "@type": "@id"},
-            "worksCatalogs": {"@id": "rism:worksCatalogs", "@type": "@id"},
+            "works": {
+                "@id": "rism:works",
+                "@type": "@id",
+                "@context": {"items": {"@id": "rism:hasWork", "@container": "@set"}},
+            },
+            "workReferences": {
+                "@id": "rism:workReferences",
+                "@type": "@id",
+                "@context": {
+                    "items": {"@id": "rism:hasWorkNode", "@container": "@set"}
+                },
+            },
+            "worksCatalogs": {
+                "@id": "rism:worksCatalogs",
+                "@type": "@id",
+                "@context": {
+                    "items": {
+                        "@id": "rism:hasWorkCatalogReference",
+                        "@container": "@set",
+                    }
+                },
+            },
+        },
+    },
+    "digitalObjects": {
+        "@id": "rism:digitalObjects",
+        "@type": "@id",
+        "@context": {"items": {"@id": "rism:hasDigitalObject", "@container": "@set"}},
+    },
+    "inventoryItems": {
+        "@id": "rism:inventoryItems",
+        "@type": "@id",
+        "@context": {
+            "items": {"@id": "rism:hasInventoryItem", "@container": "@set"},
+            **__SECTION_LABEL,
+            "url": {"@id": "schemaorg:url", "@type": "xsd:anyURI"},
+            "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
         },
     },
 }
@@ -524,6 +675,9 @@ RouteContextMap: dict[str, RouteOptions] = {
     "mp_server.institutions.institution": RouteOptions(
         "api.institution_context", RISM_JSONLD_INSTITUTION_CONTEXT
     ),
+    "mp_server.places.place": RouteOptions(
+        "api.place_context", RISM_JSONLD_PLACE_CONTEXT
+    ),
     "mp_server.sources.source": RouteOptions(
         "api.source_context", RISM_JSONLD_SOURCE_CONTEXT
     ),
@@ -531,5 +685,132 @@ RouteContextMap: dict[str, RouteOptions] = {
     "mp_server.publications.publication": RouteOptions(
         "api.publication_context", RISM_JSONLD_PUBLICATION_CONTEXT
     ),
+    "mp_server.subjects.subject": RouteOptions(
+        "api.subject_context", RISM_JSONLD_SUBJECT_CONTEXT
+    ),
     "__default": RouteOptions("api.default_context", RISM_JSONLD_DEFAULT_CONTEXT),
 }
+
+
+def _normalize_type_values(value: str | list[str] | None) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, str)]
+
+    return []
+
+
+def _merge_labels(
+    collected: dict[str, dict[str, list[str]]], type_iri: str, labels: dict
+) -> dict[str, dict[str, list[str]]]:
+    # Keep this helper copy-on-write so callers do not have to rely on mutation
+    # of a shared accumulator while walking the JSON-LD tree.
+    merged = {
+        iri: {lang: values.copy() for lang, values in label_map.items()}
+        for iri, label_map in collected.items()
+    }
+    existing = merged.setdefault(type_iri, {})
+    for lang, values in labels.items():
+        if not isinstance(lang, str) or not isinstance(values, list):
+            continue
+
+        lang_values = existing.setdefault(lang, [])
+        for value in values:
+            if isinstance(value, str) and value not in lang_values:
+                lang_values.append(value)
+
+    return merged
+
+
+def _collect_included_type_labels(
+    value,
+    collected: dict[str, dict[str, list[str]]] | None = None,
+    in_source_types: bool = False,
+    ignored_keys: set[str] | None = None,
+    depth: int = 0,
+) -> dict[str, dict[str, list[str]]]:
+    # We synthesize @included class nodes from inline type/typeLabel pairs so
+    # downstream RDF expansion also yields rdfs:label triples for those classes.
+    # The ignored top-level keys come from null-mapped context terms; those
+    # subtrees must stay in the JSON response but must not contribute RDF.
+    collected = collected or {}
+
+    if isinstance(value, list):
+        for item in value:
+            collected = _collect_included_type_labels(
+                item,
+                collected,
+                in_source_types,
+                ignored_keys=ignored_keys,
+                depth=depth + 1,
+            )
+        return collected
+
+    if not isinstance(value, dict):
+        return collected
+
+    type_label = value.get("typeLabel")
+    if isinstance(type_label, dict):
+        for type_iri in _normalize_type_values(value.get("type")):
+            collected = _merge_labels(collected, type_iri, type_label)
+    elif in_source_types:
+        label = value.get("label")
+        if isinstance(label, dict):
+            for type_iri in _normalize_type_values(value.get("type")):
+                collected = _merge_labels(collected, type_iri, label)
+
+    for key, child in value.items():
+        if key in {"@context", "included"}:
+            continue
+
+        if depth == 0 and ignored_keys and key in ignored_keys:
+            continue
+
+        collected = _collect_included_type_labels(
+            child,
+            collected,
+            in_source_types=(in_source_types or key == "sourceTypes"),
+            ignored_keys=ignored_keys,
+            depth=depth + 1,
+        )
+
+    return collected
+
+
+def null_context_terms(context: dict) -> set[str]:
+    # A null term in the route context means "leave this JSON untouched by RDF
+    # processing", so callers use this to stop included-node harvesting there.
+    return {key for key, value in context.items() if value is None}
+
+
+def with_included_type_nodes(data: dict, ignored_keys: set[str] | None = None) -> dict:
+    # Add synthesized @included nodes for classes that only appear inline in the
+    # response, while preserving any explicit included nodes already present.
+    collected = _collect_included_type_labels(data, ignored_keys=ignored_keys)
+
+    if not collected and "included" not in data:
+        return data
+
+    included: list[dict] = []
+    included_ids: set[str] = set()
+
+    existing_included = data.get("included")
+    if isinstance(existing_included, list):
+        for node in existing_included:
+            if isinstance(node, dict):
+                included.append(node)
+                if isinstance(node.get("id"), str):
+                    included_ids.add(node["id"])
+
+    for type_iri, labels in collected.items():
+        if type_iri in included_ids:
+            continue
+
+        included.append({"id": type_iri, "label": labels})
+
+    if not included:
+        return data
+
+    return {**data, "included": included}

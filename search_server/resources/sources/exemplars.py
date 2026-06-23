@@ -78,8 +78,8 @@ class ExemplarsSection(ypres.AsyncDictSerializer):
 class Holding(ypres.AsyncDictSerializer):
     sid = ypres.MethodField(label="id")
     stype = ypres.StaticField(label="type", value="rism:Holding")
+    type_label = ypres.MethodField(label="typeLabel")
     holding_type = ypres.MethodField(label="holdingType")
-    section_label = ypres.MethodField(label="sectionLabel")
     hlabel = ypres.MethodField(label="label")
     summary = ypres.MethodField()
     notes = ypres.MethodField()
@@ -123,7 +123,7 @@ class Holding(ypres.AsyncDictSerializer):
             req, "sources.holding", source_id=source_id, holding_id=holding_id
         )
 
-    def get_section_label(self, obj: dict) -> dict:
+    def get_type_label(self, obj: dict) -> dict:
         req = self.context["request"]
         transl: dict = req.ctx.translations
 
@@ -222,11 +222,17 @@ class Holding(ypres.AsyncDictSerializer):
             req, "institutions.institution", institution_id=institution_id
         )
         institution_name: str = format_institution_label(obj)
+        siglum: str | None = obj.get("siglum_s")
+        country_code: str | None = obj.get("country_code_s")
+        city: str | None = obj.get("city_s")
 
         return {
             "id": obj_ident,
             "type": "rism:Institution",
             "label": {"none": [f"{institution_name}"]},
+            "siglum": siglum,
+            "countryCode": country_code,
+            "city": city,
         }
 
     def get_relationships(self, obj: SolrResult) -> dict | None:
@@ -242,6 +248,12 @@ class Holding(ypres.AsyncDictSerializer):
             obj,
             context={
                 "request": req,
+                "route_params": {
+                    "source_id": strip_prefix(obj["source_id"]),
+                    "holding_id": strip_prefix(obj["id"].split("-")[0]),
+                },
+                "section_route": "sources.holding_relationships",
+                "item_route": "sources.holding_relationship",
             },
         ).serialized
 

@@ -26,8 +26,16 @@ _LOC_RELATOR_CODE_RE = re.compile(r"^[a-z]{3}$")
 
 
 class RelationshipsSection(ypres.DictSerializer):
+    sid = ypres.MethodField(label="id")
     section_label = ypres.MethodField(label="sectionLabel")
     items = ypres.MethodField()
+
+    def get_sid(self, obj: dict) -> str | None:
+        req = self.context["request"]
+        route_name = self.context["section_route"]
+        route_params = self.context["route_params"]
+
+        return get_identifier(req, route_name, **route_params)
 
     def get_section_label(self, obj: dict) -> dict:
         req = self.context["request"]

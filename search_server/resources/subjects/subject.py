@@ -23,7 +23,7 @@ class Subject(ypres.AsyncDictSerializer):
     sid = ypres.MethodField(label="id")
     stype = ypres.StaticField(label="type", value="rism:Subject")
     slabel = ypres.MethodField(label="label")
-    term = ypres.MethodField()
+    type_label = ypres.MethodField(label="typeLabel")
     notes = ypres.MethodField()
     alternate_terms = ypres.MethodField(label="alternateTerms")
     sources = ypres.MethodField()
@@ -35,13 +35,13 @@ class Subject(ypres.AsyncDictSerializer):
         return get_identifier(req, "subjects.subject", subject_id=subject_id)
 
     def get_slabel(self, obj: SolrResult) -> dict:
+        return {"none": [obj.get("term_s")]}
+
+    def get_type_label(self, obj: SolrResult):
         req = self.context["request"]
         transl: dict = req.ctx.translations
 
-        return transl.get("records.subject_heading", {})
-
-    def get_term(self, obj: SolrResult) -> dict:
-        return {"none": [obj.get("term_s")]}
+        return transl["records.subject_heading"]
 
     def get_notes(self, obj: SolrResult) -> dict | None:
         # If we're not retrieving the full record with a direct request, do not show the notes

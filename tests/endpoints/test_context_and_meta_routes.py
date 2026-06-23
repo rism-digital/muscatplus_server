@@ -1,13 +1,96 @@
+# ruff: noqa: S101
+
 from __future__ import annotations
 
 import json
 
 import pytest
-from rdflib import Graph, URIRef
-from rdflib.namespace import RDF, RDFS, XSD, Namespace
+from pyoxigraph import NamedNode, RdfFormat, parse
 from sanic import response
 
+from search_server.helpers.jsonld import null_context_terms, with_included_type_nodes
+from search_server.helpers.linked_data import to_ntriples
 from tests.conftest import assert_content_type, assert_json_contract
+
+
+class Namespace:
+    def __init__(self, base: str) -> None:
+        self.base = base
+
+    def __getattr__(self, name: str) -> NamedNode:
+        return NamedNode(f"{self.base}{name}")
+
+
+class _RDF:
+    type = NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+    value = NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#value")
+
+
+class _RDFS:
+    label = NamedNode("http://www.w3.org/2000/01/rdf-schema#label")
+
+
+class _XSD:
+    dateTime = NamedNode("http://www.w3.org/2001/XMLSchema#dateTime")
+    anyURI = NamedNode("http://www.w3.org/2001/XMLSchema#anyURI")
+    integer = NamedNode("http://www.w3.org/2001/XMLSchema#integer")
+
+
+RDF = _RDF()
+RDFS = _RDFS()
+XSD = _XSD()
+URIRef = NamedNode
+
+
+class Graph:
+    def __init__(self) -> None:
+        self.quads = set()
+
+    def parse(self, data: str, format: str):
+        rdf_format = RdfFormat.JSON_LD if format == "json-ld" else RdfFormat.N_TRIPLES
+        self.quads = set(
+            parse(
+                input=data.encode("utf-8"),
+                format=rdf_format,
+                without_named_graphs=True,
+                lenient=True,
+            )
+        )
+        return self
+
+    def predicates(self):
+        return (quad.predicate for quad in self.quads)
+
+    def objects(self, subject, predicate):
+        return (
+            quad.object
+            for quad in self.quads
+            if quad.subject == subject and quad.predicate == predicate
+        )
+
+    def subject_objects(self, predicate):
+        return (
+            (quad.subject, quad.object)
+            for quad in self.quads
+            if quad.predicate == predicate
+        )
+
+    def __contains__(self, triple) -> bool:
+        subject, predicate, obj = triple
+        return any(
+            quad.subject == subject
+            and quad.predicate == predicate
+            and quad.object == obj
+            for quad in self.quads
+        )
+
+
+def jsonld_doc(doc: dict) -> str:
+    ignored_keys = set()
+    if isinstance(doc.get("@context"), dict):
+        ignored_keys = null_context_terms(doc["@context"])
+
+    return json.dumps(with_included_type_nodes(doc, ignored_keys=ignored_keys))
 
 
 @pytest.mark.endpoint
@@ -18,6 +101,8 @@ from tests.conftest import assert_content_type, assert_json_contract
         "/api/v1/source.json",
         "/api/v1/person.json",
         "/api/v1/institution.json",
+        "/api/v1/place.json",
+        "/api/v1/subject.json",
         "/api/v1/work.json",
         "/api/v1/publication.json",
         "/api/v1/context.json",
@@ -26,6 +111,49 @@ from tests.conftest import assert_content_type, assert_json_contract
 def test_api_context_endpoints(client, path: str):
     _, resp = client.get(path)
     assert_json_contract(resp, status=200, required_keys=["@context"])
+
+
+@pytest.mark.endpoint
+@pytest.mark.contract
+def test_api_contexts_do_not_use_generic_has_item_predicates(client):
+    def iter_context_values(value):
+        if isinstance(value, dict):
+            yield value
+            for child in value.values():
+                yield from iter_context_values(child)
+        elif isinstance(value, list):
+            for child in value:
+                yield from iter_context_values(child)
+
+    for path in [
+        "/api/v1/person.json",
+        "/api/v1/institution.json",
+        "/api/v1/place.json",
+        "/api/v1/subject.json",
+        "/api/v1/work.json",
+        "/api/v1/publication.json",
+        "/api/v1/source.json",
+    ]:
+        _, resp = client.get(path)
+        assert_json_contract(resp, status=200, required_keys=["@context"])
+
+        ids = {
+            value.get("@id")
+            for value in iter_context_values(resp.json["@context"])
+            if isinstance(value, dict)
+        }
+        assert "rism:hasItem" not in ids
+        assert "rism:MaterialGroup" not in ids
+
+        item_aliases = [
+            value.get("items")
+            for value in iter_context_values(resp.json["@context"])
+            if isinstance(value, dict) and "items" in value
+        ]
+        assert "@set" not in item_aliases
+        assert resp.json["@context"]["included"] == "@included"
+        if path != "/api/v1/context.json":
+            assert resp.json["@context"]["typeLabel"] is None
 
 
 @pytest.mark.endpoint
@@ -39,6 +167,7 @@ def test_person_context_expands_semantic_sections(client):
         "@context": person_context,
         "id": "https://rism.online/people/115324",
         "type": "rism:Person",
+        "typeLabel": {"en": ["Person"]},
         "label": {"none": ["Mozart, Wolfgang Amadeus (1756-1791)"]},
         "recordHistory": {
             "type": "rism:RecordHistory",
@@ -61,6 +190,7 @@ def test_person_context_expands_semantic_sections(client):
             ],
         },
         "relationships": {
+            "id": "https://rism.online/people/115324/relationships",
             "items": [
                 {
                     "role": {
@@ -76,6 +206,21 @@ def test_person_context_expands_semantic_sections(client):
                 }
             ]
         },
+        "externalAuthorities": {
+            "id": "https://rism.online/people/115324/external-authorities",
+            "label": {"en": ["Other standard identifier"]},
+            "type": "rism:ExternalAuthoritiesSection",
+            "items": [
+                {
+                    "id": "https://rism.online/people/115324/external-authorities/viaf32197206",
+                    "type": "rism:ExternalAuthority",
+                    "url": "https://viaf.org/viaf/32197206",
+                    "base": "https://viaf.org/viaf/",
+                    "label": {"none": ["Virtual Internet Authority File (VIAF): 32197206"]},
+                    "value": {"none": ["32197206"]},
+                }
+            ],
+        },
         "works": {
             "sectionLabel": {"en": ["Works"]},
             "workReferences": {
@@ -90,6 +235,24 @@ def test_person_context_expands_semantic_sections(client):
                 ],
             },
         },
+        "properties": {
+            "authorityLinks": [
+                {
+                    "id": "https://rism.online/people/115324/external-authorities/viaf32197206",
+                    "scheme": "viaf",
+                    "identifier": "32197206",
+                    "uri": "https://viaf.org/viaf/32197206",
+                },
+                {
+                    "id": "https://rism.online/people/115324/external-authorities/iccuCFIV019276",
+                    "scheme": "iccu",
+                    "identifier": "CFIV019276",
+                },
+            ],
+            "sameAs": [
+                "https://viaf.org/viaf/32197206",
+            ],
+        },
         "sources": {
             "url": "https://rism.online/people/115324/sources",
             "totalItems": 19113,
@@ -97,23 +260,101 @@ def test_person_context_expands_semantic_sections(client):
     }
 
     graph = Graph()
-    graph.parse(data=json.dumps(person_doc), format="json-ld")
+    graph.parse(data=jsonld_doc(person_doc), format="json-ld")
 
     subject = URIRef("https://rism.online/people/115324")
     rism = Namespace("https://rism.online/api/v1#")
     dcterms = Namespace("http://purl.org/dc/terms/")
+    schemaorg = Namespace("https://schema.org/")
 
     predicates = {str(pred) for pred in graph.predicates()}
     assert len(predicates) > 6
     assert (subject, RDF.type, rism.Person) in graph
+    assert any(graph.objects(rism.Person, RDFS.label))
     assert sum(1 for _ in graph.objects(subject, RDFS.label)) == 1
 
     # Verify explicit mapping for record history and relationships.
     assert any(graph.objects(subject, rism.recordHistory))
-    relationship_nodes = list(graph.objects(subject, rism.hasRelationship))
+    relationship_section = next(graph.objects(subject, rism.relationships))
+    assert isinstance(relationship_section, URIRef)
+    relationship_nodes = list(graph.objects(relationship_section, rism.hasRelationship))
     assert relationship_nodes
     assert any(graph.objects(relationship_nodes[0], rism.hasRole))
     assert any(graph.objects(relationship_nodes[0], dcterms.relation))
+
+    works_node = next(graph.objects(subject, rism.works))
+    work_references_node = next(graph.objects(works_node, rism.workReferences))
+    assert any(graph.objects(work_references_node, rism.hasWorkNode))
+    assert any(graph.objects(subject, schemaorg.sameAs))
+
+    external_authorities_section = next(graph.objects(subject, rism.externalAuthorities))
+    assert isinstance(external_authorities_section, URIRef)
+    external_authorities_items = list(
+        graph.objects(external_authorities_section, rism.hasExternalAuthority)
+    )
+    assert len(external_authorities_items) == 1
+    assert isinstance(external_authorities_items[0], URIRef)
+
+    authority_nodes = list(graph.objects(subject, rism.hasExternalAuthority))
+    assert len(authority_nodes) == 2
+    assert all(isinstance(node, URIRef) for node in authority_nodes)
+    authority_scheme_values = {
+        next(graph.objects(authority_node, rism.authorityScheme)).value
+        for authority_node in authority_nodes
+        if any(graph.objects(authority_node, rism.authorityScheme))
+    }
+    assert authority_scheme_values == {"viaf", "iccu"}
+    assert any(graph.objects(subject, schemaorg.sameAs))
+
+
+@pytest.mark.endpoint
+@pytest.mark.contract
+def test_to_ntriples_materializes_direct_relationship_triples(client):
+    _, ctx_resp = client.get("/api/v1/person.json")
+    assert_json_contract(ctx_resp, status=200, required_keys=["@context"])
+    person_context = ctx_resp.json["@context"]
+
+    person_doc = {
+        "@context": person_context,
+        "id": "https://rism.online/people/115324",
+        "type": "rism:Person",
+        "typeLabel": {"en": ["Person"]},
+        "label": {"none": ["Mozart, Wolfgang Amadeus (1756-1791)"]},
+        "relationships": {
+            "id": "https://rism.online/people/115324/relationships",
+            "items": [
+                {
+                    "role": {
+                        "label": {"en": ["Father of"]},
+                        "value": "father of",
+                        "id": "https://rism.online/vocabulary/relationship/father_of",
+                    },
+                    "relatedTo": {
+                        "id": "https://rism.online/people/276624",
+                        "label": {"none": ["Mozart, Franz Xaver Wolfgang (1791-1844)"]},
+                        "type": "rism:Person",
+                    },
+                }
+            ],
+        },
+    }
+
+    graph = Graph()
+    graph.parse(to_ntriples(with_included_type_nodes(person_doc)), format="n-triples")
+
+    subject = URIRef("https://rism.online/people/115324")
+    section = URIRef("https://rism.online/people/115324/relationships")
+    related_person = URIRef("https://rism.online/people/276624")
+    role = URIRef("https://rism.online/vocabulary/relationship/father_of")
+    rism = Namespace("https://rism.online/api/v1#")
+    dcterms = Namespace("http://purl.org/dc/terms/")
+
+    assert (subject, rism.relationships, section) in graph
+    relationship_nodes = list(graph.objects(section, rism.hasRelationship))
+    assert relationship_nodes
+    assert any(graph.objects(relationship_nodes[0], rism.hasRole))
+    assert any(graph.objects(relationship_nodes[0], dcterms.relation))
+    assert (subject, role, related_person) in graph
 
 
 @pytest.mark.endpoint
@@ -152,6 +393,34 @@ def test_institution_context_expands_semantic_sections(client):
         "location": {
             "type": "rism:LocationAddressSection",
             "label": {"en": ["Location and address"]},
+            "addresses": [
+                {
+                    "street": {
+                        "label": {"en": ["Street address"]},
+                        "value": {"none": ["Schlossstrasse 1"]},
+                    },
+                    "city": {
+                        "label": {"en": ["City"]},
+                        "value": {"none": ["Dresden"]},
+                    },
+                    "postcode": {
+                        "label": {"en": ["Postal code"]},
+                        "value": {"none": ["01067"]},
+                    },
+                    "country": {
+                        "label": {"en": ["Country"]},
+                        "value": {"none": ["Germany"]},
+                    },
+                    "county": {
+                        "label": {"en": ["County / province"]},
+                        "value": {"none": ["Saxony"]},
+                    },
+                    "note": {
+                        "label": {"en": ["Public note"]},
+                        "value": {"none": ["Main entrance on west side"]},
+                    },
+                }
+            ],
             "coordinates": {
                 "id": "https://rism.online/institutions/30000042/location.geojson",
                 "sectionLabel": {"en": ["Location"]},
@@ -187,29 +456,202 @@ def test_institution_context_expands_semantic_sections(client):
             "siglum": "D-Dl",
             "countryCodes": ["D"],
             "city": "Dresden",
+            "authorityLinks": [
+                {
+                    "id": "https://rism.online/institutions/30000042/external-authorities/dnb123456-7",
+                    "scheme": "dnb",
+                    "identifier": "123456-7",
+                    "uri": "https://d-nb.info/gnd/123456-7",
+                },
+                {
+                    "id": "https://rism.online/institutions/30000042/external-authorities/isilDE-588",
+                    "scheme": "isil",
+                    "identifier": "DE-588",
+                },
+            ],
+            "sameAs": [
+                "https://d-nb.info/gnd/123456-7",
+            ],
         },
     }
 
     graph = Graph()
-    graph.parse(data=json.dumps(institution_doc), format="json-ld")
+    graph.parse(data=jsonld_doc(institution_doc), format="json-ld")
 
     subject = URIRef("https://rism.online/institutions/30000042")
     rism = Namespace("https://rism.online/api/v1#")
     dcterms = Namespace("http://purl.org/dc/terms/")
+    schemaorg = Namespace("https://schema.org/")
 
     predicates = {str(pred) for pred in graph.predicates()}
     assert len(predicates) > 10
     assert (subject, RDF.type, rism.Institution) in graph
+    assert any(graph.objects(rism.Institution, RDFS.label))
     assert sum(1 for _ in graph.objects(subject, RDFS.label)) == 1
     assert any(graph.objects(subject, rism.organizationDetails))
     assert any(graph.objects(subject, rism.recordHistory))
     assert any(graph.objects(subject, rism.hasLocation))
     assert any(graph.objects(subject, rism.sources))
+    assert any(graph.objects(subject, schemaorg.sameAs))
 
-    relationship_nodes = list(graph.objects(subject, rism.hasRelationship))
+    location_node = next(graph.objects(subject, rism.hasLocation))
+    address_nodes = list(graph.objects(location_node, schemaorg.address))
+    assert address_nodes
+    assert any(graph.objects(address_nodes[0], schemaorg.streetAddress))
+    assert any(graph.objects(address_nodes[0], schemaorg.addressLocality))
+    assert any(graph.objects(address_nodes[0], schemaorg.postalCode))
+    assert any(graph.objects(address_nodes[0], schemaorg.addressCountry))
+    assert any(graph.objects(address_nodes[0], schemaorg.addressRegion))
+    assert any(graph.objects(address_nodes[0], schemaorg.description))
+
+    relationship_section = next(graph.objects(subject, rism.relationships))
+    relationship_nodes = list(graph.objects(relationship_section, rism.hasRelationship))
     assert relationship_nodes
     assert any(graph.objects(relationship_nodes[0], rism.hasRole))
     assert any(graph.objects(relationship_nodes[0], dcterms.relation))
+
+    authority_nodes = list(graph.objects(subject, rism.hasExternalAuthority))
+    assert len(authority_nodes) == 2
+    authority_scheme_values = {
+        next(graph.objects(authority_node, rism.authorityScheme)).value
+        for authority_node in authority_nodes
+        if any(graph.objects(authority_node, rism.authorityScheme))
+    }
+    assert authority_scheme_values == {"dnb", "isil"}
+    authority_identifier_values = {
+        next(graph.objects(authority_node, RDF.value)).value
+        for authority_node in authority_nodes
+        if any(graph.objects(authority_node, RDF.value))
+    }
+    assert authority_identifier_values == {"123456-7", "DE-588"}
+    authority_urls = [
+        obj
+        for authority_node in authority_nodes
+        for obj in graph.objects(authority_node, rism.authorityUrl)
+    ]
+    assert len(authority_urls) == 1
+
+
+@pytest.mark.endpoint
+@pytest.mark.contract
+def test_place_context_expands_semantic_sections(client):
+    _, ctx_resp = client.get("/api/v1/place.json")
+    assert_json_contract(ctx_resp, status=200, required_keys=["@context"])
+    place_context = ctx_resp.json["@context"]
+
+    place_doc = {
+        "@context": place_context,
+        "id": "https://rism.online/places/30000655",
+        "type": "rism:Place",
+        "typeLabel": {"en": ["Place"]},
+        "label": {"none": ["Berlin"]},
+        "summary": [
+            {
+                "label": {"en": ["Country"]},
+                "value": {"none": ["Germany"]},
+            }
+        ],
+        "externalAuthorities": {
+            "id": "https://rism.online/places/30000655/external-authorities",
+            "label": {"en": ["Other standard identifier"]},
+            "type": "rism:ExternalAuthoritiesSection",
+            "items": [
+                {
+                    "id": "https://rism.online/places/30000655/external-authorities/wkpQ64",
+                    "type": "rism:ExternalAuthority",
+                    "url": "https://www.wikidata.org/wiki/Q64",
+                    "base": "https://www.wikidata.org/wiki/",
+                    "label": {"none": ["Wikidata: Q64"]},
+                    "value": {"none": ["Q64"]},
+                }
+            ],
+        },
+        "sources": {
+            "type": "rism:PlaceSourceList",
+            "items": [
+                {
+                    "id": "https://rism.online/sources/117580",
+                    "type": "rism:Source",
+                    "label": {"none": ["Example Source"]},
+                    "sourceTypes": {
+                        "materialTypes": [
+                            {
+                                "type": "rism:AutographMaterial",
+                                "typeLabel": {"en": ["Autograph manuscript"]},
+                            }
+                        ]
+                    },
+                }
+            ],
+        },
+        "people": {
+            "type": "rism:PlacePersonList",
+            "items": [
+                {
+                    "id": "https://rism.online/people/115324",
+                    "type": "rism:Person",
+                    "label": {"none": ["Mozart, Wolfgang Amadeus (1756-1791)"]},
+                }
+            ],
+        },
+        "institutions": {
+            "type": "rism:PlaceInstitutionList",
+            "items": [
+                {
+                    "id": "https://rism.online/institutions/30000655",
+                    "type": "rism:Institution",
+                    "label": {"none": ["Staatsbibliothek zu Berlin - Preußischer Kulturbesitz"]},
+                }
+            ],
+        },
+        "properties": {
+            "authorityLinks": [
+                {
+                    "id": "https://rism.online/places/30000655/external-authorities/wkpQ64",
+                    "scheme": "wkp",
+                    "identifier": "Q64",
+                    "uri": "https://www.wikidata.org/wiki/Q64",
+                },
+                {
+                    "id": "https://rism.online/places/30000655/external-authorities/isilDE-1",
+                    "scheme": "isil",
+                    "identifier": "DE-1",
+                },
+            ],
+            "sameAs": [
+                "https://www.wikidata.org/wiki/Q64",
+            ],
+        },
+    }
+
+    graph = Graph()
+    graph.parse(data=jsonld_doc(place_doc), format="json-ld")
+
+    subject = URIRef("https://rism.online/places/30000655")
+    rism = Namespace("https://rism.online/api/v1#")
+    schemaorg = Namespace("https://schema.org/")
+
+    predicates = {str(pred) for pred in graph.predicates()}
+    assert len(predicates) > 5
+    assert (subject, RDF.type, rism.Place) in graph
+    assert any(graph.objects(rism.Place, RDFS.label))
+    assert sum(1 for _ in graph.objects(subject, RDFS.label)) == 1
+    assert any(graph.objects(subject, rism.hasSummary))
+    assert not any(graph.objects(subject, rism.sources))
+    assert not any(graph.objects(subject, rism.people))
+    assert not any(graph.objects(subject, rism.institutions))
+    assert not any(graph.objects(rism.AutographMaterial, RDFS.label))
+    assert any(graph.objects(subject, rism.externalAuthorities))
+    assert any(graph.objects(subject, schemaorg.sameAs))
+
+    authority_nodes = list(graph.objects(subject, rism.hasExternalAuthority))
+    assert len(authority_nodes) == 2
+    authority_scheme_values = {
+        next(graph.objects(authority_node, rism.authorityScheme)).value
+        for authority_node in authority_nodes
+        if any(graph.objects(authority_node, rism.authorityScheme))
+    }
+    assert authority_scheme_values == {"wkp", "isil"}
 
 
 @pytest.mark.endpoint
@@ -282,6 +724,7 @@ def test_work_context_expands_semantic_sections(client):
             ],
         },
         "referencesNotes": {
+            "id": "https://rism.online/works/49509/references-notes",
             "sectionLabel": {"en": ["References and notes"]},
             "type": "rism:ReferencesNotesSection",
             "notes": [
@@ -303,7 +746,7 @@ def test_work_context_expands_semantic_sections(client):
     }
 
     graph = Graph()
-    graph.parse(data=json.dumps(work_doc), format="json-ld")
+    graph.parse(data=jsonld_doc(work_doc), format="json-ld")
 
     subject = URIRef("https://rism.online/works/49509")
     rism = Namespace("https://rism.online/api/v1#")
@@ -316,8 +759,51 @@ def test_work_context_expands_semantic_sections(client):
     assert any(graph.objects(subject, rism.sources))
     assert any(graph.objects(subject, rism.formOfWork))
     assert any(graph.objects(subject, rism.referencesNotes))
+    references_notes_node = next(graph.objects(subject, rism.referencesNotes))
+    assert isinstance(references_notes_node, URIRef)
     assert any(graph.objects(subject, rism.hasSummary))
+    part_of_section = next(graph.objects(subject, rism.partOf))
+    assert any(graph.objects(part_of_section, rism.isPartOf))
+    incipits_section = next(graph.objects(subject, rism.incipits))
+    assert any(graph.objects(incipits_section, rism.hasIncipit))
     assert not any(graph.subject_objects(rism.rendered))
+
+    form_of_work_node = next(graph.objects(subject, rism.formOfWork))
+    assert any(graph.objects(form_of_work_node, rism.hasFormOfWork))
+
+
+@pytest.mark.endpoint
+@pytest.mark.contract
+def test_subject_context_uses_included_type_labels_without_rism_type_label(client):
+    _, ctx_resp = client.get("/api/v1/subject.json")
+    assert_json_contract(ctx_resp, status=200, required_keys=["@context"])
+    subject_context = ctx_resp.json["@context"]
+
+    subject_doc = {
+        "@context": subject_context,
+        "id": "https://rism.online/subjects/25226",
+        "type": "rism:Subject",
+        "typeLabel": {"en": ["Subject heading"]},
+        "label": {"none": ["Madrigals"]},
+        "value": "Madrigals",
+        "notes": {"none": ["Example note"]},
+        "alternateTerms": {"none": ["Madrigale"]},
+        "sources": {
+            "id": "https://rism.online/subjects/25226/sources",
+            "totalItems": 42,
+        },
+    }
+
+    graph = Graph()
+    graph.parse(data=jsonld_doc(subject_doc), format="json-ld")
+
+    subject = URIRef("https://rism.online/subjects/25226")
+    rism = Namespace("https://rism.online/api/v1#")
+
+    assert (subject, RDF.type, rism.Subject) in graph
+    assert any(graph.objects(rism.Subject, RDFS.label))
+    assert not any(graph.objects(subject, rism.typeLabel))
+    assert any(graph.objects(subject, rism.sources))
 
 
 @pytest.mark.endpoint
@@ -334,10 +820,10 @@ def test_source_context_expands_semantic_sections(client):
         "typeLabel": {"en": ["Source"]},
         "label": {"en": ["16 Keyboard pieces; Manuscript copy; US-U x786.4108/M319"]},
         "sourceTypes": {
-            "recordType": {"label": {"en": ["Collection"]}, "type": "rism:CollectionRecord"},
-            "sourceType": {"label": {"en": ["Manuscript"]}, "type": "rism:ManuscriptSource"},
+            "recordType": {"typeLabel": {"en": ["Collection"]}, "type": "rism:CollectionRecord"},
+            "sourceType": {"typeLabel": {"en": ["Manuscript"]}, "type": "rism:ManuscriptSource"},
             "contentTypes": [
-                {"label": {"en": ["Notated music"]}, "type": "rism:MusicalContent"}
+                {"typeLabel": {"en": ["Notated music"]}, "type": "rism:MusicalContent"}
             ],
         },
         "recordHistory": {
@@ -374,12 +860,14 @@ def test_source_context_expands_semantic_sections(client):
             "items": [
                 {
                     "id": "https://rism.online/sources/117580/material-groups/01",
+                    "type": "rism:MaterialGroup",
                     "label": {"none": ["Group 01"]},
                     "summary": [{"label": {"en": ["Date"]}, "value": {"none": ["1700 (1700c)"]}}],
                 }
             ],
         },
         "relationships": {
+            "id": "https://rism.online/sources/117580/relationships",
             "sectionLabel": {"en": ["Relations"]},
             "items": [
                 {
@@ -397,6 +885,7 @@ def test_source_context_expands_semantic_sections(client):
             ],
         },
         "referencesNotes": {
+            "id": "https://rism.online/sources/117580/references-notes",
             "sectionLabel": {"en": ["References and notes"]},
             "type": "rism:ReferencesNotesSection",
             "notes": [
@@ -414,8 +903,8 @@ def test_source_context_expands_semantic_sections(client):
                 {
                     "id": "https://rism.online/sources/117580/holdings/30000011",
                     "type": "rism:Holding",
+                    "typeLabel": {"en": ["Exemplar"]},
                     "holdingType": "rism:ManuscriptHolding",
-                    "sectionLabel": {"en": ["Exemplar"]},
                     "label": {"none": ["Example Holding"]},
                     "heldBy": {
                         "id": "https://rism.online/institutions/30000011",
@@ -424,6 +913,11 @@ def test_source_context_expands_semantic_sections(client):
                     },
                 }
             ],
+        },
+        "inventoryItems": {
+            "sectionLabel": {"en": ["Inventory items"]},
+            "url": "https://rism.online/sources/117580/inventory-items",
+            "totalItems": 4,
         },
         "sourceItems": {
             "sectionLabel": {"en": ["Items in this source"]},
@@ -437,7 +931,7 @@ def test_source_context_expands_semantic_sections(client):
                     "label": {"none": ["Nested item"]},
                     "sourceTypes": {
                         "recordType": {
-                            "label": {"en": ["Single item"]},
+                            "typeLabel": {"en": ["Single item"]},
                             "type": "rism:SingleItemRecord",
                         }
                     },
@@ -473,7 +967,7 @@ def test_source_context_expands_semantic_sections(client):
     }
 
     graph = Graph()
-    graph.parse(data=json.dumps(source_doc), format="json-ld")
+    graph.parse(data=jsonld_doc(source_doc), format="json-ld")
 
     subject = URIRef("https://rism.online/sources/117580")
     rism = Namespace("https://rism.online/api/v1#")
@@ -483,17 +977,48 @@ def test_source_context_expands_semantic_sections(client):
     predicates = {str(pred) for pred in graph.predicates()}
     assert len(predicates) > 10
     assert (subject, RDF.type, rism.Source) in graph
+    assert any(graph.objects(rism.Source, RDFS.label))
+    assert any(graph.objects(rism.CollectionRecord, RDFS.label))
+    assert any(graph.objects(rism.ManuscriptSource, RDFS.label))
+    assert any(graph.objects(rism.MusicalContent, RDFS.label))
     assert any(graph.objects(subject, rism.recordHistory))
     assert any(graph.objects(subject, rism.sourceTypes))
-    assert any(graph.objects(subject, rism.hasMaterialGroup))
-    assert any(graph.objects(subject, rism.hasRelationship))
+    assert any(graph.objects(subject, rism.materialGroups))
+    relationship_section = next(graph.objects(subject, rism.relationships))
+    assert isinstance(relationship_section, URIRef)
+    assert any(graph.objects(relationship_section, rism.hasRelationship))
     assert any(graph.objects(subject, rism.referencesNotes))
-    assert any(graph.objects(subject, rism.hasHolding))
-    assert any(graph.objects(subject, rism.hasSourceItem))
+    references_notes_node = next(graph.objects(subject, rism.referencesNotes))
+    assert isinstance(references_notes_node, URIRef)
+    assert any(graph.objects(subject, rism.holdings))
+    assert any(graph.objects(subject, rism.inventoryItems))
+    assert any(graph.objects(subject, rism.sourceItems))
     assert any(graph.objects(subject, rism.externalResources))
     assert any(graph.objects(subject, rism.hasSummary))
-    assert any(graph.objects(subject, rism.hasSubject))
+    assert any(graph.objects(subject, rism.subjects))
     assert not any(graph.objects(subject, rism.contents))
+
+    material_groups_node = next(graph.objects(subject, rism.materialGroups))
+    material_group_node = next(graph.objects(material_groups_node, rism.hasMaterialGroup))
+    assert (material_group_node, RDF.type, rism.MaterialGroup) in graph
+
+    holdings_node = next(graph.objects(subject, rism.holdings))
+    assert any(graph.objects(holdings_node, rism.hasHolding))
+    holding_node = next(graph.objects(holdings_node, rism.hasHolding))
+    assert not any(graph.objects(holding_node, rism.sectionLabel))
+    assert any(graph.objects(rism.Holding, RDFS.label))
+
+    inventory_items_node = next(graph.objects(subject, rism.inventoryItems))
+    inventory_items_url = next(graph.objects(inventory_items_node, schemaorg.url))
+    assert inventory_items_url.datatype == XSD.anyURI
+    inventory_items_count = next(graph.objects(inventory_items_node, rism.totalItems))
+    assert inventory_items_count.datatype == XSD.integer
+
+    subjects_node = next(graph.objects(subject, rism.subjects))
+    assert any(graph.objects(subjects_node, rism.hasSubject))
+
+    external_resources_node = next(graph.objects(subject, rism.externalResources))
+    assert any(graph.objects(external_resources_node, rism.hasExternalResource))
 
     history_node = next(graph.objects(subject, rism.recordHistory))
     created_node = next(graph.objects(history_node, dcterms.created))
@@ -503,7 +1028,8 @@ def test_source_context_expands_semantic_sections(client):
     assert created_value.datatype == XSD.dateTime
     assert updated_value.datatype == XSD.dateTime
 
-    source_items_node = next(graph.objects(subject, rism.hasSourceItem))
+    source_items_node = next(graph.objects(subject, rism.sourceItems))
+    assert any(graph.objects(source_items_node, rism.hasSourceItem))
     source_items_url = next(graph.objects(source_items_node, schemaorg.url))
     assert source_items_url.datatype == XSD.anyURI
     source_items_count = next(graph.objects(source_items_node, rism.totalItems))
@@ -557,6 +1083,7 @@ def test_publication_context_expands_semantic_sections(client):
             {"label": {"en": ["Date"]}, "value": {"none": ["2024"]}},
         ],
         "relationships": {
+            "id": "https://rism.online/publications/50007683/relationships",
             "sectionLabel": {"en": ["Relations"]},
             "items": [
                 {
@@ -574,6 +1101,7 @@ def test_publication_context_expands_semantic_sections(client):
             ],
         },
         "notes": {
+            "id": "https://rism.online/publications/50007683/notes",
             "label": {"en": ["References and notes"]},
             "type": "rism:NotesSection",
             "notes": [
@@ -602,7 +1130,7 @@ def test_publication_context_expands_semantic_sections(client):
     }
 
     graph = Graph()
-    graph.parse(data=json.dumps(publication_doc), format="json-ld")
+    graph.parse(data=jsonld_doc(publication_doc), format="json-ld")
 
     subject = URIRef("https://rism.online/publications/50007683")
     rism = Namespace("https://rism.online/api/v1#")
@@ -612,6 +1140,7 @@ def test_publication_context_expands_semantic_sections(client):
     predicates = {str(pred) for pred in graph.predicates()}
     assert len(predicates) > 10
     assert (subject, RDF.type, rism.Publication) in graph
+    assert any(graph.objects(rism.Publication, RDFS.label))
     assert any(graph.objects(subject, dcterms.creator))
     assert any(graph.objects(subject, rism.composer))
     assert any(graph.objects(subject, rism.shortTitle))
@@ -619,10 +1148,17 @@ def test_publication_context_expands_semantic_sections(client):
     assert any(graph.objects(subject, rism.status))
     assert any(graph.objects(subject, rism.recordHistory))
     assert any(graph.objects(subject, rism.hasSummary))
-    assert any(graph.objects(subject, rism.hasRelationship))
+    relationship_section = next(graph.objects(subject, rism.relationships))
+    assert isinstance(relationship_section, URIRef)
+    assert any(graph.objects(relationship_section, rism.hasRelationship))
     assert any(graph.objects(subject, rism.notes))
+    notes_node = next(graph.objects(subject, rism.notes))
+    assert isinstance(notes_node, URIRef)
     assert any(graph.objects(subject, rism.works))
     assert any(graph.objects(subject, rism.externalResources))
+
+    external_resources_node = next(graph.objects(subject, rism.externalResources))
+    assert any(graph.objects(external_resources_node, rism.hasExternalResource))
 
     works_node = next(graph.objects(subject, rism.works))
     works_url = next(graph.objects(works_node, schemaorg.url))

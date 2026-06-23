@@ -160,6 +160,18 @@ SEARCH_ROUTE_CASES = [
         {"source_id": "123"},
     ),
     (
+        "search_server.routes.sources.handle_search",
+        "/sources/123/inventory-items",
+        "handle_inventory_item_search_request",
+        {"source_id": "123"},
+    ),
+    (
+        "search_server.routes.sources.handle_search",
+        "/sources/123/inventory-items/probe",
+        "handle_inventory_item_probe_request",
+        {"source_id": "123"},
+    ),
+    (
         "search_server.routes.subjects.handle_search",
         "/subjects/123/sources",
         "handle_subject_source_request",

@@ -95,7 +95,7 @@ def _create_external_record_link(record: dict, translations: dict) -> dict | Non
     if record_type == "source":
         resource_record["sourceTypes"] = (
             create_source_types_block(
-                "collection", "manuscript", ["musical"], translations
+                "collection", "manuscript", ["musical"], ["Other"], translations
             ),
         )
 

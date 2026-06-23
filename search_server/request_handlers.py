@@ -8,7 +8,11 @@ from small_asc.client import SolrError
 
 from search_server.exceptions import InvalidQueryException
 from search_server.helpers.identifiers import get_identifier
-from search_server.helpers.jsonld import RouteContextMap
+from search_server.helpers.jsonld import (
+    RouteContextMap,
+    null_context_terms,
+    with_included_type_nodes,
+)
 from search_server.helpers.linked_data import to_expanded_jsonld, to_ntriples, to_turtle
 from search_server.resources.tombstones import handle_tombstone
 from search_server.template_render import render_template
@@ -131,6 +135,10 @@ async def handle_request(
     else:
         ctx_options = RouteContextMap["__default"]
 
+    data_obj = with_included_type_nodes(
+        data_obj, ignored_keys=null_context_terms(ctx_options.context)
+    )
+
     res: dict
     if accept and TURTLE_MEDIA_TYPE in accept:
         # Always embed the context for turtle, as it avoids a lookup via the URI
@@ -227,6 +235,11 @@ async def handle_search(
 
     app_context = req.app.ctx
 
+    if req.route and req.route.name in RouteContextMap:
+        ctx_options = RouteContextMap[req.route.name]
+    else:
+        ctx_options = RouteContextMap["__default"]
+
     try:
         data_obj: dict = await handler(req, **kwargs)
     except InvalidQueryException as e:
@@ -241,7 +254,13 @@ async def handle_search(
                 {"message": "The requested resource was not found"}, status=404
             )
 
-        return send_json_response(req, data_obj, app_context.config["common"]["debug"])
+        return send_json_response(
+            req,
+            with_included_type_nodes(
+                data_obj, ignored_keys=null_context_terms(ctx_options.context)
+            ),
+            app_context.config["common"]["debug"],
+        )
     else:
         rendered_template: str = render_template(app_context, req, data_obj)
         return response.html(rendered_template)
