@@ -102,6 +102,7 @@ def jsonld_doc(doc: dict) -> str:
         "/api/v1/person.json",
         "/api/v1/institution.json",
         "/api/v1/place.json",
+        "/api/v1/subject.json",
         "/api/v1/work.json",
         "/api/v1/publication.json",
         "/api/v1/context.json",
@@ -128,6 +129,7 @@ def test_api_contexts_do_not_use_generic_has_item_predicates(client):
         "/api/v1/person.json",
         "/api/v1/institution.json",
         "/api/v1/place.json",
+        "/api/v1/subject.json",
         "/api/v1/work.json",
         "/api/v1/publication.json",
         "/api/v1/source.json",
@@ -768,6 +770,40 @@ def test_work_context_expands_semantic_sections(client):
 
     form_of_work_node = next(graph.objects(subject, rism.formOfWork))
     assert any(graph.objects(form_of_work_node, rism.hasFormOfWork))
+
+
+@pytest.mark.endpoint
+@pytest.mark.contract
+def test_subject_context_uses_included_type_labels_without_rism_type_label(client):
+    _, ctx_resp = client.get("/api/v1/subject.json")
+    assert_json_contract(ctx_resp, status=200, required_keys=["@context"])
+    subject_context = ctx_resp.json["@context"]
+
+    subject_doc = {
+        "@context": subject_context,
+        "id": "https://rism.online/subjects/25226",
+        "type": "rism:Subject",
+        "typeLabel": {"en": ["Subject heading"]},
+        "label": {"none": ["Madrigals"]},
+        "value": "Madrigals",
+        "notes": {"none": ["Example note"]},
+        "alternateTerms": {"none": ["Madrigale"]},
+        "sources": {
+            "id": "https://rism.online/subjects/25226/sources",
+            "totalItems": 42,
+        },
+    }
+
+    graph = Graph()
+    graph.parse(data=jsonld_doc(subject_doc), format="json-ld")
+
+    subject = URIRef("https://rism.online/subjects/25226")
+    rism = Namespace("https://rism.online/api/v1#")
+
+    assert (subject, RDF.type, rism.Subject) in graph
+    assert any(graph.objects(rism.Subject, RDFS.label))
+    assert not any(graph.objects(subject, rism.typeLabel))
+    assert any(graph.objects(subject, rism.sources))
 
 
 @pytest.mark.endpoint

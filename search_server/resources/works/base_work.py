@@ -16,6 +16,7 @@ class BaseWork(ypres.AsyncDictSerializer):
     wid = ypres.MethodField(label="id")
     wtype = ypres.StaticField(label="type", value="rism:Work")
     slabel = ypres.MethodField(label="label")
+    type_label = ypres.MethodField(label="typeLabel")
     creator = ypres.MethodField()
     summary = ypres.MethodField()
     part_of = ypres.MethodField(label="partOf")
@@ -32,6 +33,12 @@ class BaseWork(ypres.AsyncDictSerializer):
         transl: dict = req.ctx.translations
 
         return title_json_value_translator(obj.get("standard_titles_json", []), transl)
+
+    def get_type_label(self, obj: SolrResult) -> dict:
+        req = self.context["request"]
+        transl: dict = req.ctx.translations
+
+        return transl["records.work"]
 
     def get_creator(self, obj: SolrResult) -> dict | None:
         if "creator_json" not in obj:
