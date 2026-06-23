@@ -497,6 +497,18 @@ RISM_JSONLD_PUBLICATION_CONTEXT: ContextDocument = {
         },
     },
 }
+RISM_JSONLD_SUBJECT_CONTEXT: ContextDocument = {
+    **__BASE_CONTEXT,
+    **__TYPE_LABEL,
+    "sources": {
+        "@id": "rism:sources",
+        "@type": "@id",
+        "@context": {
+            "id": "@id",
+            "totalItems": {"@id": "rism:totalItems", "@type": "xsd:integer"},
+        },
+    },
+}
 
 RISM_JSONLD_SOURCE_CONTEXT: ContextDocument = {
     **__BASE_CONTEXT,
@@ -672,6 +684,9 @@ RouteContextMap: dict[str, RouteOptions] = {
     "mp_server.works.work": RouteOptions("api.work_context", RISM_JSONLD_WORK_CONTEXT),
     "mp_server.publications.publication": RouteOptions(
         "api.publication_context", RISM_JSONLD_PUBLICATION_CONTEXT
+    ),
+    "mp_server.subjects.subject": RouteOptions(
+        "api.subject_context", RISM_JSONLD_SUBJECT_CONTEXT
     ),
     "__default": RouteOptions("api.default_context", RISM_JSONLD_DEFAULT_CONTEXT),
 }
