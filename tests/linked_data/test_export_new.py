@@ -123,6 +123,44 @@ def test_turtle_conversion_emits_turtle_not_ntriples():
     )
 
 
+def test_turtle_conversion_declares_rismrel_prefix_when_relationship_role_is_used():
+    doc = {
+        "@context": {
+            "@vocab": "https://rism.online/api/v1#",
+            "rism": "https://rism.online/api/v1#",
+            "rismrel": "https://rism.online/vocabulary/relationship/#",
+            "dcterms": "http://purl.org/dc/terms/",
+            "id": "@id",
+            "type": "@type",
+            "relationships": {
+                "@id": "rism:relationships",
+                "@type": "@id",
+                "@context": {
+                    "items": {"@id": "rism:hasRelationship", "@container": "@set"},
+                    "role": {"@id": "rism:hasRole", "@type": "@vocab"},
+                    "relatedTo": {"@id": "dcterms:relation", "@type": "@id"},
+                },
+            },
+        },
+        "id": "https://rism.online/people/1",
+        "type": "rism:Person",
+        "relationships": {
+            "items": [
+                {
+                    "role": "rismrel:mother_of",
+                    "relatedTo": "https://rism.online/people/2",
+                }
+            ]
+        },
+    }
+
+    turtle = to_turtle(doc)
+
+    assert "@prefix rismrel:" in turtle
+    assert "rismrel:mother_of" in turtle
+    assert "<https://rism.online/vocabulary/relationship/#mother_of>" not in turtle
+
+
 def test_jsonld_included_materializes_class_labels_without_instance_type_label():
     doc = {
         "@context": {

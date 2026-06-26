@@ -5,6 +5,8 @@ from pyoxigraph import DefaultGraph, NamedNode, Quad, RdfFormat, parse, serializ
 from pyprttl import PrttlError, format_turtle
 from sanic.log import logger
 
+from search_server.helpers.identifiers import RISM_RELATIONSHIP_BASE
+
 TURTLE_PREFIXES = {
     "dcterms": "http://purl.org/dc/terms/",
     "geo": "http://www.w3.org/2003/01/geo/wgs84_pos#",
@@ -15,6 +17,7 @@ TURTLE_PREFIXES = {
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "relators": "http://id.loc.gov/vocabulary/relators/",
     "rism": "https://rism.online/api/v1#",
+    "rismrel": RISM_RELATIONSHIP_BASE,
     "schemaorg": "https://schema.org/",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
 }
