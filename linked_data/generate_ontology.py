@@ -699,7 +699,10 @@ IGNORED_CONTEXT_KEYS = {
 PROPERTY_METADATA = {**BASE_PROPERTY_METADATA, **RELATIONSHIP_PROPERTY_METADATA}
 RESERVED_OBJECT_MARKERS = {"@id", "@vocab"}
 XSD_OR_JSON_PREFIXES = ("xsd:", "@json")
-OUTPUT_PATH = PROJECT_ROOT / "docs" / "ontology" / "rism-service-ontology.ttl"
+OUTPUT_PATHS = {
+    "ttl": PROJECT_ROOT / "docs" / "ontology" / "rism-service-ontology.ttl",
+    "nt": PROJECT_ROOT / "docs" / "ontology" / "rism-service-ontology.nt",
+}
 
 
 def configure_logging() -> logging.Logger:
@@ -1009,26 +1012,41 @@ def sorted_quads(quads: Iterable[Quad]) -> list[Quad]:
     )
 
 
-def serialize_ontology() -> str:
-    quads = [
+def ontology_quads() -> list[Quad]:
+    return [
         *ontology_header_quads(),
         *class_quads(),
         *property_quads(collect_terms()),
     ]
-    serialized = serialize(
-        sorted_quads(quads), format=RdfFormat.TURTLE, prefixes=PREFIXES
-    )
+
+
+def decode_serialized_output(serialized: str | bytes | bytearray | None) -> str:
     if serialized is None:
-        raise RuntimeError("Ontology serialization returned no Turtle output")
+        raise RuntimeError("Ontology serialization returned no RDF output")
 
     if isinstance(serialized, (bytes, bytearray)):
-        output = serialized.decode("utf-8")
+        return serialized.decode("utf-8")
     elif isinstance(serialized, str):
-        output = serialized
+        return serialized
     else:
         raise RuntimeError("Ontology serialization returned an unexpected value")
 
+
+def serialize_ontology(output_format: str = "ttl") -> str:
+    rdf_format = {
+        "ttl": RdfFormat.TURTLE,
+        "nt": RdfFormat.N_TRIPLES,
+    }[output_format]
+    prefixes = PREFIXES if rdf_format == RdfFormat.TURTLE else None
+    serialized = serialize(
+        sorted_quads(ontology_quads()),
+        format=rdf_format,
+        prefixes=prefixes,
+    )
+    output = decode_serialized_output(serialized)
     turtle = output if output.endswith("\n") else f"{output}\n"
+    if rdf_format != RdfFormat.TURTLE:
+        return turtle
     try:
         # Reuse the same pretty-printer as the request-time Turtle exporter so
         # the checked-in ontology stays easy to diff and read.
@@ -1046,15 +1064,15 @@ def serialize_ontology() -> str:
         return turtle
 
 
-def write_ontology(output_path: Path) -> str:
-    turtle = serialize_ontology()
+def write_ontology(output_path: Path, *, output_format: str = "ttl") -> str:
+    turtle = serialize_ontology(output_format)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(turtle)
     return turtle
 
 
-def check_ontology(output_path: Path) -> int:
-    expected = serialize_ontology()
+def check_ontology(output_path: Path, *, output_format: str = "ttl") -> int:
+    expected = serialize_ontology(output_format)
     if not output_path.exists():
         log.error("Ontology file does not exist: %s", output_path)
         return 1
@@ -1071,8 +1089,14 @@ def build_parser() -> argparse.ArgumentParser:
         "-o",
         "--output",
         type=Path,
-        default=OUTPUT_PATH,
+        default=None,
         help="Write ontology Turtle to this path.",
+    )
+    parser.add_argument(
+        "--format",
+        choices=("ttl", "nt"),
+        default="ttl",
+        help="Serialize ontology in this RDF format.",
     )
     parser.add_argument(
         "--check",
@@ -1084,9 +1108,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    output_path = args.output or OUTPUT_PATHS[args.format]
     if args.check:
-        return check_ontology(args.output)
-    write_ontology(args.output)
+        return check_ontology(output_path, output_format=args.format)
+    write_ontology(output_path, output_format=args.format)
     return 0
 
 

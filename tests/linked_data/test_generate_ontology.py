@@ -17,6 +17,16 @@ def quads_from_turtle(turtle: str):
     )
 
 
+def quads_from_ntriples(ntriples: str):
+    return set(
+        parse(
+            input=ntriples.encode("utf-8"),
+            format=RdfFormat.N_TRIPLES,
+            without_named_graphs=True,
+        )
+    )
+
+
 def test_generate_ontology_emits_key_derived_properties():
     quads = quads_from_turtle(generate_ontology.serialize_ontology())
 
@@ -201,6 +211,31 @@ def test_generate_ontology_check_detects_drift_and_matches_current_output(tmp_pa
     output_path.write_text(generate_ontology.serialize_ontology())
 
     assert generate_ontology.main(["--check", "--output", str(output_path)]) == 0
+
+
+def test_generate_ontology_supports_ntriples_output_and_check(tmp_path):
+    output_path = tmp_path / "ontology.nt"
+    output_path.write_text("out of date\n")
+
+    assert (
+        generate_ontology.main(
+            ["--format", "nt", "--check", "--output", str(output_path)]
+        )
+        == 1
+    )
+
+    ntriples = generate_ontology.serialize_ontology("nt")
+    output_path.write_text(ntriples)
+
+    assert quads_from_ntriples(ntriples) == quads_from_turtle(
+        generate_ontology.serialize_ontology()
+    )
+    assert (
+        generate_ontology.main(
+            ["--format", "nt", "--check", "--output", str(output_path)]
+        )
+        == 0
+    )
 
 
 def test_generate_ontology_preserves_header_metadata():
