@@ -236,6 +236,7 @@ def test_person_context_expands_semantic_sections(client):
             },
         },
         "properties": {
+            "gender": "male",
             "authorityLinks": [
                 {
                     "id": "https://rism.online/people/115324/external-authorities/viaf32197206",
@@ -286,6 +287,7 @@ def test_person_context_expands_semantic_sections(client):
     work_references_node = next(graph.objects(works_node, rism.workReferences))
     assert any(graph.objects(work_references_node, rism.hasWorkNode))
     assert any(graph.objects(subject, schemaorg.sameAs))
+    assert any(graph.objects(subject, schemaorg.gender))
 
     external_authorities_section = next(graph.objects(subject, rism.externalAuthorities))
     assert isinstance(external_authorities_section, URIRef)

@@ -228,6 +228,7 @@ RISM_JSONLD_PERSON_CONTEXT: ContextDocument = {
     },
     **__EXTERNAL_AUTHORITIES,
     **__AUTHORITY_LINKS,
+    "gender": {"@id": "schemaorg:gender"},
     "nameVariants": {
         "@id": "rism:nameVariants",
         "@type": "@id",
