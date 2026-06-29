@@ -97,13 +97,21 @@ CLASS_METADATA = {
             "?source rism:hasDates/rism:earliestDate ?year .",
             "MINUS { ?source rism:partOf/rism:isPartOf ?parent . }",
         ],
+        "service_notes": [
+            "To count only top-level sources, exclude child-source rows with MINUS { ?source rism:partOf/rism:isPartOf ?parent . }."
+        ],
     },
     "rism:Person": {
         "label": "Person",
-        "comment": "A person authority record. Person display labels usually use language tag 'none'.",
+        "comment": (
+            "A person authority record. Person display labels usually use language "
+            "tag 'none', and gender is exposed directly on the person resource as a "
+            "plain string literal through schemaorg:gender."
+        ),
         "equivalent_classes": ["foaf:Person"],
         "query_patterns": [
-            '?person a rism:Person ; rdfs:label ?name . FILTER(LANG(?name) = "none")'
+            '?person a rism:Person ; rdfs:label ?name . FILTER(LANG(?name) = "none")',
+            '?person a rism:Person ; rdfs:label ?name ; schemaorg:gender "female" . FILTER(LANG(?name) = "none")',
         ],
     },
     "rism:Institution": {
@@ -477,7 +485,17 @@ BASE_PROPERTY_METADATA = {
     },
     "rism:hasRole": {
         "label": "has role",
-        "comment": "A role for creator and relationship nodes. Values commonly come from the Library of Congress relators vocabulary.",
+        "comment": (
+            "A role for creator and relationship nodes. Values commonly come from "
+            "the Library of Congress relators vocabulary or from local relationship "
+            "vocabularies such as rismrel:."
+        ),
+        "query_patterns": [
+            "?relationship dcterms:relation ?related ; rism:hasRole ?role .",
+            "?creator dcterms:relation ?person ; rism:hasRole relators:cre .",
+            "?relationship dcterms:relation ?person ; rism:hasRole relators:dte .",
+            "?relationship dcterms:relation ?publisher ; rism:hasRole relators:pbl .",
+        ],
     },
     "rism:hasQualifier": {
         "label": "has qualifier",
@@ -498,7 +516,14 @@ BASE_PROPERTY_METADATA = {
         "label": "has holding institution",
         "domain": ["rism:Holding"],
         "range": ["rism:Institution"],
-        "query_patterns": ["?holding rism:hasHoldingInstitution ?institution ."],
+        "comment": (
+            "Links a holding node to the institution embedded under heldBy in the "
+            "service JSON-LD context."
+        ),
+        "query_patterns": [
+            "?holding rism:hasHoldingInstitution ?institution .",
+            "?source rism:holdings/rism:hasHolding ?holding . ?holding rism:hasHoldingInstitution ?institution .",
+        ],
     },
     "rism:incipits": {
         "label": "incipits section",
@@ -538,11 +563,31 @@ BASE_PROPERTY_METADATA = {
     "rism:sourceTypes": {
         "label": "source types block",
         "domain": ["rism:Source"],
-        "comment": "Links a source to a wrapper node grouping record type, source type, content types, and material types.",
+        "comment": (
+            "Links a source to a wrapper node grouping record type, source type, "
+            "content types, and material types."
+        ),
+        "query_patterns": [
+            "?source rism:sourceTypes/rism:sourceType ?sourceType .",
+            "?source rism:sourceTypes/rism:recordType ?recordType .",
+            "?source rism:sourceTypes/rism:contentTypes ?contentType .",
+        ],
     },
-    "rism:recordType": {"label": "record type", "range": ["rism:RecordType"]},
-    "rism:sourceType": {"label": "source type", "range": ["rism:SourceType"]},
-    "rism:contentTypes": {"label": "content types", "range": ["rism:ContentType"]},
+    "rism:recordType": {
+        "label": "record type",
+        "range": ["rism:RecordType"],
+        "query_patterns": ["?source rism:sourceTypes/rism:recordType ?recordType ."],
+    },
+    "rism:sourceType": {
+        "label": "source type",
+        "range": ["rism:SourceType"],
+        "query_patterns": ["?source rism:sourceTypes/rism:sourceType ?sourceType ."],
+    },
+    "rism:contentTypes": {
+        "label": "content types",
+        "range": ["rism:ContentType"],
+        "query_patterns": ["?source rism:sourceTypes/rism:contentTypes ?contentType ."],
+    },
     "rism:materialTypes": {"label": "material types", "range": ["rism:MaterialType"]},
     "rism:subjects": {
         "label": "subjects section",
@@ -656,8 +701,26 @@ BASE_PROPERTY_METADATA = {
         "label": "physical dimensions",
         "property_type": "datatype",
     },
-    "rism:hasSiglum": {"label": "siglum", "property_type": "datatype"},
-    "rism:hasCountryCodes": {"label": "country codes", "property_type": "datatype"},
+    "rism:hasSiglum": {
+        "label": "siglum",
+        "property_type": "datatype",
+        "domain": ["rism:Institution"],
+        "comment": "Institution siglum exposed directly on institution nodes.",
+        "query_patterns": ["?institution rism:hasSiglum ?siglum ."],
+    },
+    "rism:hasCountryCodes": {
+        "label": "country codes",
+        "property_type": "datatype",
+        "domain": ["rism:Institution"],
+        "comment": (
+            "Institution country code exposed directly on institution nodes, "
+            "including institutions embedded under holdings."
+        ),
+        "query_patterns": [
+            "?institution rism:hasCountryCodes ?countryCode .",
+            "?holding rism:hasHoldingInstitution/rism:hasCountryCodes ?countryCode .",
+        ],
+    },
     "rism:hasCityName": {"label": "city name", "property_type": "datatype"},
     "rism:holdingType": {
         "label": "holding type",
@@ -685,6 +748,24 @@ BASE_PROPERTY_METADATA = {
         "property_type": "datatype",
         "label": "same as",
         "comment": "Top-level sameAs links exposed in properties for institutions and places.",
+    },
+    "schemaorg:gender": {
+        "property_type": "datatype",
+        "label": "gender",
+        "comment": (
+            "Linked RISM person RDF exposes gender directly on the person resource "
+            "as a plain string literal, for example \"female\" or \"male\"."
+        ),
+        "domain": ["rism:Person"],
+        "range": ["xsd:string"],
+        "query_patterns": [
+            "?person schemaorg:gender ?gender .",
+            '?person schemaorg:gender "female" .',
+            '?person schemaorg:gender "male" .',
+        ],
+        "service_notes": [
+            "Gender is emitted from the person properties block as a direct literal on the person resource rather than through a nested node."
+        ],
     },
 }
 IGNORED_CONTEXT_KEYS = {

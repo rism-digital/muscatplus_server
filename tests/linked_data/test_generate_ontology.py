@@ -248,3 +248,117 @@ def test_generate_ontology_preserves_header_metadata():
         NamedNode("http://purl.org/dc/terms/title"),
         Literal("RISM service ontology", language="en"),
     ) in triples
+
+
+def test_generate_ontology_adds_gender_query_guidance():
+    triples = {
+        (quad.subject, quad.predicate, quad.object)
+        for quad in quads_from_turtle(generate_ontology.serialize_ontology())
+    }
+    gender = NamedNode("https://schema.org/gender")
+
+    assert (
+        gender,
+        NamedNode("http://www.w3.org/2000/01/rdf-schema#domain"),
+        NamedNode("https://rism.online/api/v1#Person"),
+    ) in triples
+    assert (
+        gender,
+        NamedNode("http://www.w3.org/2000/01/rdf-schema#range"),
+        NamedNode("http://www.w3.org/2001/XMLSchema#string"),
+    ) in triples
+    assert (
+        gender,
+        NamedNode("http://www.w3.org/2000/01/rdf-schema#comment"),
+        Literal(
+            'Linked RISM person RDF exposes gender directly on the person resource as a plain string literal, for example "female" or "male".',
+            language="en",
+        ),
+    ) in triples
+    assert (
+        gender,
+        NamedNode("https://rism.online/api/v1#queryPattern"),
+        Literal("?person schemaorg:gender ?gender ."),
+    ) in triples
+    assert (
+        gender,
+        NamedNode("https://rism.online/api/v1#queryPattern"),
+        Literal('?person schemaorg:gender "female" .'),
+    ) in triples
+    assert (
+        gender,
+        NamedNode("https://rism.online/api/v1#queryPattern"),
+        Literal('?person schemaorg:gender "male" .'),
+    ) in triples
+
+
+def test_generate_ontology_adds_person_and_common_property_query_guidance():
+    triples = {
+        (quad.subject, quad.predicate, quad.object)
+        for quad in quads_from_turtle(generate_ontology.serialize_ontology())
+    }
+    query_pattern = NamedNode("https://rism.online/api/v1#queryPattern")
+
+    assert (
+        NamedNode("https://rism.online/api/v1#Person"),
+        query_pattern,
+        Literal(
+            '?person a rism:Person ; rdfs:label ?name ; schemaorg:gender "female" . FILTER(LANG(?name) = "none")'
+        ),
+    ) in triples
+    assert (
+        NamedNode("https://rism.online/api/v1#hasSiglum"),
+        query_pattern,
+        Literal("?institution rism:hasSiglum ?siglum ."),
+    ) in triples
+    assert (
+        NamedNode("https://rism.online/api/v1#hasCountryCodes"),
+        query_pattern,
+        Literal("?institution rism:hasCountryCodes ?countryCode ."),
+    ) in triples
+    assert (
+        NamedNode("https://rism.online/api/v1#hasCountryCodes"),
+        query_pattern,
+        Literal(
+            "?holding rism:hasHoldingInstitution/rism:hasCountryCodes ?countryCode ."
+        ),
+    ) in triples
+    assert (
+        NamedNode("https://rism.online/api/v1#hasRole"),
+        query_pattern,
+        Literal("?relationship dcterms:relation ?related ; rism:hasRole ?role ."),
+    ) in triples
+    assert (
+        NamedNode("https://rism.online/api/v1#hasRole"),
+        query_pattern,
+        Literal("?relationship dcterms:relation ?person ; rism:hasRole relators:dte ."),
+    ) in triples
+    assert (
+        NamedNode("https://rism.online/api/v1#hasRole"),
+        query_pattern,
+        Literal(
+            "?relationship dcterms:relation ?publisher ; rism:hasRole relators:pbl ."
+        ),
+    ) in triples
+    assert (
+        NamedNode("https://rism.online/api/v1#sourceTypes"),
+        query_pattern,
+        Literal("?source rism:sourceTypes/rism:sourceType ?sourceType ."),
+    ) in triples
+    assert (
+        NamedNode("https://rism.online/api/v1#sourceTypes"),
+        query_pattern,
+        Literal("?source rism:sourceTypes/rism:recordType ?recordType ."),
+    ) in triples
+    assert (
+        NamedNode("https://rism.online/api/v1#sourceTypes"),
+        query_pattern,
+        Literal("?source rism:sourceTypes/rism:contentTypes ?contentType ."),
+    ) in triples
+
+
+def test_generate_ontology_avoids_unsupported_query_cookbook_advice():
+    ontology = generate_ontology.serialize_ontology()
+
+    assert "SAMPLE(" not in ontology
+    assert "join labels later" not in ontology
