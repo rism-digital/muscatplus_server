@@ -32,7 +32,10 @@ from search_server.helpers.jsonld import (
     RISM_JSONLD_WORK_CONTEXT,
 )
 from search_server.helpers.languages import filter_languages, load_translations
-from search_server.helpers.linked_data import to_ntriples as to_ntriples_pyoxigraph
+from search_server.helpers.linked_data import (
+    to_ntriples as to_ntriples_pyoxigraph,
+    to_turtle as to_turtle_pyoxigraph,
+)
 from search_server.resources.institutions.institution import Institution
 from search_server.resources.people.person import Person
 from search_server.resources.places.place import Place
@@ -100,6 +103,7 @@ RANDOM_SEED_MAX = 2**31 - 1
 JSON_FIELD_SUFFIX = "_json"
 JSON_MULTI_FIELD_SUFFIX = "_jsonm"
 JSON_FIELD_SUFFIXES = (JSON_FIELD_SUFFIX, JSON_MULTI_FIELD_SUFFIX)
+OUTPUT_FORMATS = ("nt", "ttl")
 
 
 @dataclass
@@ -207,12 +211,24 @@ def parse_json_multi_field(field_name: str, field_value: Any) -> list[Any] | Non
     return expanded_values
 
 
-def shard_tmp_path(output_path: Path, record_type: str, worker_id: int) -> Path:
-    return output_path / record_type / f"part-{worker_id:05d}.nt.tmp"
+def shard_extension(output_format: str) -> str:
+    if output_format not in OUTPUT_FORMATS:
+        raise ValueError(f"Unsupported RDF output format: {output_format}")
+    return output_format
 
 
-def shard_final_path(output_path: Path, record_type: str, worker_id: int) -> Path:
-    return output_path / record_type / f"part-{worker_id:05d}.nt"
+def shard_tmp_path(
+    output_path: Path, record_type: str, worker_id: int, output_format: str
+) -> Path:
+    extension = shard_extension(output_format)
+    return output_path / record_type / f"part-{worker_id:05d}.{extension}.tmp"
+
+
+def shard_final_path(
+    output_path: Path, record_type: str, worker_id: int, output_format: str
+) -> Path:
+    extension = shard_extension(output_format)
+    return output_path / record_type / f"part-{worker_id:05d}.{extension}"
 
 
 def failure_report_path(output_path: Path, record_type: str, worker_id: int) -> Path:
@@ -228,6 +244,7 @@ async def serialize_doc(
     serializer_cls: Any,
     ctx_val: dict[str, Any],
     session: Client,
+    output_format: str,
 ) -> tuple[str, StageTimings]:
     timings = StageTimings()
 
@@ -241,13 +258,20 @@ async def serialize_doc(
     timings.serialize_seconds = timeit.default_timer() - serialize_started_at
 
     convert_started_at = timeit.default_timer()
-    ntriples = to_ntriples_pyoxigraph({"@context": ctx_val["@context"], **serialized})
+    payload = {"@context": ctx_val["@context"], **serialized}
+    if output_format == "nt":
+        rdf_output = to_ntriples_pyoxigraph(payload)
+    elif output_format == "ttl":
+        rdf_output = to_turtle_pyoxigraph(payload)
+    else:
+        raise ValueError(f"Unsupported RDF output format: {output_format}")
     timings.convert_seconds = timeit.default_timer() - convert_started_at
 
-    if not ntriples:
-        raise ValueError("No N-Triples output")
+    if not rdf_output:
+        format_name = "Turtle" if output_format == "ttl" else "N-Triples"
+        raise ValueError(f"No {format_name} output")
 
-    return ntriples, timings
+    return rdf_output, timings
 
 
 async def run_worker_async(
@@ -258,11 +282,12 @@ async def run_worker_async(
     output_path: Path,
     concurrency: int,
     flush_every: int,
+    output_format: str,
 ) -> None:
     serializer_cls = serializer_map[record_type]
     ctx_val = record_type_context(record_type)
-    tmp_path = shard_tmp_path(output_path, record_type, worker_id)
-    final_path = shard_final_path(output_path, record_type, worker_id)
+    tmp_path = shard_tmp_path(output_path, record_type, worker_id, output_format)
+    final_path = shard_final_path(output_path, record_type, worker_id, output_format)
     failures_path = failure_report_path(output_path, record_type, worker_id)
 
     tmp_path.parent.mkdir(parents=True, exist_ok=True)
@@ -298,10 +323,10 @@ async def run_worker_async(
         ) -> tuple[str, StageTimings, dict[str, Any] | None]:
             async with sem:
                 try:
-                    ntriples, doc_timings = await serialize_doc(
-                        doc, serializer_cls, ctx_val, session
+                    rdf_output, doc_timings = await serialize_doc(
+                        doc, serializer_cls, ctx_val, session, output_format
                     )
-                    return ntriples, doc_timings, None
+                    return rdf_output, doc_timings, None
                 except Exception as err:
                     payload = failure_payload(
                         doc.get("id"),
@@ -314,12 +339,12 @@ async def run_worker_async(
 
         async def drain_completed(
             tasks: Iterable[asyncio.Task],
-            nt_out: Any,
+            rdf_out: Any,
             failure_out: Any,
         ) -> None:
             nonlocal succeeded, failed, since_flush, timings
             for task in tasks:
-                ntriples, doc_timings, failure = task.result()
+                rdf_output, doc_timings, failure = task.result()
                 if failure:
                     failed += 1
                     failure_out.write(orjson.dumps(failure).decode("utf-8"))
@@ -327,9 +352,9 @@ async def run_worker_async(
                     continue
 
                 write_start = timeit.default_timer()
-                nt_out.write(ntriples)
-                if not ntriples.endswith("\n"):
-                    nt_out.write("\n")
+                rdf_out.write(rdf_output)
+                if not rdf_output.endswith("\n"):
+                    rdf_out.write("\n")
                 timings.write_seconds += timeit.default_timer() - write_start
 
                 timings.json_expand_seconds += doc_timings.json_expand_seconds
@@ -339,12 +364,12 @@ async def run_worker_async(
                 since_flush += 1
 
                 if since_flush >= flush_every:
-                    nt_out.flush()
+                    rdf_out.flush()
                     failure_out.flush()
                     since_flush = 0
 
         with (
-            open(tmp_path, "w", encoding="utf-8") as nt_out,
+            open(tmp_path, "w", encoding="utf-8") as rdf_out,
             open(failures_path, "w", encoding="utf-8") as failure_out,
         ):
             while True:
@@ -360,13 +385,13 @@ async def run_worker_async(
                         done, pending = await asyncio.wait(
                             pending, return_when=asyncio.FIRST_COMPLETED
                         )
-                        await drain_completed(done, nt_out, failure_out)
+                        await drain_completed(done, rdf_out, failure_out)
 
             if pending:
                 done, _ = await asyncio.wait(pending)
-                await drain_completed(done, nt_out, failure_out)
+                await drain_completed(done, rdf_out, failure_out)
 
-            nt_out.flush()
+            rdf_out.flush()
             failure_out.flush()
 
     tmp_path.replace(final_path)
@@ -399,6 +424,7 @@ def worker_entrypoint(
     output_path: str,
     concurrency: int,
     flush_every: int,
+    output_format: str,
 ) -> None:
     try:
         asyncio.run(
@@ -410,6 +436,7 @@ def worker_entrypoint(
                 output_path=Path(output_path),
                 concurrency=concurrency,
                 flush_every=flush_every,
+                output_format=output_format,
             )
         )
     except Exception as err:
@@ -484,6 +511,7 @@ async def export_record_type(
     limit: int | None,
     randomize: bool,
     random_seed: int | None,
+    output_format: str,
 ) -> list[dict[str, Any]]:
     if record_type not in serializer_map:
         raise ValueError(f"Unsupported record type: {record_type}")
@@ -502,6 +530,7 @@ async def export_record_type(
                 str(output_path),
                 worker_concurrency,
                 flush_every,
+                output_format,
             ),
         )
         for worker_id in range(workers)
@@ -593,12 +622,15 @@ def write_manifest(output_path: Path, manifests: list[dict[str, Any]]) -> None:
     )
 
 
-def clean_output_for_types(output_path: Path, record_types: Iterable[str]) -> None:
+def clean_output_for_types(
+    output_path: Path, record_types: Iterable[str], output_format: str
+) -> None:
+    extension = shard_extension(output_format)
     for record_type in record_types:
         record_dir = output_path / record_type
         if not record_dir.exists():
             continue
-        for path in record_dir.glob("part-*.nt*"):
+        for path in record_dir.glob(f"part-*.{extension}*"):
             path.unlink()
         for path in record_dir.glob("failed-records-*.jsonl"):
             path.unlink()
@@ -611,7 +643,7 @@ def main(args: argparse.Namespace) -> bool:
     random_seed = generate_random_seed() if args.random else None
 
     if args.empty:
-        clean_output_for_types(output_path, record_types)
+        clean_output_for_types(output_path, record_types, args.format)
 
     all_manifests: list[dict[str, Any]] = []
 
@@ -630,6 +662,7 @@ def main(args: argparse.Namespace) -> bool:
                 limit=args.limit,
                 randomize=args.random,
                 random_seed=random_seed,
+                output_format=args.format,
             )
             all_manifests.extend(manifests)
             write_manifest(output_path, all_manifests)
@@ -638,7 +671,7 @@ def main(args: argparse.Namespace) -> bool:
     return True
 
 
-if __name__ == "__main__":
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-o", "--output", default="../ttl-new", type=Path, help="Output directory"
@@ -698,6 +731,17 @@ if __name__ == "__main__":
         action="store_true",
         help="Reserved for compatibility; profile timings are always written to the manifest.",
     )
+    parser.add_argument(
+        "--format",
+        choices=OUTPUT_FORMATS,
+        default="nt",
+        help="RDF output format for exported shards.",
+    )
+    return parser
+
+
+if __name__ == "__main__":
+    parser = build_parser()
 
     incoming_args = parser.parse_args()
 
