@@ -203,6 +203,7 @@ class Person(BasePerson):
         d = {
             "authorityLinks": authority_links,
             "sameAs": same_as,
+            "gender": obj.get("gender_s"),
         }
 
         return {k: v for k, v in d.items() if v} or None

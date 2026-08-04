@@ -183,8 +183,8 @@ def _related_to_person(req, obj: dict) -> dict:
 def _related_to_institution(req, obj: dict) -> dict:
     name: str = f"{obj['name']}"
 
-    if "place" in obj:
-        name = f"{name}, {obj['place']}"
+    if "city" in obj:
+        name = f"{name}, {obj['city']}"
 
     if "siglum" in obj:
         name = f"{name} ({obj.get('siglum')})"

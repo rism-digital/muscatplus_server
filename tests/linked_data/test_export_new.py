@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
+from types import SimpleNamespace
 from unittest.mock import patch
 
+import pytest
 from pyoxigraph import RdfFormat, parse
 
 from linked_data.export import (
     DEFAULT_SOLR_SORT,
+    build_parser,
     clean_output_for_types,
     expand_json_fields,
     failure_report_path,
+    serialize_doc,
+    shard_extension,
     shard_final_path,
     shard_tmp_path,
     solr_request_limit,
@@ -123,6 +129,44 @@ def test_turtle_conversion_emits_turtle_not_ntriples():
     )
 
 
+def test_turtle_conversion_declares_rismrel_prefix_when_relationship_role_is_used():
+    doc = {
+        "@context": {
+            "@vocab": "https://rism.online/api/v1#",
+            "rism": "https://rism.online/api/v1#",
+            "rismrel": "https://rism.online/vocabulary/relationship/#",
+            "dcterms": "http://purl.org/dc/terms/",
+            "id": "@id",
+            "type": "@type",
+            "relationships": {
+                "@id": "rism:relationships",
+                "@type": "@id",
+                "@context": {
+                    "items": {"@id": "rism:hasRelationship", "@container": "@set"},
+                    "role": {"@id": "rism:hasRole", "@type": "@vocab"},
+                    "relatedTo": {"@id": "dcterms:relation", "@type": "@id"},
+                },
+            },
+        },
+        "id": "https://rism.online/people/1",
+        "type": "rism:Person",
+        "relationships": {
+            "items": [
+                {
+                    "role": "rismrel:mother_of",
+                    "relatedTo": "https://rism.online/people/2",
+                }
+            ]
+        },
+    }
+
+    turtle = to_turtle(doc)
+
+    assert "@prefix rismrel:" in turtle
+    assert "rismrel:mother_of" in turtle
+    assert "<https://rism.online/vocabulary/relationship/#mother_of>" not in turtle
+
+
 def test_jsonld_included_materializes_class_labels_without_instance_type_label():
     doc = {
         "@context": {
@@ -197,15 +241,26 @@ def test_expand_json_fields_parses_single_and_multi_values():
 
 
 def test_shard_paths_are_worker_owned(tmp_path):
-    assert shard_tmp_path(tmp_path, "source", 2) == (
+    assert shard_tmp_path(tmp_path, "source", 2, "nt") == (
         tmp_path / "source" / "part-00002.nt.tmp"
     )
-    assert shard_final_path(tmp_path, "source", 2) == (
+    assert shard_final_path(tmp_path, "source", 2, "nt") == (
         tmp_path / "source" / "part-00002.nt"
+    )
+    assert shard_tmp_path(tmp_path, "source", 2, "ttl") == (
+        tmp_path / "source" / "part-00002.ttl.tmp"
+    )
+    assert shard_final_path(tmp_path, "source", 2, "ttl") == (
+        tmp_path / "source" / "part-00002.ttl"
     )
     assert failure_report_path(tmp_path, "source", 2) == (
         tmp_path / "source" / "failed-records-00002.jsonl"
     )
+
+
+def test_shard_extension_rejects_unknown_format():
+    with pytest.raises(ValueError, match="Unsupported RDF output format"):
+        shard_extension("rdfxml")
 
 
 def test_write_manifest_records_totals(tmp_path):
@@ -249,13 +304,123 @@ def test_clean_output_for_types_removes_generated_shards_only(tmp_path):
     for path in [*generated, keep]:
         path.write_text("x")
 
-    clean_output_for_types(tmp_path, ["source"])
+    clean_output_for_types(tmp_path, ["source"], "nt")
 
     assert not generated[0].exists()
     assert not generated[1].exists()
     assert not generated[2].exists()
     assert generated[3].exists()
     assert keep.exists()
+
+
+def test_clean_output_for_types_only_removes_selected_format(tmp_path):
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    ttl_path = source_dir / "part-00000.ttl"
+    ttl_tmp_path = source_dir / "part-00000.ttl.tmp"
+    nt_path = source_dir / "part-00000.nt"
+    keep = source_dir / "notes.txt"
+    for path in [ttl_path, ttl_tmp_path, nt_path, keep]:
+        path.write_text("x")
+
+    clean_output_for_types(tmp_path, ["source"], "ttl")
+
+    assert not ttl_path.exists()
+    assert not ttl_tmp_path.exists()
+    assert nt_path.exists()
+    assert keep.exists()
+
+
+def test_serialize_doc_uses_turtle_output_when_requested():
+    class AwaitableSerialized:
+        def __init__(self, payload):
+            self.payload = payload
+
+        def __await__(self):
+            async def _resolve():
+                return self.payload
+
+            return _resolve().__await__()
+
+    class StubSerializer:
+        def __init__(self, doc, context):
+            self.serialized = AwaitableSerialized(
+                {
+                    "id": doc["id"],
+                    "type": "rism:Source",
+                    "label": {"en": ["Example source"]},
+                }
+            )
+
+    doc = {"id": "https://rism.online/sources/1"}
+    ctx_val = {
+        "@context": {
+            "rism": "https://rism.online/api/v1#",
+            "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+            "id": "@id",
+            "type": "@type",
+            "label": {
+                "@id": "rdfs:label",
+                "@container": ["@language", "@set"],
+            },
+        }
+    }
+
+    output, timings = asyncio.run(
+        serialize_doc(
+            doc,
+            StubSerializer,
+            ctx_val,
+            SimpleNamespace(),
+            "ttl",
+        )
+    )
+
+    assert "@prefix rism:" in output
+    assert "rism:Source" in output
+    assert timings.convert_seconds >= 0
+
+
+def test_serialize_doc_rejects_missing_turtle_output():
+    class AwaitableSerialized:
+        def __init__(self, payload):
+            self.payload = payload
+
+        def __await__(self):
+            async def _resolve():
+                return self.payload
+
+            return _resolve().__await__()
+
+    class StubSerializer:
+        def __init__(self, doc, context):
+            self.serialized = AwaitableSerialized({"id": doc["id"]})
+
+    with patch("linked_data.export.to_turtle_pyoxigraph", return_value=None):
+        with pytest.raises(ValueError, match="No Turtle output"):
+            asyncio.run(
+                serialize_doc(
+                    {"id": "https://rism.online/sources/1"},
+                    StubSerializer,
+                    {"@context": {}},
+                    SimpleNamespace(),
+                    "ttl",
+                )
+            )
+
+
+def test_build_parser_accepts_ttl_and_nt_formats():
+    parser = build_parser()
+
+    assert parser.parse_args(["--format", "ttl"]).format == "ttl"
+    assert parser.parse_args(["--format", "nt"]).format == "nt"
+
+
+def test_build_parser_rejects_unknown_format():
+    parser = build_parser()
+
+    with pytest.raises(SystemExit):
+        parser.parse_args(["--format", "rdfxml"])
 
 
 def test_solr_sort_defaults_to_stable_id_sort():

@@ -57,7 +57,7 @@ async def handle_siglum_search_request(req) -> dict | None:
     #  qt = query type, keyword search over the whole record if omitted.
     #  page = control pagination
     query: str | None = req.args.get("q", None)
-    query_type: str | None = req.args.get("qt", "all")
+    query_type: str = req.args.get("qt", "all")
     page: str | None = req.args.get("page", None)
 
     page_num: int = parse_page_number(page)
@@ -95,7 +95,7 @@ async def handle_siglum_search_request(req) -> dict | None:
         "filter": fq,
         "offset": start_row,
         "limit": rows,
-        "sort": "score desc"
+        "sort": "score desc",
     }
 
     results: Results = await SolrConnection.search(
