@@ -94,7 +94,7 @@ class Holding(ypres.AsyncDictSerializer):
     def get_sid(self, obj: dict) -> str:
         req = self.context["request"]
 
-        if "project_s" in obj and (proj := obj["project_s"]) == "diamm":
+        if "project_s" in obj and (proj := obj["project_s"]) in {"diamm", "cantus"}:
             external_inst_val = obj["external_institution_id"]
             source_id_val = obj["source_id"]
 
