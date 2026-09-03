@@ -50,6 +50,7 @@ de:
     celtic_other: Keltisch (andere)
     chinese: Chinesisch
     corsican: Korsisch
+    central_american_indian: Central American Indian (Other)
     cree: Cree
     creoles_pidgins_other: Kreolisch und Kauderwelsch (andere)
     croatian: Kroatisch
@@ -552,6 +553,8 @@ de:
     identification_status: Status der Identifikation
     identified: Identifiziert
     identified_holding: Identifizierter Exemplareintrag
+    identified_manuscript: Identifiziertes Manuskript
+    identitied_printed_edition: Identifizierte gedruckte Ausgabe
     identified_source: Identifizierte Quelle
     identified_work: Identifiziertes Werk
     identity: Identifizierung
@@ -960,7 +963,7 @@ de:
     westernmost_longitude: Westlicher Längengrad
     woodwinds: Holzblasinstrumente
     work: Werk
-    works: Works
+    works: Werk
     work_catalog: Werkkatalog
     work_catalogs: Werkkatalog
     work_catalog_note: Bemerkung Werkverzeichnis
