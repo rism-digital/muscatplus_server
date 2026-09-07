@@ -7,6 +7,7 @@ from search_server.exceptions import InvalidQueryException
 from search_server.helpers.identifiers import get_identifier
 from search_server.helpers.search_request import SearchRequest
 from search_server.helpers.solr_connection import SolrConnection
+from search_server.request_handlers import JSON_MEDIA_TYPE, JSONLD_MEDIA_TYPE, accepts
 from search_server.resources.search.facets import get_facets
 from search_server.template_render import render_template
 
@@ -27,7 +28,7 @@ async def handle_front_request(req) -> response.HTTPResponse:
     accept: str | None = req.headers.get("Accept")
     app_context = req.app.ctx
 
-    if accept and "json" in accept:
+    if accepts(accept, JSON_MEDIA_TYPE) or accepts(accept, JSONLD_MEDIA_TYPE):
         return response.json(
             results,
             content_type="application/ld+json;charset=utf-8",

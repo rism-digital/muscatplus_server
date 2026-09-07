@@ -27,6 +27,34 @@ HTML_MEDIA_TYPE = "text/html"
 ANY_MEDIA_TYPE = "*/*"
 
 
+def accepts(accept: str | None, media_type: str) -> bool:
+    """Match complete media types, ignoring quality values; HTML takes priority.
+
+    Missing, wildcard and unrecognized headers default to HTML. Parameters
+    are ignored unless explicitly requested (as for expanded JSON-LD).
+    """
+    entries = [entry.strip().split(";") for entry in (accept or "").split(",")]
+    types = {entry[0].strip().lower() for entry in entries}
+    supported = {
+        JSON_MEDIA_TYPE,
+        JSONLD_MEDIA_TYPE,
+        TURTLE_MEDIA_TYPE,
+        NTRIPLES_MEDIA_TYPE,
+        MARCXML_MEDIA_TYPE,
+    }
+    html = HTML_MEDIA_TYPE in types or ANY_MEDIA_TYPE in types or not types & supported
+    if media_type == HTML_MEDIA_TYPE:
+        return html
+    if html:
+        return False
+    base, _, parameter = media_type.partition(";")
+    return any(
+        entry[0].strip().lower() == base
+        and (not parameter or parameter in [part.strip() for part in entry[1:]])
+        for entry in entries
+    )
+
+
 async def tombstone_or_not_found(req: request.Request) -> response.HTTPResponse:
     maybe_tombstone: dict | None = await handle_tombstone(req)
     if maybe_tombstone:
@@ -112,7 +140,7 @@ async def handle_request(
     # appropriate status code. Anything beyond this point is an API request.
     # If the handler sets a raw JSON response, then bypass whatever Accept values
     # they requested. This means bypassing the HTML rendering.
-    if accept and (HTML_MEDIA_TYPE in accept) and not raw_json_response:
+    if accepts(accept, HTML_MEDIA_TYPE) and not raw_json_response:
         rendered_template: str = render_template(app_context, req, data_obj)
         return response.html(rendered_template, status=response_code)
 
@@ -140,20 +168,20 @@ async def handle_request(
     )
 
     res: dict
-    if accept and TURTLE_MEDIA_TYPE in accept:
+    if accepts(accept, TURTLE_MEDIA_TYPE):
         # Always embed the context for turtle, as it avoids a lookup via the URI
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         ttl = to_turtle(res)
         return response.text(ttl, content_type=TURTLE_MEDIA_TYPE)
 
-    if accept and NTRIPLES_MEDIA_TYPE in accept:
+    if accepts(accept, NTRIPLES_MEDIA_TYPE):
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         nt: str = to_ntriples(res)
         return response.text(nt, content_type=NTRIPLES_MEDIA_TYPE)
 
-    if accept and MARCXML_MEDIA_TYPE in accept:
+    if accepts(accept, MARCXML_MEDIA_TYPE):
         if sid := req.match_info.get("source_id"):
             rtype = "sources"
             rid = sid
@@ -187,7 +215,7 @@ async def handle_request(
 
         return response.text(muscat_resp, content_type=MARCXML_MEDIA_TYPE)
 
-    if accept and ";profile=expanded" in accept:
+    if accepts(accept, EXPANDED_JSONLD_MEDIA_TYPE):
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         exp = to_expanded_jsonld(res)
@@ -214,25 +242,7 @@ async def handle_request(
 async def handle_search(
     req: request.Request, handler: Callable, **kwargs
 ) -> response.HTTPResponse:
-    # accept: Optional[str] = req.headers.get("Accept")
-
-    # Check whether we can respond with the correct content type. Note that
-    # this server does not handle HTML responses; these are handled before
-    # the request reaches this server.
-    # if accept and (("application/ld+json" not in accept) or ("application/json" not in accept)):
-    #     return response.text("Supported content types for search interfaces are 'application/json' and
-    #     application/ld+json'", status=406)
-
     accept: str | None = req.headers.get("Accept")
-    if accept and (
-        JSON_MEDIA_TYPE not in accept
-        and JSONLD_MEDIA_TYPE not in accept
-        and HTML_MEDIA_TYPE not in accept
-        and ANY_MEDIA_TYPE not in accept
-    ):
-        status_msg = f"""Accept header {accept} is not available for this resource."""
-        return response.json({"message": status_msg}, status=406)
-
     app_context = req.app.ctx
 
     if req.route and req.route.name in RouteContextMap:
@@ -248,7 +258,7 @@ async def handle_search(
         error_message: str = f"Error sending search to Solr. {e}"
         return response.json({"message": error_message}, status=500)
 
-    if accept and "json" in accept:
+    if accepts(accept, JSON_MEDIA_TYPE) or accepts(accept, JSONLD_MEDIA_TYPE):
         if not data_obj:
             return response.json(
                 {"message": "The requested resource was not found"}, status=404

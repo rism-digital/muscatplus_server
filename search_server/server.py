@@ -12,7 +12,12 @@ from search_server.helpers.languages import (
     load_translations,
 )
 from search_server.helpers.solr_connection import SolrConnection
-from search_server.request_handlers import send_json_response
+from search_server.request_handlers import (
+    JSON_MEDIA_TYPE,
+    JSONLD_MEDIA_TYPE,
+    accepts,
+    send_json_response,
+)
 from search_server.resources.front.front import handle_front_request
 from search_server.routes.api import api_blueprint
 from search_server.routes.countries import countries_blueprint
@@ -182,7 +187,7 @@ async def about(req) -> response.HTTPResponse:
     }
 
     accept: str | None = req.headers.get("Accept")
-    if accept and "json" in accept:
+    if accepts(accept, JSON_MEDIA_TYPE) or accepts(accept, JSONLD_MEDIA_TYPE):
         return send_json_response(req, resp, app_context.config["common"]["debug"])
     else:
         rendered_template: str = render_template(app_context, req, resp)
