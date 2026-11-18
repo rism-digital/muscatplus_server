@@ -175,6 +175,7 @@ class Holding(ypres.AsyncDictSerializer):
             "department_s": ("records.department", None),
             "shelfmark_s": ("records.shelfmark", None),
             "former_shelfmarks_sm": ("records.shelfmark_olim", None),
+            "other_shelfmarks_sm": ("records.other_shelfmark", None),
             "provenance_sm": ("records.provenance", None),
             "material_held_sm": ("records.material_held", None),
             "local_numbers_sm": ("records.local_number", None),
