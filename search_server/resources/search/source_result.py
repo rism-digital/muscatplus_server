@@ -87,6 +87,14 @@ class SourceSearchResult(ypres.DictSerializer):
         if not is_contents_record:
             return None
 
+        # Malformed records (e.g., item records with no parent) could crash;
+        # guard against that.
+        membership: dict = obj.get("source_membership_json") or {}
+        parent_id: str | None = membership.get("source_id")
+
+        if not parent_id:
+            return None
+
         return PartOfSection(obj, context=self.context).serialized
 
     def get_flags(self, obj: dict) -> dict | None:
