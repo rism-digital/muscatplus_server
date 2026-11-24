@@ -74,6 +74,7 @@ class FullSource(BaseSource):
             "related_institutions_json",
             "now_in_json",
             "related_sources_json",
+            "contributing_projects_json",
         }.isdisjoint(obj.keys()):
             return None
 
