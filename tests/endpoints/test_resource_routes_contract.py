@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 from sanic import response
 
-
 REQUEST_ROUTE_CASES = [
     (
         "search_server.routes.external.handle_request",
@@ -75,7 +74,12 @@ REQUEST_ROUTE_CASES = [
         "search_server.routes.sources.handle_request",
         "/sources/123/incipits/1",
         "handle_incipit_request",
-        {"record_id": "123", "record_type": "source", "work_num": "1"},
+        {
+            "record_id": "123",
+            "record_type": "source",
+            "work_num": "1",
+            "selected_media_type": "text/html",
+        },
     ),
     (
         "search_server.routes.sources.handle_request",

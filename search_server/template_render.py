@@ -14,6 +14,11 @@ from search_server.resources.template_data.template_data import (
 
 def render_template(app_context, req, data_obj: dict | None) -> str:
     record_tmpl = app_context.template_env.get_template("main.html.j2")
+    if data_obj is None:
+        # Boot Elm like the static shell: fetch the error and country list
+        # rather than decoding the error as an already-loaded record.
+        return record_tmpl.render(record_data="null", country_list_data="null")
+
     record_type: str | None = data_obj.get("type")
     request_ctx = {"request": req}
     logger.debug("Record type: %s", record_type)

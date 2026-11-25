@@ -45,16 +45,15 @@ def json_body(resp):
 
 @pytest.mark.unit
 @pytest.mark.contract
-def test_handle_search_unsupported_accept_falls_back_to_html(mocker):
+def test_handle_search_unsupported_accept_returns_not_acceptable(mocker):
     mocker.patch("search_server.request_handlers.render_template", return_value="<html>ok</html>")
     async def fake_handler(_req, **_kwargs):
         return {"ok": True}
 
     req = DummyReq(accept="application/xml")
     resp = run(handle_search(req, fake_handler))
-    assert resp.status == 200
-    assert resp.content_type.startswith("text/html")
-    assert resp.body == b"<html>ok</html>"
+    assert resp.status == 406
+    assert resp.body == b""
 
 
 @pytest.mark.unit

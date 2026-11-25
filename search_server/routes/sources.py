@@ -1,6 +1,14 @@
 from sanic import Blueprint, response
 
-from search_server.request_handlers import handle_request, handle_search
+from search_server.negotiation import negotiate_media_type
+from search_server.request_handlers import (
+    HTML_MEDIA_TYPE,
+    MEI_MEDIA_TYPE,
+    PNG_MEDIA_TYPE,
+    RECORD_MEDIA_TYPES,
+    handle_request,
+    handle_search,
+)
 from search_server.resources.incipits.handlers import (
     handle_incipit_request,
     handle_incipits_list_request,
@@ -23,6 +31,14 @@ from search_server.resources.sources.handlers import (
 )
 
 sources_blueprint: Blueprint = Blueprint("sources", url_prefix="/sources")
+
+# Keep the record default (HTML) first, followed by the incipit-only formats.
+INCIPIT_MEDIA_TYPES = (
+    HTML_MEDIA_TYPE,
+    MEI_MEDIA_TYPE,
+    PNG_MEDIA_TYPE,
+    *RECORD_MEDIA_TYPES[1:],
+)
 
 
 @sources_blueprint.route("/<source_id:str>/")
@@ -49,9 +65,13 @@ async def incipit(req, source_id: str, work_num: str):
     of the incipit.
 
     """
-    accept: str | None = req.headers.get("Accept")
+    selected_media_type = negotiate_media_type(
+        req.headers.get("Accept"), INCIPIT_MEDIA_TYPES
+    )
+    if selected_media_type is None:
+        return response.empty(status=406)
 
-    if accept and "application/mei+xml" in accept:
+    if selected_media_type == MEI_MEDIA_TYPE:
         # Handle the request differently if the Accept type is MEI
         mei_resp: dict | None = await handle_mei_download(
             req, record_id=source_id, record_type="source", work_num=work_num
@@ -61,7 +81,7 @@ async def incipit(req, source_id: str, work_num: str):
                 {"message": "The requested resource could not be found"}, status=404
             )
         return response.text(mei_resp["content"], headers=mei_resp["headers"])
-    elif accept and "image/png" in accept:
+    elif selected_media_type == PNG_MEDIA_TYPE:
         png_resp: dict | None = await handle_png_download(
             req, record_id=source_id, record_type="source", work_num=work_num
         )
@@ -71,10 +91,10 @@ async def incipit(req, source_id: str, work_num: str):
             )
         return response.raw(png_resp["content"], headers=png_resp["headers"])
 
-    # return the JSON-LD representation of the incipit
     return await handle_request(
         req,
         handle_incipit_request,
+        selected_media_type=selected_media_type,
         record_id=source_id,
         record_type="source",
         work_num=work_num,

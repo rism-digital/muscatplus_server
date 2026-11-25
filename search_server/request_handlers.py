@@ -14,6 +14,7 @@ from search_server.helpers.jsonld import (
     with_included_type_nodes,
 )
 from search_server.helpers.linked_data import to_expanded_jsonld, to_ntriples, to_turtle
+from search_server.negotiation import negotiate_media_type
 from search_server.resources.tombstones import handle_tombstone
 from search_server.template_render import render_template
 
@@ -24,35 +25,33 @@ NTRIPLES_MEDIA_TYPE = "application/n-triples"
 MARCXML_MEDIA_TYPE = "application/marcxml+xml"
 EXPANDED_JSONLD_MEDIA_TYPE = "application/ld+json;profile=expanded"
 HTML_MEDIA_TYPE = "text/html"
-ANY_MEDIA_TYPE = "*/*"
+MEI_MEDIA_TYPE = "application/mei+xml"
+PNG_MEDIA_TYPE = "image/png"
+
+PUBLIC_PAGE_MEDIA_TYPES = (HTML_MEDIA_TYPE, JSONLD_MEDIA_TYPE, JSON_MEDIA_TYPE)
+RECORD_MEDIA_TYPES = (
+    HTML_MEDIA_TYPE,
+    TURTLE_MEDIA_TYPE,
+    NTRIPLES_MEDIA_TYPE,
+    MARCXML_MEDIA_TYPE,
+    JSONLD_MEDIA_TYPE,
+    EXPANDED_JSONLD_MEDIA_TYPE,
+    JSON_MEDIA_TYPE,
+)
 
 
-def accepts(accept: str | None, media_type: str) -> bool:
-    """Match complete media types, ignoring quality values; HTML takes priority.
-
-    Missing, wildcard and unrecognized headers default to HTML. Parameters
-    are ignored unless explicitly requested (as for expanded JSON-LD).
-    """
-    entries = [entry.strip().split(";") for entry in (accept or "").split(",")]
-    types = {entry[0].strip().lower() for entry in entries}
-    supported = {
-        JSON_MEDIA_TYPE,
-        JSONLD_MEDIA_TYPE,
-        TURTLE_MEDIA_TYPE,
-        NTRIPLES_MEDIA_TYPE,
-        MARCXML_MEDIA_TYPE,
-    }
-    html = HTML_MEDIA_TYPE in types or ANY_MEDIA_TYPE in types or not types & supported
+def public_not_found_response(
+    req: request.Request, data: dict, media_type: str | None
+) -> response.HTTPResponse:
+    headers = {"Vary": "Accept", "Cache-Control": "no-store"}
     if media_type == HTML_MEDIA_TYPE:
-        return html
-    if html:
-        return False
-    base, _, parameter = media_type.partition(";")
-    return any(
-        entry[0].strip().lower() == base
-        and (not parameter or parameter in [part.strip() for part in entry[1:]])
-        for entry in entries
-    )
+        return response.html(
+            render_template(req.app.ctx, req, None), status=404, headers=headers
+        )
+    if media_type is None:
+        return response.empty(status=404, headers=headers)
+    # Keep the existing JSON error contract, including for JSON-LD clients.
+    return response.json(data, status=404, headers=headers)
 
 
 async def tombstone_or_not_found(req: request.Request) -> response.HTTPResponse:
@@ -66,23 +65,21 @@ async def tombstone_or_not_found(req: request.Request) -> response.HTTPResponse:
 
 
 def send_json_response(
-    req: request.Request, serialized_results: dict, debug_response: bool
+    req: request.Request,
+    serialized_results: dict,
+    debug_response: bool,
+    media_type: str | None = None,
 ) -> response.HTTPResponse:
-    accept: str | None = req.headers.get("Accept")
-
-    # send_json_response should only be called if the only media types are
-    # JSON.
-    if accept:
-        # In case the header has other values in it, take only the first.
-        typ: list[str] = accept.split(";")
-        ct = typ[0] if typ else JSONLD_MEDIA_TYPE
-    else:
-        # assume JSON-LD by default.
-        ct = JSONLD_MEDIA_TYPE
+    selected_media_type = media_type or negotiate_media_type(
+        req.headers.get("Accept"), [JSONLD_MEDIA_TYPE, JSON_MEDIA_TYPE]
+    )
+    if selected_media_type is None:
+        selected_media_type = JSONLD_MEDIA_TYPE
+    ct = f"{selected_media_type};charset=utf-8"
 
     return response.json(
         serialized_results,
-        content_type=f"{ct};charset=utf-8",
+        content_type=ct,
         option=orjson.OPT_INDENT_2 if debug_response else 0,
     )
 
@@ -92,6 +89,8 @@ async def handle_request(
     handler: Callable,
     suppress_context: bool = False,
     raw_json_response: bool = False,
+    *,
+    selected_media_type: str | None = None,
     **kwargs,
 ) -> response.HTTPResponse:
     """
@@ -106,11 +105,17 @@ async def handle_request(
     :param handler: A function for handling the request
     :param suppress_context: Whether to suppress the @context when delivering
     :param raw_json_response: Treat the serialized object as a raw response, bypassing JSON-LD and Template processes
+    :param selected_media_type: Reuse a representation already negotiated by the route.
     :param kwargs: A set of options to be passed to the
     :return: A JSON Response, or an error if not successful.
     """
-    accept: str | None = req.headers.get("Accept")
     app_context = req.app.ctx
+    if not raw_json_response and selected_media_type is None:
+        selected_media_type = negotiate_media_type(
+            req.headers.get("Accept"), RECORD_MEDIA_TYPES
+        )
+        if selected_media_type is None:
+            return response.empty(status=406)
 
     # assume success unless otherwise
     response_code: int = 200
@@ -136,11 +141,14 @@ async def handle_request(
             }
             response_code = 404
 
+    if response_code == 404 and not raw_json_response:
+        return public_not_found_response(req, data_obj, selected_media_type)
+
     # If we have an HTML request, then this will serve the template with the
     # appropriate status code. Anything beyond this point is an API request.
     # If the handler sets a raw JSON response, then bypass whatever Accept values
     # they requested. This means bypassing the HTML rendering.
-    if accepts(accept, HTML_MEDIA_TYPE) and not raw_json_response:
+    if selected_media_type == HTML_MEDIA_TYPE and not raw_json_response:
         rendered_template: str = render_template(app_context, req, data_obj)
         return response.html(rendered_template, status=response_code)
 
@@ -168,20 +176,20 @@ async def handle_request(
     )
 
     res: dict
-    if accepts(accept, TURTLE_MEDIA_TYPE):
+    if selected_media_type == TURTLE_MEDIA_TYPE:
         # Always embed the context for turtle, as it avoids a lookup via the URI
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         ttl = to_turtle(res)
         return response.text(ttl, content_type=TURTLE_MEDIA_TYPE)
 
-    if accepts(accept, NTRIPLES_MEDIA_TYPE):
+    if selected_media_type == NTRIPLES_MEDIA_TYPE:
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         nt: str = to_ntriples(res)
         return response.text(nt, content_type=NTRIPLES_MEDIA_TYPE)
 
-    if accepts(accept, MARCXML_MEDIA_TYPE):
+    if selected_media_type == MARCXML_MEDIA_TYPE:
         if sid := req.match_info.get("source_id"):
             rtype = "sources"
             rid = sid
@@ -215,7 +223,7 @@ async def handle_request(
 
         return response.text(muscat_resp, content_type=MARCXML_MEDIA_TYPE)
 
-    if accepts(accept, EXPANDED_JSONLD_MEDIA_TYPE):
+    if selected_media_type == EXPANDED_JSONLD_MEDIA_TYPE:
         ctx_val = {"@context": ctx_options.context}
         res = {**ctx_val, **data_obj}
         exp = to_expanded_jsonld(res)
@@ -236,7 +244,12 @@ async def handle_request(
 
     res = {**ctx_val, **data_obj}
 
-    return send_json_response(req, res, app_context.config["common"]["debug"])
+    return send_json_response(
+        req,
+        res,
+        app_context.config["common"]["debug"],
+        media_type=selected_media_type,
+    )
 
 
 async def handle_search(
@@ -244,6 +257,9 @@ async def handle_search(
 ) -> response.HTTPResponse:
     accept: str | None = req.headers.get("Accept")
     app_context = req.app.ctx
+    selected_media_type = negotiate_media_type(accept, PUBLIC_PAGE_MEDIA_TYPES)
+    if selected_media_type is None:
+        return response.empty(status=406)
 
     if req.route and req.route.name in RouteContextMap:
         ctx_options = RouteContextMap[req.route.name]
@@ -258,18 +274,19 @@ async def handle_search(
         error_message: str = f"Error sending search to Solr. {e}"
         return response.json({"message": error_message}, status=500)
 
-    if accepts(accept, JSON_MEDIA_TYPE) or accepts(accept, JSONLD_MEDIA_TYPE):
-        if not data_obj:
-            return response.json(
-                {"message": "The requested resource was not found"}, status=404
-            )
+    if not data_obj:
+        return public_not_found_response(
+            req, {"message": "The requested resource was not found"}, selected_media_type
+        )
 
+    if selected_media_type != HTML_MEDIA_TYPE:
         return send_json_response(
             req,
             with_included_type_nodes(
                 data_obj, ignored_keys=null_context_terms(ctx_options.context)
             ),
             app_context.config["common"]["debug"],
+            media_type=selected_media_type,
         )
     else:
         rendered_template: str = render_template(app_context, req, data_obj)
