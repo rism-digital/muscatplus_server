@@ -1,4 +1,6 @@
 # ruff: noqa: S101
+import json
+import re
 from unittest.mock import AsyncMock
 
 import pytest
@@ -34,6 +36,21 @@ def test_unknown_public_url_negotiates_404(client, accept, content_type):
         assert "countryList: null" in resp.text
     else:
         assert "not found" in resp.json["message"]
+
+
+def test_public_not_found_uses_site_metadata_without_canonical_url(client):
+    _, resp = client.get("/not-a-public-route", headers={"Accept": "text/html"})
+
+    assert resp.status == 404
+    assert 'rel="canonical"' not in resp.text
+    script = re.search(r'<script type="application/ld\+json">(.*?)</script>', resp.text, re.S)
+    assert script is not None
+    metadata = json.loads(script[1])
+    assert metadata["@type"] == "WebSite"
+    assert "@id" not in metadata
+    assert metadata["name"] == "RISM Online"
+    assert metadata["maintainer"]["name"] == "RISM Digital"
+    assert f'name="description" content="{metadata["description"]}"' in resp.text
 
 
 def test_missing_record_shell_and_json_follow_up(client, mocker):
