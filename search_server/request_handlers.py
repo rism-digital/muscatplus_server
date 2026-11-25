@@ -235,21 +235,25 @@ async def handle_request(
 
     # We can control the embedding of the context either globally, in the configuration, or
     # per-request, with the X-Embed-Context header.
+    varies_by_embed_context = not suppress_context and app_context.context_uri
     if suppress_context:
         ctx_val = {}
-    elif app_context.context_uri and "X-Embed-Context" not in req.headers:
+    elif varies_by_embed_context and not req.headers.get("X-Embed-Context"):
         ctx_val = {"@context": get_identifier(req, ctx_options.route)}
     else:
         ctx_val = {"@context": ctx_options.context}
 
     res = {**ctx_val, **data_obj}
 
-    return send_json_response(
+    resp = send_json_response(
         req,
         res,
         app_context.config["common"]["debug"],
         media_type=selected_media_type,
     )
+    if varies_by_embed_context:
+        resp.headers.add("Vary", "X-Embed-Context")
+    return resp
 
 
 async def handle_search(

@@ -9,6 +9,7 @@ import orjson
 import pytest
 from pyoxigraph import RdfFormat, parse
 
+from search_server.helpers.jsonld import RouteContextMap
 from search_server.request_handlers import handle_request, handle_search
 
 
@@ -128,6 +129,44 @@ def test_handle_request_raw_json_response(mocker):
     resp = run(handle_request(req, fake_handler, raw_json_response=True))
     assert resp.status == 200
     assert json_body(resp) == {"id": "x"}
+
+
+@pytest.mark.parametrize("accept", ["application/json", "application/ld+json"])
+@pytest.mark.parametrize(
+    ("embed_header", "context_uri", "suppress_context", "expected_context", "varies"),
+    [
+        (None, True, False, "uri", True),
+        ("", True, False, "uri", True),
+        ("1", True, False, "embedded", True),
+        ("false", True, False, "embedded", True),
+        (None, False, False, "embedded", False),
+        ("1", True, True, "omitted", False),
+    ],
+)
+def test_record_context_embedding(
+    mocker, accept, embed_header, context_uri, suppress_context, expected_context, varies
+):
+    async def fake_handler(_req):
+        return {"id": "x"}
+
+    uri = "https://rism.online/api/v1/context.json"
+    mocker.patch("search_server.request_handlers.get_identifier", return_value=uri)
+    req = DummyReq(accept)
+    req.app.ctx.context_uri = context_uri
+    if embed_header is not None:
+        req.headers["X-Embed-Context"] = embed_header
+
+    resp = run(handle_request(req, fake_handler, suppress_context=suppress_context))
+
+    assert resp.status == 200
+    body = json_body(resp)
+    if expected_context == "omitted":
+        assert "@context" not in body
+    else:
+        assert body["@context"] == (
+            uri if expected_context == "uri" else RouteContextMap["__default"].context
+        )
+    assert resp.headers.get("Vary") == ("X-Embed-Context" if varies else None)
 
 
 @pytest.mark.unit
