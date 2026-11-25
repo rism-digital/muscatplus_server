@@ -1,14 +1,17 @@
 <!DOCTYPE HTML>
+{% set site_description = "RISM Online provides access to millions of musical records from a global collection of music libraries, archives, and cultural centres." -%}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest" crossorigin="use-credentials">
     <link rel="mask-icon" href="/static/icons/safari-pinned-tab.svg" color="#5bbad5">
-    <link rel="canonical" href="{{ record_url }}">
+    {% if record_url %}
+    <link rel="canonical" href="{{ record_url|e }}">
+    {% endif %}
     <link rel="license" href="https://creativecommons.org/licenses/by/3.0/">
     <meta name="apple-mobile-web-app-title" content="RISM Online">
     <meta name="application-name" content="RISM Online">
@@ -26,7 +29,7 @@
         <meta name="description" content="{{  record_description|e }}">
         <meta property="og:description" content="{{ record_description|e }}" />
     {% else %}
-        <meta name="description" content="RISM Online is a global search platform for musical sources, helping users discover manuscripts and prints held in libraries worldwide.">
+        <meta name="description" content="{{ site_description|e }}">
     {%- endif %}
 
     <meta name="twitter:site" content="@RISM_music" />
@@ -46,11 +49,13 @@
         {% else %}
         {
             "@context": "https://schema.org",
-            "@type": "WebContent",
-            "@id": "{{ record_url }}",
+            "@type": {{ ("WebContent" if record_url else "WebSite")|tojson }},
+            {% if record_url %}
+            "@id": {{ record_url|tojson }},
+            {% endif %}
             "url": "https://rism.online/",
-            "name": "{{ record_title|e }}",
-            "description": "{{ record_description|e }}",
+            "name": {{ (record_title or "RISM Online")|tojson }},
+            "description": {{ (record_description or site_description)|tojson }},
             "potentialAction": {
                 "@type": "SearchAction",
                 "target": {
@@ -111,16 +116,16 @@
         const NATIONAL_COLLECTION_KEY = "national-collection";
         const SEARCH_PREFERENCES_KEY = "search-preferences";
 
-        /**
+        {% raw %}/**
          * These are messages OUTGOING from Elm and INCOMING in JavaScript.
-         * @enum { SAVE_LANGUAGE_PREFERENCE: string,
+         * @type {{ SAVE_LANGUAGE_PREFERENCE: string,
          *          SET_NATIONAL_COLLECTION_SELECTION: string,
          *          SAVE_SEARCH_PREFERENCE: string,
          *          SET_META_INFO: string,
          *          GENERATE_PIANO_KEYBOARD_NOTE: string,
          *          ENABLE_MUSCAT_LINKS: string
-         *       }
-         */
+         *       }}
+         */{% endraw %}
         const incomingMessages =
         {
             SAVE_LANGUAGE_PREFERENCE: "save-language-preference",
@@ -131,14 +136,14 @@
             ENABLE_MUSCAT_LINKS: "enable-muscat-links"
         }
 
-        /**
+        {% raw %}/**
          * Set up a typed object for the message type values.
          * These are messages OUTGOING from JavaScript and INCOMING to Elm.
-         * @enum { TRIGGER_SEARCH: string,
+         * @type {{ TRIGGER_SEARCH: string,
          *          SEARCH_PREFERENCES_SET: string,
          *          MUSCAT_LINKS_SET: string
-         *       }
-         */
+         *       }}
+         */{% endraw %}
         const outgoingMessages =
         {
             TRIGGER_SEARCH: "trigger-search",
@@ -362,7 +367,7 @@
                     isFramed: detectIsInFrame(),
                     cacheBuster: false,
                     initialData: {{ record_data }},
-                    countryList: {{ country_list_data }}
+                    countryList: {{ country_list_data }},
                 }
             });
 

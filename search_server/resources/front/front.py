@@ -7,12 +7,22 @@ from search_server.exceptions import InvalidQueryException
 from search_server.helpers.identifiers import get_identifier
 from search_server.helpers.search_request import SearchRequest
 from search_server.helpers.solr_connection import SolrConnection
-from search_server.request_handlers import JSON_MEDIA_TYPE, JSONLD_MEDIA_TYPE, accepts
+from search_server.negotiation import negotiate_media_type
+from search_server.request_handlers import (
+    HTML_MEDIA_TYPE,
+    PUBLIC_PAGE_MEDIA_TYPES,
+)
 from search_server.resources.search.facets import get_facets
 from search_server.template_render import render_template
 
 
 async def handle_front_request(req) -> response.HTTPResponse:
+    accept: str | None = req.headers.get("Accept")
+    selected_media_type = negotiate_media_type(accept, PUBLIC_PAGE_MEDIA_TYPES)
+    if selected_media_type is None:
+        return response.empty(status=406)
+
+    app_context = req.app.ctx
     try:
         request_compiler: SearchRequest = SearchRequest(req, probe=True)
         solr_params: JsonAPIRequest = request_compiler.compile()
@@ -25,13 +35,10 @@ async def handle_front_request(req) -> response.HTTPResponse:
         solr_res, context={"request": req, "direct_request": True}
     ).serialized
 
-    accept: str | None = req.headers.get("Accept")
-    app_context = req.app.ctx
-
-    if accepts(accept, JSON_MEDIA_TYPE) or accepts(accept, JSONLD_MEDIA_TYPE):
+    if selected_media_type != HTML_MEDIA_TYPE:
         return response.json(
             results,
-            content_type="application/ld+json;charset=utf-8",
+            content_type=f"{selected_media_type};charset=utf-8",
             option=orjson.OPT_INDENT_2 if req.app.ctx.config["common"]["debug"] else 0,
         )
     else:

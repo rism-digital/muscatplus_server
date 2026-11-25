@@ -12,10 +12,11 @@ from search_server.helpers.languages import (
     load_translations,
 )
 from search_server.helpers.solr_connection import SolrConnection
+from search_server.negotiation import negotiate_media_type
 from search_server.request_handlers import (
-    JSON_MEDIA_TYPE,
-    JSONLD_MEDIA_TYPE,
-    accepts,
+    HTML_MEDIA_TYPE,
+    PUBLIC_PAGE_MEDIA_TYPES,
+    public_not_found_response,
     send_json_response,
 )
 from search_server.resources.front.front import handle_front_request
@@ -158,6 +159,11 @@ async def front(req):
 
 @app.route("/about")
 async def about(req) -> response.HTTPResponse:
+    accept: str | None = req.headers.get("Accept")
+    selected_media_type = negotiate_media_type(accept, PUBLIC_PAGE_MEDIA_TYPES)
+    if selected_media_type is None:
+        return response.empty(status=406)
+
     app_context = req.app.ctx
     cfg: dict = app_context.config
 
@@ -186,14 +192,29 @@ async def about(req) -> response.HTTPResponse:
         "latestFromCantus": cantus_records,
     }
 
-    accept: str | None = req.headers.get("Accept")
-    if accepts(accept, JSON_MEDIA_TYPE) or accepts(accept, JSONLD_MEDIA_TYPE):
-        return send_json_response(req, resp, app_context.config["common"]["debug"])
+    if selected_media_type != HTML_MEDIA_TYPE:
+        return send_json_response(
+            req,
+            resp,
+            app_context.config["common"]["debug"],
+            media_type=selected_media_type,
+        )
     else:
         rendered_template: str = render_template(app_context, req, resp)
         return response.html(rendered_template)
 
 
-@app.exception(NotFound, ServerError)
+@app.exception(NotFound)
+async def not_found(req, exc) -> response.HTTPResponse:
+    data = {"message": exc.message}
+    # These namespaces don't use the public web shell for errors.
+    if req.path.split("/", 2)[1] in {"api", "og", "reconciliation", "sigla"}:
+        return response.json(data, status=404)
+
+    media_type = negotiate_media_type(req.headers.get("Accept"), PUBLIC_PAGE_MEDIA_TYPES)
+    return public_not_found_response(req, data, media_type)
+
+
+@app.exception(ServerError)
 async def json_error(req, exc) -> response.HTTPResponse:
     return response.json({"message": exc.message}, status=exc.status_code)

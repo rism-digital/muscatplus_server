@@ -3,6 +3,8 @@ from __future__ import annotations
 import pytest
 from sanic import response
 
+from search_server import request_handlers
+from search_server.routes import sources
 from tests.conftest import assert_content_type
 
 
@@ -27,6 +29,36 @@ def test_source_incipit_content_negotiation(client, mocker):
     assert png_resp.status == 200
     assert_content_type(png_resp, "image/png")
     assert png_resp.body.startswith(b"\x89PNG")
+
+
+@pytest.mark.endpoint
+@pytest.mark.contract
+@pytest.mark.parametrize(
+    ("accept", "media_type"),
+    [
+        ("application/mei+xml;q=0.2, application/json, */*", "application/json"),
+        ("*/*", "text/html"),
+        ("application/xml", None),
+    ],
+)
+def test_source_incipit_negotiates_once(client, mocker, accept, media_type):
+    negotiate_route = mocker.spy(sources, "negotiate_media_type")
+    negotiate_record = mocker.spy(request_handlers, "negotiate_media_type")
+    load_incipit = mocker.patch.object(
+        sources, "handle_incipit_request", return_value={"type": "rism:Incipit"}
+    )
+
+    _, resp = client.get("/sources/123/incipits/1", headers={"Accept": accept})
+
+    negotiate_route.assert_called_once()
+    negotiate_record.assert_not_called()
+    if media_type is None:
+        assert resp.status == 406
+        load_incipit.assert_not_called()
+    else:
+        assert resp.status == 200
+        assert_content_type(resp, media_type)
+        load_incipit.assert_awaited_once()
 
 
 @pytest.mark.endpoint
