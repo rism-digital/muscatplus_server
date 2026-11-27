@@ -24,6 +24,7 @@ from search_server.routes.api import api_blueprint
 from search_server.routes.countries import countries_blueprint
 from search_server.routes.external import external_blueprint
 from search_server.routes.festivals import festivals_blueprint
+from search_server.routes.iiif import finish_response, iiif_blueprint, iiif_error
 from search_server.routes.incipits import incipits_blueprint
 from search_server.routes.institutions import institutions_blueprint
 from search_server.routes.opengraph import opengraph_blueprint
@@ -82,6 +83,8 @@ app.blueprint(places_blueprint)
 app.blueprint(institutions_blueprint)
 app.blueprint(subjects_blueprint)
 app.blueprint(incipits_blueprint)
+app.blueprint(iiif_blueprint)
+app.register_middleware(finish_response, "response")
 app.blueprint(festivals_blueprint)
 app.blueprint(countries_blueprint)
 app.blueprint(works_blueprint)
@@ -207,6 +210,8 @@ async def about(req) -> response.HTTPResponse:
 @app.exception(NotFound)
 async def not_found(req, exc) -> response.HTTPResponse:
     data = {"message": exc.message}
+    if req.path.split("/", 2)[1] == "iiif":
+        return iiif_error(exc.message, 404)
     # These namespaces don't use the public web shell for errors.
     if req.path.split("/", 2)[1] in {"api", "og", "reconciliation", "sigla"}:
         return response.json(data, status=404)
